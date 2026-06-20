@@ -4,6 +4,14 @@ Each phase ends in something **demoable** and has explicit exit criteria. No pha
 starts before the prior phase's contract is frozen. Order is dependency-driven, not
 feature-driven.
 
+## The bet (read before anything)
+The plumbing (Go core, React UI, capture, cloud) is "just" engineering. **The RF
+engine's *accuracy* is the bet** — Ekahau's moat is decades of propagation tuning so
+people trust a heatmap enough to deploy on it. So this roadmap **inverts the risk**:
+prove the engine is credible against real ground truth (**Gate G1**) *before* investing
+in the full product. If predictions aren't trustworthy, we've spent weeks, not a year,
+finding out — and don't build the four-process cathedral around an unproven engine.
+
 ## Phase 0 — Plan freeze (now)
 - Settle `docs/` (vision, PRD, architecture, tech stack, ADRs).
 - **Freeze the three `.proto` contracts** (`engine`, `api`, `capture`) — these
@@ -15,6 +23,21 @@ feature-driven.
 - Pure function behind the C ABI; shared-memory grid output.
 - **Golden-file tests** (known scene → known grid ±tolerance) + property tests.
 - **Exit:** `engine compute scene.pb → grid` matches goldens; runs headless in CI.
+
+## 🚦 Gate G1 — Engine credibility (the make-or-break; do NOT skip)
+Before building the core/UI/capture, prove the engine produces **trustworthy** results.
+- Take 2–3 **real** environments with known truth: an actual walk-survey (even from a
+  phone/USB adapter), and/or exported heatmaps from AirMagnet/Ekahau for the same
+  floorplan + AP layout.
+- Run the Trellis engine on the same scene; **diff predicted vs. truth** (mean/95th-pct
+  error in dB; coverage-boundary agreement).
+- Exercise **calibration**: does fitting model params to a handful of measurements pull
+  predictions into agreement?
+- **PASS criteria (proposed, tune):** ≤ ~6 dB mean error pre-calibration, ≤ ~3–4 dB
+  post-calibration on indoor office; coverage boundary within ~1 cell.
+- **If it passes:** green-light the full build (Phases 2–6) with confidence.
+- **If it fails:** stop and fix the model (or rethink the bet) — *before* the cathedral.
+  This is the cheapest possible place to learn the truth.
 
 ## Phase 2 — Go core + seams + project model
 - SQLite schema (`sqlc`) + project bundle format; load/save.
