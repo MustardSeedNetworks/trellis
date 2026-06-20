@@ -35,21 +35,27 @@ server. This one choice buys us:
 
 ## 2. Components
 
-### 2.1 RF Engine — C++20 + GPU (the only heavy-math component)
-A **pure function**: `compute(scene, params) → grids`. No I/O, no DB, no app logic ⇒
-deterministic ⇒ golden-file testable. Holds a scene handle for *incremental* recompute.
+### 2.1 Predictive RF Engine — C++20 + GPU (the only greenfield heavy-math component)
+A **pure function**: `compute(scene, params) → predicted grids`. No I/O, no DB, no app
+logic ⇒ deterministic ⇒ golden-file testable. Holds a scene handle for *incremental*
+recompute. **Measured-survey interpolation is NOT here** — it's reused Go in the core
+(see 2.2 + `09-SEED-MIGRATION.md`); the engine only does *prediction*.
 - Geometry, tiered propagation (fast MWF/ITU for interactivity; ray-trace for final),
-  derived layers (SNR, data-rate, interference, coverage, roaming), survey
-  interpolation + calibration. Detail in [04-RF-ENGINE.md](04-RF-ENGINE.md).
+  derived layers (SNR, data-rate, interference, coverage, roaming), and **calibration**
+  (fit the predictive model to measured points). Detail in [04-RF-ENGINE.md](04-RF-ENGINE.md).
 - **Interface:** flat C ABI; scene + grids in shared memory (Arrow/flatbuffer).
 - **GPU:** kernels written once against **wgpu-native / Dawn** → Vulkan/Metal/D3D12.
   **CPU/SIMD fallback** for headless CI and no-GPU hosts.
 
 ### 2.2 Core Service — Go (the majority)
-Everything that isn't math or pixels.
+Everything that isn't *predictive* math or pixels.
 - **Domain + persistence:** buildings/floors/scenes/APs/antennas/materials/
   requirements/surveys. SQLite (relational) via `sqlc`; Parquet (measurement clouds).
   Pure-Go `modernc.org/sqlite` to keep the core cgo-free.
+- **Measured survey (migrated from Seed, `09-SEED-MIGRATION.md`):** AirMapper `.amp`
+  import, interpolation, heatmap/colorscale, analysis, multi-floor, reports — proven Go,
+  reused. Produces **measured** grids in the *same* `GridDescriptor` format as the
+  engine's **predicted** grids, so UI/reports treat them identically.
 - **Orchestration:** AP move → assemble scene *delta* → request compute (shmem) →
   cache grid → notify UI. **Incremental** (only the changed AP/region).
 - **Capture coordination:** consume measurement stream, attach position, persist,

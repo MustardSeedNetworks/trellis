@@ -39,6 +39,8 @@ React+TS UI ──Connect/gRPC + binary grids──► Go core ──shmem/Arrow
 | [docs/05-DATA-MODEL.md](docs/05-DATA-MODEL.md) | Project bundle format, schema, measurement storage |
 | [docs/06-ROADMAP.md](docs/06-ROADMAP.md) | Phased build plan with exit criteria |
 | [docs/07-RISKS.md](docs/07-RISKS.md) | Risks + mitigations |
+| [docs/08-SEED-TRELLIS-BOUNDARY.md](docs/08-SEED-TRELLIS-BOUNDARY.md) | Wi-Fi boundary — all Wi-Fi → Trellis (decided) |
+| [docs/09-SEED-MIGRATION.md](docs/09-SEED-MIGRATION.md) | Seed survey subsystem migration inventory (measured = reuse; engine = new) |
 | [docs/adr/](docs/adr/) | Architecture Decision Records |
 | [docs/contracts/](docs/contracts/) | Protobuf seam definitions (the keystone) |
 
