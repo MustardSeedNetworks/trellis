@@ -1,10 +1,11 @@
 # Trellis
 
-**Wi-Fi survey, predictive planning & design platform.** Import a floorplan, model
-walls/materials, place APs, and compute coverage / SNR / data-rate / interference
-heatmaps; walk a site to capture real measurements, then calibrate predictions
-against them. A modern, cross-platform successor to AirMagnet Survey/Planner
-(EOL) and an open alternative to Ekahau / Hamina / iBwave.
+**The MSN Wi-Fi product** — live troubleshooting **and** survey + predictive planning &
+design. Glance at live signal/SNR/neighbor-APs, or open a project: floorplan + walls,
+AP placement, coverage/SNR/data-rate/interference heatmaps, walk-surveys, and
+calibration. A modern, cross-platform successor to AirMagnet Survey/Planner (EOL) and an
+open alternative to Ekahau / Hamina / iBwave. **All MSN Wi-Fi lives here — Seed exits
+Wi-Fi** (decided 2026-06-20).
 
 > Status: **design phase — docs first, no code yet.** This repo currently holds the
 > product/architecture plan. Code starts only when the plan in `docs/` is settled.

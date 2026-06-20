@@ -4,6 +4,14 @@ Status: draft. Requirements are tagged **[MVP]** (v0.1) or **[Later]**.
 
 ## Functional
 
+### Live mode (troubleshooting/visibility — migrated from Seed's ex-`canopy`)
+Thin, instant, project-free. Runs on the same shared capture core as survey.
+- **[MVP]** Connected-SSID signal / SNR / link rate, live.
+- **[MVP]** Neighbor-AP scan (BSSID/SSID/band/channel/RSSI), live list.
+- **[MVP]** Channel utilization indicator per band.
+- **[Later]** Roam analysis + association/auth forensics.
+- **[Later]** Spectrum view (when a spectrum-capable source is present).
+
 ### Floorplan & project
 - **[MVP]** Import floorplan as image (PNG/JPG) or PDF; **[Later]** CAD (DXF/DWG).
 - **[MVP]** Scale calibration (draw a known distance).

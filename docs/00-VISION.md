@@ -14,19 +14,23 @@ understanding — is tractable. A clean rebuild can be **cross-platform, GPU-acc
 scriptable (headless engine + open project format), and modern** in a way the
 incumbents aren't.
 
-## What Trellis is
-A Wi-Fi **survey + predictive planning + design** platform:
-- **Plan**: import floorplan, model walls/materials, place APs/antennas, compute
-  coverage/SNR/data-rate/interference heatmaps, multi-floor, validate against
-  requirements (e.g. -67 dBm for voice).
-- **Survey**: walk a site, capture real measurements tied to location, build measured
-  heatmaps.
-- **Calibrate**: fit predictions to measurements so plans are trustworthy.
-- **Report**: templated, versionable PDF/HTML output.
+## What Trellis is — **the** MSN Wi-Fi product (two modes, one core)
+All Wi-Fi capability lives here (decided 2026-06-20; Seed exits Wi-Fi entirely).
+- **Live mode** (troubleshooting/visibility — migrates from Seed's ex-`canopy`):
+  connected-SSID signal/SNR, neighbor-AP scan, channel utilization, roam/association
+  forensics. Thin, instant, ad-hoc.
+- **Project mode** (survey + planning + design):
+  - *Plan*: floorplan + walls/materials, AP/antenna placement, coverage/SNR/data-rate/
+    interference heatmaps, multi-floor, requirement validation (e.g. -67 dBm voice).
+  - *Survey*: walk a site, capture measurements tied to location, measured heatmaps.
+  - *Calibrate*: fit predictions to measurements so plans are trustworthy.
+  - *Report*: templated, versionable PDF/HTML.
+
+Both modes sit on one shared **Wi-Fi/RF/capture core** (the capture daemon + engine).
 
 ## What Trellis is *not* (scope discipline)
-- Not a packet analyzer / troubleshooting tool (that's Seed's Wi-Fi lane).
-- Not a network simulator (that's NIAC / "Greenhouse").
+- Not wired diagnostics / security / compliance (that's **Seed**).
+- Not a network simulator (that's **NIAC / "Greenhouse"**).
 - Not RF spectrum hardware — it *consumes* capture from supported radios/appliances.
 
 ## Positioning
@@ -44,13 +48,13 @@ The MSN locked strategy's "no planning / planning is hardware-defended" line
 into a survey/planning tool. A **separate** product (Trellis) owning Wi-Fi planning is
 fully consistent with that: planning simply doesn't live in Seed.
 
-**Open direction (under consideration):** consolidate **all** Wi-Fi capability into
-Trellis — potentially pulling Seed's live Wi-Fi troubleshooting/visibility (the former
-`internal/canopy` → `internal/wifi`) over too, leaving Seed focused on wired
-diagnostics / security / compliance. The clean way to do that is to **share a Wi-Fi/RF/
-capture core** between products rather than duplicate it — see `docs/08-SEED-TRELLIS-BOUNDARY.md`.
-`LICENSE_STRATEGY.md` should be updated to name Trellis as the sanctioned Wi-Fi product
-once the boundary is settled.
+**Decided (2026-06-20): all Wi-Fi moves out of Seed into Trellis.** Seed becomes
+wired-diagnostics / security / compliance only; Trellis is the sole MSN Wi-Fi product
+(live troubleshooting *and* survey/planning). Seed's `internal/wifi` (ex-`canopy`) is
+deprecated and its live-troubleshooting capability is reimplemented in Trellis's Live
+mode on the shared core. See `docs/08-SEED-TRELLIS-BOUNDARY.md`. **Follow-ups:** update
+`LICENSE_STRATEGY.md` to name Trellis the Wi-Fi product and remove Wi-Fi from Seed's
+scope; plan the `internal/wifi` removal in the Seed repo.
 
 ## Audience
 WLAN engineers, integrators, and MSPs doing site design and validation surveys who

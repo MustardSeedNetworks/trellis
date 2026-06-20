@@ -1,7 +1,9 @@
 # Seed ↔ Trellis — Wi-Fi boundary (OPEN DECISION)
 
-Status: **under consideration** (2026-06-20). Captures the "pull all Wi-Fi out of Seed
-into Trellis" thought so it can be decided deliberately.
+Status: **DECIDED — Option A (2026-06-20): all Wi-Fi moves out of Seed into Trellis.**
+Seed = wired diagnostics / security / compliance. Trellis = the sole Wi-Fi product
+(Live troubleshooting + Project survey/planning) on one shared Wi-Fi/RF/capture core.
+Rationale below kept for the record.
 
 ## The distinction that matters
 Wi-Fi work splits into two *different jobs* with different UX, even though they share
@@ -49,13 +51,19 @@ consuming the Trellis capture daemon + a subset of the engine is a natural exten
 not a rewrite. "Move Wi-Fi to Trellis" then means **Trellis owns the Wi-Fi core; Seed
 becomes a consumer of it**, rather than ripping features around.
 
-## Recommendation (owner decides)
-Lean **B**: Trellis owns the Wi-Fi/RF/capture core; Seed keeps a thin live mode on it
-(or drops Wi-Fi later if you want Seed purely wired/security — that's a positioning
-call, reversible). Either way, **don't duplicate the RF/capture stack.**
+## Decision: Option A
+**All Wi-Fi moves to Trellis; Seed exits Wi-Fi.** Picked over B because two products
+both touching Wi-Fi is a positioning muddle ("which one do I buy for Wi-Fi?"), and
+pre-alpha is the cheapest time to make the cut. Trellis grows a **Live mode** (the
+ex-`canopy` troubleshooting/visibility) alongside Project mode; both sit on the shared
+core — so we still build the RF/capture stack once, just consume it from two modes
+inside one product instead of two products.
 
-## To decide before this closes
-- Is Seed "diagnose any network incl. a quick Wi-Fi check" or "wired/security only"?
-- Does the shared core ship as a library, a daemon, or both?
-- Versioning/release coordination between Seed and Trellis on the shared core.
-- Migration path for the existing `internal/wifi` code (reuse vs reference implementation).
+## Follow-ups now open (tracked)
+- **Seed repo:** plan removal/deprecation of `internal/wifi` (ex-`canopy`); decide
+  reuse-as-reference vs. rewrite of the troubleshooting logic into Trellis Live mode.
+- **`LICENSE_STRATEGY.md`:** name Trellis the Wi-Fi product; remove Wi-Fi from Seed's
+  scope and tier matrix; reflect that "no planning in Seed" now reads "no Wi-Fi in Seed."
+- **Trellis PRD:** Live-mode capability set added (see `01-PRD.md`).
+- Shared-core packaging (lib vs daemon vs both) — resolved *inside* Trellis now, not a
+  cross-product contract, which simplifies it.
