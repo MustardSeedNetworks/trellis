@@ -1,0 +1,72 @@
+// Trellis UI <-> Go core API. Control travels as Connect/gRPC; bulk grids travel on a
+// separate binary channel (Wails/WebSocket), referenced by GridRef. DRAFT.
+syntax = "proto3";
+package trellis.api.v1;
+option go_package = "github.com/MustardSeedNetworks/trellis/contracts/api/v1;apiv1";
+
+import "engine.proto";   // reuse Band/Metric/PropModel/Interp/MeasurementPoint
+
+// ---- Projects --------------------------------------------------------------
+message ProjectRef { string id = 1; string path = 2; string name = 3; }
+message OpenProjectRequest { string path = 1; }
+message NewProjectRequest { string name = 1; string path = 2; }
+message SaveProjectRequest { string id = 1; }
+message ProjectReply { ProjectRef project = 1; string error = 2; }
+
+message Floor { string id = 1; string name = 2; int32 idx = 3; string asset_url = 4;
+                double scale_m_per_px = 5; double grid_res_m = 6; }
+message ListFloorsReply { repeated Floor floors = 1; }
+
+// ---- Editing (mutations the UI sends) --------------------------------------
+message PlaceApRequest { string floor_id = 1; trellis.engine.v1.AccessPoint ap = 2; }
+message MoveApRequest  { string ap_id = 1; trellis.engine.v1.Vec3 pos = 2; }
+message UpsertWallRequest { string floor_id = 1; trellis.engine.v1.Wall wall = 2; }
+message MutationReply { string error = 1; }
+
+// ---- Compute / heatmaps ----------------------------------------------------
+message HeatmapRequest {
+  string floor_id = 1;
+  trellis.engine.v1.Band band = 2;
+  trellis.engine.v1.Metric metric = 3;
+  trellis.engine.v1.PropModel model = 4;  // fast for interactive, raytrace for final
+}
+// The actual float grid arrives on the binary channel; this references it.
+message GridRef {
+  string token = 1;          // fetch key on the binary channel
+  int32 w = 2; int32 h = 3; double res_m = 4;
+  trellis.engine.v1.Vec2 origin = 5;
+  double min = 6; double max = 7;
+}
+message HeatmapReply { GridRef grid = 1; double compute_ms = 2; string error = 3; }
+
+// ---- Survey (streaming) ----------------------------------------------------
+message StartSurveyRequest { string building_id = 1; string radio_source = 2; }
+message SurveyEvent {
+  oneof ev {
+    trellis.engine.v1.MeasurementPoint point = 1;  // live measurement (already geotagged)
+    GridRef measured_grid = 2;                      // periodic interpolated heatmap
+    string status = 3;
+  }
+}
+
+// ---- Reports & license -----------------------------------------------------
+message GenerateReportRequest { string project_id = 1; string template = 2; }
+message GenerateReportReply { string pdf_path = 1; string error = 2; }
+message LicenseStatus { bool valid = 1; repeated string features = 2; string expires = 3; }
+
+service Trellis {
+  rpc NewProject(NewProjectRequest) returns (ProjectReply);
+  rpc OpenProject(OpenProjectRequest) returns (ProjectReply);
+  rpc SaveProject(SaveProjectRequest) returns (ProjectReply);
+  rpc ListFloors(ProjectRef) returns (ListFloorsReply);
+
+  rpc PlaceAp(PlaceApRequest) returns (MutationReply);
+  rpc MoveAp(MoveApRequest) returns (MutationReply);      // triggers the <100ms loop
+  rpc UpsertWall(UpsertWallRequest) returns (MutationReply);
+
+  rpc GetHeatmap(HeatmapRequest) returns (HeatmapReply);
+  rpc StartSurvey(StartSurveyRequest) returns (stream SurveyEvent);
+
+  rpc GenerateReport(GenerateReportRequest) returns (GenerateReportReply);
+  rpc GetLicense(ProjectRef) returns (LicenseStatus);
+}

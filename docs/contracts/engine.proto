@@ -1,0 +1,175 @@
+// Trellis Go <-> RF Engine contract (the keystone).
+// Control messages travel as length-prefixed protobuf over a UDS; bulk grid/scene
+// payloads travel by shared memory and are referenced here by handle + descriptor.
+// "Give scene/delta, get grids." The engine is a pure function with an incremental
+// scene cache. DRAFT - pin this down before any code.
+syntax = "proto3";
+package trellis.engine.v1;
+option go_package = "github.com/MustardSeedNetworks/trellis/contracts/engine/v1;enginev1";
+
+// ---- Geometry & RF entities ------------------------------------------------
+
+message Vec2 { double x = 1; double y = 2; }   // metres, floor-local
+message Vec3 { double x = 1; double y = 2; double z = 3; }
+
+message Material {
+  string id = 1;
+  string name = 2;            // "drywall", "concrete", "glass", ...
+  double atten_db_2_4 = 3;    // one-way attenuation @2.4 GHz (dB)
+  double atten_db_5 = 4;      // @5 GHz
+  double atten_db_6 = 5;      // @6 GHz
+  double thickness_m = 6;     // informational
+}
+
+message Wall {
+  Vec2 a = 1;                 // segment endpoints, floor-local metres
+  Vec2 b = 2;
+  string material_id = 3;
+}
+
+message Floor {
+  string id = 1;
+  int32 index = 2;            // stacking order (0 = ground)
+  double elevation_m = 3;     // z of this floor's plane
+  double height_m = 4;        // ceiling height
+  double interfloor_atten_db = 5; // loss through this floor's slab
+  repeated Wall walls = 6;
+  Vec2 grid_origin = 7;       // floor-local origin of the compute grid
+  double grid_res_m = 8;      // metres per cell (e.g. 0.25)
+  int32 grid_w = 9;           // cells
+  int32 grid_h = 10;
+}
+
+message AntennaPattern {
+  string id = 1;
+  string name = 2;            // "omni", "patch-90", vendor model
+  double gain_dbi = 3;
+  // azimuth/elevation gain tables, 1-degree steps (dB relative to peak); empty = omni
+  repeated double az_db = 4;
+  repeated double el_db = 5;
+}
+
+enum Band { BAND_UNSPECIFIED = 0; BAND_2_4 = 1; BAND_5 = 2; BAND_6 = 3; }
+enum Phy  { PHY_UNSPECIFIED = 0; PHY_11N = 1; PHY_11AC = 2; PHY_11AX = 3; PHY_11BE = 4; }
+
+message Radio {
+  Band band = 1;
+  int32 channel = 2;
+  int32 width_mhz = 3;        // 20/40/80/160/320
+  double tx_power_dbm = 4;
+  Phy phy = 5;
+  string antenna_id = 6;
+  double azimuth_deg = 7;     // mounting orientation
+  double downtilt_deg = 8;
+}
+
+message AccessPoint {
+  string id = 1;
+  string floor_id = 2;
+  Vec3 pos = 3;              // floor-local metres (+ mount height in z)
+  repeated Radio radios = 4; // one per band the AP serves
+}
+
+// ---- Scene & compute -------------------------------------------------------
+
+message Scene {
+  string id = 1;
+  repeated Material materials = 2;
+  repeated AntennaPattern antennas = 3;
+  repeated Floor floors = 4;
+  repeated AccessPoint aps = 5;
+  EnvParams env = 6;
+}
+
+message EnvParams {
+  double noise_floor_dbm = 1;   // default -95
+  PropModel model = 2;
+}
+enum PropModel {
+  PROP_UNSPECIFIED = 0;
+  PROP_MULTIWALL = 1;           // fast, interactive (COST-231 MWF)
+  PROP_ITU_INDOOR = 2;          // ITU-R P.1238
+  PROP_DOMINANT_PATH = 3;       // accurate
+  PROP_RAYTRACE = 4;            // most accurate, slowest
+}
+
+enum Metric {
+  METRIC_UNSPECIFIED = 0;
+  METRIC_RX_POWER = 1;          // dBm, strongest AP per cell
+  METRIC_SNR = 2;               // dB
+  METRIC_DATA_RATE = 3;         // Mbps (PHY-rate from SNR)
+  METRIC_INTERFERENCE = 4;      // co/adjacent-channel, dB
+  METRIC_COVERAGE = 5;          // boolean-ish vs requirement threshold
+  METRIC_AP_COUNT = 6;          // # APs above a threshold (overlap/roaming)
+  METRIC_STRONGEST_AP = 7;      // index of best AP (for "best server" map)
+}
+
+// A scene delta lets the engine recompute incrementally (the <100ms loop).
+message SceneDelta {
+  string scene_id = 1;
+  repeated AccessPoint upsert_aps = 2;
+  repeated string remove_ap_ids = 3;
+  repeated Wall upsert_walls = 4;   // (+floor_id carried per-wall in practice)
+  EnvParams env = 5;                // optional override
+}
+
+message ComputeRequest {
+  oneof source { Scene full = 1; SceneDelta delta = 2; }
+  repeated string floor_ids = 3;    // which floors to compute (empty = all)
+  repeated Band bands = 4;
+  repeated Metric metrics = 5;
+  PropModel model = 6;              // overrides EnvParams.model if set
+  bool gpu = 7;                     // false => CPU fallback (CI)
+}
+
+// Grids are returned by reference into shared memory (not inline).
+message GridDescriptor {
+  string floor_id = 1;
+  Band band = 2;
+  Metric metric = 3;
+  int32 w = 4;
+  int32 h = 5;
+  double res_m = 6;
+  Vec2 origin = 7;
+  string shm_handle = 8;            // shared-memory segment name/fd key
+  uint64 shm_offset = 9;
+  uint64 byte_len = 10;             // w*h*4 (float32)
+  double min = 11;                  // value range (for color-map)
+  double max = 12;
+}
+
+message ComputeResponse {
+  string scene_id = 1;
+  repeated GridDescriptor grids = 2;
+  double compute_ms = 3;
+  bool from_cache = 4;
+  string error = 5;
+}
+
+// ---- Survey interpolation (measured -> grid) -------------------------------
+
+message MeasurementPoint {
+  Vec3 pos = 1;
+  Band band = 2;
+  string bssid = 3;
+  double rssi_dbm = 4;
+  double snr_db = 5;
+  int32 channel = 6;
+}
+enum Interp { INTERP_UNSPECIFIED = 0; INTERP_IDW = 1; INTERP_KRIGING = 2; INTERP_NN = 3; }
+
+message InterpolateRequest {
+  string floor_id = 1;
+  repeated MeasurementPoint points = 2;
+  Metric metric = 3;
+  Interp method = 4;
+  bool calibrate = 5;               // fit model params to measurements
+}
+
+service Engine {
+  rpc Compute(ComputeRequest) returns (ComputeResponse);
+  rpc Interpolate(InterpolateRequest) returns (ComputeResponse);
+  rpc DropScene(DropSceneRequest) returns (DropSceneResponse); // free cached scene
+}
+message DropSceneRequest { string scene_id = 1; }
+message DropSceneResponse {}

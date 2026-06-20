@@ -1,0 +1,12 @@
+# build / deps (for when code lands)
+/engine/build/
+/core/bin/
+/ui/node_modules/
+/ui/dist/
+*.o
+*.a
+*.so
+*.dylib
+.DS_Store
+# generated protobuf code (regenerated via buf)
+**/gen/

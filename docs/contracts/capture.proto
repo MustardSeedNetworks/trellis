@@ -1,0 +1,73 @@
+// Trellis Go core <-> Capture daemon. The daemon abstracts a "radio source" (host NIC
+// or external HW/appliance) into a uniform measurement stream. DRAFT.
+syntax = "proto3";
+package trellis.capture.v1;
+option go_package = "github.com/MustardSeedNetworks/trellis/contracts/capture/v1;capturev1";
+
+import "engine.proto";  // Band, Phy
+
+enum SourceKind {
+  SOURCE_UNSPECIFIED = 0;
+  SOURCE_HOST_NIC = 1;     // best-effort, OS-dependent (monitor mode where available)
+  SOURCE_USB_RADIO = 2;    // supported USB adapter
+  SOURCE_APPLIANCE = 3;    // external HW over USB-IP / network (primary path)
+}
+
+message RadioSource {
+  string id = 1;
+  SourceKind kind = 2;
+  string name = 3;             // "AirCheck-G3 @ 10.0.0.5", "wlan1", ...
+  repeated trellis.engine.v1.Band bands = 4;
+  bool monitor_capable = 5;
+  bool spectrum_capable = 6;
+}
+
+message ListSourcesReply { repeated RadioSource sources = 1; }
+
+message StartRequest {
+  string source_id = 1;
+  repeated int32 channels = 2;   // empty = scan/hop all
+  bool passive = 3;              // passive listen vs active probe
+  int32 dwell_ms = 4;            // per-channel dwell when hopping
+}
+
+// One observation of a BSSID on a channel at a moment. Position is attached later by
+// the core (from the UI pin / GPS), so the daemon stays location-agnostic.
+message Observation {
+  int64 ts_unix_ns = 1;
+  string bssid = 2;
+  string ssid = 3;
+  trellis.engine.v1.Band band = 4;
+  int32 channel = 5;
+  int32 width_mhz = 6;
+  double rssi_dbm = 7;
+  double snr_db = 8;
+  trellis.engine.v1.Phy phy = 9;
+  double noise_dbm = 10;
+  double channel_util = 11;      // if available
+}
+
+message SpectrumSweep {            // optional, when spectrum_capable
+  int64 ts_unix_ns = 1;
+  trellis.engine.v1.Band band = 2;
+  double start_mhz = 3;
+  double bin_mhz = 4;
+  repeated float power_dbm = 5;    // one per bin
+}
+
+message CaptureEvent {
+  oneof ev {
+    Observation obs = 1;
+    SpectrumSweep sweep = 2;
+    string status = 3;             // "hopping ch 36", "source lost", ...
+  }
+}
+
+service Capture {
+  rpc ListSources(ListSourcesRequest) returns (ListSourcesReply);
+  rpc Start(StartRequest) returns (stream CaptureEvent);   // backpressured stream
+  rpc Stop(StopRequest) returns (StopReply);
+}
+message ListSourcesRequest {}
+message StopRequest { string source_id = 1; }
+message StopReply {}
