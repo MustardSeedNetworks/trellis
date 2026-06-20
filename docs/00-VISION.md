@@ -38,14 +38,19 @@ A Wi-Fi **survey + predictive planning + design** platform:
 | Capture | NDIS drivers | vendor HW | **external HW first + host-NIC** |
 | Cost model | dead | premium | TBD (MSN open-core candidate) |
 
-## ⚠️ Strategy note (recorded honestly)
-The MSN locked strategy (2026-05-19, `LICENSE_STRATEGY.md`) explicitly **removed**
-predictive survey / AP-placement / heatmap design as a direction ("planning is
-hardware-defended; don't compete with Ekahau/Hamina/iBwave"). Trellis **reverses that
-position**. Standing it up is an owner-level strategy decision, made deliberately on
-the strength of the AirMagnet deep-dive (we *can* build the engine). If this reversal
-stands, `LICENSE_STRATEGY.md` should be updated to reflect Trellis as a sanctioned
-product so the docs stop contradicting each other.
+## Strategy alignment (clarified 2026-06-20)
+The MSN locked strategy's "no planning / planning is hardware-defended" line
+(`LICENSE_STRATEGY.md`, 2026-05-19) was **scoped to Seed** — i.e. *Seed* doesn't grow
+into a survey/planning tool. A **separate** product (Trellis) owning Wi-Fi planning is
+fully consistent with that: planning simply doesn't live in Seed.
+
+**Open direction (under consideration):** consolidate **all** Wi-Fi capability into
+Trellis — potentially pulling Seed's live Wi-Fi troubleshooting/visibility (the former
+`internal/canopy` → `internal/wifi`) over too, leaving Seed focused on wired
+diagnostics / security / compliance. The clean way to do that is to **share a Wi-Fi/RF/
+capture core** between products rather than duplicate it — see `docs/08-SEED-TRELLIS-BOUNDARY.md`.
+`LICENSE_STRATEGY.md` should be updated to name Trellis as the sanctioned Wi-Fi product
+once the boundary is settled.
 
 ## Audience
 WLAN engineers, integrators, and MSPs doing site design and validation surveys who
