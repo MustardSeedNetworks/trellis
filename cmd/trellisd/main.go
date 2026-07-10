@@ -13,16 +13,31 @@ import (
 	"syscall"
 	"time"
 
+	"connectrpc.com/connect"
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1/surveyv1connect"
 	"github.com/MustardSeedNetworks/trellis/internal/api"
 )
 
 const (
-	defaultAddr         = ":8080"
+	// defaultAddr binds loopback only. This server currently has no
+	// authentication or TLS (both are tracked follow-ups before any
+	// non-local deployment), so it must not be exposed on all interfaces by
+	// default. An operator who understands the trade-off can override with
+	// TRELLIS_ADDR — and owns adding auth/TLS in front of it.
+	defaultAddr         = "127.0.0.1:8080"
 	defaultDataDir      = "./data"
 	shutdownGracePeriod = 10 * time.Second
 	readHeaderTimeout   = 5 * time.Second
+	readTimeout         = 30 * time.Second
+	// writeTimeout is generous: report generation and heatmap rendering can
+	// take a few seconds on large surveys.
+	writeTimeout = 120 * time.Second
+	idleTimeout  = 60 * time.Second
+	// maxUploadBytes bounds a single Connect request message so an oversized
+	// AirMapper upload can't exhaust memory. 64 MiB comfortably covers a
+	// floor-plan-bearing .amp while capping the blast radius.
+	maxUploadBytes = 64 << 20
 )
 
 func main() {
@@ -53,7 +68,10 @@ func run() error {
 	slog.Info("loaded surveys", "count", len(manager.ListSurveys()), "data_dir", dataDir)
 
 	mux := http.NewServeMux()
-	path, handler := surveyv1connect.NewSurveyServiceHandler(api.NewSurveyServiceHandler(manager))
+	path, handler := surveyv1connect.NewSurveyServiceHandler(
+		api.NewSurveyServiceHandler(manager),
+		connect.WithReadMaxBytes(maxUploadBytes),
+	)
 	mux.Handle(path, handler)
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -70,6 +88,9 @@ func run() error {
 		Handler:           mux,
 		Protocols:         &protocols,
 		ReadHeaderTimeout: readHeaderTimeout,
+		ReadTimeout:       readTimeout,
+		WriteTimeout:      writeTimeout,
+		IdleTimeout:       idleTimeout,
 	}
 
 	serveErr := make(chan error, 1)

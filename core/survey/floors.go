@@ -15,7 +15,7 @@ func (m *Manager) UpdateFloorPlan(id string, floorPlan *FloorPlan) error {
 
 	survey, exists := m.surveys[id]
 	if !exists {
-		return fmt.Errorf("survey not found: %s", id)
+		return fmt.Errorf("%w: %s", ErrSurveyNotFound, id)
 	}
 
 	// Find the active floor
@@ -38,12 +38,12 @@ func (m *Manager) UpdateFloorPlanByFloorID(surveyID, floorID string, floorPlan *
 
 	survey, exists := m.surveys[surveyID]
 	if !exists {
-		return fmt.Errorf("survey not found: %s", surveyID)
+		return fmt.Errorf("%w: %s", ErrSurveyNotFound, surveyID)
 	}
 
 	floor := survey.GetFloorByID(floorID)
 	if floor == nil {
-		return fmt.Errorf("floor not found: %s", floorID)
+		return fmt.Errorf("%w: %s", ErrFloorNotFound, floorID)
 	}
 
 	floor.FloorPlan = floorPlan
@@ -60,7 +60,7 @@ func (m *Manager) AddFloor(surveyID, name string, level int) (*Floor, error) {
 
 	survey, exists := m.surveys[surveyID]
 	if !exists {
-		return nil, fmt.Errorf("survey not found: %s", surveyID)
+		return nil, fmt.Errorf("%w: %s", ErrSurveyNotFound, surveyID)
 	}
 
 	now := time.Now()
@@ -90,12 +90,12 @@ func (m *Manager) UpdateFloor(surveyID, floorID, name string, level int) error {
 
 	survey, exists := m.surveys[surveyID]
 	if !exists {
-		return fmt.Errorf("survey not found: %s", surveyID)
+		return fmt.Errorf("%w: %s", ErrSurveyNotFound, surveyID)
 	}
 
 	floor := survey.GetFloorByID(floorID)
 	if floor == nil {
-		return fmt.Errorf("floor not found: %s", floorID)
+		return fmt.Errorf("%w: %s", ErrFloorNotFound, floorID)
 	}
 
 	floor.Name = name
@@ -113,7 +113,7 @@ func (m *Manager) DeleteFloor(surveyID, floorID string) error {
 
 	survey, exists := m.surveys[surveyID]
 	if !exists {
-		return fmt.Errorf("survey not found: %s", surveyID)
+		return fmt.Errorf("%w: %s", ErrSurveyNotFound, surveyID)
 	}
 
 	// Don't allow deletion of the last floor
@@ -136,7 +136,7 @@ func (m *Manager) DeleteFloor(surveyID, floorID string) error {
 		}
 	}
 
-	return fmt.Errorf("floor not found: %s", floorID)
+	return fmt.Errorf("%w: %s", ErrFloorNotFound, floorID)
 }
 
 // SetActiveFloor sets the active floor for data collection.
@@ -146,13 +146,13 @@ func (m *Manager) SetActiveFloor(surveyID, floorID string) error {
 
 	survey, exists := m.surveys[surveyID]
 	if !exists {
-		return fmt.Errorf("survey not found: %s", surveyID)
+		return fmt.Errorf("%w: %s", ErrSurveyNotFound, surveyID)
 	}
 
 	// Verify floor exists
 	floor := survey.GetFloorByID(floorID)
 	if floor == nil {
-		return fmt.Errorf("floor not found: %s", floorID)
+		return fmt.Errorf("%w: %s", ErrFloorNotFound, floorID)
 	}
 
 	survey.ActiveFloorID = floorID
@@ -168,7 +168,7 @@ func (m *Manager) GetFloors(surveyID string) ([]*Floor, error) {
 
 	survey, exists := m.surveys[surveyID]
 	if !exists {
-		return nil, fmt.Errorf("survey not found: %s", surveyID)
+		return nil, fmt.Errorf("%w: %s", ErrSurveyNotFound, surveyID)
 	}
 
 	return survey.Floors, nil
@@ -181,12 +181,12 @@ func (m *Manager) GetFloor(surveyID, floorID string) (*Floor, error) {
 
 	survey, exists := m.surveys[surveyID]
 	if !exists {
-		return nil, fmt.Errorf("survey not found: %s", surveyID)
+		return nil, fmt.Errorf("%w: %s", ErrSurveyNotFound, surveyID)
 	}
 
 	floor := survey.GetFloorByID(floorID)
 	if floor == nil {
-		return nil, fmt.Errorf("floor not found: %s", floorID)
+		return nil, fmt.Errorf("%w: %s", ErrFloorNotFound, floorID)
 	}
 
 	return floor, nil

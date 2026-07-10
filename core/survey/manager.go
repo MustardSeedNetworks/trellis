@@ -114,7 +114,7 @@ func (m *Manager) GetSurvey(id string) (*Survey, error) {
 
 	survey, exists := m.surveys[id]
 	if !exists {
-		return nil, fmt.Errorf("survey not found: %s", id)
+		return nil, fmt.Errorf("%w: %s", ErrSurveyNotFound, id)
 	}
 
 	return survey, nil
@@ -139,7 +139,7 @@ func (m *Manager) DeleteSurvey(id string) error {
 	defer m.mu.Unlock()
 
 	if _, exists := m.surveys[id]; !exists {
-		return fmt.Errorf("survey not found: %s", id)
+		return fmt.Errorf("%w: %s", ErrSurveyNotFound, id)
 	}
 
 	// Delete from disk
@@ -163,7 +163,7 @@ func (m *Manager) StartSurvey(id string) error {
 
 	survey, exists := m.surveys[id]
 	if !exists {
-		return fmt.Errorf("survey not found: %s", id)
+		return fmt.Errorf("%w: %s", ErrSurveyNotFound, id)
 	}
 
 	if survey.Status == StatusInProgress {
@@ -183,7 +183,7 @@ func (m *Manager) PauseSurvey(id string) error {
 
 	survey, exists := m.surveys[id]
 	if !exists {
-		return fmt.Errorf("survey not found: %s", id)
+		return fmt.Errorf("%w: %s", ErrSurveyNotFound, id)
 	}
 
 	survey.Status = StatusPaused
@@ -199,7 +199,7 @@ func (m *Manager) CompleteSurvey(id string) error {
 
 	survey, exists := m.surveys[id]
 	if !exists {
-		return fmt.Errorf("survey not found: %s", id)
+		return fmt.Errorf("%w: %s", ErrSurveyNotFound, id)
 	}
 
 	survey.Status = StatusCompleted
@@ -220,7 +220,7 @@ func (m *Manager) UpdateSurveySettings(
 
 	survey, exists := m.surveys[id]
 	if !exists {
-		return fmt.Errorf("survey not found: %s", id)
+		return fmt.Errorf("%w: %s", ErrSurveyNotFound, id)
 	}
 
 	if survey.Status != StatusCreated {
@@ -269,7 +269,7 @@ func (m *Manager) UpdateImportedData(id string, update ImportedDataUpdate) error
 
 	survey, exists := m.surveys[id]
 	if !exists {
-		return fmt.Errorf("survey not found: %s", id)
+		return fmt.Errorf("%w: %s", ErrSurveyNotFound, id)
 	}
 
 	if update.APLocations != nil {
@@ -293,7 +293,7 @@ func (m *Manager) AddSample(id string, x, y int, sampleData any) error {
 
 	survey, exists := m.surveys[id]
 	if !exists {
-		return fmt.Errorf("survey not found: %s", id)
+		return fmt.Errorf("%w: %s", ErrSurveyNotFound, id)
 	}
 
 	if survey.Status != StatusInProgress {
@@ -326,7 +326,7 @@ func (m *Manager) AddSampleToFloor(surveyID, floorID string, x, y int, sampleDat
 
 	survey, exists := m.surveys[surveyID]
 	if !exists {
-		return fmt.Errorf("survey not found: %s", surveyID)
+		return fmt.Errorf("%w: %s", ErrSurveyNotFound, surveyID)
 	}
 
 	if survey.Status != StatusInProgress {
@@ -335,7 +335,7 @@ func (m *Manager) AddSampleToFloor(surveyID, floorID string, x, y int, sampleDat
 
 	floor := survey.GetFloorByID(floorID)
 	if floor == nil {
-		return fmt.Errorf("floor not found: %s", floorID)
+		return fmt.Errorf("%w: %s", ErrFloorNotFound, floorID)
 	}
 
 	sample := &SamplePoint{
