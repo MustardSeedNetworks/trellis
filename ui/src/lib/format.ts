@@ -23,3 +23,16 @@ export function formatSignal(value: number, unit: string): string {
 export function formatCoverageScore(score: number): string {
   return `${Math.round(score * 100)}%`;
 }
+
+/**
+ * Builds a safe download filename for a survey's PDF report from its name,
+ * e.g. "Everett HQ" → "everett-hq-survey-report.pdf". Falls back to a generic
+ * name when the survey name has no usable characters.
+ */
+export function reportFilename(surveyName: string): string {
+  const slug = surveyName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return `${slug || 'survey'}-survey-report.pdf`;
+}

@@ -1,16 +1,29 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { surveyClient } from '@/lib/client';
-import { bytesToDataUrl, formatCoverageScore } from '@/lib/format';
+import { bytesToDataUrl, formatCoverageScore, reportFilename } from '@/lib/format';
 
 type Metric = 'rssi' | 'snr';
 
 interface SurveyDetailProps {
   surveyId: string;
+  surveyName: string;
 }
 
-export function SurveyDetail({ surveyId }: SurveyDetailProps) {
+export function SurveyDetail({ surveyId, surveyName }: SurveyDetailProps) {
   const [metric, setMetric] = useState<Metric>('rssi');
+
+  const reportMutation = useMutation({
+    mutationFn: async () => {
+      const reply = await surveyClient.generateReport({ surveyId });
+      // Reuse the tested bytes→data-URL path and trigger a browser download
+      // via a transient anchor; no library needed for a one-shot PDF save.
+      const link = document.createElement('a');
+      link.href = bytesToDataUrl(reply.pdf, 'application/pdf');
+      link.download = reportFilename(surveyName);
+      link.click();
+    },
+  });
 
   const heatmapQuery = useQuery({
     queryKey: ['heatmap', surveyId, metric],
@@ -38,7 +51,20 @@ export function SurveyDetail({ surveyId }: SurveyDetailProps) {
             {m}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => reportMutation.mutate()}
+          disabled={reportMutation.isPending}
+          className="ml-auto rounded bg-slate-900 px-3 py-1 text-xs text-white disabled:opacity-50"
+        >
+          {reportMutation.isPending ? 'Generating…' : 'Download PDF report'}
+        </button>
       </div>
+      {reportMutation.isError && (
+        <p className="mb-4 text-sm text-red-600">
+          Failed to generate report: {String(reportMutation.error)}
+        </p>
+      )}
 
       <section className="mb-6">
         <h2 className="mb-2 text-sm font-semibold text-slate-700">Heatmap</h2>

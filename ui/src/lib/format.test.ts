@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bytesToDataUrl, formatCoverageScore, formatSignal } from '@/lib/format';
+import { bytesToDataUrl, formatCoverageScore, formatSignal, reportFilename } from '@/lib/format';
 
 describe('bytesToDataUrl', () => {
   it('encodes bytes as a base64 data URL with the given mime type', () => {
@@ -32,5 +32,19 @@ describe('formatCoverageScore', () => {
     expect(formatCoverageScore(0.823)).toBe('82%');
     expect(formatCoverageScore(1)).toBe('100%');
     expect(formatCoverageScore(0)).toBe('0%');
+  });
+});
+
+describe('reportFilename', () => {
+  it('slugifies a survey name into a pdf filename', () => {
+    expect(reportFilename('Everett HQ')).toBe('everett-hq-survey-report.pdf');
+  });
+
+  it('collapses punctuation and trims dashes', () => {
+    expect(reportFilename('  Floor 3 — West!! ')).toBe('floor-3-west-survey-report.pdf');
+  });
+
+  it('falls back to a generic name when nothing usable remains', () => {
+    expect(reportFilename('—')).toBe('survey-survey-report.pdf');
   });
 });
