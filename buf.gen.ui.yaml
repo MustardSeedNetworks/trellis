@@ -1,0 +1,12 @@
+version: v2
+inputs:
+  - directory: proto
+plugins:
+  # protoc-gen-es v2 (Connect-ES v2 line) emits both message types and the
+  # GenService descriptor from a single plugin — no separate connect-es
+  # plugin is needed; @connectrpc/connect's createClient() consumes the
+  # GenService directly.
+  - remote: buf.build/bufbuild/es
+    out: ui/src/gen
+    opt:
+      - target=ts
