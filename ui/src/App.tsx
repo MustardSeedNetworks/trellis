@@ -14,6 +14,7 @@ export function App() {
   });
 
   const surveys = surveysQuery.data?.surveys ?? [];
+  const selectedSurvey = surveys.find((s) => s.id === selectedId);
 
   return (
     <div className="flex h-screen flex-col bg-slate-50 text-slate-900">
@@ -41,7 +42,7 @@ export function App() {
         </aside>
 
         {selectedId ? (
-          <SurveyDetail surveyId={selectedId} />
+          <SurveyDetail surveyId={selectedId} surveyName={selectedSurvey?.name ?? 'survey'} />
         ) : (
           <div className="flex flex-1 items-center justify-center text-sm text-slate-500">
             Select a survey to view its heatmap and coverage
