@@ -8,5 +8,3 @@
 *.so
 *.dylib
 .DS_Store
-# generated protobuf code (regenerated via buf)
-**/gen/

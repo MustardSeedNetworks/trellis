@@ -1,0 +1,112 @@
+// Trellis measured-survey API. Exposes the existing survey engine
+// (core/survey): AirMapper import, stored surveys, heatmap rendering, and
+// dead-zone/coverage analysis derived from real measured samples.
+//
+// Scope: measured-survey RPCs only. Predictive-planning capabilities (AP
+// placement, wall editing, propagation-model heatmaps) are intentionally not
+// defined here — that RF engine does not exist yet.
+syntax = "proto3";
+
+package trellis.survey.v1;
+
+option go_package = "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1;surveyv1";
+
+// SurveyService serves measured Wi-Fi site surveys backed by core/survey.
+service SurveyService {
+  // ImportAirMapper imports an AirMapper (.amp) archive into a new stored
+  // survey.
+  rpc ImportAirMapper(ImportAirMapperRequest) returns (ImportAirMapperResponse);
+
+  // ListSurveys returns summaries of every stored survey.
+  rpc ListSurveys(ListSurveysRequest) returns (ListSurveysResponse);
+
+  // GetSurvey returns a single stored survey by ID.
+  rpc GetSurvey(GetSurveyRequest) returns (GetSurveyResponse);
+
+  // DeleteSurvey removes a stored survey.
+  rpc DeleteSurvey(DeleteSurveyRequest) returns (DeleteSurveyResponse);
+
+  // GetHeatmap renders a measured-signal heatmap for a survey's active floor.
+  rpc GetHeatmap(GetHeatmapRequest) returns (GetHeatmapResponse);
+
+  // GetCoverage runs dead-zone detection over a survey's measured samples.
+  rpc GetCoverage(GetCoverageRequest) returns (GetCoverageResponse);
+
+  // GenerateReport renders a PDF report for a survey.
+  rpc GenerateReport(GenerateReportRequest) returns (GenerateReportResponse);
+}
+
+// SurveySummary is the lightweight survey representation used in list and
+// single-survey replies.
+message SurveySummary {
+  string id = 1;
+  string name = 2;
+  string status = 3;
+  int32 floor_count = 4;
+  int32 sample_count = 5;
+  bool has_floor_plan = 6;
+}
+
+message ImportAirMapperRequest {
+  string name = 1;
+  bytes amp_data = 2;
+}
+
+message ImportAirMapperResponse {
+  SurveySummary survey = 1;
+}
+
+message ListSurveysRequest {}
+
+message ListSurveysResponse {
+  repeated SurveySummary surveys = 1;
+}
+
+message GetSurveyRequest {
+  string id = 1;
+}
+
+message GetSurveyResponse {
+  SurveySummary survey = 1;
+}
+
+message DeleteSurveyRequest {
+  string id = 1;
+}
+
+message DeleteSurveyResponse {}
+
+message GetHeatmapRequest {
+  string survey_id = 1;
+  // Heatmap metric: "rssi" or "snr". Defaults to "rssi".
+  string metric = 2;
+}
+
+message GetHeatmapResponse {
+  bytes png = 1;
+  int32 width = 2;
+  int32 height = 3;
+  double min = 4;
+  double max = 5;
+  int32 sample_count = 6;
+}
+
+message GetCoverageRequest {
+  string survey_id = 1;
+  // Dead-zone threshold in dBm. Defaults to -75.
+  int32 threshold_dbm = 2;
+}
+
+message GetCoverageResponse {
+  double coverage_score = 1;
+  int32 dead_zone_count = 2;
+  repeated string recommendations = 3;
+}
+
+message GenerateReportRequest {
+  string survey_id = 1;
+}
+
+message GenerateReportResponse {
+  bytes pdf = 1;
+}
