@@ -3,6 +3,8 @@
 /core/bin/
 /ui/node_modules/
 /ui/dist/
+/ui/*.tsbuildinfo
+/ui/.env
 *.o
 *.a
 *.so

@@ -1,7 +1,10 @@
-.PHONY: generate build lint vet test fmt-check
+.PHONY: generate generate-ts build lint vet test fmt-check
 
 generate:
 	buf generate
+
+generate-ts:
+	buf generate --template buf.gen.ui.yaml
 
 build:
 	go build ./...
