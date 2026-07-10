@@ -218,12 +218,11 @@ func toSurveySummary(svy *survey.Survey) *surveyv1.SurveySummary {
 	}
 }
 
-// notFoundOrInternal maps the manager's untyped "not found" errors onto
-// connect.CodeNotFound; anything else surfaces as CodeInternal. core/survey
-// does not export a sentinel not-found error, so this matches on the message
-// the manager consistently uses.
+// notFoundOrInternal maps the manager's not-found errors onto
+// connect.CodeNotFound via the exported survey sentinels; anything else
+// surfaces as CodeInternal.
 func notFoundOrInternal(err error) error {
-	if strings.Contains(err.Error(), "not found") {
+	if errors.Is(err, survey.ErrSurveyNotFound) || errors.Is(err, survey.ErrFloorNotFound) {
 		return connect.NewError(connect.CodeNotFound, err)
 	}
 	return connect.NewError(connect.CodeInternal, err)
