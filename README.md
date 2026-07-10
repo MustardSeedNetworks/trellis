@@ -7,8 +7,11 @@ calibration. A modern, cross-platform successor to AirMagnet Survey/Planner (EOL
 open alternative to Ekahau / Hamina / iBwave. **All MSN Wi-Fi lives here — Seed exits
 Wi-Fi** (decided 2026-06-20).
 
-> Status: **design phase — docs first, no code yet.** This repo currently holds the
-> product/architecture plan. Code starts only when the plan in `docs/` is settled.
+> Status: **build started (2026-07-10).** The Go core module is bootstrapped
+> (`core/`), beginning with the shared Wi-Fi scan model (`core/wifi`). Next: lift
+> Seed's proven measured-survey engine into `core/survey` (per `docs/09-SEED-MIGRATION.md`),
+> then the protobuf API, UI, and the net-new predictive RF engine. The
+> product/architecture plan lives in `docs/`.
 
 ## Why "Trellis"
 A trellis is a structure you **deliberately design before growth** — the right
