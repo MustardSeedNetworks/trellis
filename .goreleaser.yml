@@ -1,0 +1,150 @@
+# =============================================================================
+# goreleaser config for Trellis
+# =============================================================================
+# Canonical packaging config. .github/workflows/release.yml drives this on
+# tag push (or workflow_dispatch dry-run).
+#
+# Shape mirrors seed/stem/niac's .goreleaser.yml so all four projects share
+# the same release tooling, trimmed to what Trellis actually has today:
+#
+# Covers natively:
+#   - Multi-arch builds (linux/windows amd64+arm64; darwin arm64 only)
+#   - Archives (.tar.gz, .zip)
+#   - ldflags injection (Version, Commit, BuildTime, UIBuildHash) into
+#     internal/version — the canonical contract shared with seed/stem/niac
+#   - cosign keyless signing of every artifact
+#   - syft SBOM per archive
+#   - SHA-256 checksums
+#
+# Deliberately NOT covered (unlike stem/seed/niac):
+#   - .deb/.rpm packages via nfpm — trellisd has no deploy/ directory: no
+#     systemd unit, no packaged config, no pre/postinstall scripts. Trellis
+#     is a loopback-only, no-auth, no-TLS daemon (see cmd/trellisd/main.go);
+#     inventing a systemd service and package metadata for it would be
+#     infrastructure the product doesn't have yet. Archives are the
+#     published artifact until that changes.
+#   - Native C dataplane — Trellis has no C dataplane; it's pure Go.
+#
+# Handled outside goreleaser:
+#   - UI frontend build — runs in the build-ui job inside release.yml;
+#     Vite writes directly to internal/api/ui/ which Go embeds. The
+#     `before:` hook below just verifies the dist landed.
+# =============================================================================
+
+version: 2
+
+project_name: trellis
+
+before:
+  hooks:
+    - go mod download
+    - bash -c 'test -f internal/api/ui/index.html || (echo "internal/api/ui/index.html missing — UI build step failed or artifact missing"; exit 1)'
+
+builds:
+  - id: trellis-linux-amd64
+    main: ./cmd/trellisd
+    binary: trellisd
+    env:
+      - CGO_ENABLED=0
+    goos: [linux]
+    goarch: [amd64]
+    flags:
+      - -trimpath
+      - -buildvcs=false
+    ldflags: &ldflags
+      - -s -w
+      - -X github.com/MustardSeedNetworks/trellis/internal/version.Version={{.Version}}
+      - -X github.com/MustardSeedNetworks/trellis/internal/version.Commit={{.Commit}}
+      - -X github.com/MustardSeedNetworks/trellis/internal/version.BuildTime={{.Date}}
+      - -X github.com/MustardSeedNetworks/trellis/internal/version.UIBuildHash={{.Env.UI_BUILD_HASH}}
+
+  - id: trellis-linux-arm64
+    main: ./cmd/trellisd
+    binary: trellisd
+    env:
+      - CGO_ENABLED=0
+    goos: [linux]
+    goarch: [arm64]
+    flags:
+      - -trimpath
+      - -buildvcs=false
+    ldflags: *ldflags
+
+  - id: trellis-darwin
+    main: ./cmd/trellisd
+    binary: trellisd
+    env:
+      - CGO_ENABLED=0
+    goos: [darwin]
+    # Intel macOS (amd64) support dropped fleet-wide 2026-06-08 — Apple Silicon only.
+    goarch: [arm64]
+    flags:
+      - -trimpath
+      - -buildvcs=false
+    ldflags: *ldflags
+
+  - id: trellis-windows
+    main: ./cmd/trellisd
+    binary: trellisd
+    env:
+      - CGO_ENABLED=0
+    goos: [windows]
+    goarch: [amd64, arm64]
+    flags:
+      - -trimpath
+      - -buildvcs=false
+    ldflags: *ldflags
+
+archives:
+  - id: linux-archive
+    ids: [trellis-linux-amd64, trellis-linux-arm64]
+    name_template: "trellis-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    formats: [tar.gz]
+
+  - id: darwin-archive
+    ids: [trellis-darwin]
+    name_template: "trellis-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    formats: [tar.gz]
+
+  - id: windows-archive
+    ids: [trellis-windows]
+    name_template: "trellis-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    formats: [zip]
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+sboms:
+  - id: archives-sbom
+    artifacts: archive
+    documents:
+      - "{{ .ArtifactName }}.sbom.json"
+
+signs:
+  # Sign all release artifacts via cosign keyless OIDC. Mirrors seed/stem/niac's
+  # signing block.
+  - cmd: cosign
+    signature: "${artifact}.cosign.bundle"
+    args:
+      - sign-blob
+      - "--yes"
+      - "--bundle"
+      - "${artifact}.cosign.bundle"
+      - "${artifact}"
+    artifacts: all
+    output: true
+
+release:
+  github:
+    owner: MustardSeedNetworks
+    name: trellis
+  replace_existing_artifacts: true
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    Trellis {{ .Tag }} — Wi-Fi Survey & Planning by Mustard Seed Networks.
+
+snapshot:
+  version_template: "0.0.0-dryrun-{{ .ShortCommit }}"

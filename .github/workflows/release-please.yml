@@ -1,0 +1,105 @@
+# =============================================================================
+# Release Please - Automated Version Management
+# =============================================================================
+# Creates release PRs with changelogs when commits land on main.
+# When a release PR is merged, creates a GitHub release which triggers
+# release.yml for building packages (via version tag).
+#
+# Trigger pattern (shared with seed, stem, niac):
+#   - workflow_run on CI completion: real trigger; gated on success
+#   - workflow_dispatch: manual debug / force trigger
+#
+# Versioning behaviour is driven by .github/release-please-config.json
+# and .github/.release-please-manifest.json so that release-please knows
+# the current version and applies the same changelog grouping across
+# all four projects.
+# =============================================================================
+
+name: Release Please
+
+on:
+  # zizmor: ignore[dangerous-triggers]
+  # workflow_run is the required trigger here: release-please must run after
+  # CI succeeds on main, with write access, which pull_request cannot give.
+  # The usual workflow_run hazard is checking out the triggering run's
+  # untrusted head — this workflow performs no checkout at all, and is gated
+  # on branches:[main] + conclusion == 'success'.
+  workflow_run:
+    workflows: ["CI"]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  release-please:
+    # Only run if CI workflow succeeded (or this is a manual dispatch).
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    name: Release Please
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Mint GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          # Scope the installation token to what release-please actually needs:
+          # write the changelog/tag/release (contents) and open, update and
+          # label the release PR (pull-requests). Without these the token
+          # inherits every permission the msn-ci-bot installation holds.
+          #
+          # Do NOT re-add permission-issues here. The msn-ci-bot installation
+          # does not grant Issues, and create-github-app-token hard-fails when
+          # asked for a permission the installation lacks — that broke every
+          # release across the fleet. Labels on a pull request are covered by
+          # pull-requests: write; the Issues scope is only needed for labelling
+          # real issues, which release-please never does.
+          permission-contents: write
+          permission-pull-requests: write
+      - name: Run Release Please
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          # Short-lived GitHub App installation token (msn-ci-bot), minted
+          # per-run. Unlike GITHUB_TOKEN, an App-authored tag/PR triggers
+          # downstream workflows (release PR CI, release.yml's v* tag build).
+          # App tokens sidestep the org's fine-grained-PAT >366-day rule that
+          # rejected RELEASE_PLEASE_TOKEN. Fleet-standard (seed/stem/niac/trellis).
+          token: ${{ steps.app-token.outputs.token }}
+          # The release type is declared per-package in the manifest config.
+          # Passing it here switches the action to simple mode and bypasses
+          # extra-files and the tracked manifest version.
+          config-file: .github/release-please-config.json
+          manifest-file: .github/.release-please-manifest.json
+
+      - name: Output release info
+        if: steps.release.outputs.release_created
+        env:
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          echo "Release created: ${TAG_NAME}"
+          echo "Version: ${VERSION}"
+
+  trigger-release:
+    name: Trigger Release Build
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Trigger release workflow
+        env:
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+        run: |
+          echo "Release ${TAG_NAME} created"
+          echo "The release.yml workflow will be triggered by the new tag"

@@ -76,6 +76,13 @@ func run() error {
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
+	mux.HandleFunc("/__version", api.HandleBuildVersion)
+
+	uiHandler, err := api.UIHandler()
+	if err != nil {
+		return err
+	}
+	mux.Handle("/", uiHandler)
 
 	// Serve HTTP/2 over plain-text (h2c) so local/dev clients can speak
 	// gRPC or Connect without TLS, alongside HTTP/1.1 for connect-web/JSON.

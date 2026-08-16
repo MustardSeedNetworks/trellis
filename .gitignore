@@ -5,6 +5,12 @@
 /ui/dist/
 /ui/*.tsbuildinfo
 /ui/.env
+
+# Frontend build output (Vite builds directly to internal/api/ui/, embedded
+# via go:embed — see internal/api/embed_ui.go and the Universal Build
+# Contract in CLAUDE.md).
+internal/api/ui/*
+!internal/api/ui/.gitkeep
 *.o
 *.a
 *.so

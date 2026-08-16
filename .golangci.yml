@@ -5,7 +5,9 @@ run:
 
 linters:
   default: standard
-
-issues:
-  exclude-dirs:
-    - gen
+  exclusions:
+    # gen/ is buf-generated protobuf code — not ours to lint.
+    # This lives under linters.exclusions in schema v2; the v1 spelling was
+    # issues.exclude-dirs, which `golangci-lint config verify` rejects.
+    paths:
+      - gen
