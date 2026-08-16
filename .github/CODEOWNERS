@@ -1,0 +1,18 @@
+# =============================================================================
+# Code Owners - Trellis
+# =============================================================================
+# Default owner for all files
+* @krisarmstrong
+
+# =============================================================================
+# CRITICAL FILES - Require explicit approval
+# =============================================================================
+# CI, release and supply-chain configuration. A change here can weaken a gate
+# without touching product code, which is exactly how gaps have gone unnoticed
+# across this fleet.
+/.github/                 @krisarmstrong
+/.goreleaser.yml          @krisarmstrong
+/scripts/                 @krisarmstrong
+
+# Licensing and legal text.
+/LICENSE                  @krisarmstrong

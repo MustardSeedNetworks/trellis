@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Required for the merge queue: `CI Complete` is a required status check, so
+  # it must report on merge_group events too. Without this the queue accepts a
+  # PR and then waits forever for a check that never fires.
+  merge_group:
   workflow_dispatch:
 
 concurrency:
@@ -112,8 +116,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup-go
       - name: Run govulncheck
+        # Pinned, not @latest. govulncheck is a hard gate per fleet policy, and
+        # an unpinned gate can change behaviour with no code change — either a
+        # spurious break or a silent loss of coverage. Renovate tracks this pin
+        # via the customManager in MustardSeedNetworks/.github.
         run: |
-          go install golang.org/x/vuln/cmd/govulncheck@latest
+          go install golang.org/x/vuln/cmd/govulncheck@v1.7.0
           govulncheck ./...
 
   frontend:
@@ -145,3 +153,37 @@ jobs:
     uses: MustardSeedNetworks/.github/.github/workflows/semgrep.yml@762b756e6fb5803443b9bcfdba03b88596c18e04 # v1.0.0
     permissions:
       contents: read
+
+  # ============================================================================
+  # CI Complete — the single required status check
+  # ============================================================================
+  # Matches seed, stem and niac-go. Branch protection requires this one context
+  # instead of naming every job, so adding a job does not mean remembering to
+  # update protection — the aggregator picks it up via `needs:`.
+  #
+  # `if: always()` so it still runs when an upstream job fails; the step below
+  # decides pass/fail. Skipped counts as success: path-filtered jobs legitimately
+  # do not run.
+  ci-complete:
+    name: CI Complete
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs:
+      - backend
+      - quality
+      - govulncheck
+      - frontend
+      - semgrep
+    if: always()
+    steps:
+      - name: Verify upstream results
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          echo "Upstream job results:"
+          echo "$RESULTS" | jq '.'
+          if ! echo "$RESULTS" | jq -e 'to_entries | map(.value.result) | all(. == "success" or . == "skipped")' >/dev/null; then
+            echo "::error::One or more required CI jobs failed or were cancelled."
+            exit 1
+          fi
+          echo "All required CI jobs passed (or were intentionally skipped)."

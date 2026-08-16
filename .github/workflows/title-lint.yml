@@ -9,6 +9,8 @@ on:
   # never needs one. (zizmor dangerous-triggers)
   pull_request:
     types: [opened, edited, synchronize, reopened, ready_for_review]
+  # Required for the merge queue — see ci.yml.
+  merge_group:
 
 permissions: {}
 
@@ -16,11 +18,12 @@ jobs:
   lint-pr-title:
     name: Lint PR Title
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
     permissions:
       pull-requests: read
     steps:
       - name: Validate PR title
+        if: github.event_name == 'pull_request'
         uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
