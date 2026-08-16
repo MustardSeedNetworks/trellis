@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.2...v0.1.3) (2026-08-16)
+
+
+### Continuous Integration
+
+* match the fleet's CI shape ([#41](https://github.com/MustardSeedNetworks/trellis/issues/41)) ([d87415d](https://github.com/MustardSeedNetworks/trellis/commit/d87415dee35b97ccdf92190931a3544f388747ff))
+
 ## [0.1.2](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.1...v0.1.2) (2026-08-16)
 
 
