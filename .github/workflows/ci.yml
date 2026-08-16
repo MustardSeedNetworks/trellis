@@ -55,6 +55,55 @@ jobs:
         # version is nailed down.
         run: go run github.com/bufbuild/buf/cmd/buf@v1.72.0 lint
 
+  quality:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Enforce customer-facing vocabulary policy
+        run: python3 scripts/check-banned-vocabulary.py
+
+      - name: File-size gate (baseline-ratchet)
+        run: ./scripts/check-file-size.sh
+
+      - name: Check for sensitive files
+        run: |
+          SENSITIVE_FILES=$(find . -type f \( \
+            -name "*.env" -o \
+            -name "*.pem" -o \
+            -name "*.key" -o \
+            -name "*secret*" -o \
+            -name "*credential*" \
+          \) ! -path "./.git/*" ! -name "*.example" ! -name "*.sample" 2>/dev/null || true)
+          if [ -n "$SENSITIVE_FILES" ]; then
+            echo "Sensitive files found:"
+            echo "$SENSITIVE_FILES"
+            exit 1
+          fi
+          echo "No sensitive files found"
+
+      - name: Check for unsafe logging patterns
+        run: |
+          DANGEROUS_PATTERNS=(
+            'log\.Print.*password'
+            'log\.Print.*token'
+            'log\.Print.*Authorization'
+            'log\.Print.*apikey'
+          )
+          found=0
+          for pattern in "${DANGEROUS_PATTERNS[@]}"; do
+            if grep -rniE "$pattern" --include="*.go" internal/ cmd/ core/ 2>/dev/null; then
+              found=1
+            fi
+          done
+          if [ "$found" -eq 1 ]; then
+            echo "::error::Potentially unsafe logging of credentials"
+            exit 1
+          fi
+          echo "No unsafe logging patterns found"
+
   govulncheck:
     name: govulncheck
     runs-on: ubuntu-latest

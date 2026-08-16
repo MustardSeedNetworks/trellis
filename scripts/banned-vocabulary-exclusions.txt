@@ -1,0 +1,26 @@
+# Exact, reviewable exceptions for text that is not current product copy.
+# Format: git path pattern | why the immutable or developer-only text is exempt
+#
+# Deliberately minimal. This file is NOT a copy of another repo's exclusions —
+# stem's version exempts MEF 23.1 Class-of-Service identifiers and dated audit
+# snapshots that do not exist here. Add an entry only when a real violation is
+# found AND the text is genuinely immutable or developer-only.
+
+# Immutable history and legal source text.
+CHANGELOG.md | release-please generated immutable release history
+LICENSE | unmodified BUSL-1.1 legal source text
+
+# Generated lockfile: the hits are third-party package names (magic-string et al),
+# not product copy, and the file is rewritten by npm.
+ui/package-lock.json | generated lockfile; hits are upstream package names
+
+# Developer-facing comments that cite CLAUDE.md by name. CLAUDE.md is dev
+# tooling and explicitly exempt from the vocabulary rule; these are code
+# comments, never customer-facing copy.
+.gitignore | comment cites CLAUDE.md, developer tooling
+ui/vite.config.ts | comment cites CLAUDE.md for the Universal Build Contract
+
+# Competitor comparison table. "premium" describes AirMagnet's cost model, not
+# an MSN tier — the locked tier matrix has no Premium tier and this does not
+# claim one.
+docs/00-VISION.md | competitor cost-model comparison, not an MSN tier
