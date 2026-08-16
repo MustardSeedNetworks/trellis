@@ -1,0 +1,40 @@
+# PR Labeler Configuration
+# Mustard Seed Networks - Trellis
+
+go:
+  - changed-files:
+      - any-glob-to-any-file: '**/*.go'
+
+frontend:
+  - changed-files:
+      - any-glob-to-any-file: 'ui/**'
+
+proto:
+  - changed-files:
+      - any-glob-to-any-file: 'proto/**'
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - 'docs/**'
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**'
+          - 'Makefile'
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*_test.go'
+          - 'tests/**'
+
+config:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '*.json'
+          - '*.yaml'
+          - '*.yml'
+          - '*.toml'

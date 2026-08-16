@@ -1,0 +1,25 @@
+name: License Compliance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run weekly on Mondays at 9am UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # The gate is defined once in the fleet-shared repo; this repo only wires it.
+  # To change license policy for the fleet, edit that workflow, not this file.
+  # foundation + modernc.org/mathutil are already ignored there fleet-wide.
+  license-check:
+    uses: MustardSeedNetworks/.github/.github/workflows/license-check.yml@762b756e6fb5803443b9bcfdba03b88596c18e04 # v1.0.0
