@@ -1,11 +1,58 @@
 version: "2"
 
+issues:
+  # 0 = report everything. The default is 50 per linter, which silently hides
+  # findings past that point — seed reported 50 when the real count was 71.
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
 run:
   timeout: 5m
 
 linters:
   default: standard
+  enable:
+    # Security and correctness only. seed/stem/niac run 78 linters via the
+    # maratori community config; copying that here was tested and rejected —
+    # it drags in seed's depguard architecture rules for internal/wifi and
+    # internal/api, and path exclusions for files that do not exist here.
+    # Dead rules that look like coverage are worse than no rules.
+    #
+    # These are the ones whose absence is a real gap on a customer-facing
+    # product, not a style preference. The style/complexity bulk waits until
+    # Trellis has the surface area to justify it.
+    - gosec # security scanner; Trellis had NO Go security linting at all
+    - bodyclose # unclosed HTTP response bodies — resource leak
+    - errorlint # broken errors.Is/As and %w wrapping
+    - noctx # HTTP requests without context — no cancellation or timeout
+    - nilerr # returns nil after checking err != nil
+    - rowserrcheck # unchecked sql.Rows.Err
+    - sqlclosecheck # unclosed sql.Rows / sql.Stmt
   exclusions:
+    # Same presets seed uses. common-false-positives drops gosec's FP-prone
+    # heuristics (G115 integer-conversion, G304 file-from-variable) from the
+    # blocking gate. Trellis's 8 G115 hits are int32(result.Width) on protobuf
+    # fields and its G304 is a survey-store path built from a validated ID —
+    # exactly the shapes seed already classified as advisory. High-signal rules
+    # (weak crypto G401/G501, literal secrets G101) still fail the build.
+    presets:
+      - std-error-handling
+      - common-false-positives
+    rules:
+      # int32(result.Width/Height/SampleCount) when filling protobuf response
+      # fields, which are int32 by schema. The sources are image dimensions and
+      # a sample count from a bounded heatmap render — an int large enough to
+      # overflow int32 here would already have exhausted memory upstream.
+      # Narrowly scoped to this rule and file so a genuine conversion bug
+      # elsewhere still fails the build.
+      - text: 'G115: integer overflow conversion int -> int32'
+        path: 'internal/api/survey_service.*\.go'
+        linters: [ gosec ]
+      # os.ReadFile over a path from filepath.Glob with a pattern this package
+      # controls — not user input. The call site documents the same.
+      - text: 'G304: Potential file inclusion via variable'
+        path: 'core/survey/store\.go'
+        linters: [ gosec ]
     # gen/ is buf-generated protobuf code — not ours to lint.
     # This lives under linters.exclusions in schema v2; the v1 spelling was
     # issues.exclude-dirs, which `golangci-lint config verify` rejects.
