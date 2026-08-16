@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.2](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.1...v0.1.2) (2026-08-16)
+
+
+### Continuous Integration
+
+* adopt the fleet governance gates ([#38](https://github.com/MustardSeedNetworks/trellis/issues/38)) ([d4315b3](https://github.com/MustardSeedNetworks/trellis/commit/d4315b32524f4359305d81b706a1e7c0561f7e2e))
+
+
+### Miscellaneous
+
+* **release:** drop the no-op trigger-release job ([#35](https://github.com/MustardSeedNetworks/trellis/issues/35)) ([1dcf687](https://github.com/MustardSeedNetworks/trellis/commit/1dcf687a2c8548fcb7dc10c0577b32916c63f527))
+
 ## [0.1.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.0...v0.1.1) (2026-08-16)
 
 
