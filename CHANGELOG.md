@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.3...v0.1.4) (2026-08-16)
+
+
+### Continuous Integration
+
+* add security linting to Trellis ([#44](https://github.com/MustardSeedNetworks/trellis/issues/44)) ([997f70e](https://github.com/MustardSeedNetworks/trellis/commit/997f70e5b9d5dbdf717ebf28354118730f6aa4f0))
+
 ## [0.1.3](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.2...v0.1.3) (2026-08-16)
 
 
