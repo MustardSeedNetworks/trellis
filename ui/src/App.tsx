@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
 import { Route, Routes } from 'react-router';
-import { SurveysPage } from '@/pages/SurveysPage';
+import { type PageConfig, pages } from '@/pageRegistry';
+import { PageHeader } from '@/ui/PageHeader';
 import { Sidebar } from '@/ui/Sidebar';
 
 /**
@@ -18,11 +20,43 @@ export function App() {
       <Sidebar version={__APP_VERSION__} />
       <main className="flex flex-1 flex-col overflow-hidden">
         <Routes>
-          <Route path="/" element={<SurveysPage />} />
+          {pages.map((page) => (
+            <Route
+              key={page.path}
+              path={page.path}
+              element={
+                <PageWithHeader page={page}>
+                  <page.component />
+                </PageWithHeader>
+              }
+            />
+          ))}
           <Route path="*" element={<NotBuiltYet />} />
         </Routes>
       </main>
     </div>
+  );
+}
+
+/**
+ * PageWithHeader renders the header strip every routed page shares, from
+ * the registry entry rather than from the page body. The strip is its own
+ * band above the scrolling content, which is why trellis wraps the header
+ * rather than stacking it with the page like the siblings do.
+ */
+function PageWithHeader({ page, children }: { page: PageConfig; children: ReactNode }) {
+  return (
+    <>
+      <div className="border-b border-hairline px-6 pt-6">
+        <PageHeader
+          icon={page.icon}
+          eyebrow={page.eyebrow}
+          title={page.title}
+          description={page.description}
+        />
+      </div>
+      {children}
+    </>
   );
 }
 

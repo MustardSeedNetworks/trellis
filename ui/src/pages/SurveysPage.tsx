@@ -4,7 +4,6 @@ import { ImportSurvey } from '@/components/ImportSurvey';
 import { SurveyDetail } from '@/components/SurveyDetail';
 import { SurveyList } from '@/components/SurveyList';
 import { surveyClient } from '@/lib/client';
-import { PageHeader } from '@/ui/PageHeader';
 import { type RollupState, StatusRollup } from '@/ui/StatusRollup';
 
 /**
@@ -48,42 +47,32 @@ export function SurveysPage() {
       : undefined;
 
   return (
-    <>
-      <div className="border-b border-hairline px-6 pt-6">
-        <PageHeader
-          eyebrow="Capture"
-          title="Surveys"
-          secondary={surveysQuery.isSuccess ? `${surveys.length} captured` : undefined}
-        />
+    <div className="flex flex-1 flex-col gap-6 overflow-hidden p-6">
+      <StatusRollup
+        state={state}
+        headline={headline}
+        body={body}
+        figures={[{ label: 'Surveys', value: String(surveys.length) }]}
+      />
+
+      <div className="flex flex-1 gap-6 overflow-hidden">
+        <aside className="panel flex w-72 shrink-0 flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto">
+            {surveysQuery.isSuccess ? (
+              <SurveyList surveys={surveys} selectedId={selectedId} onSelect={setSelectedId} />
+            ) : null}
+          </div>
+          <ImportSurvey />
+        </aside>
+
+        {selectedId ? (
+          <SurveyDetail surveyId={selectedId} surveyName={selectedSurvey?.name ?? 'survey'} />
+        ) : (
+          <div className="panel flex flex-1 items-center justify-center text-sm text-text-muted">
+            Select a survey to view its heatmap and coverage
+          </div>
+        )}
       </div>
-
-      <div className="flex flex-1 flex-col gap-6 overflow-hidden p-6">
-        <StatusRollup
-          state={state}
-          headline={headline}
-          body={body}
-          figures={[{ label: 'Surveys', value: String(surveys.length) }]}
-        />
-
-        <div className="flex flex-1 gap-6 overflow-hidden">
-          <aside className="panel flex w-72 shrink-0 flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto">
-              {surveysQuery.isSuccess ? (
-                <SurveyList surveys={surveys} selectedId={selectedId} onSelect={setSelectedId} />
-              ) : null}
-            </div>
-            <ImportSurvey />
-          </aside>
-
-          {selectedId ? (
-            <SurveyDetail surveyId={selectedId} surveyName={selectedSurvey?.name ?? 'survey'} />
-          ) : (
-            <div className="panel flex flex-1 items-center justify-center text-sm text-text-muted">
-              Select a survey to view its heatmap and coverage
-            </div>
-          )}
-        </div>
-      </div>
-    </>
+    </div>
   );
 }
