@@ -45,7 +45,9 @@ export function SurveyDetail({ surveyId, surveyName }: SurveyDetailProps) {
             type="button"
             onClick={() => setMetric(m)}
             className={`rounded px-2 py-1 text-xs uppercase ${
-              metric === m ? 'bg-brand-primary text-on-brand' : 'bg-surface-sunken text-text-secondary'
+              metric === m
+                ? 'bg-brand-primary text-on-brand'
+                : 'bg-surface-sunken text-text-secondary'
             }`}
           >
             {m}
