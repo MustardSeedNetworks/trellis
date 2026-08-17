@@ -1,1 +1,58 @@
 @import "tailwindcss";
+@import "./theme/msn-shared.css";
+@import "./theme/product-trellis.css";
+
+/* Trellis had no theme layer at all: index.css was a single Tailwind import, so
+ * the family tokens would have been defined and then unusable. These mappings
+ * turn them into utilities (bg-surface-base, text-status-error, font-mono),
+ * using the same names the other three products expose, so a component copied
+ * from stem compiles here unchanged.
+ *
+ * Manrope carries display and body; JetBrains Mono carries figures. Both are
+ * vendored through @fontsource-variable, so nothing is fetched at runtime. */
+@theme {
+  --font-family-display: "Manrope Variable", "Manrope", system-ui, sans-serif;
+  --font-family-body: "Manrope Variable", "Manrope", system-ui, sans-serif;
+  --font-family-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-brand-primary: var(--color-brand-primary);
+  --color-brand-accent: var(--color-brand-accent);
+  --color-brand-gold: var(--color-brand-gold);
+
+  --color-surface-base: var(--color-surface-base);
+  --color-surface-raised: var(--color-surface-raised);
+  --color-surface-border: var(--color-surface-border);
+  --color-surface-hover: var(--color-surface-hover);
+  --color-surface-sunken: var(--color-surface-sunken);
+  --color-surface-deep: var(--color-surface-deep);
+
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-inverse: var(--color-text-inverse);
+  --color-text-disabled: var(--color-text-disabled);
+
+  --color-status-success: var(--color-status-success);
+  --color-status-warning: var(--color-status-warning);
+  --color-status-error: var(--color-status-error);
+  --color-status-info: var(--color-status-info);
+
+  --color-on-brand: var(--color-on-brand);
+  --color-on-danger: var(--color-on-danger);
+  --color-on-success: var(--color-on-success);
+
+  --color-scrim: var(--color-scrim);
+  --color-knob: var(--color-knob);
+}
+
+@source "../index.html";
+@source "./**/*.{js,ts,jsx,tsx}";
+
+/* Family tokens promoted to Tailwind utilities (bg-hairline, border-hairline,
+ * from-rail-from). Added by the MSN family rollout; see ui/src/theme/. */
+@theme {
+  --color-hairline: var(--color-hairline);
+  --color-hairline-strong: var(--color-hairline-strong);
+  --color-rail-from: var(--color-rail-from);
+  --color-rail-to: var(--color-rail-to);
+}
