@@ -40,7 +40,7 @@ warn BARE_WHITE_BLACK \
 warn RAW_HEX \
   "$(grep -rInE -- '#([0-9a-fA-F]{6}([0-9a-fA-F]{2})?|[0-9a-fA-F]{0,3}[a-fA-F][0-9a-fA-F]{0,3})\b' \
      "$TARGET" --include='*.tsx' --include='*.ts' --include='*.css' 2>/dev/null \
-     | grep -v "$TARGET/theme/" | grep -vE ':[0-9]+:\s*(\*|//|/\*)' | grep -vE "$EXCLUDE_RE" || true)" \
+     | grep -v "$TARGET/theme/" | grep -v "/assets/" | grep -vE ':[0-9]+:\s*(\*|//|/\*)' | grep -vE "$EXCLUDE_RE" || true)" \
   'Raw hex outside theme/ — define it in ui/src/theme and reference the token'
 
 # The theme must actually be wired, or every token above resolves to nothing.

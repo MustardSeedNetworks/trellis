@@ -17,20 +17,20 @@ export function App() {
   const selectedSurvey = surveys.find((s) => s.id === selectedId);
 
   return (
-    <div className="flex h-screen flex-col bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white px-6 py-4">
+    <div className="flex h-screen flex-col bg-surface-base text-text-primary">
+      <header className="border-b border-hairline bg-surface-raised px-6 py-4">
         <h1 className="text-lg font-semibold">Trellis</h1>
-        <p className="text-xs text-slate-500">Wi-Fi survey heatmaps and coverage analysis</p>
+        <p className="text-xs text-text-muted">Wi-Fi survey heatmaps and coverage analysis</p>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="flex w-72 flex-col border-r border-slate-200 bg-white">
+        <aside className="flex w-72 flex-col border-r border-hairline bg-surface-raised">
           <div className="flex-1 overflow-y-auto">
             {surveysQuery.isLoading && (
-              <p className="p-4 text-sm text-slate-500">Loading surveys…</p>
+              <p className="p-4 text-sm text-text-muted">Loading surveys…</p>
             )}
             {surveysQuery.isError && (
-              <p className="p-4 text-sm text-red-600">
+              <p className="p-4 text-sm text-status-error">
                 Failed to load surveys: {String(surveysQuery.error)}
               </p>
             )}
@@ -44,7 +44,7 @@ export function App() {
         {selectedId ? (
           <SurveyDetail surveyId={selectedId} surveyName={selectedSurvey?.name ?? 'survey'} />
         ) : (
-          <div className="flex flex-1 items-center justify-center text-sm text-slate-500">
+          <div className="flex flex-1 items-center justify-center text-sm text-text-muted">
             Select a survey to view its heatmap and coverage
           </div>
         )}

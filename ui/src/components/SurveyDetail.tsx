@@ -38,14 +38,14 @@ export function SurveyDetail({ surveyId, surveyName }: SurveyDetailProps) {
   return (
     <div className="flex-1 overflow-y-auto p-6">
       <div className="mb-4 flex items-center gap-2">
-        <span className="text-sm font-medium text-slate-700">Metric:</span>
+        <span className="text-sm font-medium text-text-secondary">Metric:</span>
         {(['rssi', 'snr'] as const).map((m) => (
           <button
             key={m}
             type="button"
             onClick={() => setMetric(m)}
             className={`rounded px-2 py-1 text-xs uppercase ${
-              metric === m ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-700'
+              metric === m ? 'bg-brand-primary text-on-brand' : 'bg-surface-sunken text-text-secondary'
             }`}
           >
             {m}
@@ -55,22 +55,22 @@ export function SurveyDetail({ surveyId, surveyName }: SurveyDetailProps) {
           type="button"
           onClick={() => reportMutation.mutate()}
           disabled={reportMutation.isPending}
-          className="ml-auto rounded bg-slate-900 px-3 py-1 text-xs text-white disabled:opacity-50"
+          className="ml-auto rounded bg-brand-primary px-3 py-1 text-xs text-on-brand disabled:opacity-50"
         >
           {reportMutation.isPending ? 'Generating…' : 'Download PDF report'}
         </button>
       </div>
       {reportMutation.isError && (
-        <p className="mb-4 text-sm text-red-600">
+        <p className="mb-4 text-sm text-status-error">
           Failed to generate report: {String(reportMutation.error)}
         </p>
       )}
 
       <section className="mb-6">
-        <h2 className="mb-2 text-sm font-semibold text-slate-700">Heatmap</h2>
-        {heatmapQuery.isLoading && <p className="text-sm text-slate-500">Loading heatmap…</p>}
+        <h2 className="mb-2 text-sm font-semibold text-text-secondary">Heatmap</h2>
+        {heatmapQuery.isLoading && <p className="text-sm text-text-muted">Loading heatmap…</p>}
         {heatmapQuery.isError && (
-          <p className="text-sm text-red-600">
+          <p className="text-sm text-status-error">
             Failed to load heatmap: {String(heatmapQuery.error)}
           </p>
         )}
@@ -81,9 +81,9 @@ export function SurveyDetail({ surveyId, surveyName }: SurveyDetailProps) {
               alt={`${metric.toUpperCase()} heatmap`}
               width={heatmapQuery.data.width}
               height={heatmapQuery.data.height}
-              className="max-w-full rounded border border-slate-200"
+              className="max-w-full rounded border border-hairline"
             />
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-text-muted">
               {heatmapQuery.data.sampleCount} samples · range {heatmapQuery.data.min.toFixed(1)} to{' '}
               {heatmapQuery.data.max.toFixed(1)}
             </p>
@@ -92,21 +92,21 @@ export function SurveyDetail({ surveyId, surveyName }: SurveyDetailProps) {
       </section>
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-slate-700">Coverage</h2>
-        {coverageQuery.isLoading && <p className="text-sm text-slate-500">Loading coverage…</p>}
+        <h2 className="mb-2 text-sm font-semibold text-text-secondary">Coverage</h2>
+        {coverageQuery.isLoading && <p className="text-sm text-text-muted">Loading coverage…</p>}
         {coverageQuery.isError && (
-          <p className="text-sm text-red-600">
+          <p className="text-sm text-status-error">
             Failed to load coverage: {String(coverageQuery.error)}
           </p>
         )}
         {coverageQuery.data && (
           <div className="space-y-2">
-            <div className="flex gap-6 text-sm text-slate-700">
+            <div className="flex gap-6 text-sm text-text-secondary">
               <span>Coverage score: {formatCoverageScore(coverageQuery.data.coverageScore)}</span>
               <span>Dead zones: {coverageQuery.data.deadZoneCount}</span>
             </div>
             {coverageQuery.data.recommendations.length > 0 && (
-              <ul className="list-inside list-disc text-sm text-slate-600">
+              <ul className="list-inside list-disc text-sm text-text-secondary">
                 {coverageQuery.data.recommendations.map((recommendation) => (
                   <li key={recommendation}>{recommendation}</li>
                 ))}
