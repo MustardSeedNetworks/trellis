@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.5](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.4...v0.1.5) (2026-08-17)
+
+
+### Continuous Integration
+
+* pin staticcheck via go.mod tool directive ([#48](https://github.com/MustardSeedNetworks/trellis/issues/48)) ([9553576](https://github.com/MustardSeedNetworks/trellis/commit/9553576b1bbb050a316f24631a31b72cffb52ecc))
+* pin the last unpinned tool installs ([#46](https://github.com/MustardSeedNetworks/trellis/issues/46)) ([0dfd037](https://github.com/MustardSeedNetworks/trellis/commit/0dfd0372054a5aa2794de03f4d99de4eeacba2e2))
+
 ## [0.1.4](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.3...v0.1.4) (2026-08-16)
 
 
