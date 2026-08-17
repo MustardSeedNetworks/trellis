@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.5...v0.1.6) (2026-08-17)
+
+
+### Continuous Integration
+
+* make CI conformance a blocking gate ([#50](https://github.com/MustardSeedNetworks/trellis/issues/50)) ([895f1bb](https://github.com/MustardSeedNetworks/trellis/commit/895f1bba95816a2e0d85d34ca3e4e399b303af79))
+
 ## [0.1.5](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.4...v0.1.5) (2026-08-17)
 
 
