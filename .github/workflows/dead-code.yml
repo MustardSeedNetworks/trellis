@@ -37,13 +37,15 @@ jobs:
 
       - name: Run staticcheck for unused code
         run: |
-          go install honnef.co/go/tools/cmd/staticcheck@v0.7.0
-
           echo "### Go Dead Code Analysis" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
 
           # Run staticcheck and capture unused code warnings
-          staticcheck -checks="U*" ./... 2>&1 | tee staticcheck-unused.txt || true
+          # `go tool` runs the version pinned by the go.mod tool directive,
+          # matching seed and niac-go. Renovate's native gomod manager tracks
+          # it; the previous `go install ...@latest` meant this gate could
+          # change behaviour with no code change.
+          go tool staticcheck -checks="U*" ./... 2>&1 | tee staticcheck-unused.txt || true
 
           UNUSED_COUNT=$(wc -l < staticcheck-unused.txt | tr -d ' ')
           echo "Found $UNUSED_COUNT potential unused code items" >> "$GITHUB_STEP_SUMMARY"
