@@ -1,53 +1,78 @@
-import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
-import { ImportSurvey } from '@/components/ImportSurvey';
-import { SurveyDetail } from '@/components/SurveyDetail';
-import { SurveyList } from '@/components/SurveyList';
-import { surveyClient } from '@/lib/client';
+import type { ReactNode } from 'react';
+import { Route, Routes } from 'react-router';
+import { type PageConfig, pages } from '@/pageRegistry';
+import { PageHeader } from '@/ui/PageHeader';
+import { Sidebar } from '@/ui/Sidebar';
 
+/**
+ * Shell + routes. The rail, page header and status rollup are the family shell
+ * (see ui/SHELL.md in the sibling products); everything inside a route is
+ * trellis's own.
+ *
+ * Only Surveys has a page so far. The remaining nav items are listed in
+ * navGroups.ts and land on the placeholder below until their pages are built,
+ * which is deliberate: an item that routes somewhere honest is easier to
+ * review than a rail that hides how much is left.
+ */
 export function App() {
-  const [selectedId, setSelectedId] = useState<string | undefined>();
-
-  const surveysQuery = useQuery({
-    queryKey: ['surveys'],
-    queryFn: () => surveyClient.listSurveys({}),
-  });
-
-  const surveys = surveysQuery.data?.surveys ?? [];
-  const selectedSurvey = surveys.find((s) => s.id === selectedId);
-
   return (
-    <div className="flex h-screen flex-col bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white px-6 py-4">
-        <h1 className="text-lg font-semibold">Trellis</h1>
-        <p className="text-xs text-slate-500">Wi-Fi survey heatmaps and coverage analysis</p>
-      </header>
+    <div className="flex h-screen bg-surface-base text-text-primary">
+      <Sidebar version={__APP_VERSION__} />
+      <main className="flex flex-1 flex-col overflow-hidden">
+        <Routes>
+          {pages.map((page) => (
+            <Route
+              key={page.path}
+              path={page.path}
+              element={
+                <PageWithHeader page={page}>
+                  <page.component />
+                </PageWithHeader>
+              }
+            />
+          ))}
+          <Route path="*" element={<NotBuiltYet />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}
 
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="flex w-72 flex-col border-r border-slate-200 bg-white">
-          <div className="flex-1 overflow-y-auto">
-            {surveysQuery.isLoading && (
-              <p className="p-4 text-sm text-slate-500">Loading surveys…</p>
-            )}
-            {surveysQuery.isError && (
-              <p className="p-4 text-sm text-red-600">
-                Failed to load surveys: {String(surveysQuery.error)}
-              </p>
-            )}
-            {surveysQuery.data && (
-              <SurveyList surveys={surveys} selectedId={selectedId} onSelect={setSelectedId} />
-            )}
-          </div>
-          <ImportSurvey />
-        </aside>
+/**
+ * PageWithHeader renders the header strip every routed page shares, from
+ * the registry entry rather than from the page body. The strip is its own
+ * band above the scrolling content, which is why trellis wraps the header
+ * rather than stacking it with the page like the siblings do.
+ */
+function PageWithHeader({ page, children }: { page: PageConfig; children: ReactNode }) {
+  return (
+    <>
+      <div className="border-b border-hairline px-6 pt-6">
+        <PageHeader
+          icon={page.icon}
+          eyebrow={page.eyebrow}
+          title={page.title}
+          description={page.description}
+        />
+      </div>
+      {children}
+    </>
+  );
+}
 
-        {selectedId ? (
-          <SurveyDetail surveyId={selectedId} surveyName={selectedSurvey?.name ?? 'survey'} />
-        ) : (
-          <div className="flex flex-1 items-center justify-center text-sm text-slate-500">
-            Select a survey to view its heatmap and coverage
-          </div>
-        )}
+/**
+ * Says what it is rather than pretending. A blank pane reads as a failure; this
+ * reads as a plan.
+ */
+function NotBuiltYet() {
+  return (
+    <div className="flex flex-1 items-center justify-center p-8">
+      <div className="panel max-w-md p-6 text-center">
+        <p className="kicker">Not built yet</p>
+        <p className="mt-2 text-sm text-text-secondary">
+          This section is listed in the rail so the shape of the product is visible, but its page
+          has not been built.
+        </p>
       </div>
     </div>
   );

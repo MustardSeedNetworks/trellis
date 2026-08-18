@@ -1,0 +1,48 @@
+/* Trellis — product brand values. New: Trellis had no tokens.
+ *
+ * Anchor is teal. It is the only unclaimed position in the family that reads
+ * as measurement rather than growth (Seed green) or test (Stem blue), and it
+ * survives sitting next to an RSSI heatmap, where green→amber→red are all
+ * spoken for by the data.
+ *
+ * The heatmap ramp is data, not brand: it must stay a single perceptual
+ * sequence and must never be re-skinned to the anchor. Named here so the
+ * scale has one definition rather than one per chart.
+ */
+
+:root {
+  --color-brand-primary: #0f6f68;
+  --color-brand-accent: #0b5a54;
+  --color-brand-gold: #8a6208;
+  --color-text-accent: #0f6f68;
+  --color-on-brand: #ffffff;
+  --color-on-danger: #ffffff;
+  --color-on-success: #ffffff;
+
+  /* RSSI ramp, strong → weak. −40 dBm to −85 dBm. */
+  --color-rssi-1: #2f7d4f;
+  --color-rssi-2: #4f9a5c;
+  --color-rssi-3: #86bd6e;
+  --color-rssi-4: #c9c268;
+  --color-rssi-5: #d99b3f;
+  --color-rssi-6: #c65a3f;
+  --color-rssi-gap: #b93a3a;
+}
+
+.dark {
+  --color-brand-primary: #5ec8c0;
+  --color-brand-accent: #8adad4;
+  --color-brand-gold: #f5c451;
+  --color-text-accent: #8adad4;
+  --color-on-brand: #08100c;
+  --color-on-danger: #08100c;
+  --color-on-success: #08100c;
+
+  --color-rssi-1: #3f9a5c;
+  --color-rssi-2: #62c48d;
+  --color-rssi-3: #b9d47a;
+  --color-rssi-4: #f5c451;
+  --color-rssi-5: #e88a4e;
+  --color-rssi-6: #e0704f;
+  --color-rssi-gap: #ef6b73;
+}

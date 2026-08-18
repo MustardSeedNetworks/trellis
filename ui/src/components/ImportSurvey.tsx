@@ -37,7 +37,7 @@ export function ImportSurvey() {
   }
 
   return (
-    <div className="border-t border-slate-200 p-4">
+    <div className="border-t border-hairline p-4">
       <input
         ref={fileInputRef}
         type="file"
@@ -50,11 +50,11 @@ export function ImportSurvey() {
         type="button"
         onClick={() => fileInputRef.current?.click()}
         disabled={importMutation.isPending}
-        className="w-full rounded bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+        className="w-full rounded bg-brand-primary px-3 py-2 text-sm font-medium text-on-brand hover:bg-brand-accent disabled:opacity-50"
       >
         {importMutation.isPending ? 'Importing…' : 'Import AirMapper (.amp)'}
       </button>
-      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-xs text-status-error">{error}</p>}
     </div>
   );
 }
