@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.6...v0.1.7) (2026-08-18)
+
+
+### Features
+
+* **ui:** give trellis the family shell and a central page header ([#55](https://github.com/MustardSeedNetworks/trellis/issues/55)) ([b69bc49](https://github.com/MustardSeedNetworks/trellis/commit/b69bc498a071cd308bdf2c0f92f7dd09fd5207d6))
+
 ## [0.1.6](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.5...v0.1.6) (2026-08-17)
 
 
