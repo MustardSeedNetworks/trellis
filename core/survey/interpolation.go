@@ -320,14 +320,25 @@ func extractThroughputValue(data *ThroughputSample, valueType string) float64 {
 	}
 }
 
+// extractMapValue reads a sample that has been through JSON, which is every
+// stored sample: the survey file types SampleData as `any`, so a loaded survey
+// hands back a map rather than a *PassiveSample. The keys are wifi.
+// ScannedNetwork's own JSON tags — reading a key it does not write returns NaN
+// for every point, which the caller reports as "no samples found".
 func extractMapValue(data map[string]any, valueType string) float64 {
 	// Handle networks array for passive samples
 	if networks, networksOK := data["networks"].([]any); networksOK && len(networks) > 0 {
 		if first, firstOK := networks[0].(map[string]any); firstOK {
 			switch valueType {
 			case string(HeatmapRSSI), HeatmapAliasSignal:
-				if rssi, rssiOK := first[string(HeatmapRSSI)].(float64); rssiOK {
-					return rssi
+				// wifi.ScannedNetwork marshals Signal as "signal"; the metric
+				// it answers is called rssi.
+				if signal, signalOK := first["signal"].(float64); signalOK {
+					return signal
+				}
+			case string(HeatmapSNR):
+				if snr, snrOK := first["snr"].(float64); snrOK {
+					return snr
 				}
 			}
 		}

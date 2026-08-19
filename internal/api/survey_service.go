@@ -9,6 +9,7 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"connectrpc.com/connect"
@@ -143,7 +144,22 @@ func (h *SurveyServiceHandler) GetHeatmap(
 		Min:         result.Stats.Min,
 		Max:         result.Stats.Max,
 		SampleCount: int32(result.SampleCount),
+		Metric:      result.Type,
+		Legend:      legendStops(result.Scale),
 	}), nil
+}
+
+// legendStops maps the colour scale that painted the image onto the reply, so
+// the legend a client draws and the gradient it labels are the same scale.
+func legendStops(scale survey.ColorScale) []*surveyv1.LegendStop {
+	stops := make([]*surveyv1.LegendStop, 0, len(scale.Stops))
+	for _, stop := range scale.Stops {
+		stops = append(stops, &surveyv1.LegendStop{
+			Value: stop.Value,
+			Color: fmt.Sprintf("#%02x%02x%02x", stop.Color.R, stop.Color.G, stop.Color.B),
+		})
+	}
+	return stops
 }
 
 // GetCoverage runs dead-zone detection over a survey's measured samples.

@@ -63,11 +63,11 @@ export function SurveysPage() {
           </div>
         </aside>
 
-        {selectedId ? (
-          <SurveyDetail surveyId={selectedId} surveyName={selectedSurvey?.name ?? 'survey'} />
+        {selectedSurvey ? (
+          <SurveyDetail survey={selectedSurvey} />
         ) : (
           <div className="panel flex flex-1 items-center justify-center text-sm text-text-muted">
-            Select a survey to view its heatmap and coverage
+            Select a survey to see what it stores and what it can produce
           </div>
         )}
       </div>

@@ -89,6 +89,23 @@ message GetHeatmapResponse {
   double min = 4;
   double max = 5;
   int32 sample_count = 6;
+  // The metric actually rendered. An unrecognised request metric falls back
+  // to rssi, so a caller that labels its legend from what it asked for can
+  // label the wrong scale; this is what was drawn.
+  string metric = 7;
+  // The colour scale the image was painted with, sent so a legend describes
+  // the gradient on screen rather than a second copy of it.
+  repeated LegendStop legend = 8;
+}
+
+// LegendStop is one stop of a heatmap's colour scale: the metric value and
+// the colour the renderer uses at that value, interpolating between stops.
+message LegendStop {
+  // Metric value at this stop, in the heatmap metric's own unit (dBm for
+  // rssi, dB for snr).
+  double value = 1;
+  // Hex sRGB, "#rrggbb".
+  string color = 2;
 }
 
 message GetCoverageRequest {

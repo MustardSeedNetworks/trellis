@@ -28,9 +28,11 @@ describe('formatSignal', () => {
 });
 
 describe('formatCoverageScore', () => {
-  it('formats a 0-1 score as a rounded percentage', () => {
-    expect(formatCoverageScore(0.823)).toBe('82%');
-    expect(formatCoverageScore(1)).toBe('100%');
+  /* The service sends a percentage (core/survey documents CoverageScore as
+     0-100), so a score of 82 is 82% and not 8200%. */
+  it('rounds an already-percentage score', () => {
+    expect(formatCoverageScore(82.3)).toBe('82%');
+    expect(formatCoverageScore(100)).toBe('100%');
     expect(formatCoverageScore(0)).toBe('0%');
   });
 });

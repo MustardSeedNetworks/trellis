@@ -342,8 +342,3 @@ func GetColorScaleByName(name string) *ColorScale {
 	}
 	return &scale
 }
-
-// WithAlpha returns a copy of the color with the specified alpha value.
-func WithAlpha(c color.RGBA, alpha uint8) color.RGBA {
-	return color.RGBA{R: c.R, G: c.G, B: c.B, A: alpha}
-}

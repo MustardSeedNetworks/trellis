@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"image"
 	"image/color"
 	"image/png"
@@ -181,6 +182,26 @@ func TestSurveyServiceEndToEnd(t *testing.T) {
 	}
 	if hm.GetMax() <= hm.GetMin() {
 		t.Errorf("heatmap has no gradient: min=%.1f max=%.1f", hm.GetMin(), hm.GetMax())
+	}
+	if hm.GetMetric() != "rssi" {
+		t.Errorf("heatmap Metric = %q, want %q", hm.GetMetric(), "rssi")
+	}
+
+	// The legend has to be the scale that painted this image, not a second
+	// copy of it: a client draws its key from these stops, so a legend that
+	// merely resembles the renderer's scale mislabels every colour on screen
+	// the first time a threshold moves.
+	wantScale := survey.GetRSSIColorScale()
+	if len(hm.GetLegend()) != len(wantScale.Stops) {
+		t.Fatalf("legend has %d stops, want %d", len(hm.GetLegend()), len(wantScale.Stops))
+	}
+	for i, stop := range hm.GetLegend() {
+		want := wantScale.Stops[i]
+		wantColor := fmt.Sprintf("#%02x%02x%02x", want.Color.R, want.Color.G, want.Color.B)
+		if stop.GetValue() != want.Value || stop.GetColor() != wantColor {
+			t.Errorf("legend stop %d = (%.1f, %s), want (%.1f, %s)",
+				i, stop.GetValue(), stop.GetColor(), want.Value, wantColor)
+		}
 	}
 
 	// --- GetCoverage over the API ---------------------------------------

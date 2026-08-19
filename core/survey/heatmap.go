@@ -78,14 +78,18 @@ type HeatmapConfig struct {
 
 // HeatmapResult contains the generated heatmap.
 type HeatmapResult struct {
-	Image       []byte    `json:"image"`        // PNG image data
-	ImageBase64 string    `json:"image_base64"` // Base64-encoded PNG
-	Width       int       `json:"width"`
-	Height      int       `json:"height"`
-	Type        string    `json:"type"`
-	Stats       GridStats `json:"stats"`
-	Generated   time.Time `json:"generated"`
-	SampleCount int       `json:"sample_count"`
+	Image       []byte `json:"image"`        // PNG image data
+	ImageBase64 string `json:"image_base64"` // Base64-encoded PNG
+	Width       int    `json:"width"`
+	Height      int    `json:"height"`
+	Type        string `json:"type"`
+	// Scale is the colour scale this image was painted with. It travels with
+	// the result so a caller drawing a legend describes the gradient in the
+	// image rather than keeping a second copy of it that can drift.
+	Scale       ColorScale `json:"scale"`
+	Stats       GridStats  `json:"stats"`
+	Generated   time.Time  `json:"generated"`
+	SampleCount int        `json:"sample_count"`
 }
 
 // DefaultHeatmapConfig returns default configuration.
@@ -175,6 +179,7 @@ func GenerateHeatmap(survey *Survey, config HeatmapConfig) (*HeatmapResult, erro
 		Width:       width,
 		Height:      height,
 		Type:        string(config.Type),
+		Scale:       colorScale,
 		Stats:       stats,
 		Generated:   time.Now(),
 		SampleCount: len(samples),
@@ -304,8 +309,7 @@ func renderHeatmapToImage(
 	for row := range rows {
 		for col := range cols {
 			value := grid[row][col]
-			baseColor := scale.GetColor(value)
-			c := WithAlpha(baseColor, opacity)
+			c := premultiplied(scale.GetColor(value), opacity)
 
 			// Fill the cell
 			for dy := range cellSize {
@@ -318,6 +322,24 @@ func renderHeatmapToImage(
 				}
 			}
 		}
+	}
+}
+
+// premultiplied scales a straight-alpha colour into the premultiplied form
+// image.RGBA stores.
+//
+// Writing straight-alpha values here is not merely inaccurate: png.Encode
+// un-premultiplies on the way out, and dividing a full-strength channel by a
+// partial alpha overflows and wraps, so an orange cell left the encoder as
+// olive and a red one as magenta. The heatmap then disagreed with the colour
+// scale that produced it — including the legend rendered from that same scale.
+func premultiplied(c color.RGBA, alpha uint8) color.RGBA {
+	a := uint32(alpha)
+	return color.RGBA{
+		R: uint8(uint32(c.R) * a / colorChannelOpaque),
+		G: uint8(uint32(c.G) * a / colorChannelOpaque),
+		B: uint8(uint32(c.B) * a / colorChannelOpaque),
+		A: alpha,
 	}
 }
 
