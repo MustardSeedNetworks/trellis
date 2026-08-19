@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { ImportSurvey } from '@/components/ImportSurvey';
 import { SurveyDetail } from '@/components/SurveyDetail';
 import { SurveyList } from '@/components/SurveyList';
 import { surveyClient } from '@/lib/client';
@@ -62,7 +61,6 @@ export function SurveysPage() {
               <SurveyList surveys={surveys} selectedId={selectedId} onSelect={setSelectedId} />
             ) : null}
           </div>
-          <ImportSurvey />
         </aside>
 
         {selectedId ? (

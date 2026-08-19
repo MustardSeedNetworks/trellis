@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
-import { Waypoints } from 'lucide-react';
+import { Upload, Waypoints } from 'lucide-react';
 import type { FC } from 'react';
+import { ImportPage } from '@/pages/ImportPage';
 import { SurveysPage } from '@/pages/SurveysPage';
 
 /**
@@ -33,5 +34,13 @@ export const pages: PageConfig[] = [
     title: 'Surveys',
     icon: Waypoints,
     component: SurveysPage,
+  },
+  {
+    path: '/import',
+    eyebrow: 'Capture',
+    title: 'Import',
+    description: 'Bring an AirMapper .amp archive in as a survey.',
+    icon: Upload,
+    component: ImportPage,
   },
 ];
