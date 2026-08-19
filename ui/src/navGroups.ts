@@ -9,19 +9,16 @@
  * Pages arrive over the following steps. A group whose pages do not exist yet
  * still belongs here: the rail is how the shape of the product is agreed, and
  * an item that routes nowhere is easier to see than one that was never listed.
+ *
+ * That only holds while the item is a page someone intends to build. Reports
+ * and Exports were listed and are not: a report is produced from the survey it
+ * describes, so it belongs to the survey rather than to a destination of its
+ * own, and exporting a survey is not something the product does. Listing them
+ * promised two pages that were never coming.
  */
 
 import type { LucideIcon } from 'lucide-react';
-import {
-  Activity,
-  Download,
-  FileText,
-  Layers,
-  Radio,
-  Signal,
-  Upload,
-  Waypoints,
-} from 'lucide-react';
+import { Activity, Layers, Radio, Signal, Upload, Waypoints } from 'lucide-react';
 
 export interface TrellisNavItem {
   label: string;
@@ -50,13 +47,6 @@ export const navGroups: TrellisNavGroup[] = [
       { label: 'Coverage', path: '/coverage', icon: Signal },
       { label: 'Interference', path: '/interference', icon: Radio },
       { label: 'Capacity', path: '/capacity', icon: Activity },
-    ],
-  },
-  {
-    label: 'Output',
-    items: [
-      { label: 'Reports', path: '/reports', icon: FileText },
-      { label: 'Exports', path: '/exports', icon: Download },
     ],
   },
 ];
