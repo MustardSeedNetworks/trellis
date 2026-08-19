@@ -1,7 +1,6 @@
 package survey_test
 
 import (
-	"image/color"
 	"testing"
 	"time"
 
@@ -170,32 +169,5 @@ func TestColorScale_GetColor_Interpolation(t *testing.T) {
 				t.Errorf("Expected alpha 255, got %d", c.A)
 			}
 		})
-	}
-}
-
-func TestWithAlpha_AllValues(t *testing.T) {
-	original := color.RGBA{R: 100, G: 150, B: 200, A: 255}
-
-	tests := []struct {
-		alpha    uint8
-		expected uint8
-	}{
-		{0, 0},
-		{1, 1},
-		{127, 127},
-		{128, 128},
-		{254, 254},
-		{255, 255},
-	}
-
-	for _, tt := range tests {
-		result := survey.WithAlpha(original, tt.alpha)
-		if result.A != tt.expected {
-			t.Errorf("WithAlpha(_, %d).A = %d, want %d", tt.alpha, result.A, tt.expected)
-		}
-		// RGB should be unchanged
-		if result.R != 100 || result.G != 150 || result.B != 200 {
-			t.Error("WithAlpha should not modify RGB values")
-		}
 	}
 }

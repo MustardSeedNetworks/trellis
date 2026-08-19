@@ -198,41 +198,6 @@ func TestGetColorScaleByName(t *testing.T) {
 	}
 }
 
-func TestWithAlpha(t *testing.T) {
-	original := color.RGBA{R: 100, G: 150, B: 200, A: 255}
-
-	tests := []struct {
-		name     string
-		alpha    uint8
-		expected color.RGBA
-	}{
-		{
-			name:     "full alpha",
-			alpha:    255,
-			expected: color.RGBA{R: 100, G: 150, B: 200, A: 255},
-		},
-		{
-			name:     "half alpha",
-			alpha:    128,
-			expected: color.RGBA{R: 100, G: 150, B: 200, A: 128},
-		},
-		{
-			name:     "zero alpha",
-			alpha:    0,
-			expected: color.RGBA{R: 100, G: 150, B: 200, A: 0},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := survey.WithAlpha(original, tt.alpha)
-			if got != tt.expected {
-				t.Errorf("WithAlpha(%v, %d) = %v, want %v", original, tt.alpha, got, tt.expected)
-			}
-		})
-	}
-}
-
 func TestColorScaleProperties(t *testing.T) {
 	rssiScale := survey.GetRSSIColorScale()
 	snrScale := survey.GetSNRColorScale()

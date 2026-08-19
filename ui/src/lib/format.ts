@@ -18,10 +18,14 @@ export function formatSignal(value: number, unit: string): string {
 }
 
 /**
- * Formats a 0-1 coverage score as a whole-number percentage, e.g. "82%".
+ * Formats a coverage score as a whole-number percentage, e.g. "82%".
+ *
+ * The score arrives already expressed as a percentage — `core/survey` documents
+ * `CoverageScore` as 0-100 and computes it as a percentage of samples above the
+ * threshold. This used to multiply by 100 again, rendering 82% as "8200%".
  */
 export function formatCoverageScore(score: number): string {
-  return `${Math.round(score * 100)}%`;
+  return `${Math.round(score)}%`;
 }
 
 /**

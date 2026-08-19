@@ -462,11 +462,16 @@ func TestExtractThroughputValue_Nil(t *testing.T) {
 	}
 }
 
+// The fixture is the shape a stored sample actually has: these are wifi.
+// ScannedNetwork's JSON tags, as written by the survey store. The previous
+// fixture used an "rssi" key, which nothing marshals — so it agreed with the
+// extractor and neither noticed that a reloaded survey read as no samples.
 func TestExtractMapValue(t *testing.T) {
 	data := map[string]any{
 		"networks": []any{
 			map[string]any{
-				"rssi": float64(-55),
+				"signal": float64(-55),
+				"snr":    float64(40),
 			},
 		},
 		"uniqueBSSIDs": float64(5),
@@ -480,6 +485,7 @@ func TestExtractMapValue(t *testing.T) {
 	}{
 		{"rssi from networks", "rssi", -55},
 		{"signal alias", "signal", -55},
+		{"snr from networks", "snr", 40},
 		{"density", "density", 5},
 		{"interference", "interference", 2},
 	}

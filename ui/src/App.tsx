@@ -9,8 +9,8 @@ import { Sidebar } from '@/ui/Sidebar';
  * (see ui/SHELL.md in the sibling products); everything inside a route is
  * trellis's own.
  *
- * Only Surveys has a page so far. The remaining nav items are listed in
- * navGroups.ts and land on the placeholder below until their pages are built,
+ * Surveys, Import and Coverage have pages. The remaining nav items are listed
+ * in navGroups.ts and land on the placeholder below until they are built,
  * which is deliberate: an item that routes somewhere honest is easier to
  * review than a rail that hides how much is left.
  */

@@ -1,122 +1,78 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { Link } from 'react-router';
+import type { SurveySummary } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
-import { bytesToDataUrl, formatCoverageScore, reportFilename } from '@/lib/format';
+import { bytesToDataUrl, reportFilename } from '@/lib/format';
 
-type Metric = 'rssi' | 'snr';
-
+/**
+ * SurveyDetail — what is stored about one survey, and what can be produced
+ * from it.
+ *
+ * The heatmap and the dead-zone analysis used to render here. They moved to
+ * the Coverage page, which is the Canvas archetype and gives the image the
+ * toolbar, scale and findings panel it needs; a copy left behind would be the
+ * same reading in two places with only one of them adjustable. The report
+ * stays: it is produced *about this survey*, so it belongs to the survey.
+ */
 interface SurveyDetailProps {
-  surveyId: string;
-  surveyName: string;
+  survey: SurveySummary;
 }
 
-export function SurveyDetail({ surveyId, surveyName }: SurveyDetailProps) {
-  const [metric, setMetric] = useState<Metric>('rssi');
-
+export function SurveyDetail({ survey }: SurveyDetailProps) {
   const reportMutation = useMutation({
     mutationFn: async () => {
-      const reply = await surveyClient.generateReport({ surveyId });
+      const reply = await surveyClient.generateReport({ surveyId: survey.id });
       // Reuse the tested bytes→data-URL path and trigger a browser download
       // via a transient anchor; no library needed for a one-shot PDF save.
       const link = document.createElement('a');
       link.href = bytesToDataUrl(reply.pdf, 'application/pdf');
-      link.download = reportFilename(surveyName);
+      link.download = reportFilename(survey.name);
       link.click();
     },
   });
 
-  const heatmapQuery = useQuery({
-    queryKey: ['heatmap', surveyId, metric],
-    queryFn: () => surveyClient.getHeatmap({ surveyId, metric }),
-  });
-
-  const coverageQuery = useQuery({
-    queryKey: ['coverage', surveyId],
-    queryFn: () => surveyClient.getCoverage({ surveyId }),
-  });
+  const facts = [
+    { label: 'Status', value: survey.status },
+    { label: 'Floors', value: String(survey.floorCount) },
+    { label: 'Samples', value: String(survey.sampleCount) },
+    { label: 'Floor plan', value: survey.hasFloorPlan ? 'Present' : 'None' },
+  ];
 
   return (
-    <div className="flex-1 overflow-y-auto p-6">
-      <div className="mb-4 flex items-center gap-2">
-        <span className="text-sm font-medium text-text-secondary">Metric:</span>
-        {(['rssi', 'snr'] as const).map((m) => (
-          <button
-            key={m}
-            type="button"
-            onClick={() => setMetric(m)}
-            className={`rounded px-2 py-1 text-xs uppercase ${
-              metric === m
-                ? 'bg-brand-primary text-on-brand'
-                : 'bg-surface-sunken text-text-secondary'
-            }`}
-          >
-            {m}
-          </button>
+    <div className="panel flex-1 overflow-y-auto p-6">
+      <dl className="flex flex-wrap gap-x-10 gap-y-4">
+        {facts.map((fact) => (
+          <div key={fact.label}>
+            <dd className="figure text-lg font-bold leading-none text-text-primary">
+              {fact.value}
+            </dd>
+            <dt className="kicker mt-2">{fact.label}</dt>
+          </div>
         ))}
+      </dl>
+
+      <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-hairline pt-6">
+        <Link
+          to="/coverage"
+          className="rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
+        >
+          Plot coverage
+        </Link>
         <button
           type="button"
           onClick={() => reportMutation.mutate()}
           disabled={reportMutation.isPending}
-          className="ml-auto rounded bg-brand-primary px-3 py-1 text-xs text-on-brand disabled:opacity-50"
+          className="rounded bg-brand-primary px-3 py-2 text-sm font-medium text-on-brand hover:bg-brand-accent disabled:opacity-50"
         >
           {reportMutation.isPending ? 'Generating…' : 'Download PDF report'}
         </button>
       </div>
+
       {reportMutation.isError && (
-        <p className="mb-4 text-sm text-status-error">
+        <p className="mt-3 text-sm text-status-error">
           Failed to generate report: {String(reportMutation.error)}
         </p>
       )}
-
-      <section className="mb-6">
-        <h2 className="mb-2 text-sm font-semibold text-text-secondary">Heatmap</h2>
-        {heatmapQuery.isLoading && <p className="text-sm text-text-muted">Loading heatmap…</p>}
-        {heatmapQuery.isError && (
-          <p className="text-sm text-status-error">
-            Failed to load heatmap: {String(heatmapQuery.error)}
-          </p>
-        )}
-        {heatmapQuery.data && (
-          <div>
-            <img
-              src={bytesToDataUrl(heatmapQuery.data.png, 'image/png')}
-              alt={`${metric.toUpperCase()} heatmap`}
-              width={heatmapQuery.data.width}
-              height={heatmapQuery.data.height}
-              className="max-w-full rounded border border-hairline"
-            />
-            <p className="mt-1 text-xs text-text-muted">
-              {heatmapQuery.data.sampleCount} samples · range {heatmapQuery.data.min.toFixed(1)} to{' '}
-              {heatmapQuery.data.max.toFixed(1)}
-            </p>
-          </div>
-        )}
-      </section>
-
-      <section>
-        <h2 className="mb-2 text-sm font-semibold text-text-secondary">Coverage</h2>
-        {coverageQuery.isLoading && <p className="text-sm text-text-muted">Loading coverage…</p>}
-        {coverageQuery.isError && (
-          <p className="text-sm text-status-error">
-            Failed to load coverage: {String(coverageQuery.error)}
-          </p>
-        )}
-        {coverageQuery.data && (
-          <div className="space-y-2">
-            <div className="flex gap-6 text-sm text-text-secondary">
-              <span>Coverage score: {formatCoverageScore(coverageQuery.data.coverageScore)}</span>
-              <span>Dead zones: {coverageQuery.data.deadZoneCount}</span>
-            </div>
-            {coverageQuery.data.recommendations.length > 0 && (
-              <ul className="list-inside list-disc text-sm text-text-secondary">
-                {coverageQuery.data.recommendations.map((recommendation) => (
-                  <li key={recommendation}>{recommendation}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-      </section>
     </div>
   );
 }

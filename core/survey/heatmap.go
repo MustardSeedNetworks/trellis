@@ -78,14 +78,18 @@ type HeatmapConfig struct {
 
 // HeatmapResult contains the generated heatmap.
 type HeatmapResult struct {
-	Image       []byte    `json:"image"`        // PNG image data
-	ImageBase64 string    `json:"image_base64"` // Base64-encoded PNG
-	Width       int       `json:"width"`
-	Height      int       `json:"height"`
-	Type        string    `json:"type"`
-	Stats       GridStats `json:"stats"`
-	Generated   time.Time `json:"generated"`
-	SampleCount int       `json:"sample_count"`
+	Image       []byte `json:"image"`        // PNG image data
+	ImageBase64 string `json:"image_base64"` // Base64-encoded PNG
+	Width       int    `json:"width"`
+	Height      int    `json:"height"`
+	Type        string `json:"type"`
+	// Scale is the colour scale this image was painted with. It travels with
+	// the result so a caller drawing a legend describes the gradient in the
+	// image rather than keeping a second copy of it that can drift.
+	Scale       ColorScale `json:"scale"`
+	Stats       GridStats  `json:"stats"`
+	Generated   time.Time  `json:"generated"`
+	SampleCount int        `json:"sample_count"`
 }
 
 // DefaultHeatmapConfig returns default configuration.
@@ -175,6 +179,7 @@ func GenerateHeatmap(survey *Survey, config HeatmapConfig) (*HeatmapResult, erro
 		Width:       width,
 		Height:      height,
 		Type:        string(config.Type),
+		Scale:       colorScale,
 		Stats:       stats,
 		Generated:   time.Now(),
 		SampleCount: len(samples),
@@ -304,8 +309,15 @@ func renderHeatmapToImage(
 	for row := range rows {
 		for col := range cols {
 			value := grid[row][col]
-			baseColor := scale.GetColor(value)
-			c := WithAlpha(baseColor, opacity)
+			base := scale.GetColor(value)
+			// Set takes a straight-alpha colour here on purpose. image.RGBA
+			// stores premultiplied alpha and png.Encode un-premultiplies on
+			// the way out; handing it a straight-alpha color.RGBA made that
+			// division overflow and shifted hues — an orange cell encoded as
+			// olive, a red one as magenta — so the heatmap disagreed with the
+			// scale that produced it, legend included. color.NRGBA is the
+			// straight-alpha type, and RGBA's own model premultiplies it.
+			c := color.NRGBA{R: base.R, G: base.G, B: base.B, A: opacity}
 
 			// Fill the cell
 			for dy := range cellSize {
