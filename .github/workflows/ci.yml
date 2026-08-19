@@ -47,7 +47,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
-          version: v2.12.2
+          version: v2.13.0
           # The repo ships .golangci.yml and `make lint` runs it, but CI never
           # did — the other three products have gated on it for months. Full
           # tree verified clean (0 issues) before this gate was added.
@@ -150,7 +150,7 @@ jobs:
 
   # Fleet-shared SAST gate (MustardSeedNetworks/.github, pinned).
   semgrep:
-    uses: MustardSeedNetworks/.github/.github/workflows/semgrep.yml@762b756e6fb5803443b9bcfdba03b88596c18e04 # v1.0.0
+    uses: MustardSeedNetworks/.github/.github/workflows/semgrep.yml@37513d7fbaacf4a7adaab1ac1514f021115868d1 # v1.4.0
     permissions:
       contents: read
 
@@ -162,7 +162,7 @@ jobs:
   # Defined once in MustardSeedNetworks/.github (fleet-shared); ci-complete
   # still needs: [ci-conformance].
   ci-conformance:
-    uses: MustardSeedNetworks/.github/.github/workflows/ci-conformance.yml@20eb29355b0448c791677c167164282da49d130f # v1.3.0
+    uses: MustardSeedNetworks/.github/.github/workflows/ci-conformance.yml@37513d7fbaacf4a7adaab1ac1514f021115868d1 # v1.4.0
     permissions:
       contents: read
 
