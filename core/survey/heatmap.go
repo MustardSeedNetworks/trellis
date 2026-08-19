@@ -309,7 +309,15 @@ func renderHeatmapToImage(
 	for row := range rows {
 		for col := range cols {
 			value := grid[row][col]
-			c := premultiplied(scale.GetColor(value), opacity)
+			base := scale.GetColor(value)
+			// Set takes a straight-alpha colour here on purpose. image.RGBA
+			// stores premultiplied alpha and png.Encode un-premultiplies on
+			// the way out; handing it a straight-alpha color.RGBA made that
+			// division overflow and shifted hues — an orange cell encoded as
+			// olive, a red one as magenta — so the heatmap disagreed with the
+			// scale that produced it, legend included. color.NRGBA is the
+			// straight-alpha type, and RGBA's own model premultiplies it.
+			c := color.NRGBA{R: base.R, G: base.G, B: base.B, A: opacity}
 
 			// Fill the cell
 			for dy := range cellSize {
@@ -322,24 +330,6 @@ func renderHeatmapToImage(
 				}
 			}
 		}
-	}
-}
-
-// premultiplied scales a straight-alpha colour into the premultiplied form
-// image.RGBA stores.
-//
-// Writing straight-alpha values here is not merely inaccurate: png.Encode
-// un-premultiplies on the way out, and dividing a full-strength channel by a
-// partial alpha overflows and wraps, so an orange cell left the encoder as
-// olive and a red one as magenta. The heatmap then disagreed with the colour
-// scale that produced it — including the legend rendered from that same scale.
-func premultiplied(c color.RGBA, alpha uint8) color.RGBA {
-	a := uint32(alpha)
-	return color.RGBA{
-		R: uint8(uint32(c.R) * a / colorChannelOpaque),
-		G: uint8(uint32(c.G) * a / colorChannelOpaque),
-		B: uint8(uint32(c.B) * a / colorChannelOpaque),
-		A: alpha,
 	}
 }
 
