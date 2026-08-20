@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.11](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.10...v0.1.11) (2026-08-20)
+
+
+### Miscellaneous
+
+* **ts:** turn on noUncheckedIndexedAccess and erasableSyntaxOnly ([#78](https://github.com/MustardSeedNetworks/trellis/issues/78)) ([192feeb](https://github.com/MustardSeedNetworks/trellis/commit/192feeb55c3fe991fbcc91bef442089b88c7d535)), closes [#54](https://github.com/MustardSeedNetworks/trellis/issues/54)
+
 ## [0.1.10](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.9...v0.1.10) (2026-08-20)
 
 
