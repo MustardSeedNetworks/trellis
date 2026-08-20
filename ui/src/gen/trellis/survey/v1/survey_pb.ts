@@ -18,7 +18,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file trellis/survey/v1/survey.proto.
  */
 export const file_trellis_survey_v1_survey: GenFile = /*@__PURE__*/
-  fileDesc("Ch50cmVsbGlzL3N1cnZleS92MS9zdXJ2ZXkucHJvdG8SEXRyZWxsaXMuc3VydmV5LnYxInwKDVN1cnZleVN1bW1hcnkSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIOCgZzdGF0dXMYAyABKAkSEwoLZmxvb3JfY291bnQYBCABKAUSFAoMc2FtcGxlX2NvdW50GAUgASgFEhYKDmhhc19mbG9vcl9wbGFuGAYgASgIIjgKFkltcG9ydEFpck1hcHBlclJlcXVlc3QSDAoEbmFtZRgBIAEoCRIQCghhbXBfZGF0YRgCIAEoDCJLChdJbXBvcnRBaXJNYXBwZXJSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5IhQKEkxpc3RTdXJ2ZXlzUmVxdWVzdCJIChNMaXN0U3VydmV5c1Jlc3BvbnNlEjEKB3N1cnZleXMYASADKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5Ih4KEEdldFN1cnZleVJlcXVlc3QSCgoCaWQYASABKAkiRQoRR2V0U3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIhChNEZWxldGVTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIhYKFERlbGV0ZVN1cnZleVJlc3BvbnNlIjYKEUdldEhlYXRtYXBSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIOCgZtZXRyaWMYAiABKAkirwEKEkdldEhlYXRtYXBSZXNwb25zZRILCgNwbmcYASABKAwSDQoFd2lkdGgYAiABKAUSDgoGaGVpZ2h0GAMgASgFEgsKA21pbhgEIAEoARILCgNtYXgYBSABKAESFAoMc2FtcGxlX2NvdW50GAYgASgFEg4KBm1ldHJpYxgHIAEoCRItCgZsZWdlbmQYCCADKAsyHS50cmVsbGlzLnN1cnZleS52MS5MZWdlbmRTdG9wIioKCkxlZ2VuZFN0b3ASDQoFdmFsdWUYASABKAESDQoFY29sb3IYAiABKAkiPgoSR2V0Q292ZXJhZ2VSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIVCg10aHJlc2hvbGRfZGJtGAIgASgFIl8KE0dldENvdmVyYWdlUmVzcG9uc2USFgoOY292ZXJhZ2Vfc2NvcmUYASABKAESFwoPZGVhZF96b25lX2NvdW50GAIgASgFEhcKD3JlY29tbWVuZGF0aW9ucxgDIAMoCSIqChVHZW5lcmF0ZVJlcG9ydFJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJIiUKFkdlbmVyYXRlUmVwb3J0UmVzcG9uc2USCwoDcGRmGAEgASgMMrAFCg1TdXJ2ZXlTZXJ2aWNlEmgKD0ltcG9ydEFpck1hcHBlchIpLnRyZWxsaXMuc3VydmV5LnYxLkltcG9ydEFpck1hcHBlclJlcXVlc3QaKi50cmVsbGlzLnN1cnZleS52MS5JbXBvcnRBaXJNYXBwZXJSZXNwb25zZRJcCgtMaXN0U3VydmV5cxIlLnRyZWxsaXMuc3VydmV5LnYxLkxpc3RTdXJ2ZXlzUmVxdWVzdBomLnRyZWxsaXMuc3VydmV5LnYxLkxpc3RTdXJ2ZXlzUmVzcG9uc2USVgoJR2V0U3VydmV5EiMudHJlbGxpcy5zdXJ2ZXkudjEuR2V0U3VydmV5UmVxdWVzdBokLnRyZWxsaXMuc3VydmV5LnYxLkdldFN1cnZleVJlc3BvbnNlEl8KDERlbGV0ZVN1cnZleRImLnRyZWxsaXMuc3VydmV5LnYxLkRlbGV0ZVN1cnZleVJlcXVlc3QaJy50cmVsbGlzLnN1cnZleS52MS5EZWxldGVTdXJ2ZXlSZXNwb25zZRJZCgpHZXRIZWF0bWFwEiQudHJlbGxpcy5zdXJ2ZXkudjEuR2V0SGVhdG1hcFJlcXVlc3QaJS50cmVsbGlzLnN1cnZleS52MS5HZXRIZWF0bWFwUmVzcG9uc2USXAoLR2V0Q292ZXJhZ2USJS50cmVsbGlzLnN1cnZleS52MS5HZXRDb3ZlcmFnZVJlcXVlc3QaJi50cmVsbGlzLnN1cnZleS52MS5HZXRDb3ZlcmFnZVJlc3BvbnNlEmUKDkdlbmVyYXRlUmVwb3J0EigudHJlbGxpcy5zdXJ2ZXkudjEuR2VuZXJhdGVSZXBvcnRSZXF1ZXN0GikudHJlbGxpcy5zdXJ2ZXkudjEuR2VuZXJhdGVSZXBvcnRSZXNwb25zZUJHWkVnaXRodWIuY29tL011c3RhcmRTZWVkTmV0d29ya3MvdHJlbGxpcy9nZW4vdHJlbGxpcy9zdXJ2ZXkvdjE7c3VydmV5djFiBnByb3RvMw");
+  fileDesc("Ch50cmVsbGlzL3N1cnZleS92MS9zdXJ2ZXkucHJvdG8SEXRyZWxsaXMuc3VydmV5LnYxInwKDVN1cnZleVN1bW1hcnkSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIOCgZzdGF0dXMYAyABKAkSEwoLZmxvb3JfY291bnQYBCABKAUSFAoMc2FtcGxlX2NvdW50GAUgASgFEhYKDmhhc19mbG9vcl9wbGFuGAYgASgIIjgKFkltcG9ydEFpck1hcHBlclJlcXVlc3QSDAoEbmFtZRgBIAEoCRIQCghhbXBfZGF0YRgCIAEoDCJLChdJbXBvcnRBaXJNYXBwZXJSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5IhQKEkxpc3RTdXJ2ZXlzUmVxdWVzdCJIChNMaXN0U3VydmV5c1Jlc3BvbnNlEjEKB3N1cnZleXMYASADKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5Ih4KEEdldFN1cnZleVJlcXVlc3QSCgoCaWQYASABKAkiRQoRR2V0U3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIhChNEZWxldGVTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIhYKFERlbGV0ZVN1cnZleVJlc3BvbnNlIjYKEUdldEhlYXRtYXBSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIOCgZtZXRyaWMYAiABKAkirwEKEkdldEhlYXRtYXBSZXNwb25zZRILCgNwbmcYASABKAwSDQoFd2lkdGgYAiABKAUSDgoGaGVpZ2h0GAMgASgFEgsKA21pbhgEIAEoARILCgNtYXgYBSABKAESFAoMc2FtcGxlX2NvdW50GAYgASgFEg4KBm1ldHJpYxgHIAEoCRItCgZsZWdlbmQYCCADKAsyHS50cmVsbGlzLnN1cnZleS52MS5MZWdlbmRTdG9wIioKCkxlZ2VuZFN0b3ASDQoFdmFsdWUYASABKAESDQoFY29sb3IYAiABKAkiPgoSR2V0Q292ZXJhZ2VSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIVCg10aHJlc2hvbGRfZGJtGAIgASgFIl8KE0dldENvdmVyYWdlUmVzcG9uc2USFgoOY292ZXJhZ2Vfc2NvcmUYASABKAESFwoPZGVhZF96b25lX2NvdW50GAIgASgFEhcKD3JlY29tbWVuZGF0aW9ucxgDIAMoCSJdChVHZW5lcmF0ZVJlcG9ydFJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEjEKB29wdGlvbnMYAiABKAsyIC50cmVsbGlzLnN1cnZleS52MS5SZXBvcnRPcHRpb25zIp0BCg1SZXBvcnRPcHRpb25zEhgKEGluY2x1ZGVfaGVhdG1hcHMYASABKAgSGAoQaW5jbHVkZV9yYXdfZGF0YRgCIAEoCBIfChdpbmNsdWRlX3JlY29tbWVuZGF0aW9ucxgDIAEoCBIhChlpbmNsdWRlX2V4ZWN1dGl2ZV9zdW1tYXJ5GAQgASgIEhQKDGNvbXBhbnlfbmFtZRgFIAEoCSIlChZHZW5lcmF0ZVJlcG9ydFJlc3BvbnNlEgsKA3BkZhgBIAEoDDKwBQoNU3VydmV5U2VydmljZRJoCg9JbXBvcnRBaXJNYXBwZXISKS50cmVsbGlzLnN1cnZleS52MS5JbXBvcnRBaXJNYXBwZXJSZXF1ZXN0GioudHJlbGxpcy5zdXJ2ZXkudjEuSW1wb3J0QWlyTWFwcGVyUmVzcG9uc2USXAoLTGlzdFN1cnZleXMSJS50cmVsbGlzLnN1cnZleS52MS5MaXN0U3VydmV5c1JlcXVlc3QaJi50cmVsbGlzLnN1cnZleS52MS5MaXN0U3VydmV5c1Jlc3BvbnNlElYKCUdldFN1cnZleRIjLnRyZWxsaXMuc3VydmV5LnYxLkdldFN1cnZleVJlcXVlc3QaJC50cmVsbGlzLnN1cnZleS52MS5HZXRTdXJ2ZXlSZXNwb25zZRJfCgxEZWxldGVTdXJ2ZXkSJi50cmVsbGlzLnN1cnZleS52MS5EZWxldGVTdXJ2ZXlSZXF1ZXN0GicudHJlbGxpcy5zdXJ2ZXkudjEuRGVsZXRlU3VydmV5UmVzcG9uc2USWQoKR2V0SGVhdG1hcBIkLnRyZWxsaXMuc3VydmV5LnYxLkdldEhlYXRtYXBSZXF1ZXN0GiUudHJlbGxpcy5zdXJ2ZXkudjEuR2V0SGVhdG1hcFJlc3BvbnNlElwKC0dldENvdmVyYWdlEiUudHJlbGxpcy5zdXJ2ZXkudjEuR2V0Q292ZXJhZ2VSZXF1ZXN0GiYudHJlbGxpcy5zdXJ2ZXkudjEuR2V0Q292ZXJhZ2VSZXNwb25zZRJlCg5HZW5lcmF0ZVJlcG9ydBIoLnRyZWxsaXMuc3VydmV5LnYxLkdlbmVyYXRlUmVwb3J0UmVxdWVzdBopLnRyZWxsaXMuc3VydmV5LnYxLkdlbmVyYXRlUmVwb3J0UmVzcG9uc2VCR1pFZ2l0aHViLmNvbS9NdXN0YXJkU2VlZE5ldHdvcmtzL3RyZWxsaXMvZ2VuL3RyZWxsaXMvc3VydmV5L3YxO3N1cnZleXYxYgZwcm90bzM");
 
 /**
  * SurveySummary is the lightweight survey representation used in list and
@@ -370,6 +370,14 @@ export type GenerateReportRequest = Message<"trellis.survey.v1.GenerateReportReq
    * @generated from field: string survey_id = 1;
    */
   surveyId: string;
+
+  /**
+   * What the report should contain. Absent means the engine's defaults:
+   * executive summary, recommendations and heatmaps, no raw-data appendix.
+   *
+   * @generated from field: trellis.survey.v1.ReportOptions options = 2;
+   */
+  options?: ReportOptions | undefined;
 };
 
 /**
@@ -378,6 +386,56 @@ export type GenerateReportRequest = Message<"trellis.survey.v1.GenerateReportReq
  */
 export const GenerateReportRequestSchema: GenMessage<GenerateReportRequest> = /*@__PURE__*/
   messageDesc(file_trellis_survey_v1_survey, 14);
+
+/**
+ * ReportOptions selects the report's sections and its cover-page branding.
+ *
+ * core/survey has supported these since the generator was written; the API
+ * hardcoded the defaults, so an operator always got the same document. Every
+ * field here is one the generator actually reads.
+ *
+ * @generated from message trellis.survey.v1.ReportOptions
+ */
+export type ReportOptions = Message<"trellis.survey.v1.ReportOptions"> & {
+  /**
+   * Per-floor heatmap images. Omitting them makes a much smaller PDF.
+   *
+   * @generated from field: bool include_heatmaps = 1;
+   */
+  includeHeatmaps: boolean;
+
+  /**
+   * The sample-by-sample appendix. Off by default: it is long.
+   *
+   * @generated from field: bool include_raw_data = 2;
+   */
+  includeRawData: boolean;
+
+  /**
+   * @generated from field: bool include_recommendations = 3;
+   */
+  includeRecommendations: boolean;
+
+  /**
+   * @generated from field: bool include_executive_summary = 4;
+   */
+  includeExecutiveSummary: boolean;
+
+  /**
+   * Printed on the cover page. This is what makes the PDF a deliverable
+   * rather than a printout.
+   *
+   * @generated from field: string company_name = 5;
+   */
+  companyName: string;
+};
+
+/**
+ * Describes the message trellis.survey.v1.ReportOptions.
+ * Use `create(ReportOptionsSchema)` to create a new message.
+ */
+export const ReportOptionsSchema: GenMessage<ReportOptions> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 15);
 
 /**
  * @generated from message trellis.survey.v1.GenerateReportResponse
@@ -394,7 +452,7 @@ export type GenerateReportResponse = Message<"trellis.survey.v1.GenerateReportRe
  * Use `create(GenerateReportResponseSchema)` to create a new message.
  */
 export const GenerateReportResponseSchema: GenMessage<GenerateReportResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 15);
+  messageDesc(file_trellis_survey_v1_survey, 16);
 
 /**
  * SurveyService serves measured Wi-Fi site surveys backed by core/survey.

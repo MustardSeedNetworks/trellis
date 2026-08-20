@@ -788,8 +788,11 @@ func (x *GetCoverageResponse) GetRecommendations() []string {
 }
 
 type GenerateReportRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	SurveyId      string                 `protobuf:"bytes,1,opt,name=survey_id,json=surveyId,proto3" json:"survey_id,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	SurveyId string                 `protobuf:"bytes,1,opt,name=survey_id,json=surveyId,proto3" json:"survey_id,omitempty"`
+	// What the report should contain. Absent means the engine's defaults:
+	// executive summary, recommendations and heatmaps, no raw-data appendix.
+	Options       *ReportOptions `protobuf:"bytes,2,opt,name=options,proto3" json:"options,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -831,6 +834,98 @@ func (x *GenerateReportRequest) GetSurveyId() string {
 	return ""
 }
 
+func (x *GenerateReportRequest) GetOptions() *ReportOptions {
+	if x != nil {
+		return x.Options
+	}
+	return nil
+}
+
+// ReportOptions selects the report's sections and its cover-page branding.
+//
+// core/survey has supported these since the generator was written; the API
+// hardcoded the defaults, so an operator always got the same document. Every
+// field here is one the generator actually reads.
+type ReportOptions struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Per-floor heatmap images. Omitting them makes a much smaller PDF.
+	IncludeHeatmaps bool `protobuf:"varint,1,opt,name=include_heatmaps,json=includeHeatmaps,proto3" json:"include_heatmaps,omitempty"`
+	// The sample-by-sample appendix. Off by default: it is long.
+	IncludeRawData          bool `protobuf:"varint,2,opt,name=include_raw_data,json=includeRawData,proto3" json:"include_raw_data,omitempty"`
+	IncludeRecommendations  bool `protobuf:"varint,3,opt,name=include_recommendations,json=includeRecommendations,proto3" json:"include_recommendations,omitempty"`
+	IncludeExecutiveSummary bool `protobuf:"varint,4,opt,name=include_executive_summary,json=includeExecutiveSummary,proto3" json:"include_executive_summary,omitempty"`
+	// Printed on the cover page. This is what makes the PDF a deliverable
+	// rather than a printout.
+	CompanyName   string `protobuf:"bytes,5,opt,name=company_name,json=companyName,proto3" json:"company_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReportOptions) Reset() {
+	*x = ReportOptions{}
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReportOptions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReportOptions) ProtoMessage() {}
+
+func (x *ReportOptions) ProtoReflect() protoreflect.Message {
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReportOptions.ProtoReflect.Descriptor instead.
+func (*ReportOptions) Descriptor() ([]byte, []int) {
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ReportOptions) GetIncludeHeatmaps() bool {
+	if x != nil {
+		return x.IncludeHeatmaps
+	}
+	return false
+}
+
+func (x *ReportOptions) GetIncludeRawData() bool {
+	if x != nil {
+		return x.IncludeRawData
+	}
+	return false
+}
+
+func (x *ReportOptions) GetIncludeRecommendations() bool {
+	if x != nil {
+		return x.IncludeRecommendations
+	}
+	return false
+}
+
+func (x *ReportOptions) GetIncludeExecutiveSummary() bool {
+	if x != nil {
+		return x.IncludeExecutiveSummary
+	}
+	return false
+}
+
+func (x *ReportOptions) GetCompanyName() string {
+	if x != nil {
+		return x.CompanyName
+	}
+	return ""
+}
+
 type GenerateReportResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Pdf           []byte                 `protobuf:"bytes,1,opt,name=pdf,proto3" json:"pdf,omitempty"`
@@ -840,7 +935,7 @@ type GenerateReportResponse struct {
 
 func (x *GenerateReportResponse) Reset() {
 	*x = GenerateReportResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[15]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -852,7 +947,7 @@ func (x *GenerateReportResponse) String() string {
 func (*GenerateReportResponse) ProtoMessage() {}
 
 func (x *GenerateReportResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[15]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -865,7 +960,7 @@ func (x *GenerateReportResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateReportResponse.ProtoReflect.Descriptor instead.
 func (*GenerateReportResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{15}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *GenerateReportResponse) GetPdf() []byte {
@@ -925,9 +1020,16 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\x13GetCoverageResponse\x12%\n" +
 	"\x0ecoverage_score\x18\x01 \x01(\x01R\rcoverageScore\x12&\n" +
 	"\x0fdead_zone_count\x18\x02 \x01(\x05R\rdeadZoneCount\x12(\n" +
-	"\x0frecommendations\x18\x03 \x03(\tR\x0frecommendations\"4\n" +
+	"\x0frecommendations\x18\x03 \x03(\tR\x0frecommendations\"p\n" +
 	"\x15GenerateReportRequest\x12\x1b\n" +
-	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\"*\n" +
+	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\x12:\n" +
+	"\aoptions\x18\x02 \x01(\v2 .trellis.survey.v1.ReportOptionsR\aoptions\"\xfc\x01\n" +
+	"\rReportOptions\x12)\n" +
+	"\x10include_heatmaps\x18\x01 \x01(\bR\x0fincludeHeatmaps\x12(\n" +
+	"\x10include_raw_data\x18\x02 \x01(\bR\x0eincludeRawData\x127\n" +
+	"\x17include_recommendations\x18\x03 \x01(\bR\x16includeRecommendations\x12:\n" +
+	"\x19include_executive_summary\x18\x04 \x01(\bR\x17includeExecutiveSummary\x12!\n" +
+	"\fcompany_name\x18\x05 \x01(\tR\vcompanyName\"*\n" +
 	"\x16GenerateReportResponse\x12\x10\n" +
 	"\x03pdf\x18\x01 \x01(\fR\x03pdf2\xb0\x05\n" +
 	"\rSurveyService\x12h\n" +
@@ -952,7 +1054,7 @@ func file_trellis_survey_v1_survey_proto_rawDescGZIP() []byte {
 	return file_trellis_survey_v1_survey_proto_rawDescData
 }
 
-var file_trellis_survey_v1_survey_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_trellis_survey_v1_survey_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_trellis_survey_v1_survey_proto_goTypes = []any{
 	(*SurveySummary)(nil),           // 0: trellis.survey.v1.SurveySummary
 	(*ImportAirMapperRequest)(nil),  // 1: trellis.survey.v1.ImportAirMapperRequest
@@ -969,32 +1071,34 @@ var file_trellis_survey_v1_survey_proto_goTypes = []any{
 	(*GetCoverageRequest)(nil),      // 12: trellis.survey.v1.GetCoverageRequest
 	(*GetCoverageResponse)(nil),     // 13: trellis.survey.v1.GetCoverageResponse
 	(*GenerateReportRequest)(nil),   // 14: trellis.survey.v1.GenerateReportRequest
-	(*GenerateReportResponse)(nil),  // 15: trellis.survey.v1.GenerateReportResponse
+	(*ReportOptions)(nil),           // 15: trellis.survey.v1.ReportOptions
+	(*GenerateReportResponse)(nil),  // 16: trellis.survey.v1.GenerateReportResponse
 }
 var file_trellis_survey_v1_survey_proto_depIdxs = []int32{
 	0,  // 0: trellis.survey.v1.ImportAirMapperResponse.survey:type_name -> trellis.survey.v1.SurveySummary
 	0,  // 1: trellis.survey.v1.ListSurveysResponse.surveys:type_name -> trellis.survey.v1.SurveySummary
 	0,  // 2: trellis.survey.v1.GetSurveyResponse.survey:type_name -> trellis.survey.v1.SurveySummary
 	11, // 3: trellis.survey.v1.GetHeatmapResponse.legend:type_name -> trellis.survey.v1.LegendStop
-	1,  // 4: trellis.survey.v1.SurveyService.ImportAirMapper:input_type -> trellis.survey.v1.ImportAirMapperRequest
-	3,  // 5: trellis.survey.v1.SurveyService.ListSurveys:input_type -> trellis.survey.v1.ListSurveysRequest
-	5,  // 6: trellis.survey.v1.SurveyService.GetSurvey:input_type -> trellis.survey.v1.GetSurveyRequest
-	7,  // 7: trellis.survey.v1.SurveyService.DeleteSurvey:input_type -> trellis.survey.v1.DeleteSurveyRequest
-	9,  // 8: trellis.survey.v1.SurveyService.GetHeatmap:input_type -> trellis.survey.v1.GetHeatmapRequest
-	12, // 9: trellis.survey.v1.SurveyService.GetCoverage:input_type -> trellis.survey.v1.GetCoverageRequest
-	14, // 10: trellis.survey.v1.SurveyService.GenerateReport:input_type -> trellis.survey.v1.GenerateReportRequest
-	2,  // 11: trellis.survey.v1.SurveyService.ImportAirMapper:output_type -> trellis.survey.v1.ImportAirMapperResponse
-	4,  // 12: trellis.survey.v1.SurveyService.ListSurveys:output_type -> trellis.survey.v1.ListSurveysResponse
-	6,  // 13: trellis.survey.v1.SurveyService.GetSurvey:output_type -> trellis.survey.v1.GetSurveyResponse
-	8,  // 14: trellis.survey.v1.SurveyService.DeleteSurvey:output_type -> trellis.survey.v1.DeleteSurveyResponse
-	10, // 15: trellis.survey.v1.SurveyService.GetHeatmap:output_type -> trellis.survey.v1.GetHeatmapResponse
-	13, // 16: trellis.survey.v1.SurveyService.GetCoverage:output_type -> trellis.survey.v1.GetCoverageResponse
-	15, // 17: trellis.survey.v1.SurveyService.GenerateReport:output_type -> trellis.survey.v1.GenerateReportResponse
-	11, // [11:18] is the sub-list for method output_type
-	4,  // [4:11] is the sub-list for method input_type
-	4,  // [4:4] is the sub-list for extension type_name
-	4,  // [4:4] is the sub-list for extension extendee
-	0,  // [0:4] is the sub-list for field type_name
+	15, // 4: trellis.survey.v1.GenerateReportRequest.options:type_name -> trellis.survey.v1.ReportOptions
+	1,  // 5: trellis.survey.v1.SurveyService.ImportAirMapper:input_type -> trellis.survey.v1.ImportAirMapperRequest
+	3,  // 6: trellis.survey.v1.SurveyService.ListSurveys:input_type -> trellis.survey.v1.ListSurveysRequest
+	5,  // 7: trellis.survey.v1.SurveyService.GetSurvey:input_type -> trellis.survey.v1.GetSurveyRequest
+	7,  // 8: trellis.survey.v1.SurveyService.DeleteSurvey:input_type -> trellis.survey.v1.DeleteSurveyRequest
+	9,  // 9: trellis.survey.v1.SurveyService.GetHeatmap:input_type -> trellis.survey.v1.GetHeatmapRequest
+	12, // 10: trellis.survey.v1.SurveyService.GetCoverage:input_type -> trellis.survey.v1.GetCoverageRequest
+	14, // 11: trellis.survey.v1.SurveyService.GenerateReport:input_type -> trellis.survey.v1.GenerateReportRequest
+	2,  // 12: trellis.survey.v1.SurveyService.ImportAirMapper:output_type -> trellis.survey.v1.ImportAirMapperResponse
+	4,  // 13: trellis.survey.v1.SurveyService.ListSurveys:output_type -> trellis.survey.v1.ListSurveysResponse
+	6,  // 14: trellis.survey.v1.SurveyService.GetSurvey:output_type -> trellis.survey.v1.GetSurveyResponse
+	8,  // 15: trellis.survey.v1.SurveyService.DeleteSurvey:output_type -> trellis.survey.v1.DeleteSurveyResponse
+	10, // 16: trellis.survey.v1.SurveyService.GetHeatmap:output_type -> trellis.survey.v1.GetHeatmapResponse
+	13, // 17: trellis.survey.v1.SurveyService.GetCoverage:output_type -> trellis.survey.v1.GetCoverageResponse
+	16, // 18: trellis.survey.v1.SurveyService.GenerateReport:output_type -> trellis.survey.v1.GenerateReportResponse
+	12, // [12:19] is the sub-list for method output_type
+	5,  // [5:12] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_trellis_survey_v1_survey_proto_init() }
@@ -1008,7 +1112,7 @@ func file_trellis_survey_v1_survey_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_trellis_survey_v1_survey_proto_rawDesc), len(file_trellis_survey_v1_survey_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   16,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
