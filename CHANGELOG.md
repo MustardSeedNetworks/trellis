@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.10](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.9...v0.1.10) (2026-08-20)
+
+
+### Bug Fixes
+
+* **lint:** scope Biome's dist and coverage excludes to where they land ([#76](https://github.com/MustardSeedNetworks/trellis/issues/76)) ([b57cf00](https://github.com/MustardSeedNetworks/trellis/commit/b57cf00c7ce37c607ae66159ccf51ff2c549947f)), closes [#71](https://github.com/MustardSeedNetworks/trellis/issues/71)
+
 ## [0.1.9](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.8...v0.1.9) (2026-08-20)
 
 
