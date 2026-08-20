@@ -79,6 +79,12 @@ jobs:
       - name: Theme contract (semantic classes resolve)
         run: python3 scripts/check-theme-contract.py
 
+      # The four products each own their tsconfig, so the strictness flags
+      # drift silently — a missing one never announces itself, it just checks
+      # less than its sibling does.
+      - name: TypeScript strictness contract
+        run: python3 scripts/check-tsconfig-flags.py
+
       - name: Check for sensitive files
         run: |
           SENSITIVE_FILES=$(find . -type f \( \
