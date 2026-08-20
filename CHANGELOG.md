@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.12](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.11...v0.1.12) (2026-08-20)
+
+
+### Features
+
+* **reports:** let the operator choose what the report contains ([#84](https://github.com/MustardSeedNetworks/trellis/issues/84)) ([a4fc3f5](https://github.com/MustardSeedNetworks/trellis/commit/a4fc3f550fd8e1af782e2a2be76a97b40fbaf9d3)), closes [#83](https://github.com/MustardSeedNetworks/trellis/issues/83)
+
+
+### Miscellaneous
+
+* **deps:** update github actions ([#81](https://github.com/MustardSeedNetworks/trellis/issues/81)) ([13a027b](https://github.com/MustardSeedNetworks/trellis/commit/13a027bc6b5eae35fa902866f962267370439d43))
+* **deps:** update module honnef.co/go/tools to v0.8.0 ([#25](https://github.com/MustardSeedNetworks/trellis/issues/25)) ([ad728c7](https://github.com/MustardSeedNetworks/trellis/commit/ad728c79879d87650d3e5f27888ada2f0b05aba2))
+* **ts:** adopt isolatedModules and gate the fleet's strictness contract ([#80](https://github.com/MustardSeedNetworks/trellis/issues/80)) ([6fb15d9](https://github.com/MustardSeedNetworks/trellis/commit/6fb15d9595b8b631fe88e1f2937c8005ac16a5fb))
+
 ## [0.1.11](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.10...v0.1.11) (2026-08-20)
 
 
