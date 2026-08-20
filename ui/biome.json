@@ -11,8 +11,8 @@
     "includes": [
       "**",
       "!**/node_modules",
-      "!**/dist",
-      "!**/coverage",
+      "!dist",
+      "!coverage",
       "!**/package-lock.json",
       "!**/src/gen"
     ]
