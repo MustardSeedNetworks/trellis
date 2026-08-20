@@ -72,6 +72,13 @@ jobs:
       - name: File-size gate (baseline-ratchet)
         run: ./scripts/check-file-size.sh
 
+      # A theme that is defined but not rendered is the failure the design
+      # rollout retired grep-based validation over. This checks the direction
+      # that can actually fail: every semantic class the markup uses has a
+      # definition behind it.
+      - name: Theme contract (semantic classes resolve)
+        run: python3 scripts/check-theme-contract.py
+
       - name: Check for sensitive files
         run: |
           SENSITIVE_FILES=$(find . -type f \( \
