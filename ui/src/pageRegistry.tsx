@@ -1,8 +1,9 @@
 import type { LucideIcon } from 'lucide-react';
-import { Signal, Upload, Waypoints } from 'lucide-react';
+import { FileText, Signal, Upload, Waypoints } from 'lucide-react';
 import type { FC } from 'react';
 import { CoveragePage } from '@/pages/CoveragePage';
 import { ImportPage } from '@/pages/ImportPage';
+import { ReportsPage } from '@/pages/ReportsPage';
 import { SurveysPage } from '@/pages/SurveysPage';
 
 /**
@@ -51,5 +52,13 @@ export const pages: PageConfig[] = [
     description: 'Measured signal across the surveyed floor, and where it falls short.',
     icon: Signal,
     component: CoveragePage,
+  },
+  {
+    path: '/reports',
+    eyebrow: 'Deliver',
+    title: 'Reports',
+    description: 'Generate a PDF for a survey, choosing what it contains.',
+    icon: FileText,
+    component: ReportsPage,
   },
 ];

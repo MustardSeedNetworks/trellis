@@ -122,6 +122,26 @@ message GetCoverageResponse {
 
 message GenerateReportRequest {
   string survey_id = 1;
+  // What the report should contain. Absent means the engine's defaults:
+  // executive summary, recommendations and heatmaps, no raw-data appendix.
+  ReportOptions options = 2;
+}
+
+// ReportOptions selects the report's sections and its cover-page branding.
+//
+// core/survey has supported these since the generator was written; the API
+// hardcoded the defaults, so an operator always got the same document. Every
+// field here is one the generator actually reads.
+message ReportOptions {
+  // Per-floor heatmap images. Omitting them makes a much smaller PDF.
+  bool include_heatmaps = 1;
+  // The sample-by-sample appendix. Off by default: it is long.
+  bool include_raw_data = 2;
+  bool include_recommendations = 3;
+  bool include_executive_summary = 4;
+  // Printed on the cover page. This is what makes the PDF a deliverable
+  // rather than a printout.
+  string company_name = 5;
 }
 
 message GenerateReportResponse {

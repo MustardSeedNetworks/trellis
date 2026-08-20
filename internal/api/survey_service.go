@@ -209,12 +209,32 @@ func (h *SurveyServiceHandler) GenerateReport(
 		return nil, notFoundOrInternal(err)
 	}
 
-	pdf, err := survey.NewReportGenerator(svy, survey.DefaultReportOptions()).Generate()
+	pdf, err := survey.NewReportGenerator(svy, reportOptions(req.Msg.GetOptions())).Generate()
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
 	return connect.NewResponse(&surveyv1.GenerateReportResponse{Pdf: pdf}), nil
+}
+
+// reportOptions maps the request's section choices onto the generator's.
+//
+// A request that sends no options gets the engine's defaults, which is what
+// every report got before the options could cross the wire at all. Once a
+// caller does send them, they are taken literally: proto3 cannot distinguish
+// an unset bool from false, so a partially-filled options message would
+// otherwise silently re-enable sections the operator turned off.
+func reportOptions(opts *surveyv1.ReportOptions) survey.ReportOptions {
+	if opts == nil {
+		return survey.DefaultReportOptions()
+	}
+	return survey.ReportOptions{
+		IncludeHeatmaps:         opts.GetIncludeHeatmaps(),
+		IncludeRawData:          opts.GetIncludeRawData(),
+		IncludeRecommendations:  opts.GetIncludeRecommendations(),
+		IncludeExecutiveSummary: opts.GetIncludeExecutiveSummary(),
+		CompanyName:             opts.GetCompanyName(),
+	}
 }
 
 // toSurveySummary maps a core survey.Survey onto the proto SurveySummary.
