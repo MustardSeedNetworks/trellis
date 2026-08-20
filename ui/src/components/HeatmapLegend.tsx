@@ -19,7 +19,14 @@ interface HeatmapLegendProps {
 }
 
 export function HeatmapLegend({ stops, unit }: HeatmapLegendProps) {
-  if (stops.length < 2) {
+  const lowest = stops.at(0);
+  const highest = stops.at(-1);
+
+  /* Two stops is the minimum that makes a gradient. The existence checks are
+     what narrow the ends' type — under noUncheckedIndexedAccess an index is
+     not a promise that something is there — and they are the same condition
+     the length check states, so neither is decoration. */
+  if (stops.length < 2 || lowest === undefined || highest === undefined) {
     /* One stop is not a gradient and zero is not a scale. Either means the
        reply did not describe what it drew, which is worth saying rather than
        rendering a bar that implies a range. */
@@ -30,8 +37,8 @@ export function HeatmapLegend({ stops, unit }: HeatmapLegendProps) {
     );
   }
 
-  const first = stops[0].value;
-  const last = stops[stops.length - 1].value;
+  const first = lowest.value;
+  const last = highest.value;
   const span = last - first;
 
   const position = (value: number) => (span === 0 ? 0 : ((value - first) / span) * 100);
