@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.9](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.8...v0.1.9) (2026-08-20)
+
+
+### Bug Fixes
+
+* **theme:** define the semantic scale the shared shell is written against ([#74](https://github.com/MustardSeedNetworks/trellis/issues/74)) ([99f014d](https://github.com/MustardSeedNetworks/trellis/commit/99f014da3a2a2f863d215e0f25cd5444d9045b03)), closes [#70](https://github.com/MustardSeedNetworks/trellis/issues/70)
+* **ui:** serve client routes from the binary instead of 404ing them ([#73](https://github.com/MustardSeedNetworks/trellis/issues/73)) ([38837ad](https://github.com/MustardSeedNetworks/trellis/commit/38837ad57e9bbf4d984dd3c9e4612ea973bd4296)), closes [#69](https://github.com/MustardSeedNetworks/trellis/issues/69)
+
 ## [0.1.8](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.7...v0.1.8) (2026-08-20)
 
 
