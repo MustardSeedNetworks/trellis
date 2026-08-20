@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1.8](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.7...v0.1.8) (2026-08-20)
+
+
+### Features
+
+* **coverage:** give the heatmap its own page, with a legend from the render scale ([#68](https://github.com/MustardSeedNetworks/trellis/issues/68)) ([9e4b40e](https://github.com/MustardSeedNetworks/trellis/commit/9e4b40e28507d61346b39bdb8bde558454df877d))
+* **import:** give AirMapper ingest its own page ([#60](https://github.com/MustardSeedNetworks/trellis/issues/60)) ([748cf2e](https://github.com/MustardSeedNetworks/trellis/commit/748cf2e47aba067c960ad0b49ab8dbf97c74fb13))
+
+
+### Bug Fixes
+
+* **nav:** stop listing Reports and Exports as destinations ([#67](https://github.com/MustardSeedNetworks/trellis/issues/67)) ([2bca1cb](https://github.com/MustardSeedNetworks/trellis/commit/2bca1cb6430400c3336210c8fb7961f8581cda6e))
+
+
+### Continuous Integration
+
+* reconcile skipped releases with a 3-hourly release-please run ([#58](https://github.com/MustardSeedNetworks/trellis/issues/58)) ([eaa2c0e](https://github.com/MustardSeedNetworks/trellis/commit/eaa2c0e4a76fe5c86466b2b75516313472179d10))
+
+
+### Miscellaneous
+
+* **deps:** update github actions ([#72](https://github.com/MustardSeedNetworks/trellis/issues/72)) ([b99b251](https://github.com/MustardSeedNetworks/trellis/commit/b99b251ef8d87057b993448ab7a6d51b31f8439b))
+
 ## [0.1.7](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.6...v0.1.7) (2026-08-18)
 
 
