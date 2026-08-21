@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.14](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.13...v0.1.14) (2026-08-21)
+
+
+### Continuous Integration
+
+* refuse to start tests while orphaned test binaries are running ([#90](https://github.com/MustardSeedNetworks/trellis/issues/90)) ([4a1fb2f](https://github.com/MustardSeedNetworks/trellis/commit/4a1fb2f4ba17e2a3155af93d40540a329f43d0ee))
+* stop the PR body lint cutting Testing Evidence at a fenced heading ([#93](https://github.com/MustardSeedNetworks/trellis/issues/93)) ([a26a072](https://github.com/MustardSeedNetworks/trellis/commit/a26a072bff54c0e773d2194d5bab6dbf1f7b2f1f))
+
+
+### Miscellaneous
+
+* **deps:** update dependency @babel/core to v8 ([#86](https://github.com/MustardSeedNetworks/trellis/issues/86)) ([3b62940](https://github.com/MustardSeedNetworks/trellis/commit/3b629404b11fee727aaff9c98f7ebabec4e040c1))
+
 ## [0.1.13](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.12...v0.1.13) (2026-08-21)
 
 
