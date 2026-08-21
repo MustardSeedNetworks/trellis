@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.13](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.12...v0.1.13) (2026-08-21)
+
+
+### Features
+
+* **build:** enable the React Compiler, keeping every existing memo ([#85](https://github.com/MustardSeedNetworks/trellis/issues/85)) ([d88f823](https://github.com/MustardSeedNetworks/trellis/commit/d88f823ec729aad03d1723db3deee630d9c370e0))
+
+
+### Bug Fixes
+
+* **test:** run the React Compiler in vitest, so tests exercise what ships ([#88](https://github.com/MustardSeedNetworks/trellis/issues/88)) ([0ce6aff](https://github.com/MustardSeedNetworks/trellis/commit/0ce6affea912ef945a3d2c5e8ee8a53aad73e254))
+
 ## [0.1.12](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.11...v0.1.12) (2026-08-20)
 
 
