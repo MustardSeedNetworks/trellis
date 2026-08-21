@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.15](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.14...v0.1.15) (2026-08-21)
+
+
+### Miscellaneous
+
+* **deps:** update module honnef.co/go/tools to v0.8.1 ([#94](https://github.com/MustardSeedNetworks/trellis/issues/94)) ([55b8797](https://github.com/MustardSeedNetworks/trellis/commit/55b8797ebf7a296ca9c958bfacbc77008b72a223))
+
 ## [0.1.14](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.13...v0.1.14) (2026-08-21)
 
 
