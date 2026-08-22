@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.17](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.16...v0.1.17) (2026-08-22)
+
+
+### Bug Fixes
+
+* **deps:** let npm regenerate the lockfile, which unblocks Renovate ([#98](https://github.com/MustardSeedNetworks/trellis/issues/98)) ([e523073](https://github.com/MustardSeedNetworks/trellis/commit/e52307321fa39a0871c3872c5fa029d9fdaec650))
+
 ## [0.1.16](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.15...v0.1.16) (2026-08-22)
 
 
