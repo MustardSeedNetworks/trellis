@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.16](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.15...v0.1.16) (2026-08-22)
+
+
+### Continuous Integration
+
+* exempt bots from the issue-title lint ([#96](https://github.com/MustardSeedNetworks/trellis/issues/96)) ([86e5a13](https://github.com/MustardSeedNetworks/trellis/commit/86e5a13a57ba3337e03557d963fd26c3ef1069c2))
+
 ## [0.1.15](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.14...v0.1.15) (2026-08-21)
 
 
