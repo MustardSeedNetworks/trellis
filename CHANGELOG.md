@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.18](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.17...v0.1.18) (2026-08-22)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.33.0 ([#103](https://github.com/MustardSeedNetworks/trellis/issues/103)) ([7de9d25](https://github.com/MustardSeedNetworks/trellis/commit/7de9d25181b2b40d162a72717fa321c69a21a868))
+
+
+### Miscellaneous
+
+* **deps:** update dependency @biomejs/biome to v2.5.10 ([#101](https://github.com/MustardSeedNetworks/trellis/issues/101)) ([7e05895](https://github.com/MustardSeedNetworks/trellis/commit/7e058953295463e325d52f31a7d4ed8cdd05a703))
+* **deps:** update dependency @vitejs/plugin-react to v6.1.0 ([#20](https://github.com/MustardSeedNetworks/trellis/issues/20)) ([6b053fc](https://github.com/MustardSeedNetworks/trellis/commit/6b053fc01ff025d0176ba292462e536439ca213d))
+* **deps:** update frontend toolchain ([#102](https://github.com/MustardSeedNetworks/trellis/issues/102)) ([6b7abce](https://github.com/MustardSeedNetworks/trellis/commit/6b7abceb03a8b6bad1647907b1290234ab43d2a6))
+
 ## [0.1.17](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.16...v0.1.17) (2026-08-22)
 
 
