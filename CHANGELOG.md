@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.19](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.18...v0.1.19) (2026-08-22)
+
+
+### Continuous Integration
+
+* serialise Release Please so concurrent runs stop racing the ref ([#105](https://github.com/MustardSeedNetworks/trellis/issues/105)) ([3a7d0cf](https://github.com/MustardSeedNetworks/trellis/commit/3a7d0cf614f70a902fcc4fb333474c1fbc410991))
+
 ## [0.1.18](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.17...v0.1.18) (2026-08-22)
 
 
