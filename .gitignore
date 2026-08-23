@@ -16,3 +16,10 @@ internal/api/ui/*
 *.so
 *.dylib
 .DS_Store
+
+# Migrations are source, not scratch output. A developer global gitignore may
+# exclude *.sql (this one does), which drops them from commits silently — the
+# build then fails at the //go:embed directive with "no matching files found",
+# nowhere near the cause. The repo must be self-contained whatever any
+# developer config says. seed carries the same un-ignore for the same reason.
+!core/survey/migrations/*.sql
