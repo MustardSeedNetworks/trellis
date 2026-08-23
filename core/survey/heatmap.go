@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/draw"
+	_ "image/jpeg" // AirMapper stores floor plans as JPEG; registered for image.Decode.
 	"image/png"
 	"strings"
 	"time"
@@ -152,8 +154,18 @@ func GenerateHeatmap(survey *Survey, config HeatmapConfig) (*HeatmapResult, erro
 	// Create image
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 
-	// Fill with heatmap colors
-	renderHeatmapToImage(img, grid, config.CellSize, &colorScale, config.Opacity)
+	// The floor plan is the base layer. Heat is rendered at 70% alpha over it,
+	// which is what makes a coverage map readable — colour alone does not say
+	// which room is weak. A live scan has no plan and keeps a blank canvas.
+	drawFloorPlan(img, floorPlanOf(survey))
+
+	// Heat goes onto its own transparent layer and is composited over the
+	// plan. renderHeatmapToImage writes cells with Set, which replaces a pixel
+	// rather than blending it, so rendering straight onto the canvas would
+	// erase the plan and quietly undo the layer above.
+	heat := image.NewRGBA(image.Rect(0, 0, width, height))
+	renderHeatmapToImage(heat, grid, config.CellSize, &colorScale, config.Opacity)
+	draw.Draw(img, img.Bounds(), heat, image.Point{}, draw.Over)
 
 	// Optionally show sample points
 	if config.ShowSamples {
@@ -290,6 +302,43 @@ func getColorScaleForType(ht HeatmapType) ColorScale {
 	default:
 		return GetRSSIColorScale()
 	}
+}
+
+// floorPlanOf returns the plan the heatmap is drawn on, preferring the active
+// floor and falling back to the survey's own plan, mirroring how the canvas
+// dimensions are chosen.
+func floorPlanOf(survey *Survey) *FloorPlan {
+	if activeFloor := survey.GetActiveFloor(); activeFloor != nil && activeFloor.FloorPlan != nil {
+		return activeFloor.FloorPlan
+	}
+	return survey.FloorPlan
+}
+
+// drawFloorPlan paints the plan across dst, scaling nothing: the canvas is
+// sized from the plan, so they agree by construction.
+//
+// A plan that will not decode is not worth failing a heatmap over — the
+// measurements are still worth seeing — so this leaves the canvas blank and
+// says nothing. The formats registered above are the ones AirMapper writes.
+func drawFloorPlan(dst *image.RGBA, plan *FloorPlan) {
+	if plan == nil || plan.ImageData == "" {
+		return
+	}
+	// ImageData is a data URI. The payload is what follows the first comma;
+	// the media type is not consulted, image.Decode sniffs the real format.
+	encoded := plan.ImageData
+	if _, payload, found := strings.Cut(encoded, ","); found {
+		encoded = payload
+	}
+	raw, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		return
+	}
+	src, _, err := image.Decode(bytes.NewReader(raw))
+	if err != nil {
+		return
+	}
+	draw.Draw(dst, dst.Bounds(), src, src.Bounds().Min, draw.Src)
 }
 
 // renderHeatmapToImage fills the image with interpolated heatmap colors.
