@@ -28,7 +28,7 @@ func (m *Manager) UpdateFloorPlan(id string, floorPlan *FloorPlan) error {
 	floor.UpdatedAt = time.Now()
 	survey.UpdatedAt = time.Now()
 
-	return m.saveSurvey(survey)
+	return m.persistSurvey(survey)
 }
 
 // UpdateFloorPlanByFloorID updates the floor plan for a specific floor.
@@ -50,7 +50,7 @@ func (m *Manager) UpdateFloorPlanByFloorID(surveyID, floorID string, floorPlan *
 	floor.UpdatedAt = time.Now()
 	survey.UpdatedAt = time.Now()
 
-	return m.saveSurvey(survey)
+	return m.persistSurvey(survey)
 }
 
 // AddFloor adds a new floor to a survey.
@@ -76,7 +76,7 @@ func (m *Manager) AddFloor(surveyID, name string, level int) (*Floor, error) {
 	survey.Floors = append(survey.Floors, floor)
 	survey.UpdatedAt = now
 
-	if err := m.saveSurvey(survey); err != nil {
+	if err := m.persistSurvey(survey); err != nil {
 		return nil, err
 	}
 
@@ -103,7 +103,7 @@ func (m *Manager) UpdateFloor(surveyID, floorID, name string, level int) error {
 	floor.UpdatedAt = time.Now()
 	survey.UpdatedAt = time.Now()
 
-	return m.saveSurvey(survey)
+	return m.persistSurvey(survey)
 }
 
 // DeleteFloor removes a floor from a survey.
@@ -132,7 +132,7 @@ func (m *Manager) DeleteFloor(surveyID, floorID string) error {
 			}
 
 			survey.UpdatedAt = time.Now()
-			return m.saveSurvey(survey)
+			return m.persistSurvey(survey)
 		}
 	}
 
@@ -158,7 +158,7 @@ func (m *Manager) SetActiveFloor(surveyID, floorID string) error {
 	survey.ActiveFloorID = floorID
 	survey.UpdatedAt = time.Now()
 
-	return m.saveSurvey(survey)
+	return m.persistSurvey(survey)
 }
 
 // GetFloors returns all floors for a survey.

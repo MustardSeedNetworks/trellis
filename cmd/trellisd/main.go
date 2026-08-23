@@ -61,7 +61,12 @@ func run() error {
 		addr = defaultAddr
 	}
 
-	manager := survey.NewManager(dataDir, nil, nil, nil, nil)
+	manager, err := survey.NewManager(dataDir, nil, nil, nil, nil)
+	if err != nil {
+		slog.Error("open survey store", "error", err)
+		os.Exit(1)
+	}
+	defer func() { _ = manager.Close() }()
 	if err := manager.LoadSurveys(); err != nil {
 		return err
 	}

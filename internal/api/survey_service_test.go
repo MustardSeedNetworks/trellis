@@ -79,7 +79,7 @@ func TestSurveyServiceEndToEnd(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
-	mgr := survey.NewManager(dir, nil, nil, nil, nil)
+	mgr := mustManager(t, dir, nil, nil, nil, nil)
 	handler := api.NewSurveyServiceHandler(mgr)
 
 	mux := http.NewServeMux()
@@ -253,7 +253,7 @@ func TestGetSurveyNotFound(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
-	mgr := survey.NewManager(dir, nil, nil, nil, nil)
+	mgr := mustManager(t, dir, nil, nil, nil, nil)
 	handler := api.NewSurveyServiceHandler(mgr)
 
 	mux := http.NewServeMux()
@@ -279,7 +279,7 @@ func TestImportAirMapperInvalidArgument(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
-	mgr := survey.NewManager(dir, nil, nil, nil, nil)
+	mgr := mustManager(t, dir, nil, nil, nil, nil)
 	handler := api.NewSurveyServiceHandler(mgr)
 
 	mux := http.NewServeMux()

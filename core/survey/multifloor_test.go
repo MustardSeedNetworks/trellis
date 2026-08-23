@@ -9,7 +9,7 @@ import (
 
 func TestManager_AddFloor(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	// Create a survey first
 	s, err := m.CreateSurvey("Test Survey", "Description", "en0", survey.TypePassive)
@@ -45,7 +45,7 @@ func TestManager_AddFloor(t *testing.T) {
 
 func TestManager_AddFloor_SurveyNotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	_, err := m.AddFloor("non-existent", "Floor", 1)
 	if err == nil {
@@ -55,7 +55,7 @@ func TestManager_AddFloor_SurveyNotFound(t *testing.T) {
 
 func TestManager_UpdateFloor(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 	floorID := s.Floors[0].ID
@@ -80,7 +80,7 @@ func TestManager_UpdateFloor(t *testing.T) {
 
 func TestManager_UpdateFloor_SurveyNotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	err := m.UpdateFloor("non-existent", "floor", "Name", 1)
 	if err == nil {
@@ -90,7 +90,7 @@ func TestManager_UpdateFloor_SurveyNotFound(t *testing.T) {
 
 func TestManager_UpdateFloor_FloorNotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 
@@ -102,7 +102,7 @@ func TestManager_UpdateFloor_FloorNotFound(t *testing.T) {
 
 func TestManager_DeleteFloor(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 
@@ -123,7 +123,7 @@ func TestManager_DeleteFloor(t *testing.T) {
 
 func TestManager_DeleteFloor_LastFloor(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 	floorID := s.Floors[0].ID
@@ -140,7 +140,7 @@ func TestManager_DeleteFloor_LastFloor(t *testing.T) {
 
 func TestManager_DeleteFloor_SurveyNotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	err := m.DeleteFloor("non-existent", "floor")
 	if err == nil {
@@ -150,7 +150,7 @@ func TestManager_DeleteFloor_SurveyNotFound(t *testing.T) {
 
 func TestManager_DeleteFloor_FloorNotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 	// Add a second floor so we can try to delete a non-existent one
@@ -164,7 +164,7 @@ func TestManager_DeleteFloor_FloorNotFound(t *testing.T) {
 
 func TestManager_DeleteFloor_ActiveFloorReset(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 	floor1ID := s.Floors[0].ID
@@ -188,7 +188,7 @@ func TestManager_DeleteFloor_ActiveFloorReset(t *testing.T) {
 
 func TestManager_SetActiveFloor(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 	floor2, _ := m.AddFloor(s.ID, "Floor 2", 2)
@@ -206,7 +206,7 @@ func TestManager_SetActiveFloor(t *testing.T) {
 
 func TestManager_SetActiveFloor_SurveyNotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	err := m.SetActiveFloor("non-existent", "floor")
 	if err == nil {
@@ -216,7 +216,7 @@ func TestManager_SetActiveFloor_SurveyNotFound(t *testing.T) {
 
 func TestManager_SetActiveFloor_FloorNotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 
@@ -228,7 +228,7 @@ func TestManager_SetActiveFloor_FloorNotFound(t *testing.T) {
 
 func TestManager_GetFloors(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 	_, _ = m.AddFloor(s.ID, "Floor 2", 2)
@@ -245,7 +245,7 @@ func TestManager_GetFloors(t *testing.T) {
 
 func TestManager_GetFloors_SurveyNotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	_, err := m.GetFloors("non-existent")
 	if err == nil {
@@ -255,7 +255,7 @@ func TestManager_GetFloors_SurveyNotFound(t *testing.T) {
 
 func TestManager_GetFloor(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 	floorID := s.Floors[0].ID
@@ -272,7 +272,7 @@ func TestManager_GetFloor(t *testing.T) {
 
 func TestManager_GetFloor_SurveyNotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	_, err := m.GetFloor("non-existent", "floor")
 	if err == nil {
@@ -282,7 +282,7 @@ func TestManager_GetFloor_SurveyNotFound(t *testing.T) {
 
 func TestManager_GetFloor_FloorNotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 
@@ -294,7 +294,7 @@ func TestManager_GetFloor_FloorNotFound(t *testing.T) {
 
 func TestManager_AddSampleToFloor(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 	_ = m.StartSurvey(s.ID)
@@ -320,7 +320,7 @@ func TestManager_AddSampleToFloor(t *testing.T) {
 
 func TestManager_AddSampleToFloor_SurveyNotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	err := m.AddSampleToFloor("non-existent", "floor", 0, 0, nil)
 	if err == nil {
@@ -330,7 +330,7 @@ func TestManager_AddSampleToFloor_SurveyNotFound(t *testing.T) {
 
 func TestManager_AddSampleToFloor_SurveyNotInProgress(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 	// Don't start the survey
@@ -343,7 +343,7 @@ func TestManager_AddSampleToFloor_SurveyNotInProgress(t *testing.T) {
 
 func TestManager_AddSampleToFloor_FloorNotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 	_ = m.StartSurvey(s.ID)
@@ -356,7 +356,7 @@ func TestManager_AddSampleToFloor_FloorNotFound(t *testing.T) {
 
 func TestManager_UpdateFloorPlanByFloorID(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 	floorID := s.Floors[0].ID
@@ -383,7 +383,7 @@ func TestManager_UpdateFloorPlanByFloorID(t *testing.T) {
 
 func TestManager_UpdateFloorPlanByFloorID_SurveyNotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	err := m.UpdateFloorPlanByFloorID("non-existent", "floor", nil)
 	if err == nil {
@@ -393,7 +393,7 @@ func TestManager_UpdateFloorPlanByFloorID_SurveyNotFound(t *testing.T) {
 
 func TestManager_UpdateFloorPlanByFloorID_FloorNotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 
@@ -405,7 +405,7 @@ func TestManager_UpdateFloorPlanByFloorID_FloorNotFound(t *testing.T) {
 
 func TestManager_UpdateSurveySettings(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	// Create initial survey for baseline
 	_, _ = m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
@@ -479,7 +479,7 @@ func TestManager_UpdateSurveySettings(t *testing.T) {
 
 func TestManager_UpdateSurveySettings_SurveyNotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	err := m.UpdateSurveySettings("non-existent", survey.TypePassive, "", 5)
 	if err == nil {
@@ -489,7 +489,7 @@ func TestManager_UpdateSurveySettings_SurveyNotFound(t *testing.T) {
 
 func TestManager_UpdateSurveySettings_SurveyAlreadyStarted(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 	_ = m.StartSurvey(s.ID)
@@ -502,7 +502,7 @@ func TestManager_UpdateSurveySettings_SurveyAlreadyStarted(t *testing.T) {
 
 func TestManager_UpdateFloorPlan_NoActiveFloor(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	// Create survey and remove all floors to test no active floor case
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
@@ -523,7 +523,7 @@ func TestManager_UpdateFloorPlan_NoActiveFloor(t *testing.T) {
 
 func TestManager_AddSample_NoActiveFloor(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 	_ = m.StartSurvey(s.ID)
@@ -545,7 +545,7 @@ func TestManager_AddSample_NoActiveFloor(t *testing.T) {
 
 func TestManager_StartSurvey_AlreadyInProgress(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 	_ = m.StartSurvey(s.ID)

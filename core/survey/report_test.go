@@ -696,7 +696,7 @@ func TestReportGenerator_Generate_EmptyNetworks(t *testing.T) {
 
 func TestManager_GenerateReport(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	// Create a survey
 	s, err := m.CreateSurvey("Test Survey", "Description", "en0", survey.TypePassive)
@@ -716,7 +716,7 @@ func TestManager_GenerateReport(t *testing.T) {
 
 func TestManager_GenerateReport_SurveyNotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	_, err := m.GenerateReport("non-existent", survey.DefaultReportOptions())
 	if err == nil {

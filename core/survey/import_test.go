@@ -71,7 +71,7 @@ func TestImportAirMapperRoundTrip(t *testing.T) {
 
 	dir := t.TempDir()
 	// Import needs no live capture — all seams are nil.
-	mgr := survey.NewManager(dir, nil, nil, nil, nil)
+	mgr := mustManager(t, dir, nil, nil, nil, nil)
 
 	const (
 		w, h     = 1600, 1200
@@ -113,7 +113,7 @@ func TestImportAirMapperRoundTrip(t *testing.T) {
 	}
 
 	// --- Persistence round-trip: a fresh Manager reloads it ----------------
-	reopened := survey.NewManager(dir, nil, nil, nil, nil)
+	reopened := mustManager(t, dir, nil, nil, nil, nil)
 	if err := reopened.LoadSurveys(); err != nil {
 		t.Fatalf("LoadSurveys: %v", err)
 	}

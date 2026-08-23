@@ -35,7 +35,7 @@ func (fakeThroughputMeter) Measure(context.Context, string, int) (survey.Through
 func TestNewManager(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	mgr := survey.NewManager(tmpDir, fakeScanner{}, fakeConnMonitor{}, fakeThroughputMeter{}, nil)
+	mgr := mustManager(t, tmpDir, fakeScanner{}, fakeConnMonitor{}, fakeThroughputMeter{}, nil)
 	if mgr == nil {
 		t.Fatal("NewManager() returned nil")
 	}
@@ -126,7 +126,7 @@ func assertSurveyTimestamps(t *testing.T, s *survey.Survey) {
 
 func TestCreateSurvey(t *testing.T) {
 	tmpDir := t.TempDir()
-	mgr := survey.NewManager(tmpDir, nil, nil, nil, nil)
+	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
 
 	tests := []createSurveyTestCase{
 		{
@@ -184,7 +184,7 @@ func TestCreateSurvey(t *testing.T) {
 
 func TestGetSurvey(t *testing.T) {
 	tmpDir := t.TempDir()
-	mgr := survey.NewManager(tmpDir, nil, nil, nil, nil)
+	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
 
 	// Create a survey first.
 	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
@@ -243,7 +243,7 @@ func TestGetSurvey(t *testing.T) {
 
 func TestListSurveys(t *testing.T) {
 	tmpDir := t.TempDir()
-	mgr := survey.NewManager(tmpDir, nil, nil, nil, nil)
+	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
 
 	// Initially empty.
 	surveys := mgr.ListSurveys()
@@ -283,7 +283,7 @@ func TestListSurveys(t *testing.T) {
 
 func TestDeleteSurvey(t *testing.T) {
 	tmpDir := t.TempDir()
-	mgr := survey.NewManager(tmpDir, nil, nil, nil, nil)
+	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
 
 	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
 	if err != nil {
@@ -333,7 +333,7 @@ func TestDeleteSurvey(t *testing.T) {
 
 func TestStartSurvey(t *testing.T) {
 	tmpDir := t.TempDir()
-	mgr := survey.NewManager(tmpDir, nil, nil, nil, nil)
+	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
 
 	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
 	if err != nil {
@@ -391,7 +391,7 @@ func TestStartSurvey(t *testing.T) {
 
 func TestPauseSurvey(t *testing.T) {
 	tmpDir := t.TempDir()
-	mgr := survey.NewManager(tmpDir, nil, nil, nil, nil)
+	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
 
 	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
 	if err != nil {
@@ -452,7 +452,7 @@ func TestPauseSurvey(t *testing.T) {
 
 func TestCompleteSurvey(t *testing.T) {
 	tmpDir := t.TempDir()
-	mgr := survey.NewManager(tmpDir, nil, nil, nil, nil)
+	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
 
 	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
 	if err != nil {
@@ -513,7 +513,7 @@ func TestCompleteSurvey(t *testing.T) {
 
 func TestStateTransitions(t *testing.T) {
 	tmpDir := t.TempDir()
-	mgr := survey.NewManager(tmpDir, nil, nil, nil, nil)
+	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
 
 	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
 	if err != nil {
@@ -619,7 +619,7 @@ func runUpdateFloorPlanTest(
 
 func TestUpdateFloorPlan(t *testing.T) {
 	tmpDir := t.TempDir()
-	mgr := survey.NewManager(tmpDir, nil, nil, nil, nil)
+	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
 
 	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
 	if err != nil {
@@ -675,7 +675,7 @@ type addSampleTestFixture struct {
 func setupAddSampleTest(t *testing.T) *addSampleTestFixture {
 	t.Helper()
 	tmpDir := t.TempDir()
-	mgr := survey.NewManager(tmpDir, nil, nil, nil, nil)
+	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
 
 	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
 	if err != nil {
@@ -773,7 +773,7 @@ func TestAddSample(t *testing.T) {
 
 func TestPersistence(t *testing.T) {
 	tmpDir := t.TempDir()
-	mgr := survey.NewManager(tmpDir, nil, nil, nil, nil)
+	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
 
 	// Create a survey.
 	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
@@ -781,14 +781,16 @@ func TestPersistence(t *testing.T) {
 		t.Fatalf("CreateSurvey() failed: %v", err)
 	}
 
-	// Verify file was created.
-	filePath := filepath.Join(tmpDir, s.ID+".json")
-	if _, statErr := os.Stat(filePath); os.IsNotExist(statErr) {
-		t.Errorf("Survey file not created at %s", filePath)
+	// Verify the store exists. A survey is a row now, not a file, so this
+	// asserts the database was created rather than looking for <id>.json —
+	// the round-trip below is what proves the survey itself persisted.
+	dbPath := filepath.Join(tmpDir, "surveys.db")
+	if _, statErr := os.Stat(dbPath); os.IsNotExist(statErr) {
+		t.Errorf("survey store not created at %s", dbPath)
 	}
 
 	// Create new manager to load surveys.
-	mgr2 := survey.NewManager(tmpDir, nil, nil, nil, nil)
+	mgr2 := mustManager(t, tmpDir, nil, nil, nil, nil)
 
 	// Load surveys from disk.
 	err = mgr2.LoadSurveys()
@@ -814,20 +816,24 @@ func TestPersistence(t *testing.T) {
 		t.Errorf("Loaded survey Description = %v, want %v", loaded.Description, s.Description)
 	}
 
-	// Delete and verify file removed.
-	err = mgr2.DeleteSurvey(s.ID)
-	if err != nil {
+	// Delete, then prove it is gone from the store rather than from the
+	// filesystem: a third manager reloads from SQLite and must not find it.
+	if err = mgr2.DeleteSurvey(s.ID); err != nil {
 		t.Errorf("DeleteSurvey() failed: %v", err)
 	}
 
-	if _, statErr := os.Stat(filePath); !os.IsNotExist(statErr) {
-		t.Error("Survey file not deleted")
+	mgr3 := mustManager(t, tmpDir, nil, nil, nil, nil)
+	if err := mgr3.LoadSurveys(); err != nil {
+		t.Fatalf("LoadSurveys() after delete: %v", err)
+	}
+	if _, err := mgr3.GetSurvey(s.ID); err == nil {
+		t.Error("deleted survey still present after reload")
 	}
 }
 
 func TestConcurrentOperations(t *testing.T) {
 	tmpDir := t.TempDir()
-	mgr := survey.NewManager(tmpDir, nil, nil, nil, nil)
+	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
 
 	var wg sync.WaitGroup
 	numGoroutines := 10
@@ -855,7 +861,7 @@ func TestConcurrentOperations(t *testing.T) {
 
 func TestConcurrentSampleAddition(t *testing.T) {
 	tmpDir := t.TempDir()
-	mgr := survey.NewManager(tmpDir, nil, nil, nil, nil)
+	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
 
 	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
 	if err != nil {
@@ -907,7 +913,7 @@ func TestConcurrentSampleAddition(t *testing.T) {
 
 func TestSurveyTimestamps(t *testing.T) {
 	tmpDir := t.TempDir()
-	mgr := survey.NewManager(tmpDir, nil, nil, nil, nil)
+	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
 
 	beforeCreate := time.Now()
 	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
@@ -945,7 +951,7 @@ func TestSurveyTimestamps(t *testing.T) {
 
 func TestSampleCount(t *testing.T) {
 	tmpDir := t.TempDir()
-	mgr := survey.NewManager(tmpDir, nil, nil, nil, nil)
+	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
 
 	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
 	if err != nil {

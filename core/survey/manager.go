@@ -2,9 +2,11 @@ package survey
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -42,6 +44,7 @@ type Manager struct {
 	mu              sync.RWMutex
 	surveys         map[string]*Survey // key is survey ID
 	storagePath     string
+	db              *sql.DB
 	scanner         Scanner
 	connMonitor     ConnectionMonitor
 	throughputMeter ThroughputMeter
@@ -56,15 +59,31 @@ func NewManager(
 	connMonitor ConnectionMonitor,
 	throughputMeter ThroughputMeter,
 	anomalyDetector AnomalyDetector,
-) *Manager {
+) (*Manager, error) {
+	if err := os.MkdirAll(storagePath, 0o750); err != nil {
+		return nil, fmt.Errorf("create survey storage dir: %w", err)
+	}
+	db, err := openDB(filepath.Join(storagePath, "surveys.db"))
+	if err != nil {
+		return nil, err
+	}
 	return &Manager{
 		surveys:         make(map[string]*Survey),
 		storagePath:     storagePath,
+		db:              db,
 		scanner:         scanner,
 		connMonitor:     connMonitor,
 		throughputMeter: throughputMeter,
 		anomalyDetector: anomalyDetector,
+	}, nil
+}
+
+// Close releases the survey database.
+func (m *Manager) Close() error {
+	if m.db == nil {
+		return nil
 	}
+	return m.db.Close()
 }
 
 // CreateSurvey creates a new survey with a default floor.
@@ -100,7 +119,7 @@ func (m *Manager) CreateSurvey(name, description, iface string, surveyType Type)
 	m.surveys[survey.ID] = survey
 
 	// Persist to disk
-	if err := m.saveSurvey(survey); err != nil {
+	if err := m.persistSurvey(survey); err != nil {
 		return nil, fmt.Errorf("failed to save survey: %w", err)
 	}
 
@@ -142,13 +161,8 @@ func (m *Manager) DeleteSurvey(id string) error {
 		return fmt.Errorf("%w: %s", ErrSurveyNotFound, id)
 	}
 
-	// Delete from disk
-	filename, err := m.surveyFilePath(id)
-	if err != nil {
+	if err := m.deleteSurveyRow(id); err != nil {
 		return err
-	}
-	if err = os.Remove(filename); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("failed to delete survey file: %w", err)
 	}
 
 	delete(m.surveys, id)
@@ -173,7 +187,7 @@ func (m *Manager) StartSurvey(id string) error {
 	survey.Status = StatusInProgress
 	survey.UpdatedAt = time.Now()
 
-	return m.saveSurvey(survey)
+	return m.persistSurvey(survey)
 }
 
 // PauseSurvey pauses a survey.
@@ -189,7 +203,7 @@ func (m *Manager) PauseSurvey(id string) error {
 	survey.Status = StatusPaused
 	survey.UpdatedAt = time.Now()
 
-	return m.saveSurvey(survey)
+	return m.persistSurvey(survey)
 }
 
 // CompleteSurvey completes a survey.
@@ -205,7 +219,7 @@ func (m *Manager) CompleteSurvey(id string) error {
 	survey.Status = StatusCompleted
 	survey.UpdatedAt = time.Now()
 
-	return m.saveSurvey(survey)
+	return m.persistSurvey(survey)
 }
 
 // UpdateSurveySettings updates survey settings (only when survey is in created state).
@@ -246,7 +260,7 @@ func (m *Manager) UpdateSurveySettings(
 	survey.IperfServer = iperfServer
 	survey.UpdatedAt = time.Now()
 
-	return m.saveSurvey(survey)
+	return m.persistSurvey(survey)
 }
 
 // ImportedDataUpdate carries the slices a caller wants to replace on a survey.
@@ -283,7 +297,7 @@ func (m *Manager) UpdateImportedData(id string, update ImportedDataUpdate) error
 	}
 	survey.UpdatedAt = time.Now()
 
-	return m.saveSurvey(survey)
+	return m.persistSurvey(survey)
 }
 
 // AddSample adds a measurement sample to the active floor of a survey.
@@ -316,7 +330,7 @@ func (m *Manager) AddSample(id string, x, y int, sampleData any) error {
 	floor.UpdatedAt = time.Now()
 	survey.UpdatedAt = time.Now()
 
-	return m.saveSurvey(survey)
+	return m.appendPoint(survey.ID, floor.ID, survey, sample)
 }
 
 // AddSampleToFloor adds a measurement sample to a specific floor.
@@ -349,5 +363,5 @@ func (m *Manager) AddSampleToFloor(surveyID, floorID string, x, y int, sampleDat
 	floor.UpdatedAt = time.Now()
 	survey.UpdatedAt = time.Now()
 
-	return m.saveSurvey(survey)
+	return m.persistSurvey(survey)
 }
