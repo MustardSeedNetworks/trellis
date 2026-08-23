@@ -34,8 +34,13 @@ func buildAMP(t *testing.T, w, h int, scalePpf float64, limits []survey.InsitesL
 		FloorPlanScalePpf: scalePpf, // pixels per foot → drives Calibration.ScaleM
 		Propagation:       15,
 		PropagationUnit:   "feet",
-		SurveyPointCount:  0,
-		InsitesLimits:     limits,
+		// Zero on purpose: this fixture carries no .SurveyResult member, so it
+		// exercises the plan-only import path. Measurement import is covered
+		// against the real corpus in import_corpus_test.go — a synthetic
+		// fixture cannot validate a reverse-engineered wire format, because it
+		// would only ever encode what the parser already believes.
+		SurveyPointCount: 0,
+		InsitesLimits:    limits,
 	}
 	serialJSON, err := json.Marshal(serial)
 	if err != nil {
