@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -126,7 +127,7 @@ func insertFloor(ctx context.Context, tx *sql.Tx, surveyID string, f *Floor) err
 }
 
 func insertPoint(ctx context.Context, tx *sql.Tx, surveyID, floorID string, p *SamplePoint) error {
-	kind, passive := classifySample(p.SampleData)
+	kind, passive, active := classifySample(p.SampleData)
 	var ssids, bssids, ap24, ap5, ap6, coCh, adjCh any
 	if passive != nil {
 		ssids, bssids = passive.UniqueSSIDs, passive.UniqueBSSIDs
@@ -148,6 +149,20 @@ func insertPoint(ctx context.Context, tx *sql.Tx, surveyID, floorID string, p *S
 	if err != nil {
 		return fmt.Errorf("point id: %w", err)
 	}
+
+	if active != nil {
+		if _, err := tx.ExecContext(ctx, `
+			INSERT INTO active_samples (point_id, survey_id, ssid, bssid, rssi_dbm,
+				data_rate_mbps, roaming_event, previous_bssid, roam_count)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			pointID, surveyID, active.SSID, active.BSSID, active.RSSI,
+			active.DataRate, boolToInt(active.RoamingEvent), active.PreviousBSSID,
+			active.RoamCount,
+		); err != nil {
+			return fmt.Errorf("insert active sample: %w", err)
+		}
+	}
+
 	if passive == nil {
 		return nil
 	}
@@ -172,16 +187,18 @@ func insertPoint(ctx context.Context, tx *sql.Tx, surveyID, floorID string, p *S
 // classifySample names the sample union arm and returns the passive payload
 // when that is what it is. SampleData is `any` on the wire because a point
 // carries one of three shapes; the schema records which.
-func classifySample(data any) (string, *PassiveSample) {
+func classifySample(data any) (string, *PassiveSample, *ActiveSample) {
 	switch v := data.(type) {
 	case *PassiveSample:
-		return "passive", v
+		return "passive", v, nil
 	case PassiveSample:
-		return "passive", &v
-	case *ActiveSample, ActiveSample:
-		return "active", nil
+		return "passive", &v, nil
+	case *ActiveSample:
+		return "active", nil, v
+	case ActiveSample:
+		return "active", nil, &v
 	case *ThroughputSample, ThroughputSample:
-		return "throughput", nil
+		return "throughput", nil, nil
 	}
 	// JSON-decoded samples arrive as map[string]any. Re-decode rather than
 	// guess: a point whose kind we cannot name would violate the CHECK, and a
@@ -191,16 +208,22 @@ func classifySample(data any) (string, *PassiveSample) {
 			var ps PassiveSample
 			if raw, err := json.Marshal(m); err == nil {
 				if json.Unmarshal(raw, &ps) == nil {
-					return "passive", &ps
+					return "passive", &ps, nil
 				}
 			}
 		}
 		if _, hasThroughput := m["throughputMbps"]; hasThroughput {
-			return "throughput", nil
+			return "throughput", nil, nil
 		}
-		return "active", nil
+		var as ActiveSample
+		if raw, err := json.Marshal(m); err == nil {
+			if json.Unmarshal(raw, &as) == nil {
+				return "active", nil, &as
+			}
+		}
+		return "active", nil, nil
 	}
-	return "passive", nil
+	return "passive", nil, nil
 }
 
 // LoadSurveys reads every survey into the in-memory map.
@@ -315,6 +338,15 @@ func (m *Manager) loadPoints(ctx context.Context, f *Floor) error {
 		}
 		p.Timestamp, _ = time.Parse(rfc3339Nano, recorded)
 		var ps *PassiveSample
+		if kind == "active" {
+			act, actErr := m.loadActiveSample(ctx, id)
+			if actErr != nil {
+				return actErr
+			}
+			if act != nil {
+				p.SampleData = act
+			}
+		}
 		if kind == "passive" {
 			ps = &PassiveSample{
 				UniqueSSIDs: int(ssids.Int64), UniqueBSSIDs: int(bssids.Int64),
@@ -370,6 +402,24 @@ func (m *Manager) loadSamples(ctx context.Context, pointID int64) ([]*wifi.Scann
 		return nil, fmt.Errorf("iterate samples: %w", err)
 	}
 	return out, nil
+}
+
+// loadActiveSample reads the association recorded at an active point.
+func (m *Manager) loadActiveSample(ctx context.Context, pointID int64) (*ActiveSample, error) {
+	var a ActiveSample
+	var roaming int
+	err := m.db.QueryRowContext(ctx, `
+		SELECT ssid, bssid, rssi_dbm, data_rate_mbps, roaming_event, previous_bssid, roam_count
+		FROM active_samples WHERE point_id = ?`, pointID).
+		Scan(&a.SSID, &a.BSSID, &a.RSSI, &a.DataRate, &roaming, &a.PreviousBSSID, &a.RoamCount)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("load active sample: %w", err)
+	}
+	a.RoamingEvent = roaming == 1
+	return &a, nil
 }
 
 func (m *Manager) loadCriteria(ctx context.Context, s *Survey) error {

@@ -100,8 +100,22 @@ func (m *Manager) importMeasurements(surveyID string, payload []byte) error {
 		return fmt.Errorf("open survey for import: %w", err)
 	}
 	for _, p := range points {
-		sample := &PassiveSample{Networks: p.Networks}
-		sample.CalculateAggregations()
+		// A point carries one kind or the other, never both: AirMapper writes
+		// passive observations and the active association as different fields.
+		var sample any
+		switch {
+		case len(p.Networks) > 0:
+			passive := &PassiveSample{Networks: p.Networks}
+			passive.CalculateAggregations()
+			sample = passive
+		case p.Active != nil:
+			sample = p.Active
+		default:
+			// A walk position with no usable measurement. Recording it as an
+			// empty passive sample keeps the path — where the surveyor stood
+			// is information even when the radio returned nothing.
+			sample = &PassiveSample{}
+		}
 		if err := m.AddSample(surveyID, p.X, p.Y, sample); err != nil {
 			return fmt.Errorf("record imported point (%d,%d): %w", p.X, p.Y, err)
 		}
