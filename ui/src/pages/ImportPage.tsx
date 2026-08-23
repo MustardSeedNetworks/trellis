@@ -126,7 +126,21 @@ interface ImportRollup {
   state: RollupState;
   headline: string;
   body?: string;
-  figures: { label: string; value: string }[];
+  /** Only a completed import has anything measured to show. */
+  figures?: { label: string; value: string }[];
+}
+
+/**
+ * formatBytes states an archive's size in the units a person reads. Captures
+ * run to several megabytes, and the size is the other half of "is this the file
+ * I meant" — a 6 MB store survey and a 200 KB test capture are told apart by it.
+ */
+function formatBytes(bytes: number): string {
+  const mb = bytes / 1024 / 1024;
+  if (mb >= 1) {
+    return `${mb.toFixed(1)} MB`;
+  }
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
 /**
@@ -136,18 +150,25 @@ interface ImportRollup {
  * report, and a calm green rollup over an untouched form would claim one.
  */
 function describeImport({ file, name, pending, error, imported }: ImportState): ImportRollup {
-  const figures = file ? [{ label: 'File', value: file.name }] : [];
+  // The chosen file is named in the body rather than carried as a figure.
+  // StatusRollup withholds figures in the unknown state on purpose — a rollup
+  // that prints values when it has no reading claims one — and "ready to
+  // import" is genuinely unknown, since nothing has been measured yet. The
+  // filename is not a measurement, so it belongs in the sentence, where it is
+  // readable at exactly the moment the user is deciding whether to commit.
+  const chosen = file ? `${file.name}, ${formatBytes(file.size)}.` : '';
 
   if (error) {
     return {
       state: 'crit',
       headline: 'Import failed',
-      body: error instanceof Error ? error.message : String(error),
-      figures,
+      body: [chosen, error instanceof Error ? error.message : String(error)]
+        .filter(Boolean)
+        .join(' '),
     };
   }
   if (pending) {
-    return { state: 'unknown', headline: 'Importing the archive', figures };
+    return { state: 'unknown', headline: 'Importing the archive', body: chosen };
   }
   if (imported) {
     // What the archive actually yielded is the useful readout — an import
@@ -157,7 +178,6 @@ function describeImport({ file, name, pending, error, imported }: ImportState): 
       headline: `Imported ${imported.name}`,
       body: `Stored as ${imported.id}. It is now listed under Surveys.`,
       figures: [
-        ...figures,
         { label: 'Samples', value: String(imported.sampleCount) },
         { label: 'Floors', value: String(imported.floorCount) },
       ],
@@ -168,16 +188,14 @@ function describeImport({ file, name, pending, error, imported }: ImportState): 
       state: 'unknown',
       headline: 'No survey file chosen',
       body: 'Choose an AirMapper .amp archive to import it as a survey.',
-      figures,
     };
   }
   if (name.trim() === '') {
     return {
       state: 'warn',
       headline: 'The survey needs a name',
-      body: 'The file is still selected — give the survey a name to import it.',
-      figures,
+      body: `${chosen} Give the survey a name to import it.`,
     };
   }
-  return { state: 'unknown', headline: 'Ready to import', figures };
+  return { state: 'unknown', headline: 'Ready to import', body: chosen };
 }
