@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.23](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.22...v0.1.23) (2026-08-23)
+
+
+### Bug Fixes
+
+* **survey:** order scanned networks strongest-first, so the heatmap reads the serving AP ([#114](https://github.com/MustardSeedNetworks/trellis/issues/114)) ([8a6960d](https://github.com/MustardSeedNetworks/trellis/commit/8a6960dbfb09c9906c60a66c97ff786e3a807b29))
+
 ## [0.1.22](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.21...v0.1.22) (2026-08-23)
 
 
