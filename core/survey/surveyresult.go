@@ -35,16 +35,26 @@ const (
 	frTopSurvey = 10 // survey + floor-plan metadata
 	frTopPoint  = 40 // one walk position and everything seen from it
 
-	frPointX     = 10 // pixels on the floor plan
-	frPointY     = 20
-	frPointTime  = 30 // epoch milliseconds
-	frPointObs   = 40 // one observed BSS
-	frObsBSSID   = 1
-	frObsSSID    = 3
-	frObsChannel = 16
-	frObsRSSI    = 21 // dBm, two's-complement in a varint
-	frObsNoise   = 22 // dBm, same encoding
-	frObsTime    = 24
+	frPointX      = 10 // pixels on the floor plan
+	frPointY      = 20
+	frPointTime   = 30 // epoch milliseconds
+	frPointObs    = 40 // one observed BSS (passive walk)
+	frPointActive = 60 // the connected-AP measurement (active walk)
+
+	// Inside an active measurement: field 1 is the local interface, field 2
+	// the association it is reporting on.
+	frActiveAssoc = 2
+	frAssocSSID   = 1
+	frAssocBSSID  = 3
+	frAssocRSSI   = 6 // dBm, two's-complement varint
+	frAssocNoise  = 7
+	frAssocChan   = 27
+	frObsBSSID    = 1
+	frObsSSID     = 3
+	frObsChannel  = 16
+	frObsRSSI     = 21 // dBm, two's-complement in a varint
+	frObsNoise    = 22 // dBm, same encoding
+	frObsTime     = 24
 )
 
 // Wire types.
@@ -64,11 +74,19 @@ const radioFloorDBm = -110
 // archive member is damaged rather than merely unfamiliar.
 var ErrTruncated = errors.New("surveyresult: truncated message")
 
-// SurveyPointRecord is one walk position and the BSSs observed from it.
+// SurveyPointRecord is one walk position and what was measured there.
+//
+// A passive walk records every BSS in earshot, so Networks is populated. An
+// active walk records the association the radio actually held, so Active is
+// populated instead. AirMapper writes them as different fields on the point,
+// which is why one archive can look empty to a reader that only knows the
+// other — the 245-point "Time Square 9th Floor" capture is an active survey
+// and yielded zero passive observations for exactly that reason.
 type SurveyPointRecord struct {
 	X, Y     int
 	Observed time.Time
 	Networks []*wifi.ScannedNetwork
+	Active   *ActiveSample
 }
 
 // decoder walks a protobuf message.
@@ -225,6 +243,17 @@ func parsePoint(data []byte) (SurveyPointRecord, error) {
 			if n != nil {
 				p.Networks = append(p.Networks, n)
 			}
+		case frPointActive:
+			if payload == nil {
+				continue
+			}
+			a, activeErr := parseActive(payload)
+			if activeErr != nil {
+				return p, activeErr
+			}
+			if a != nil {
+				p.Active = a
+			}
 		}
 	}
 	return p, nil
@@ -264,6 +293,51 @@ func parseObservation(data []byte) (*wifi.ScannedNetwork, error) {
 	}
 	n.Frequency = channelToFrequency(n.Channel)
 	return n, nil
+}
+
+// parseActive reads the connected-AP measurement an active walk records.
+// Field 1 of the enclosing message describes the local interface — address,
+// gateway, DNS — which the survey domain does not model, so it is skipped.
+func parseActive(data []byte) (*ActiveSample, error) {
+	d := &decoder{buf: data}
+	for !d.done() {
+		field, _, payload, _, err := d.next()
+		if err != nil {
+			return nil, err
+		}
+		if field != frActiveAssoc || payload == nil {
+			continue
+		}
+		return parseAssociation(payload)
+	}
+	return nil, nil
+}
+
+func parseAssociation(data []byte) (*ActiveSample, error) {
+	a := &ActiveSample{}
+	d := &decoder{buf: data}
+	for !d.done() {
+		field, _, payload, val, err := d.next()
+		if err != nil {
+			return nil, err
+		}
+		switch field {
+		case frAssocSSID:
+			a.SSID = string(payload)
+		case frAssocBSSID:
+			a.BSSID = string(payload)
+		case frAssocRSSI:
+			a.RSSI = signedDBm(val)
+		case frAssocChan:
+			_ = val // channel is carried but ActiveSample does not model it
+		}
+	}
+	// Same rule as a passive observation: a reading no receiver could produce
+	// means the field map is wrong for this file, not that the air was odd.
+	if a.RSSI >= invalidDBm || a.RSSI > 0 || a.RSSI < radioFloorDBm {
+		return nil, nil
+	}
+	return a, nil
 }
 
 func msToTime(ms uint64) time.Time {

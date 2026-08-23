@@ -47,6 +47,14 @@ func TestImportAirMapperLandsMeasurementsInTheStore(t *testing.T) {
 				t.Fatalf("read archive: %v", readErr)
 			}
 
+			// What the reader recovers, to compare against what the store
+			// keeps. Anything the persistence layer silently drops shows up as
+			// a difference between these two.
+			parsed, parseErr := survey.ParseSurveyResult(parts.surveyResult)
+			if parseErr != nil {
+				t.Fatalf("ParseSurveyResult: %v", parseErr)
+			}
+
 			storeDir := t.TempDir()
 			mgr := mustManager(t, storeDir, nil, nil, nil, nil)
 			imported, importErr := mgr.ImportAirMapper("corpus", raw)
@@ -66,12 +74,15 @@ func TestImportAirMapperLandsMeasurementsInTheStore(t *testing.T) {
 				t.Fatalf("GetSurvey after reload: %v", getErr)
 			}
 
-			points, obs := 0, 0
+			points, obs, active := 0, 0, 0
 			for _, floor := range got.Floors {
 				points += len(floor.Samples)
 				for _, p := range floor.Samples {
-					if ps, ok := p.SampleData.(*survey.PassiveSample); ok {
-						obs += len(ps.Networks)
+					switch sd := p.SampleData.(type) {
+					case *survey.PassiveSample:
+						obs += len(sd.Networks)
+					case *survey.ActiveSample:
+						active++
 					}
 				}
 			}
@@ -79,10 +90,29 @@ func TestImportAirMapperLandsMeasurementsInTheStore(t *testing.T) {
 			if parts.declaredPoints > 0 && points != parts.declaredPoints {
 				t.Errorf("stored %d points, the archive declares %d", points, parts.declaredPoints)
 			}
+
+			// Compare against what the parser recovered, not against a number
+			// written here. Counting points alone let a whole survey type
+			// through: the parser recovered 245 active associations, the store
+			// dropped every one, and this test passed anyway.
+			wantObs, wantActive := 0, 0
+			for _, p := range parsed {
+				wantObs += len(p.Networks)
+				if p.Active != nil {
+					wantActive++
+				}
+			}
+			if obs != wantObs {
+				t.Errorf("stored %d passive observations, the parser recovered %d", obs, wantObs)
+			}
+			if active != wantActive {
+				t.Errorf("stored %d active associations, the parser recovered %d", active, wantActive)
+			}
 			if len(got.Floors) == 0 || got.Floors[0].FloorPlan == nil {
 				t.Error("floor plan did not survive the round trip")
 			}
-			t.Logf("%d points, %d observations persisted and reloaded", points, obs)
+			t.Logf("%d points, %d passive observations, %d active associations persisted and reloaded",
+				points, obs, active)
 		})
 	}
 }

@@ -89,7 +89,7 @@ func TestParseSurveyResultAgainstRealCaptures(t *testing.T) {
 		t.Fatalf("no .amp files under %s (err=%v)", dir, err)
 	}
 
-	totalPoints, totalObs := 0, 0
+	totalPoints, totalObs, totalActive := 0, 0, 0
 	for _, path := range files {
 		t.Run(filepath.Base(path), func(t *testing.T) {
 			parts := readAMP(t, path)
@@ -108,9 +108,15 @@ func TestParseSurveyResultAgainstRealCaptures(t *testing.T) {
 					len(points), parts.declaredPoints)
 			}
 
-			obs := 0
+			obs, active := 0, 0
 			for _, p := range points {
 				obs += len(p.Networks)
+				if p.Active != nil {
+					active++
+					if p.Active.RSSI > 0 || p.Active.RSSI < -110 {
+						t.Fatalf("active RSSI %d dBm is outside a receiver's range", p.Active.RSSI)
+					}
+				}
 				for _, n := range p.Networks {
 					if n.Signal > 0 || n.Signal < -110 {
 						t.Fatalf("signal %d dBm is outside a receiver's range", n.Signal)
@@ -120,11 +126,27 @@ func TestParseSurveyResultAgainstRealCaptures(t *testing.T) {
 					}
 				}
 			}
+			// Every point must yield something. A point with neither passive
+			// observations nor an active association means a field this reader
+			// does not know about, which is the failure mode that made a
+			// 245-point active survey look empty.
+			measured := 0
+			for _, p := range points {
+				if len(p.Networks) > 0 || p.Active != nil {
+					measured++
+				}
+			}
+			if measured == 0 && len(points) > 0 {
+				t.Errorf("%d points yielded no measurements of either kind", len(points))
+			}
+
 			totalPoints += len(points)
 			totalObs += obs
-			t.Logf("%d points, %d observations", len(points), obs)
+			totalActive += active
+			t.Logf("%d points, %d passive observations, %d active associations",
+				len(points), obs, active)
 		})
 	}
-	t.Logf("corpus totals: %d points, %d observations across %d files",
-		totalPoints, totalObs, len(files))
+	t.Logf("corpus totals: %d points, %d passive observations, %d active associations across %d files",
+		totalPoints, totalObs, totalActive, len(files))
 }
