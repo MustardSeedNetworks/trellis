@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.26](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.25...v0.1.26) (2026-08-23)
+
+
+### Bug Fixes
+
+* **ui:** call the origin the page was served from, not a hardcoded 127.0.0.1:8080 ([#125](https://github.com/MustardSeedNetworks/trellis/issues/125)) ([acc3593](https://github.com/MustardSeedNetworks/trellis/commit/acc35933c798da2eac33a6864508d0e8b695165b)), closes [#124](https://github.com/MustardSeedNetworks/trellis/issues/124)
+
+
+### Miscellaneous
+
+* **deps:** move to Go 1.27.0 ([#119](https://github.com/MustardSeedNetworks/trellis/issues/119)) ([f140023](https://github.com/MustardSeedNetworks/trellis/commit/f1400231ef9c099442153a3a2d3368c4f3b175d8))
+
 ## [0.1.25](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.24...v0.1.25) (2026-08-23)
 
 
