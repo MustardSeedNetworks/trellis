@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.24](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.23...v0.1.24) (2026-08-23)
+
+
+### Bug Fixes
+
+* **heatmap:** draw the coverage map on the floor plan ([#118](https://github.com/MustardSeedNetworks/trellis/issues/118)) ([237b040](https://github.com/MustardSeedNetworks/trellis/commit/237b04002bbe05455fd80aa21c5076346a46fab3)), closes [#117](https://github.com/MustardSeedNetworks/trellis/issues/117)
+
 ## [0.1.23](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.22...v0.1.23) (2026-08-23)
 
 
