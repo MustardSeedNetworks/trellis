@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.27](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.26...v0.1.27) (2026-08-23)
+
+
+### Bug Fixes
+
+* **ui:** name the chosen file on the import page, and give the app a favicon ([#128](https://github.com/MustardSeedNetworks/trellis/issues/128)) ([634999d](https://github.com/MustardSeedNetworks/trellis/commit/634999deeeb1cdac15644f1b445cac3034ba616e)), closes [#126](https://github.com/MustardSeedNetworks/trellis/issues/126)
+
 ## [0.1.26](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.25...v0.1.26) (2026-08-23)
 
 
