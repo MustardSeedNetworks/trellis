@@ -25,7 +25,7 @@ import (
 func TestHeatmapPixelsMatchTheScale(t *testing.T) {
 	const rssi = -75
 
-	mgr := survey.NewManager(t.TempDir(), nil, nil, nil, nil)
+	mgr := mustManager(t, t.TempDir(), nil, nil, nil, nil)
 	svy, err := mgr.CreateSurvey("Uniform floor", "", "wlan0", survey.TypePassive)
 	if err != nil {
 		t.Fatalf("CreateSurvey: %v", err)

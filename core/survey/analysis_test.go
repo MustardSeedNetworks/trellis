@@ -370,7 +370,7 @@ func TestDetectDeadZones_MinMaxRSSI(t *testing.T) {
 }
 
 func TestManager_DetectDeadZones(t *testing.T) {
-	manager := survey.NewManager(t.TempDir(), nil, nil, nil, nil)
+	manager := mustManager(t, t.TempDir(), nil, nil, nil, nil)
 
 	// Create a survey
 	s := createTestSurveyWithSamples([]*survey.SamplePoint{
@@ -391,7 +391,7 @@ func TestManager_DetectDeadZones(t *testing.T) {
 }
 
 func TestManager_DetectDeadZones_NotFound(t *testing.T) {
-	manager := survey.NewManager(t.TempDir(), nil, nil, nil, nil)
+	manager := mustManager(t, t.TempDir(), nil, nil, nil, nil)
 
 	_, err := manager.DetectDeadZones("nonexistent-id", survey.DefaultThreshold)
 	if err == nil {

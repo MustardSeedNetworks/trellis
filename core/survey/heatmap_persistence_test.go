@@ -21,7 +21,7 @@ import (
 // suite that keeps one manager in memory.
 func TestHeatmapSurvivesReload(t *testing.T) {
 	dir := t.TempDir()
-	mgr := survey.NewManager(dir, nil, nil, nil, nil)
+	mgr := mustManager(t, dir, nil, nil, nil, nil)
 
 	svy, err := mgr.CreateSurvey("Everett HQ", "", "wlan0", survey.TypePassive)
 	if err != nil {
@@ -49,7 +49,7 @@ func TestHeatmapSurvivesReload(t *testing.T) {
 		}
 	}
 
-	reopened := survey.NewManager(dir, nil, nil, nil, nil)
+	reopened := mustManager(t, dir, nil, nil, nil, nil)
 	if err := reopened.LoadSurveys(); err != nil {
 		t.Fatalf("LoadSurveys: %v", err)
 	}

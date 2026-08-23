@@ -109,7 +109,7 @@ func TestGetHeatmapDimensions_FromActiveFloorPlan(t *testing.T) {
 
 func TestManager_GenerateHeatmap_Success(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	s, _ := m.CreateSurvey("Test", "Desc", "en0", survey.TypePassive)
 	_ = m.StartSurvey(s.ID)
@@ -136,7 +136,7 @@ func TestManager_GenerateHeatmap_Success(t *testing.T) {
 
 func TestManager_GenerateHeatmap_NotFound(t *testing.T) {
 	tempDir := t.TempDir()
-	m := survey.NewManager(tempDir, nil, nil, nil, nil)
+	m := mustManager(t, tempDir, nil, nil, nil, nil)
 
 	_, err := m.GenerateHeatmap("non-existent", survey.DefaultHeatmapConfig())
 	if err == nil {
