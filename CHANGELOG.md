@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.22](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.21...v0.1.22) (2026-08-23)
+
+
+### Features
+
+* **import:** read active surveys too, and persist what they record ([#112](https://github.com/MustardSeedNetworks/trellis/issues/112)) ([3ac76c2](https://github.com/MustardSeedNetworks/trellis/commit/3ac76c22bfcc937afde9da2b33504919bc1e122e))
+
 ## [0.1.21](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.20...v0.1.21) (2026-08-23)
 
 
