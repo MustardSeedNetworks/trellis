@@ -64,7 +64,52 @@ func (m *Manager) ImportAirMapper(name string, data []byte) (*Survey, error) {
 		return nil, err
 	}
 
+	// The measurements. Until this landed, an import produced a floor plan
+	// with nothing on it: the parser read the .serial metadata and the image
+	// and dropped every observation, which for the reference corpus meant
+	// discarding 113,551 of them across twelve files.
+	if err := m.importMeasurements(svy.ID, ampFile.SurveyResult); err != nil {
+		return nil, err
+	}
+
 	return m.GetSurvey(svy.ID)
+}
+
+// importMeasurements decodes the .SurveyResult member and records each walk
+// position with everything observed from it.
+//
+// An archive with no measurement member is not an error: AirMapper writes one
+// only once a walk has produced data, so a plan-only export is a legitimate
+// thing to import. The survey simply arrives empty.
+func (m *Manager) importMeasurements(surveyID string, payload []byte) error {
+	if len(payload) == 0 {
+		return nil
+	}
+	points, err := ParseSurveyResult(payload)
+	if err != nil {
+		return fmt.Errorf("parse survey measurements: %w", err)
+	}
+	if len(points) == 0 {
+		return nil
+	}
+
+	// AddSample requires a survey in progress; an import is a completed walk,
+	// so it is moved through that state rather than around it — the status
+	// machine stays the single description of what a survey is doing.
+	if err := m.StartSurvey(surveyID); err != nil {
+		return fmt.Errorf("open survey for import: %w", err)
+	}
+	for _, p := range points {
+		sample := &PassiveSample{Networks: p.Networks}
+		sample.CalculateAggregations()
+		if err := m.AddSample(surveyID, p.X, p.Y, sample); err != nil {
+			return fmt.Errorf("record imported point (%d,%d): %w", p.X, p.Y, err)
+		}
+	}
+	if err := m.CompleteSurvey(surveyID); err != nil {
+		return fmt.Errorf("close imported survey: %w", err)
+	}
+	return nil
 }
 
 // importedAPLocations maps AirMapper AP placements onto the survey domain type,

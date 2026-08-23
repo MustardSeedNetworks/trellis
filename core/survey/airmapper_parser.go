@@ -31,6 +31,9 @@ type AirMapperFile struct {
 	Serial            *SerialMetadata `json:"serial"`
 	FloorPlan         []byte          `json:"floorPlanData"` // Raw JPEG/PNG data
 	FloorPlanFilename string          `json:"floorPlanFilename"`
+	// SurveyResult is the raw measurement member, decoded by
+	// ParseSurveyResult. Nil when the archive carries none.
+	SurveyResult []byte `json:"-"`
 }
 
 // SerialMetadata contains metadata from the .serial JSON file in an AirMapper archive.
@@ -139,8 +142,14 @@ func ParseAirMapperFile(data []byte) (*AirMapperFile, error) {
 			result.FloorPlanFilename = filepath.Base(name)
 			floorPlanFound = true
 
-			// .SurveyResult binary parsing is not yet implemented
-			// It contains the actual survey sample data in a protobuf-like format
+		}
+
+		if strings.HasSuffix(strings.ToLower(name), ".surveyresult") {
+			payload, readErr := readZipFile(file)
+			if readErr != nil {
+				return nil, fmt.Errorf("read .SurveyResult: %w", readErr)
+			}
+			result.SurveyResult = payload
 		}
 	}
 
