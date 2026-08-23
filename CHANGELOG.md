@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.25](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.24...v0.1.25) (2026-08-23)
+
+
+### Bug Fixes
+
+* **report:** put the coverage map in the report ([#122](https://github.com/MustardSeedNetworks/trellis/issues/122)) ([25cc1e5](https://github.com/MustardSeedNetworks/trellis/commit/25cc1e575b10522ac0af1ac065e0dc32ad3dadda)), closes [#120](https://github.com/MustardSeedNetworks/trellis/issues/120)
+
 ## [0.1.24](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.23...v0.1.24) (2026-08-23)
 
 
