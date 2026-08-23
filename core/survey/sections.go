@@ -1,10 +1,14 @@
 package survey
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/go-pdf/fpdf"
 )
 
 // addCoverPage creates the report cover page.
@@ -260,19 +264,76 @@ func (g *ReportGenerator) addFloorSection(floor *Floor) {
 
 	// Add heatmap if requested and floor has data
 	if g.options.IncludeHeatmaps && len(floor.Samples) > 0 && floor.FloorPlan != nil {
-		g.addFloorHeatmapNote(floor)
+		g.addFloorHeatmap(floor)
 	}
 }
 
-// addFloorHeatmapNote adds a note about heatmap availability.
-func (g *ReportGenerator) addFloorHeatmapNote(_ *Floor) {
+// addFloorHeatmap draws the floor's coverage map onto its own page.
+//
+// This is what the report is read for — the numbers above are the caption.
+// The map is rendered from this floor's samples on this floor's plan, so a
+// multi-floor survey gets one map per floor rather than the same one repeated.
+//
+// A floor whose map will not render keeps its measurements: the section says
+// so and moves on, because a page of correct statistics is worth more than a
+// failed report.
+func (g *ReportGenerator) addFloorHeatmap(floor *Floor) {
+	result, err := GenerateFloorHeatmap(floor, DefaultHeatmapConfig())
+	if err != nil {
+		g.addFloorHeatmapUnavailable(err)
+		return
+	}
+
+	g.pdf.AddPage()
+	g.addSectionHeader(fmt.Sprintf("Coverage Map: %s", floor.Name))
+
+	// fpdf keys registered images by name and reuses them, so the floor id
+	// keeps two floors from collapsing onto whichever was registered first.
+	name := "heatmap-" + floor.ID
+	g.pdf.RegisterImageOptionsReader(
+		name,
+		fpdf.ImageOptions{ImageType: "PNG", ReadDpi: false},
+		bytes.NewReader(result.Image),
+	)
+	if g.pdf.Err() {
+		// RegisterImageOptionsReader records the failure on the document
+		// itself, which would otherwise poison Output for every later section.
+		g.pdf.ClearError()
+		g.addFloorHeatmapUnavailable(errors.New("the map could not be embedded"))
+		return
+	}
+
+	// Fit to the printable width, preserving the plan's aspect ratio. Height 0
+	// tells fpdf to derive it.
+	left, _, right, _ := g.pdf.GetMargins()
+	pageWidth, _ := g.pdf.GetPageSize()
+	g.pdf.ImageOptions(
+		name, left, g.pdf.GetY(), pageWidth-left-right, 0,
+		true, fpdf.ImageOptions{ImageType: "PNG"}, 0, "",
+	)
+
+	g.pdf.Ln(pdfSpacingSmall)
+	g.pdf.SetFont("Arial", "I", pdfFontSizeTiny)
+	g.pdf.SetTextColor(pdfColorGrayMedium, pdfColorGrayMedium, pdfColorGrayMedium)
+	g.pdf.CellFormat(
+		0, pdfSpacingMedium,
+		fmt.Sprintf(
+			"Signal strength across %d measured points, %.0f to %.0f dBm.",
+			result.SampleCount, result.Stats.Min, result.Stats.Max,
+		),
+		"", 1, "L", false, 0, "",
+	)
+}
+
+// addFloorHeatmapUnavailable says why the map is missing, in place of it.
+func (g *ReportGenerator) addFloorHeatmapUnavailable(cause error) {
 	g.pdf.Ln(pdfSpacingSection)
 	g.pdf.SetFont("Arial", "I", pdfFontSizeSmall)
 	g.pdf.SetTextColor(pdfColorGrayMedium, pdfColorGrayMedium, pdfColorGrayMedium)
 	g.pdf.CellFormat(
 		0,
 		pdfSpacingMedium,
-		"Heatmap visualization available in the web interface.",
+		fmt.Sprintf("Coverage map unavailable for this floor: %s.", cause),
 		"",
 		1,
 		"L",
