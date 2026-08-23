@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.21](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.20...v0.1.21) (2026-08-23)
+
+
+### Features
+
+* **survey:** store surveys in SQLite instead of one JSON file each ([#109](https://github.com/MustardSeedNetworks/trellis/issues/109)) ([9b992f9](https://github.com/MustardSeedNetworks/trellis/commit/9b992f9176b9936830a8e36dcc1f1dd64c8c1c48))
+
 ## [0.1.20](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.19...v0.1.20) (2026-08-22)
 
 
