@@ -85,6 +85,9 @@ func renderWithPlan(t *testing.T, planData string, w, h int) image.Image {
 	return img
 }
 
+// planWhite is the stand-in plan colour shared with the report tests.
+var planWhite = color.NRGBA{R: 255, G: 255, B: 255, A: 255}
+
 func TestHeatmapDrawsOnTheFloorPlan(t *testing.T) {
 	const w, h = 80, 60
 	// Sampled away from the survey points, where the plan carries the picture

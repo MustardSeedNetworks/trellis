@@ -120,6 +120,40 @@ func GenerateHeatmap(survey *Survey, config HeatmapConfig) (*HeatmapResult, erro
 		return nil, errors.New("invalid dimensions: floor plan required")
 	}
 
+	valueType := mapHeatmapTypeToValueType(config.Type)
+	return renderHeatmap(
+		ExtractSamplesFromSurvey(survey, valueType), floorPlanOf(survey),
+		width, height, config,
+	)
+}
+
+// GenerateFloorHeatmap renders one floor's coverage from that floor's own
+// samples and plan. The report calls this per floor: a survey-wide heatmap
+// would interpolate every floor's measurements onto whichever plan happened to
+// be active, which is only right when there is one floor.
+func GenerateFloorHeatmap(floor *Floor, config HeatmapConfig) (*HeatmapResult, error) {
+	if floor == nil {
+		return nil, errors.New("floor is nil")
+	}
+	if floor.FloorPlan == nil || floor.FloorPlan.Width == 0 || floor.FloorPlan.Height == 0 {
+		return nil, errors.New("invalid dimensions: floor plan required")
+	}
+
+	valueType := mapHeatmapTypeToValueType(config.Type)
+	return renderHeatmap(
+		ExtractSamplesFromFloor(floor, valueType), floor.FloorPlan,
+		floor.FloorPlan.Width, floor.FloorPlan.Height, config,
+	)
+}
+
+// renderHeatmap is the drawing itself, once both callers have decided which
+// samples and which plan they mean.
+func renderHeatmap(
+	samples []SampleValue,
+	plan *FloorPlan,
+	width, height int,
+	config HeatmapConfig,
+) (*HeatmapResult, error) {
 	// Apply defaults
 	if config.CellSize <= 0 {
 		config.CellSize = defaultHeatmapCellSize
@@ -130,10 +164,6 @@ func GenerateHeatmap(survey *Survey, config HeatmapConfig) (*HeatmapResult, erro
 	if config.Power <= 0 {
 		config.Power = defaultIDWPowerHeatmap
 	}
-
-	// Extract sample values for the requested type
-	valueType := mapHeatmapTypeToValueType(config.Type)
-	samples := ExtractSamplesFromSurvey(survey, valueType)
 
 	if len(samples) == 0 {
 		return nil, fmt.Errorf("no samples found for heatmap type: %s", config.Type)
@@ -157,7 +187,7 @@ func GenerateHeatmap(survey *Survey, config HeatmapConfig) (*HeatmapResult, erro
 	// The floor plan is the base layer. Heat is rendered at 70% alpha over it,
 	// which is what makes a coverage map readable — colour alone does not say
 	// which room is weak. A live scan has no plan and keeps a blank canvas.
-	drawFloorPlan(img, floorPlanOf(survey))
+	drawFloorPlan(img, plan)
 
 	// Heat goes onto its own transparent layer and is composited over the
 	// plan. renderHeatmapToImage writes cells with Set, which replaces a pixel
