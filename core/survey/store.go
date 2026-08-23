@@ -128,19 +128,10 @@ func insertFloor(ctx context.Context, tx *sql.Tx, surveyID string, f *Floor) err
 
 func insertPoint(ctx context.Context, tx *sql.Tx, surveyID, floorID string, p *SamplePoint) error {
 	kind, passive, active := classifySample(p.SampleData)
-	var ssids, bssids, ap24, ap5, ap6, coCh, adjCh any
-	if passive != nil {
-		ssids, bssids = passive.UniqueSSIDs, passive.UniqueBSSIDs
-		ap24, ap5, ap6 = passive.APCount2_4, passive.APCount5, passive.APCount6
-		coCh, adjCh = passive.CoChannelAPs, passive.AdjChannelAPs
-	}
 	res, err := tx.ExecContext(ctx, `
-		INSERT INTO survey_points (floor_id, survey_id, x, y, recorded_at, sample_kind,
-			unique_ssids, unique_bssids, ap_count_24, ap_count_5, ap_count_6,
-			co_channel_aps, adj_channel_aps)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		INSERT INTO survey_points (floor_id, survey_id, x, y, recorded_at, sample_kind)
+		VALUES (?, ?, ?, ?, ?, ?)`,
 		floorID, surveyID, p.X, p.Y, p.Timestamp.UTC().Format(rfc3339Nano), kind,
-		ssids, bssids, ap24, ap5, ap6, coCh, adjCh,
 	)
 	if err != nil {
 		return fmt.Errorf("insert point: %w", err)
@@ -312,8 +303,7 @@ func (m *Manager) loadFloors(ctx context.Context, s *Survey) error {
 
 func (m *Manager) loadPoints(ctx context.Context, f *Floor) error {
 	rows, err := m.db.QueryContext(ctx, `
-		SELECT id, x, y, recorded_at, sample_kind, unique_ssids, unique_bssids,
-			ap_count_24, ap_count_5, ap_count_6, co_channel_aps, adj_channel_aps
+		SELECT id, x, y, recorded_at, sample_kind
 		FROM survey_points WHERE floor_id = ? ORDER BY id`, f.ID)
 	if err != nil {
 		return fmt.Errorf("list points: %w", err)
@@ -331,9 +321,7 @@ func (m *Manager) loadPoints(ctx context.Context, f *Floor) error {
 		var id int64
 		var p SamplePoint
 		var recorded, kind string
-		var ssids, bssids, ap24, ap5, ap6, coCh, adjCh sql.NullInt64
-		if err := rows.Scan(&id, &p.X, &p.Y, &recorded, &kind,
-			&ssids, &bssids, &ap24, &ap5, &ap6, &coCh, &adjCh); err != nil {
+		if err := rows.Scan(&id, &p.X, &p.Y, &recorded, &kind); err != nil {
 			return fmt.Errorf("scan point: %w", err)
 		}
 		p.Timestamp, _ = time.Parse(rfc3339Nano, recorded)
@@ -348,12 +336,7 @@ func (m *Manager) loadPoints(ctx context.Context, f *Floor) error {
 			}
 		}
 		if kind == "passive" {
-			ps = &PassiveSample{
-				UniqueSSIDs: int(ssids.Int64), UniqueBSSIDs: int(bssids.Int64),
-				APCount2_4: int(ap24.Int64), APCount5: int(ap5.Int64),
-				APCount6: int(ap6.Int64), CoChannelAPs: int(coCh.Int64),
-				AdjChannelAPs: int(adjCh.Int64),
-			}
+			ps = &PassiveSample{}
 			p.SampleData = ps
 		}
 		todo = append(todo, pending{point: &p, id: id, kind: kind, ps: ps})
@@ -368,6 +351,7 @@ func (m *Manager) loadPoints(ctx context.Context, f *Floor) error {
 				return err
 			}
 			t.ps.Networks = nets
+			t.ps.CalculateAggregations()
 		}
 		f.Samples = append(f.Samples, t.point)
 	}

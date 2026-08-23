@@ -1,6 +1,8 @@
 package survey
 
 import (
+	"cmp"
+	"slices"
 	"time"
 
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
@@ -75,8 +77,13 @@ type PassiveSample struct {
 	AdjChannelAPs int `json:"adjChannelAPs"` // Number of APs on adjacent channels (±1-2 from strongest)
 }
 
-// CalculateAggregations computes aggregated statistics from the networks array.
-// This should be called after populating the Networks field to generate heatmap data.
+// CalculateAggregations sorts Networks strongest-signal-first and computes the
+// aggregated statistics from them. Call it after populating the Networks field,
+// on every path that produces a PassiveSample — import and reload alike.
+//
+// The sort is not cosmetic: Networks[0] is what the heatmap, coverage analysis,
+// and report read as "the AP serving this point", so this method is the one
+// place that establishes that ordering.
 //
 // The function calculates:
 //   - Unique SSIDs and BSSIDs for network density metrics
@@ -86,6 +93,15 @@ type PassiveSample struct {
 //
 // Handles nil or empty networks array gracefully.
 func (p *PassiveSample) CalculateAggregations() {
+	// Signals are negative dBm, so descending Signal is strongest-first. BSSID
+	// breaks ties so a point with two equally strong APs reloads identically.
+	slices.SortFunc(p.Networks, func(a, b *wifi.ScannedNetwork) int {
+		if c := cmp.Compare(b.Signal, a.Signal); c != 0 {
+			return c
+		}
+		return cmp.Compare(a.BSSID, b.BSSID)
+	})
+
 	// Reset all aggregated fields
 	p.UniqueSSIDs = 0
 	p.UniqueBSSIDs = 0
@@ -104,7 +120,6 @@ func (p *PassiveSample) CalculateAggregations() {
 	uniqueSSIDs := make(map[string]bool)
 	uniqueBSSIDs := make(map[string]bool)
 
-	// Find the strongest AP (first in the array, as they're sorted by signal strength)
 	strongestChannel := p.Networks[0].Channel
 
 	// Process each network

@@ -301,6 +301,22 @@ func (m *Manager) UpdateImportedData(id string, update ImportedDataUpdate) error
 }
 
 // AddSample adds a measurement sample to the active floor of a survey.
+// newSamplePoint stamps a measurement and puts its payload into the shape the
+// readers expect. A passive scan arrives in whatever order the radio reported
+// it, so aggregating here is what makes Networks[0] the AP serving this point
+// for everything downstream.
+func newSamplePoint(x, y int, sampleData any) *SamplePoint {
+	if ps, ok := sampleData.(*PassiveSample); ok {
+		ps.CalculateAggregations()
+	}
+	return &SamplePoint{
+		X:          x,
+		Y:          y,
+		Timestamp:  time.Now(),
+		SampleData: sampleData,
+	}
+}
+
 func (m *Manager) AddSample(id string, x, y int, sampleData any) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -319,12 +335,7 @@ func (m *Manager) AddSample(id string, x, y int, sampleData any) error {
 		return fmt.Errorf("no active floor set for survey: %s", id)
 	}
 
-	sample := &SamplePoint{
-		X:          x,
-		Y:          y,
-		Timestamp:  time.Now(),
-		SampleData: sampleData,
-	}
+	sample := newSamplePoint(x, y, sampleData)
 
 	floor.Samples = append(floor.Samples, sample)
 	floor.UpdatedAt = time.Now()
@@ -352,12 +363,7 @@ func (m *Manager) AddSampleToFloor(surveyID, floorID string, x, y int, sampleDat
 		return fmt.Errorf("%w: %s", ErrFloorNotFound, floorID)
 	}
 
-	sample := &SamplePoint{
-		X:          x,
-		Y:          y,
-		Timestamp:  time.Now(),
-		SampleData: sampleData,
-	}
+	sample := newSamplePoint(x, y, sampleData)
 
 	floor.Samples = append(floor.Samples, sample)
 	floor.UpdatedAt = time.Now()
