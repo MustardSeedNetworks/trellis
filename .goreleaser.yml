@@ -83,6 +83,34 @@ builds:
       - -buildvcs=false
     ldflags: *ldflags
 
+  # Capture is a separate binary from trellisd so cgo and OS radio APIs stay out
+  # of the Go core (docs/02-ARCHITECTURE, docs/07-RISKS R5). It is the only
+  # target built with cgo, and darwin-only until the Linux and Windows host-NIC
+  # backends land (docs/06-ROADMAP).
+  #
+  # It is shipped for completeness; on its own it cannot read network names.
+  # macOS grants that only to a signed, entitled .app — see
+  # deploy/macos/build-capture.sh.
+  - id: trellis-capture-darwin
+    main: ./cmd/trellis-capture
+    binary: trellis-capture
+    env:
+      - CGO_ENABLED=1
+    goos: [darwin]
+    goarch: [arm64]
+    flags:
+      - -trimpath
+      - -buildvcs=false
+    ldflags: *ldflags
+    # macOS cross-compile via osxcross (bundled in goreleaser-cross). The SDK
+    # carries CoreWLAN and CoreLocation; the CC paths are stable in the image.
+    overrides:
+      - goos: darwin
+        goarch: arm64
+        env:
+          - CC=oa64-clang
+          - CXX=oa64-clang++
+
   - id: trellis-windows
     main: ./cmd/trellisd
     binary: trellisd
@@ -102,7 +130,8 @@ archives:
     formats: [tar.gz]
 
   - id: darwin-archive
-    ids: [trellis-darwin]
+    # Capture ships alongside trellisd so a macOS archive carries both halves.
+    ids: [trellis-darwin, trellis-capture-darwin]
     name_template: "trellis-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     formats: [tar.gz]
 

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>net.mustardseed.trellis.capture</string>
+
+    <key>CFBundleName</key>
+    <string>Trellis Capture</string>
+
+    <key>CFBundleDisplayName</key>
+    <string>Trellis Capture</string>
+
+    <key>CFBundleExecutable</key>
+    <string>trellis-capture</string>
+
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+
+    <key>CFBundleShortVersionString</key>
+    <string>0.0.0</string>
+
+    <key>CFBundleVersion</key>
+    <string>0.0.0</string>
+
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
+
+    <!-- Driven by the survey engine, not opened by hand. -->
+    <key>LSUIElement</key>
+    <true/>
+
+    <!-- macOS hides Wi-Fi network names and BSSIDs from any process without
+         Location Services authorization. This string is what a surveyor reads
+         when deciding whether to grant it. -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Trellis needs your location permission to read Wi-Fi network names and BSSIDs while surveying. macOS hides this information from applications that do not have it. Your location is never recorded, stored, or transmitted.</string>
+</dict>
+</plist>
