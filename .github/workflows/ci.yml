@@ -59,6 +59,35 @@ jobs:
         # version is nailed down.
         run: go run github.com/bufbuild/buf/cmd/buf@v1.72.0 lint
 
+  # Every darwin-only file is behind //go:build darwin, so the ubuntu backend job
+  # never compiles the capture backend. It reaches CoreWLAN through cgo and
+  # Objective-C, and a break there would leave every other check green — the
+  # blind spot that let Seed's macOS Wi-Fi rot into dead code unnoticed.
+  backend-darwin:
+    name: Backend (macOS)
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-go
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      # Linking, not merely compiling, is what proves the -framework LDFLAGS
+      # resolve: building a library package stops after the Objective-C compile.
+      # The capture test binary links the darwin implementation, covering both.
+      # These tests are pure mapping logic, so the runner needs no Wi-Fi adapter
+      # and no Location Services grant.
+      - name: Test
+        run: go test -race ./internal/capture/...
+
   quality:
     name: Quality Checks
     runs-on: ubuntu-latest
@@ -195,6 +224,7 @@ jobs:
     timeout-minutes: 5
     needs:
       - backend
+      - backend-darwin
       - quality
       - govulncheck
       - frontend
