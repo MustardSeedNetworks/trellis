@@ -14,6 +14,11 @@ import (
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
 )
 
+// defaultNoiseFloorDBm stands in when the driver reports no noise measurement,
+// which CoreWLAN omits for scanned networks on some adapters. Reporting 0 dBm
+// would make the derived SNR meaningless.
+const defaultNoiseFloorDBm = -95
+
 // coreWLANScanner reads the host adapter through Apple's CoreWLAN framework.
 //
 // macOS redacts SSID and BSSID from any process without Location Services

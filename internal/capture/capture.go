@@ -29,10 +29,6 @@ var (
 	ErrNoInterface = errors.New("capture: no Wi-Fi interface")
 )
 
-// defaultNoiseFloorDBm stands in when the driver reports no noise measurement.
-// Reporting 0 dBm would make the derived SNR meaningless.
-const defaultNoiseFloorDBm = -95
-
 // Frequency of the first channel in each band, in MHz.
 const (
 	freq24GHzChannel1  = 2407
