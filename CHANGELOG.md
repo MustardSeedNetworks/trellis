@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.29](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.28...v0.1.29) (2026-08-24)
+
+
+### Features
+
+* **capture:** add the macOS host-NIC Wi-Fi capture backend ([#132](https://github.com/MustardSeedNetworks/trellis/issues/132)) ([3e02bd5](https://github.com/MustardSeedNetworks/trellis/commit/3e02bd5df260ccb7b63258489e41a8030698ca20))
+
 ## [0.1.28](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.27...v0.1.28) (2026-08-24)
 
 
