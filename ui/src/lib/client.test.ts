@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { resolveApiBaseUrl } from './client';
 
 /**
- * The UI shipped for months pointed at a compile-time 127.0.0.1:8080 while
+ * The UI shipped for months pointed at a compile-time loopback address while
  * being served from whatever port trellisd bound, so every RPC was cross-origin
  * and the browser blocked it. These assert the resolution itself, since that is
  * the whole of the decision.
@@ -20,8 +20,8 @@ describe('resolveApiBaseUrl', () => {
   });
 
   it('honours an explicit override, for a dev server on a separate origin', () => {
-    expect(resolveApiBaseUrl('http://127.0.0.1:8080', 'http://localhost:5173')).toBe(
-      'http://127.0.0.1:8080',
+    expect(resolveApiBaseUrl('http://127.0.0.1:8446', 'http://localhost:5173')).toBe(
+      'http://127.0.0.1:8446',
     );
   });
 
