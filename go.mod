@@ -4,7 +4,7 @@ go 1.27.0
 
 require (
 	connectrpc.com/connect v1.20.0
-	github.com/MustardSeedNetworks/foundation v0.5.1
+	github.com/MustardSeedNetworks/foundation v0.5.2
 	github.com/go-pdf/fpdf v0.9.0
 	github.com/google/uuid v1.6.0
 	github.com/mdlayher/genetlink v1.4.0
