@@ -3,16 +3,16 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <string>net.mustardseed.trellis.capture</string>
+    <string>net.mustardseed.trellis</string>
 
     <key>CFBundleName</key>
-    <string>Trellis Capture</string>
+    <string>Trellis</string>
 
     <key>CFBundleDisplayName</key>
-    <string>Trellis Capture</string>
+    <string>Trellis</string>
 
     <key>CFBundleExecutable</key>
-    <string>trellis-capture</string>
+    <string>trellisd</string>
 
     <key>CFBundlePackageType</key>
     <string>APPL</string>
@@ -26,7 +26,9 @@
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
 
-    <!-- Driven by the survey engine, not opened by hand. -->
+    <!-- trellisd has no windows of its own: the surveyor works in a browser
+         against 127.0.0.1:8080. Without this it would sit in the Dock as an
+         app that never opens anything. Quit it with `pkill trellisd`. -->
     <key>LSUIElement</key>
     <true/>
 

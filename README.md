@@ -27,7 +27,7 @@ shared-memory for big buffers, same Go core running desktop (Wails) or cloud.
 React+TS UI ──Connect/gRPC + binary grids──► Go core ──shmem/Arrow──► C++/GPU RF engine
                                                │
                                                ├─ SQLite (project) + Parquet (survey pts)
-                                               ├─ Capture daemon (Go, per-OS / external HW)
+                                               ├─ internal/capture (Go, per-OS Wi-Fi radio)
                                                └─ Reporter (Go + headless Chromium)
 ```
 

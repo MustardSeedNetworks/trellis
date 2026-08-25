@@ -27,7 +27,8 @@ Trellis implements Tier 1 today. Tier 2 is not implemented on any platform.
 
 ### macOS
 
-Implemented, via CoreWLAN (`internal/capture/capture_darwin.go`).
+Implemented, via CoreWLAN (`internal/capture/capture_darwin.go`), linked
+directly into trellisd (ADR-0006).
 
 **Cadence is the binding constraint.** Measured on macOS 27.0, Apple Silicon:
 
@@ -72,7 +73,35 @@ naming nothing. `foundation/pkg/corewlan` treats a scan that found networks and
 named none of them as `ErrLocationDenied`, because a real observation always
 carries a BSSID.
 
-Check a bundle's grant with `deploy/macos/location-status.py`.
+Check a bundle's grant with `deploy/macos/location-status.py` (exit 0 authorized,
+1 registered but not authorized, 2 unknown to locationd).
+
+**Two consequences of launching through LaunchServices**, both measured, both
+handled in `internal/apppaths`:
+
+| | |
+|---|---|
+| Working directory | `/` — a relative data directory would resolve under the filesystem root |
+| stdout and stderr | `/dev/null` — a bundled daemon logging to stdout is silent |
+
+So the bundled daemon keeps its survey store at
+`~/Library/Application Support/Trellis` and its log at
+`~/Library/Logs/Trellis/trellisd.log`. That log is the only output it has; the
+capture-readiness line at startup is where an operator sees whether this launch
+can read network names.
+
+Environment variables *do* reach the app when it is launched with `open` from a
+shell (`TRELLIS_ADDR=… open -a Trellis.app` works), but not when it is started
+from the Finder or the Dock, which inherit launchd's environment instead.
+
+**Building and running it:**
+
+```
+npm --prefix ui ci && npm --prefix ui run build
+./deploy/macos/build-app.sh 0.1.30
+open -a dist/macos-app/Trellis.app
+python3 deploy/macos/location-status.py
+```
 
 ### Linux
 
@@ -105,11 +134,12 @@ Tier 1 API on any platform. They require monitor mode.
   `CAP_NET_ADMIN` / `CAP_NET_RAW`.
 - **Windows:** Npcap, with the weakest monitor-mode support of the three.
 
-Note the architectural consequence. Tier 1 needs **no** privilege — on macOS the
-gate is TCC, not root, and a root daemon gets nothing a user-session bundle does
-not. Tier 2 needs privilege on every platform. A privileged capture process is
-therefore justified by Tier 2 and not by Tier 1, which is why capture is linked
-into `trellisd` today rather than split out.
+Note the architectural consequence, which is the whole of ADR-0006. Tier 1 needs
+**no** privilege — on macOS the gate is TCC, not root, and a root daemon gets
+*less* than a user-session bundle, because TCC grants to a signed bundle
+identity. Tier 2 needs privilege on every platform. A separate, privileged
+capture process is therefore justified by Tier 2 and not by Tier 1, which is why
+capture is linked into `trellisd` today rather than split out.
 
 ## What is honest to claim
 

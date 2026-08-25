@@ -3,7 +3,7 @@
 // Package wifi holds Trellis's shared Wi-Fi domain model — the scan-result and
 // BSS types the survey engine and (later) the live/troubleshooting paths both
 // consume. It is deliberately data-only: no capture, no I/O, no OS-specific
-// code. The capture daemon (per docs/03-TECH-STACK) produces these values;
+// code. internal/capture (per docs/03-TECH-STACK) produces these values;
 // core/survey and the reporter consume them.
 package wifi
 

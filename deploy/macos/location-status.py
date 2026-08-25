@@ -21,7 +21,7 @@ import plistlib
 import sys
 
 CLIENTS = "/var/db/locationd/clients.plist"
-DEFAULT_BUNDLE = "net.mustardseed.trellis.capture"
+DEFAULT_BUNDLE = "net.mustardseed.trellis"
 
 
 def main() -> int:
