@@ -86,13 +86,16 @@ No domain logic, no math.
 
 ### 2.4 Capture — `internal/capture`, linked into the core (ADR-0006)
 Turns radios into `wifi.ScannedNetwork` values behind one `Scanner` interface.
-- Backends (build tags): macOS CoreWLAN (**implemented**); Linux `nl80211`,
-  Windows Native Wifi. Monitor mode is dead on modern macOS.
+- Backends (build tags), all implemented: macOS CoreWLAN (cgo), Linux `nl80211`
+  over generic netlink (pure Go), Windows Native Wifi via `wlanapi.dll` (pure
+  Go). Monitor mode is dead on modern macOS.
 - **Tier 1 privilege is per-platform** — see
   [10-WIFI-CAPTURE.md](10-WIFI-CAPTURE.md). macOS needs none but requires a
   signed, entitled, LaunchServices-launched bundle, which is why trellisd ships
   as `Trellis.app`. Linux needs `CAP_NET_ADMIN` to *trigger* a scan (not to read
-  the cache); Windows needs none. Tier 2 (monitor mode) needs privilege on every platform and is
+  the cache). Windows 11 gates scanning on Location Services the same way macOS
+  does — granted per user in an interactive session, and not substitutable by
+  elevation. Tier 2 (monitor mode) needs privilege on every platform and is
   not implemented; it will want its own process when it lands.
 - **External hardware is first-class** (supported USB radio / NetAlly appliance over
   USB-IP) — a separate process behind the same `Scanner`, unaffected by ADR-0006.

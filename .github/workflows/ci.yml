@@ -59,6 +59,33 @@ jobs:
         # version is nailed down.
         run: go run github.com/bufbuild/buf/cmd/buf@v1.72.0 lint
 
+  # The ubuntu backend job builds the Linux nl80211 backend but never the
+  # Windows one, which reads WLAN_BSS_ENTRY straight out of memory wlanapi
+  # allocated. A wrong struct offset there does not fail loudly — every field
+  # after it is read from the wrong bytes — so the layout test has to run on a
+  # real Windows ABI, not be inferred from a cross-compile.
+  backend-windows:
+    name: Backend (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-go
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      # The runner has no Wi-Fi adapter, so TestLiveScan skips itself. What
+      # runs here is the struct layout against the real ABI and the IE parser.
+      - name: Test
+        run: go test -race ./internal/capture/...
+
   # Every darwin-only file is behind //go:build darwin && cgo, so the ubuntu
   # backend job never compiles the capture backend. It reaches CoreWLAN through
   # cgo and Objective-C, and a break there would leave every other check green —
