@@ -15,13 +15,30 @@ Building the macOS backend (`internal/capture`, shipped in 0.1.29) showed the
 first reason does not apply to what Trellis actually does, and that the split
 carries a specific cost.
 
-**Tier 1 scanning needs no privilege on any platform.** The gate on macOS is
-TCC, not root, and it is *stricter* than root: macOS gives Wi-Fi network names
-only to a signed, entitled bundle that LaunchServices attributes to that bundle
-identity. A root daemon gets nothing a user-session bundle does not — it gets
-less. Linux and Windows Tier 1 are likewise unprivileged. Privilege becomes real
-only at Tier 2 (monitor mode), which is not implemented on any platform and,
-when it lands, is a different code path with different needs.
+**On macOS, privilege is not the gate and cannot be.** The gate is TCC, and it
+is *stricter* than root: macOS gives Wi-Fi network names only to a signed,
+entitled bundle that LaunchServices attributes to that bundle identity. A root
+daemon gets nothing a user-session bundle does not — it gets less. No amount of
+privilege separation buys a single named BSSID.
+
+**On Linux, privilege is real, and this ADR does not pretend otherwise.**
+Measured on an RTL8723BU adapter:
+
+| | |
+|---|---|
+| root, trigger scan | 11 BSSes |
+| unprivileged, trigger scan | `Operation not permitted` (EPERM) |
+| unprivileged, read cached results | 11 BSSes |
+
+So *triggering* a scan needs `CAP_NET_ADMIN`; *reading* the cache does not. That
+is a genuine argument for a privileged helper — **on Linux**. It is not an
+argument for a process split on macOS, where the same split actively costs a
+working permission model, nor on Windows, where Native Wifi scanning is
+unprivileged.
+
+Privilege also becomes real at Tier 2 (monitor mode) on every platform. Tier 2
+is not implemented anywhere and, when it lands, is a different code path with a
+different lifecycle.
 
 **The split makes the macOS permission model harder, not easier.** A grant
 belongs to a bundle. With capture split out, trellisd would have to launch the
@@ -53,8 +70,10 @@ CI check) and keeps its *goal* (cgo does not spread through the Go core).
 
 ## Why
 
-- **The privilege argument was never true for Tier 1.** Splitting for privilege
-  isolation that does not exist buys nothing and costs an IPC seam.
+- **The privilege argument does not hold where it was being applied.** It is
+  false on macOS and on Windows, and where it *is* true — Linux scan triggering —
+  it argues for one small platform-specific helper, not for every platform paying
+  an IPC seam. Splitting all three because one might need it is the wrong default.
 - **One process, one bundle, one grant.** The permission model becomes a
   property of how trellisd is launched, not a subprocess protocol to get right.
 - **cgo hygiene survives as a package boundary.** `CGO_ENABLED=0 go build ./...`
@@ -94,3 +113,13 @@ CI check) and keeps its *goal* (cgo does not spread through the Go core).
 - **Wait for Tier 2 and split then.** Tier 2 needs privilege *and* takes the
   radio off the network, so it will want its own process with its own lifecycle
   regardless. Carrying an unused split until then is not a down payment on it.
+
+## Open question for the Linux backend
+
+`CAP_NET_ADMIN` has to come from somewhere: a file capability on trellisd, a
+small capability-bearing helper that only triggers scans, or accepting
+cached-only results — which are stale, and empty if nothing else on the host
+ever scans. That choice belongs to the Linux backend's own ADR, decided against
+a working implementation rather than in advance. `capture.Scanner` is the same
+interface either way, which is the point: this ADR removes a *process* boundary,
+not the *contract* boundary that would let Linux reintroduce a helper behind it.
