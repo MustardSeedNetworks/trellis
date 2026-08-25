@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.1...v0.2.2) (2026-08-25)
+
+
+### Bug Fixes
+
+* **trellisd:** walk +1..+9 when the listening port is taken ([#156](https://github.com/MustardSeedNetworks/trellis/issues/156)) ([dd2e527](https://github.com/MustardSeedNetworks/trellis/commit/dd2e5278435050aaaf4aed03cc39ae53b1bce7ca)), closes [#151](https://github.com/MustardSeedNetworks/trellis/issues/151)
+
 ## [0.2.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.0...v0.2.1) (2026-08-25)
 
 
