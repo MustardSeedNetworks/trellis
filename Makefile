@@ -9,8 +9,14 @@ generate-ts:
 build:
 	go build ./...
 
+# The host platform's build tags decide which files golangci-lint even sees, so
+# a macOS run never inspects capture_linux.go or capture_windows.go — three
+# gosec findings reached CI that way. GOOS is enough to fix it for the pure-Go
+# backends; the darwin backend needs cgo and so only lints on a Mac.
 lint:
 	golangci-lint run ./core/... ./internal/... ./cmd/...
+	GOOS=linux golangci-lint run ./internal/capture/...
+	GOOS=windows golangci-lint run ./internal/capture/...
 	buf lint
 
 vet:

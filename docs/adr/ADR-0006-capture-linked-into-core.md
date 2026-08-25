@@ -33,8 +33,19 @@ Measured on an RTL8723BU adapter:
 So *triggering* a scan needs `CAP_NET_ADMIN`; *reading* the cache does not. That
 is a genuine argument for a privileged helper — **on Linux**. It is not an
 argument for a process split on macOS, where the same split actively costs a
-working permission model, nor on Windows, where Native Wifi scanning is
-unprivileged.
+working permission model.
+
+**On Windows the gate turned out to be the macOS one.** Measured on Windows 11
+build 26200 while implementing the Native Wifi backend: a process running as
+`nt authority\system` *with administrator rights* still gets
+`ERROR_ACCESS_DENIED` from `WlanScan` while Location Services consent is denied,
+and `netsh` says why in as many words. Elevation is not the missing piece — the
+consent is granted per user in an interactive session.
+
+So two of the three platforms gate scanning on a per-user privacy consent that a
+background daemon cannot hold, and the third gates it on a capability a daemon
+can. That is a stronger case for linking capture into the user-session process
+than the one this ADR was originally written on.
 
 Privilege also becomes real at Tier 2 (monitor mode) on every platform. Tier 2
 is not implemented anywhere and, when it lands, is a different code path with a

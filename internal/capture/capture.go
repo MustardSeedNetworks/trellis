@@ -40,6 +40,13 @@ const (
 	channel14          = 14
 )
 
+// defaultNoiseFloorDBm stands in when the driver reports no noise measurement:
+// CoreWLAN omits it for scanned networks on some adapters, and nl80211 never
+// reports one with scan results at all. Reporting 0 dBm would make the derived
+// SNR meaningless, and every backend using the same assumption keeps points
+// comparable across the hosts that walked them.
+const defaultNoiseFloorDBm = -95
+
 // Bands, in GHz, as reported by a driver.
 const (
 	band24GHz = 2
@@ -104,6 +111,31 @@ func htModeForWidth(width int) string {
 		return "EHT320"
 	default:
 		return "HT20"
+	}
+}
+
+// channelForFrequency converts MHz back to a channel number and its band in
+// GHz. Linux and Windows report frequency where CoreWLAN reports a channel, and
+// the 2.4/5 GHz split at 2484 MHz plus the 5/6 GHz overlap make this more than
+// arithmetic: 5955 MHz is 6 GHz channel 1, while 5955 read as 5 GHz would be
+// channel 191.
+//
+// A frequency outside every allocated band returns 0, 0 rather than a plausible
+// wrong channel.
+func channelForFrequency(freqMHz int) (channel, bandGHz int) {
+	switch {
+	case freqMHz == freq24GHzChannel14:
+		return channel14, band24GHz
+	case freqMHz >= 2412 && freqMHz <= 2472:
+		return (freqMHz - freq24GHzChannel1) / channelSpacingMHz, band24GHz
+	// The 5 and 6 GHz bands are contiguous in Hz but not in channel numbering:
+	// 5 GHz stops at 5885 (channel 177) and 6 GHz starts at 5955 (channel 1).
+	case freqMHz >= 5160 && freqMHz <= 5885:
+		return (freqMHz - freq5GHzBase) / channelSpacingMHz, band5GHz
+	case freqMHz >= 5955 && freqMHz <= 7115:
+		return (freqMHz - freq6GHzChannel1) / channelSpacingMHz, band6GHz
+	default:
+		return 0, 0
 	}
 }
 
