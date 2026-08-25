@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.2...v0.2.3) (2026-08-25)
+
+
+### Miscellaneous
+
+* **trellisd:** take 8446 as the canonical port instead of generic 8080 ([#161](https://github.com/MustardSeedNetworks/trellis/issues/161)) ([bc79559](https://github.com/MustardSeedNetworks/trellis/commit/bc79559723f7628b0f23a0c404a4887c5f4073f2)), closes [#159](https://github.com/MustardSeedNetworks/trellis/issues/159)
+
 ## [0.2.2](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.1...v0.2.2) (2026-08-25)
 
 
