@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.2.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.29...v0.2.0) (2026-08-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **capture:** link Wi-Fi capture into trellisd and bundle the daemon ([#138](https://github.com/MustardSeedNetworks/trellis/issues/138))
+
+### Code Refactoring
+
+* **capture:** link Wi-Fi capture into trellisd and bundle the daemon ([#138](https://github.com/MustardSeedNetworks/trellis/issues/138)) ([2ceec49](https://github.com/MustardSeedNetworks/trellis/commit/2ceec4978ac35eec9a473ffd85d202a1d0ac6406))
+
+
+### Documentation
+
+* **capture:** state Tier 1 privilege per platform, not as a blanket ([#141](https://github.com/MustardSeedNetworks/trellis/issues/141)) ([d6939fe](https://github.com/MustardSeedNetworks/trellis/commit/d6939fef9455aa5046a60a4557d263c4a8a446fd))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#139](https://github.com/MustardSeedNetworks/trellis/issues/139)) ([47396a7](https://github.com/MustardSeedNetworks/trellis/commit/47396a72887fe8aff661c9c655abaaa9fde9fa94))
+
 ## [0.1.29](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.28...v0.1.29) (2026-08-24)
 
 
