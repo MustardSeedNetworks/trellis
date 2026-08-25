@@ -28,7 +28,7 @@ const (
 	// non-local deployment), so it must not be exposed on all interfaces by
 	// default. An operator who understands the trade-off can override with
 	// TRELLIS_ADDR — and owns adding auth/TLS in front of it.
-	defaultAddr         = "127.0.0.1:8080"
+	defaultAddr         = "127.0.0.1:8446"
 	shutdownGracePeriod = 10 * time.Second
 	readHeaderTimeout   = 5 * time.Second
 	readTimeout         = 30 * time.Second

@@ -27,7 +27,7 @@
     <string>13.0</string>
 
     <!-- trellisd has no windows of its own: the surveyor works in a browser
-         against 127.0.0.1:8080. Without this it would sit in the Dock as an
+         against 127.0.0.1:8446. Without this it would sit in the Dock as an
          app that never opens anything. Quit it with `pkill trellisd`. -->
     <key>LSUIElement</key>
     <true/>

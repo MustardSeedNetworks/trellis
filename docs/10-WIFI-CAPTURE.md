@@ -96,7 +96,7 @@ capture-readiness line at startup is where an operator sees whether this launch
 can read network names.
 
 The same log is the only place a bundle announces its address. `trellisd` binds
-`127.0.0.1:8080`, and walks `8081..8089` when something already holds the port —
+`127.0.0.1:8446`, and walks `8447..8455` when something already holds the port —
 the fleet convention, and the difference here between an app that moved and an
 app that appears not to start at all. The `trellisd listening` line names the
 address to open; a `TRELLIS_ADDR` given by an operator is taken literally and
