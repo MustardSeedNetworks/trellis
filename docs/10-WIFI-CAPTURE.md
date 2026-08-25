@@ -25,7 +25,8 @@ Tier 1 is *mostly* unprivileged, with one measured exception — Linux needs
 `CAP_NET_ADMIN` to trigger a scan, though not to read the cache. That is why the
 privilege claim below is stated per platform rather than as a blanket.
 
-Trellis implements Tier 1 today. Tier 2 is not implemented on any platform.
+Trellis implements Tier 1 on macOS, Linux and Windows. Tier 2 is not
+implemented on any platform.
 
 ## Tier 1 — what is implemented
 
@@ -120,11 +121,12 @@ grant, and the bundle went on reporting named BSSIDs.
 
 ### Linux
 
-Not implemented. `capture.New()` returns `ErrUnsupported`.
+Implemented, via nl80211 over generic netlink
+(`internal/capture/capture_linux.go`). Pure Go through `mdlayher/genetlink`, so
+R5's cgo boundary costs Linux nothing.
 
-The intended backend is nl80211 via netlink: a scan request plus a
-scan-results notification, which is the same shape as the macOS event and has
-no equivalent cache-window restriction. Linux also has the strongest monitor
+The backend is a scan request plus a scan-results notification, which is the
+same shape as the macOS event and has no equivalent cache-window restriction. Linux also has the strongest monitor
 mode support of the three platforms, so it is the natural first host for Tier 2.
 
 **Privilege, measured** (RTL8723BU USB adapter):
@@ -140,16 +142,55 @@ is a real privilege boundary, and where the capability comes from — a file
 capability on trellisd, a minimal helper that only triggers, or cached-only
 results — is open (ADR-0006, "Open question for the Linux backend").
 Cached-only is not a free option: the cache is stale, and stays empty if nothing
-else on the host ever scans.
+else on the host ever scans. This backend therefore reports `ErrPermission`
+rather than quietly serving the cache.
+
+**One implementation note that cost real time.** The scan-complete notification
+must be received on a *second* netlink socket. Multicast notifications carry
+sequence number 0, so a group joined on the socket that sent the request
+interleaves them with its own reply and netlink rejects the exchange with
+`mismatched sequence in netlink reply`.
+
+**Signal accuracy is the adapter's, not the backend's.** The RTL8723BU reports
+−6 dBm for an AP a metre away. `iw` prints exactly the same value from the same
+kernel data, so the backend is faithful; the adapter's absolute calibration is
+not. A survey is a comparison between points, but a miscalibrated adapter still
+makes absolute thresholds meaningless.
 
 ### Windows
 
-Not implemented. `capture.New()` returns `ErrUnsupported`.
+Implemented, via the Native Wifi API (`internal/capture/capture_windows.go`):
+`WlanScan`, `WLAN_NOTIFICATION_ACM_SCAN_COMPLETE`, then
+`WlanGetNetworkBssList`. Pure Go through `golang.org/x/sys/windows` — no cgo.
 
-The intended backend is the Native Wifi API: `WlanScan` plus
-`WLAN_NOTIFICATION_ACM_SCAN_COMPLETE`. Windows historically rate-limits scans
-more aggressively than Linux, so the cadence question needs measuring there
-rather than assuming it matches macOS.
+**Windows 11 gates scanning on Location Services, like macOS.** This was not
+expected: every summary of the Native Wifi API describes scanning as
+unprivileged, and the Linux experience above sets you up to look for a
+capability. Measured on Windows 11 build 26200, in a process running as
+`nt authority\system` **holding administrator rights**:
+
+| | |
+|---|---|
+| Location consent `Deny` | `WlanScan` → `ERROR_ACCESS_DENIED` |
+| `netsh wlan show networks` | "Network shell commands need location permission to access WLAN information." |
+| Machine consent set to `Allow`, `lfsvc` running, rebooted | still denied |
+| Session state | `console` session present, **no user logged in** |
+
+Elevation is not the missing piece — the process already had it. The consent is
+granted **per user in an interactive session**, which a headless service session
+cannot satisfy. That is structurally the same gate as macOS's TCC, reached by a
+different mechanism, and it means trellisd must run in the surveyor's own
+session on Windows too.
+
+**Struct layout is a contract with the OS.** `WLAN_BSS_ENTRY` is read straight
+out of memory `wlanapi` allocated. One wrong offset does not fail loudly: every
+field after the mistake is read from the wrong bytes and the survey records
+plausible nonsense. `TestWLANBSSEntryLayout` pins all sixteen offsets and the
+360-byte size, and is run on real Windows rather than inferred.
+
+**Cadence is unmeasured.** Windows historically rate-limits scans more
+aggressively than Linux. That needs measuring on a host with a logged-in user,
+which is the same thing the live scan needs.
 
 ## Tier 2 — not implemented anywhere
 
