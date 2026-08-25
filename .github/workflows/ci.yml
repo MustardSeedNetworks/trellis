@@ -83,8 +83,13 @@ jobs:
 
       # The runner has no Wi-Fi adapter, so TestLiveScan skips itself. What
       # runs here is the struct layout against the real ABI and the IE parser.
+      #
+      # cmd/trellisd is here for the same reason: the port walk decides whether
+      # a bind failed on "address already in use", and Winsock reports that as
+      # a different errno from the one every other platform uses. Get it wrong
+      # and the walk silently never happens on Windows.
       - name: Test
-        run: go test -race ./internal/capture/...
+        run: go test -race ./internal/capture/... ./cmd/trellisd/...
 
   # Every darwin-only file is behind //go:build darwin && cgo, so the ubuntu
   # backend job never compiles the capture backend. It reaches CoreWLAN through

@@ -66,7 +66,8 @@ func run() error {
 	}
 
 	addr := os.Getenv("TRELLIS_ADDR")
-	if addr == "" {
+	explicitAddr := addr != ""
+	if !explicitAddr {
 		addr = defaultAddr
 	}
 
@@ -119,8 +120,13 @@ func run() error {
 	protocols.SetHTTP1(true)
 	protocols.SetUnencryptedHTTP2(true)
 
+	ln, boundAddr, err := listen(ctx, addr, explicitAddr)
+	if err != nil {
+		return err
+	}
+
 	srv := &http.Server{
-		Addr:              addr,
+		Addr:              boundAddr,
 		Handler:           mux,
 		Protocols:         &protocols,
 		ReadHeaderTimeout: readHeaderTimeout,
@@ -131,8 +137,8 @@ func run() error {
 
 	serveErr := make(chan error, 1)
 	go func() {
-		slog.Info("trellisd listening", "addr", addr)
-		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		slog.Info("trellisd listening", "addr", boundAddr)
+		if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			serveErr <- err
 			return
 		}
