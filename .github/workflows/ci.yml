@@ -290,6 +290,7 @@ jobs:
     needs:
       - backend
       - backend-darwin
+      - backend-windows
       - quality
       - govulncheck
       - frontend
