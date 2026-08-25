@@ -15,6 +15,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // Must mirror vite.config.ts: the suite initialises i18next, which
+      // imports the locale catalogs through this alias.
+      '@locales': fileURLToPath(new URL('../internal/i18n/locales', import.meta.url)),
     },
   },
   test: {

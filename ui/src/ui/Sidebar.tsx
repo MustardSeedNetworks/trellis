@@ -16,9 +16,10 @@
  */
 import { ChevronsLeft, ChevronsRight, Settings } from 'lucide-react';
 import { type FC, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
 import { iconSizes } from '../constants/sizes';
-import { navGroups } from '../navGroups';
+import { useNavGroups } from '../navGroups';
 import { MsnMark } from './MsnMark';
 
 const STORAGE_KEY = 'trellis-sidebar-collapsed';
@@ -29,6 +30,8 @@ interface SidebarProps {
 }
 
 export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
+  const { t } = useTranslation('common');
+  const navGroups = useNavGroups();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(STORAGE_KEY) === 'true');
 
   useEffect(() => {
@@ -51,12 +54,13 @@ export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-brand-primary">
           <span className="figure text-sm font-extrabold tracking-tight text-on-brand">TR</span>
         </div>
+        {/* allow-hardcoded: product name, not copy. */}
         {!collapsed ? (
           <span className="truncate font-extrabold tracking-tight text-text-primary">Trellis</span>
         ) : null}
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Trellis sections">
+      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label={t('accessibility.sections')}>
         {navGroups.map((group) => (
           <div key={group.label} className="mb-6">
             {!collapsed ? <p className="kicker mb-2 px-3">{group.label}</p> : null}
@@ -104,13 +108,13 @@ export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
           <button
             type="button"
             onClick={onOpenSettings}
-            title="Settings"
+            title={t('labels.settings')}
             className={`mb-3 flex min-h-11 items-center gap-2 rounded-[11px] px-3 text-sm text-text-muted hover:bg-surface-hover hover:text-text-primary ${
               collapsed ? 'w-full justify-center' : 'w-full'
             }`}
           >
             <Settings className={iconSizes.md} />
-            {!collapsed ? <span>Settings</span> : null}
+            {!collapsed ? <span>{t('labels.settings')}</span> : null}
           </button>
         ) : null}
 
@@ -118,7 +122,7 @@ export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
           <div
             className={`figure text-xs text-text-muted ${collapsed ? '' : 'flex items-center justify-between'}`}
           >
-            {!collapsed ? <span>Version</span> : null}
+            {!collapsed ? <span>{t('labels.version')}</span> : null}
             <span>{version}</span>
           </div>
         ) : null}
@@ -130,7 +134,9 @@ export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
         <button
           type="button"
           onClick={() => setCollapsed((value) => !value)}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={
+            collapsed ? t('accessibility.expandSidebar') : t('accessibility.collapseSidebar')
+          }
           className="mt-3 flex min-h-11 w-full items-center justify-center rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary"
         >
           {collapsed ? (

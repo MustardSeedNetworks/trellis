@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SurveyDetail } from '@/components/SurveyDetail';
 import { SurveyList } from '@/components/SurveyList';
 import { surveyClient } from '@/lib/client';
@@ -13,6 +14,7 @@ import { type RollupState, StatusRollup } from '@/ui/StatusRollup';
  * rather than render an empty list that looks like "no surveys yet".
  */
 export function SurveysPage() {
+  const { t } = useTranslation(['common', 'pages']);
   const [selectedId, setSelectedId] = useState<string | undefined>();
 
   const surveysQuery = useQuery({
@@ -32,17 +34,17 @@ export function SurveysPage() {
       : 'ok';
 
   const headline = surveysQuery.isError
-    ? 'Survey data is not arriving'
+    ? t('pages:surveys.notArriving')
     : surveysQuery.isLoading
-      ? 'Loading surveys'
+      ? t('pages:surveys.loading')
       : surveys.length > 0
-        ? `${surveys.length} survey${surveys.length === 1 ? '' : 's'} available`
-        : 'No surveys captured yet';
+        ? t('pages:surveys.available', { count: surveys.length })
+        : t('pages:surveys.noneCaptured');
 
   const body = surveysQuery.isError
-    ? `The survey service did not answer: ${String(surveysQuery.error)}`
+    ? t('pages:surveys.surveyServiceSilent', { error: String(surveysQuery.error) })
     : surveys.length === 0 && !surveysQuery.isLoading
-      ? 'Import a survey to build a heatmap and coverage analysis from it.'
+      ? t('pages:surveys.emptyBody')
       : undefined;
 
   return (
@@ -51,7 +53,7 @@ export function SurveysPage() {
         state={state}
         headline={headline}
         body={body}
-        figures={[{ label: 'Surveys', value: String(surveys.length) }]}
+        figures={[{ label: t('common:labels.surveys'), value: String(surveys.length) }]}
       />
 
       <div className="flex flex-1 gap-6 overflow-hidden">
@@ -67,7 +69,7 @@ export function SurveysPage() {
           <SurveyDetail survey={selectedSurvey} />
         ) : (
           <div className="panel flex flex-1 items-center justify-center text-sm text-text-muted">
-            Select a survey to see what it stores and what it can produce
+            {t('pages:surveys.selectPrompt')}
           </div>
         )}
       </div>

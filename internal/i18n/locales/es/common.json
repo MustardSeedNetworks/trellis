@@ -1,0 +1,56 @@
+{
+  "accessibility": {
+    "breadcrumb": "Ruta de navegación",
+    "collapseSidebar": "Contraer la barra lateral",
+    "expandSidebar": "Expandir la barra lateral",
+    "openHelp": "Abrir la ayuda de {{title}}",
+    "sections": "Secciones de Trellis",
+    "whatIs": "¿Qué es {{title}}?"
+  },
+  "buttons": {
+    "generating": "Generando…"
+  },
+  "emptyState": {
+    "notBuiltBody": "Esta sección aparece en la barra lateral para que la forma del producto sea visible, pero su página aún no se ha desarrollado.",
+    "notBuiltTitle": "Aún no desarrollado"
+  },
+  "labels": {
+    "companyName": "Nombre de la empresa",
+    "coverageScore": "Puntuación de cobertura",
+    "deadZones": "Zonas muertas",
+    "floorPlan": "Plano de planta",
+    "floors": "Plantas",
+    "metric": "Métrica",
+    "recommendations": "Recomendaciones",
+    "samples": "Muestras",
+    "scale": "Escala",
+    "sections": "Secciones",
+    "settings": "Configuración",
+    "status": "Estado",
+    "survey": "Estudio",
+    "surveys": "Estudios",
+    "version": "Versión"
+  },
+  "nav": {
+    "capacity": "Capacidad",
+    "capture": "Captura",
+    "analysis": "Análisis",
+    "coverage": "Cobertura",
+    "deliver": "Entrega",
+    "floors": "Plantas",
+    "import": "Importar",
+    "interference": "Interferencias",
+    "reports": "Informes",
+    "surveys": "Estudios"
+  },
+  "status": {
+    "crit": "Crítico",
+    "ok": "Todo correcto",
+    "unknown": "Sin datos",
+    "warn": "Degradado"
+  },
+  "values": {
+    "none": "Ninguno",
+    "present": "Presente"
+  }
+}

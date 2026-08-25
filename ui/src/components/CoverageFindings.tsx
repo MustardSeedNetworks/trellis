@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { RollupState } from '@/ui/StatusRollup';
 
 /**
@@ -26,13 +27,6 @@ const STATE_STYLES: Record<RollupState, { edge: string; kicker: string }> = {
   unknown: { edge: 'bg-text-muted', kicker: 'text-text-muted' },
 };
 
-const STATE_LABELS: Record<RollupState, string> = {
-  ok: 'All clear',
-  warn: 'Degraded',
-  crit: 'Critical',
-  unknown: 'No data',
-};
-
 export function CoverageFindings({
   state,
   headline,
@@ -40,6 +34,19 @@ export function CoverageFindings({
   figures,
   recommendations,
 }: CoverageFindingsProps) {
+  const { t } = useTranslation('common');
+
+  /* Written out literally rather than as t(STATE_LABEL_KEYS[state]): a key
+     built from a variable is invisible to the key checker, which would report
+     all four as unused and need a dynamic-prefixes entry to silence. Four
+     literal calls cost nothing and keep the check honest. */
+  const stateLabels: Record<RollupState, string> = {
+    ok: t('status.ok'),
+    warn: t('status.warn'),
+    crit: t('status.crit'),
+    unknown: t('status.unknown'),
+  };
+
   const styles = STATE_STYLES[state];
 
   return (
@@ -52,7 +59,7 @@ export function CoverageFindings({
       <span aria-hidden="true" className={`absolute inset-y-0 left-0 w-[3px] ${styles.edge}`} />
 
       <div>
-        <p className={`kicker ${styles.kicker}`}>{STATE_LABELS[state]}</p>
+        <p className={`kicker ${styles.kicker}`}>{stateLabels[state]}</p>
         <h2 className="mt-2 text-base font-extrabold tracking-[-0.02em] text-text-primary">
           {headline}
         </h2>
@@ -76,7 +83,7 @@ export function CoverageFindings({
 
       {recommendations.length > 0 ? (
         <div className="flex flex-col gap-2 border-t border-hairline pt-4">
-          <span className="kicker">Recommendations</span>
+          <span className="kicker">{t('labels.recommendations')}</span>
           <ul className="flex list-inside list-disc flex-col gap-1 text-sm text-text-secondary">
             {recommendations.map((recommendation) => (
               <li key={recommendation}>{recommendation}</li>

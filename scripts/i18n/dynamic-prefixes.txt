@@ -1,0 +1,8 @@
+# Key prefixes reached by data-driven lookup rather than a literal t() call,
+# which the static analyzer cannot see. Each entry needs a one-line WHY.
+#
+# Deliberately empty. Trellis resolves every key literally — the page registry,
+# the rail and the report section list all write their keys out rather than
+# building them from a loop variable. The siblings build theirs dynamically and
+# pay for it here with entries that switch the unused-key check off for whole
+# namespaces; starting clean means not needing any.

@@ -30,6 +30,7 @@ export const MsnMark: FC<MsnMarkProps> = ({ collapsed = false, className = '' })
     data-testid="msn-mark"
   >
     <img src={msnLogo} alt="" aria-hidden="true" className="h-4 w-4 shrink-0" />
+    {/* allow-hardcoded: proper noun, kept verbatim in every locale by the glossary. */}
     {!collapsed ? (
       <span className="text-[10px] font-semibold tracking-wide text-text-muted">
         Mustard Seed Networks

@@ -190,6 +190,28 @@ jobs:
       - name: Build (tsc strict + vite)
         run: npm run build
 
+  # ============================================================================
+  # Internationalization (i18n) Validation
+  # ============================================================================
+  # Blocking from day one: no --ratchet, no baseline file, no allow-list. The
+  # other three products retrofitted i18n and are still paying that down —
+  # trellis was localized at 22 files precisely so it never acquires the debt,
+  # and a gate that starts permissive is how the debt gets acquired.
+  #
+  # The checks live once in MustardSeedNetworks/.github; this repo keeps only
+  # its glossary, banned vocabulary, glossary exceptions and dynamic-prefix
+  # allow-list (which is empty, and meant to stay that way).
+  i18n:
+    name: i18n Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Validate i18n (parity, glossary, banned vocab, etc.)
+        uses: MustardSeedNetworks/.github/.github/actions/i18n-validate@e6d74ebd42168c9b89f2b93f14841f58b90edece # v1.5.0
+
   # Fleet-shared SAST gate (MustardSeedNetworks/.github, pinned).
   semgrep:
     uses: MustardSeedNetworks/.github/.github/workflows/semgrep.yml@37513d7fbaacf4a7adaab1ac1514f021115868d1 # v1.4.0
@@ -228,6 +250,7 @@ jobs:
       - quality
       - govulncheck
       - frontend
+      - i18n
       - semgrep
       - ci-conformance
     if: always()

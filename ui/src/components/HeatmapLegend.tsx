@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { LegendStop } from '@/gen/trellis/survey/v1/survey_pb';
 
 /**
@@ -19,6 +20,7 @@ interface HeatmapLegendProps {
 }
 
 export function HeatmapLegend({ stops, unit }: HeatmapLegendProps) {
+  const { t } = useTranslation(['common', 'pages']);
   const lowest = stops.at(0);
   const highest = stops.at(-1);
 
@@ -32,7 +34,7 @@ export function HeatmapLegend({ stops, unit }: HeatmapLegendProps) {
        rendering a bar that implies a range. */
     return (
       <p className="text-xs text-text-muted" data-testid="legend-unavailable">
-        The service did not describe the colour scale it used.
+        {t('pages:coverage.legendUnavailable')}
       </p>
     );
   }
@@ -48,7 +50,7 @@ export function HeatmapLegend({ stops, unit }: HeatmapLegendProps) {
 
   return (
     <div className="flex flex-col gap-2" data-testid="heatmap-legend">
-      <span className="kicker">Scale</span>
+      <span className="kicker">{t('common:labels.scale')}</span>
       <div
         aria-hidden="true"
         className="h-2 w-full rounded-full border border-hairline"

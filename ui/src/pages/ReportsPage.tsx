@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import { surveyClient } from '@/lib/client';
 import { bytesToDataUrl, reportFilename } from '@/lib/format';
@@ -21,30 +22,14 @@ import { bytesToDataUrl, reportFilename } from '@/lib/format';
  * same way Coverage chooses one, and for the same reason — a link that names
  * the survey opens the report for it.
  */
-const SECTIONS = [
-  {
-    key: 'includeExecutiveSummary',
-    label: 'Executive summary',
-    hint: 'Coverage score, dead-zone count and the headline findings.',
-  },
-  {
-    key: 'includeRecommendations',
-    label: 'Recommendations',
-    hint: 'What the analysis suggests doing about the weak areas it found.',
-  },
-  {
-    key: 'includeHeatmaps',
-    label: 'Floor heatmaps',
-    hint: 'One rendered heatmap per surveyed floor. The bulk of the file size.',
-  },
-  {
-    key: 'includeRawData',
-    label: 'Raw data appendix',
-    hint: 'Every measurement, sample by sample. Long, and off by default.',
-  },
+const SECTION_KEYS = [
+  'includeExecutiveSummary',
+  'includeRecommendations',
+  'includeHeatmaps',
+  'includeRawData',
 ] as const;
 
-type SectionKey = (typeof SECTIONS)[number]['key'];
+type SectionKey = (typeof SECTION_KEYS)[number];
 
 /** Matches core/survey's DefaultReportOptions. */
 const DEFAULT_SECTIONS: Record<SectionKey, boolean> = {
@@ -55,7 +40,32 @@ const DEFAULT_SECTIONS: Record<SectionKey, boolean> = {
 };
 
 export function ReportsPage() {
+  const { t } = useTranslation(['common', 'pages']);
   const [searchParams, setSearchParams] = useSearchParams();
+
+  /* Resolved here rather than in a module constant: a constant would freeze
+     whichever language loaded first. Written out literally rather than as
+     t(section.labelKey), so the key checker can see every key — the dynamic
+     form would need a dynamic-prefixes entry that switches the unused-key
+     check off for this whole group. */
+  const sectionCopy: Record<SectionKey, { label: string; hint: string }> = {
+    includeExecutiveSummary: {
+      label: t('pages:reports.sectionExecutiveSummary'),
+      hint: t('pages:reports.sectionExecutiveSummaryHint'),
+    },
+    includeRecommendations: {
+      label: t('pages:reports.sectionRecommendations'),
+      hint: t('pages:reports.sectionRecommendationsHint'),
+    },
+    includeHeatmaps: {
+      label: t('pages:reports.sectionHeatmaps'),
+      hint: t('pages:reports.sectionHeatmapsHint'),
+    },
+    includeRawData: {
+      label: t('pages:reports.sectionRawData'),
+      hint: t('pages:reports.sectionRawDataHint'),
+    },
+  };
   const [sections, setSections] = useState<Record<SectionKey, boolean>>(DEFAULT_SECTIONS);
   const [companyName, setCompanyName] = useState('');
 
@@ -91,7 +101,7 @@ export function ReportsPage() {
     <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
       <div className="panel flex max-w-2xl flex-col gap-6 p-6">
         <label className="flex flex-col gap-2 text-sm" htmlFor="report-survey">
-          <span className="kicker">Survey</span>
+          <span className="kicker">{t('common:labels.survey')}</span>
           <select
             id="report-survey"
             value={surveyId ?? ''}
@@ -108,33 +118,33 @@ export function ReportsPage() {
         </label>
 
         <fieldset className="flex flex-col gap-3 border-t border-hairline pt-6">
-          <legend className="kicker">Sections</legend>
-          {SECTIONS.map((section) => (
-            <label key={section.key} className="flex items-start gap-3 text-sm">
+          <legend className="kicker">{t('common:labels.sections')}</legend>
+          {SECTION_KEYS.map((sectionKey) => (
+            <label key={sectionKey} className="flex items-start gap-3 text-sm">
               <input
                 type="checkbox"
-                checked={sections[section.key]}
+                checked={sections[sectionKey]}
                 onChange={(event) =>
-                  setSections((current) => ({ ...current, [section.key]: event.target.checked }))
+                  setSections((current) => ({ ...current, [sectionKey]: event.target.checked }))
                 }
                 className="mt-1"
               />
               <span className="flex flex-col">
-                <span className="text-text-primary">{section.label}</span>
-                <span className="text-xs text-text-muted">{section.hint}</span>
+                <span className="text-text-primary">{sectionCopy[sectionKey].label}</span>
+                <span className="text-xs text-text-muted">{sectionCopy[sectionKey].hint}</span>
               </span>
             </label>
           ))}
         </fieldset>
 
         <label className="flex flex-col gap-2 text-sm" htmlFor="report-company">
-          <span className="kicker">Company name</span>
+          <span className="kicker">{t('common:labels.companyName')}</span>
           <input
             id="report-company"
             type="text"
             value={companyName}
             onChange={(event) => setCompanyName(event.target.value)}
-            placeholder="Printed on the cover page"
+            placeholder={t('pages:reports.companyPlaceholder')}
             className="rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
           />
         </label>
@@ -147,18 +157,16 @@ export function ReportsPage() {
             className="rounded bg-brand-primary px-3 py-2 text-sm font-medium text-on-brand hover:bg-brand-accent disabled:opacity-50"
             data-testid="generate-report"
           >
-            {generate.isPending ? 'Generating…' : 'Generate PDF'}
+            {generate.isPending ? t('common:buttons.generating') : t('pages:reports.generate')}
           </button>
           {surveys.length === 0 && !surveysQuery.isLoading ? (
-            <span className="text-sm text-text-muted">
-              No surveys captured yet — import one to report on it.
-            </span>
+            <span className="text-sm text-text-muted">{t('pages:reports.noSurveys')}</span>
           ) : null}
         </div>
 
         {generate.isError ? (
           <p className="text-sm text-status-error" data-testid="report-error">
-            The report was not generated: {String(generate.error)}
+            {t('pages:reports.generateFailed', { error: String(generate.error) })}
           </p>
         ) : null}
       </div>
