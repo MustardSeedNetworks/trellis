@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Route, Routes } from 'react-router';
-import { type PageConfig, pages } from '@/pageRegistry';
+import { type PageConfig, usePages } from '@/pageRegistry';
 import { PageHeader } from '@/ui/PageHeader';
 import { Sidebar } from '@/ui/Sidebar';
 
@@ -15,6 +16,8 @@ import { Sidebar } from '@/ui/Sidebar';
  * review than a rail that hides how much is left.
  */
 export function App() {
+  const pages = usePages();
+
   return (
     <div className="flex h-screen bg-surface-base text-text-primary">
       <Sidebar version={__APP_VERSION__} />
@@ -65,14 +68,13 @@ function PageWithHeader({ page, children }: { page: PageConfig; children: ReactN
  * reads as a plan.
  */
 function NotBuiltYet() {
+  const { t } = useTranslation('common');
+
   return (
     <div className="flex flex-1 items-center justify-center p-8">
       <div className="panel max-w-md p-6 text-center">
-        <p className="kicker">Not built yet</p>
-        <p className="mt-2 text-sm text-text-secondary">
-          This section is listed in the rail so the shape of the product is visible, but its page
-          has not been built.
-        </p>
+        <p className="kicker">{t('emptyState.notBuiltTitle')}</p>
+        <p className="mt-2 text-sm text-text-secondary">{t('emptyState.notBuiltBody')}</p>
       </div>
     </div>
   );

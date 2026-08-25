@@ -5,6 +5,8 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 import { App } from '@/App';
+// Side-effect import: initialises i18next before any component renders.
+import '@/i18n';
 import './index.css';
 
 const queryClient = new QueryClient();

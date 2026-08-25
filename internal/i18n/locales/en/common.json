@@ -1,0 +1,56 @@
+{
+  "accessibility": {
+    "breadcrumb": "Breadcrumb",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
+    "openHelp": "Open help for {{title}}",
+    "sections": "Trellis sections",
+    "whatIs": "What is {{title}}?"
+  },
+  "buttons": {
+    "generating": "Generating…"
+  },
+  "emptyState": {
+    "notBuiltBody": "This section is listed in the rail so the shape of the product is visible, but its page has not been built.",
+    "notBuiltTitle": "Not built yet"
+  },
+  "labels": {
+    "companyName": "Company name",
+    "coverageScore": "Coverage score",
+    "deadZones": "Dead zones",
+    "floorPlan": "Floor plan",
+    "floors": "Floors",
+    "metric": "Metric",
+    "recommendations": "Recommendations",
+    "samples": "Samples",
+    "scale": "Scale",
+    "sections": "Sections",
+    "settings": "Settings",
+    "status": "Status",
+    "survey": "Survey",
+    "surveys": "Surveys",
+    "version": "Version"
+  },
+  "nav": {
+    "capacity": "Capacity",
+    "capture": "Capture",
+    "analysis": "Analysis",
+    "coverage": "Coverage",
+    "deliver": "Deliver",
+    "floors": "Floors",
+    "import": "Import",
+    "interference": "Interference",
+    "reports": "Reports",
+    "surveys": "Surveys"
+  },
+  "status": {
+    "crit": "Critical",
+    "ok": "All clear",
+    "unknown": "No data",
+    "warn": "Degraded"
+  },
+  "values": {
+    "none": "None",
+    "present": "Present"
+  }
+}

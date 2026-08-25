@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { TFunction } from 'i18next';
 import { type ChangeEvent, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { surveyClient } from '@/lib/client';
 import { type RollupState, StatusRollup } from '@/ui/StatusRollup';
 
@@ -17,6 +19,7 @@ import { type RollupState, StatusRollup } from '@/ui/StatusRollup';
  * fails silently and leaves a calm empty form reads as "nothing happened".
  */
 export function ImportPage() {
+  const { t } = useTranslation(['common', 'pages']);
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | undefined>();
@@ -50,13 +53,16 @@ export function ImportPage() {
     importMutation.mutate({ surveyName: name.trim(), ampData: new Uint8Array(buffer) });
   }
 
-  const rollup = describeImport({
-    file,
-    name,
-    pending: importMutation.isPending,
-    error: importMutation.error,
-    imported: importMutation.data?.survey,
-  });
+  const rollup = describeImport(
+    {
+      file,
+      name,
+      pending: importMutation.isPending,
+      error: importMutation.error,
+      imported: importMutation.data?.survey,
+    },
+    t,
+  );
 
   return (
     <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
@@ -78,18 +84,18 @@ export function ImportPage() {
         />
 
         <div className="flex flex-col gap-2">
-          <span className="kicker">AirMapper archive</span>
+          <span className="kicker">{t('pages:import.archive')}</span>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className="w-fit rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-raised"
           >
-            {file ? 'Choose a different file' : 'Choose .amp file'}
+            {file ? t('pages:import.chooseDifferentFile') : t('pages:import.chooseFile')}
           </button>
         </div>
 
         <label className="flex flex-col gap-2 text-sm" htmlFor="survey-name">
-          <span className="kicker">Survey name</span>
+          <span className="kicker">{t('pages:import.surveyName')}</span>
           <input
             id="survey-name"
             type="text"
@@ -106,7 +112,7 @@ export function ImportPage() {
           disabled={!file || name.trim() === '' || importMutation.isPending}
           className="w-fit rounded bg-brand-primary px-3 py-2 text-sm font-medium text-on-brand hover:bg-brand-accent disabled:opacity-50"
         >
-          {importMutation.isPending ? 'Importing…' : 'Import survey'}
+          {importMutation.isPending ? t('pages:import.importing') : t('pages:import.submit')}
         </button>
       </div>
     </div>
@@ -149,7 +155,10 @@ function formatBytes(bytes: number): string {
  * Nothing chosen is `unknown` rather than `ok`: the page has no result to
  * report, and a calm green rollup over an untouched form would claim one.
  */
-function describeImport({ file, name, pending, error, imported }: ImportState): ImportRollup {
+function describeImport(
+  { file, name, pending, error, imported }: ImportState,
+  t: TFunction<['common', 'pages']>,
+): ImportRollup {
   // The chosen file is named in the body rather than carried as a figure.
   // StatusRollup withholds figures in the unknown state on purpose — a rollup
   // that prints values when it has no reading claims one — and "ready to
@@ -161,41 +170,41 @@ function describeImport({ file, name, pending, error, imported }: ImportState): 
   if (error) {
     return {
       state: 'crit',
-      headline: 'Import failed',
+      headline: t('pages:import.failed'),
       body: [chosen, error instanceof Error ? error.message : String(error)]
         .filter(Boolean)
         .join(' '),
     };
   }
   if (pending) {
-    return { state: 'unknown', headline: 'Importing the archive', body: chosen };
+    return { state: 'unknown', headline: t('pages:import.importingArchive'), body: chosen };
   }
   if (imported) {
     // What the archive actually yielded is the useful readout — an import
     // that stored zero samples "succeeded" and is still worth seeing.
     return {
       state: 'ok',
-      headline: `Imported ${imported.name}`,
-      body: `Stored as ${imported.id}. It is now listed under Surveys.`,
+      headline: t('pages:import.imported', { name: imported.name }),
+      body: t('pages:import.importedBody', { id: imported.id }),
       figures: [
-        { label: 'Samples', value: String(imported.sampleCount) },
-        { label: 'Floors', value: String(imported.floorCount) },
+        { label: t('common:labels.samples'), value: String(imported.sampleCount) },
+        { label: t('common:labels.floors'), value: String(imported.floorCount) },
       ],
     };
   }
   if (!file) {
     return {
       state: 'unknown',
-      headline: 'No survey file chosen',
-      body: 'Choose an AirMapper .amp archive to import it as a survey.',
+      headline: t('pages:import.noFileChosen'),
+      body: t('pages:import.noFileChosenBody'),
     };
   }
   if (name.trim() === '') {
     return {
       state: 'warn',
-      headline: 'The survey needs a name',
-      body: `${chosen} Give the survey a name to import it.`,
+      headline: t('pages:import.needsName'),
+      body: t('pages:import.needsNameBody', { chosen }),
     };
   }
-  return { state: 'unknown', headline: 'Ready to import', body: chosen };
+  return { state: 'unknown', headline: t('pages:import.ready'), body: chosen };
 }

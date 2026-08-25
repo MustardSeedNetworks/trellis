@@ -23,8 +23,10 @@
     "erasableSyntaxOnly": true,
 
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "@/*": ["./src/*"],
+      "@locales/*": ["../internal/i18n/locales/*"]
+    },
+    "resolveJsonModule": true
   },
-  "include": ["src"]
+  "include": ["src", "../internal/i18n/locales"]
 }

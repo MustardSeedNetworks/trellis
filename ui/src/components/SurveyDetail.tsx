@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import type { SurveySummary } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
@@ -19,6 +20,7 @@ interface SurveyDetailProps {
 }
 
 export function SurveyDetail({ survey }: SurveyDetailProps) {
+  const { t } = useTranslation(['common', 'pages']);
   const reportMutation = useMutation({
     mutationFn: async () => {
       const reply = await surveyClient.generateReport({ surveyId: survey.id });
@@ -32,10 +34,13 @@ export function SurveyDetail({ survey }: SurveyDetailProps) {
   });
 
   const facts = [
-    { label: 'Status', value: survey.status },
-    { label: 'Floors', value: String(survey.floorCount) },
-    { label: 'Samples', value: String(survey.sampleCount) },
-    { label: 'Floor plan', value: survey.hasFloorPlan ? 'Present' : 'None' },
+    { label: t('common:labels.status'), value: survey.status },
+    { label: t('common:labels.floors'), value: String(survey.floorCount) },
+    { label: t('common:labels.samples'), value: String(survey.sampleCount) },
+    {
+      label: t('common:labels.floorPlan'),
+      value: survey.hasFloorPlan ? t('common:values.present') : t('common:values.none'),
+    },
   ];
 
   return (
@@ -56,7 +61,7 @@ export function SurveyDetail({ survey }: SurveyDetailProps) {
           to="/coverage"
           className="rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
         >
-          Plot coverage
+          {t('pages:surveys.plotCoverage')}
         </Link>
         <button
           type="button"
@@ -64,13 +69,15 @@ export function SurveyDetail({ survey }: SurveyDetailProps) {
           disabled={reportMutation.isPending}
           className="rounded bg-brand-primary px-3 py-2 text-sm font-medium text-on-brand hover:bg-brand-accent disabled:opacity-50"
         >
-          {reportMutation.isPending ? 'Generating…' : 'Download PDF report'}
+          {reportMutation.isPending
+            ? t('common:buttons.generating')
+            : t('pages:surveys.downloadReport')}
         </button>
       </div>
 
       {reportMutation.isError && (
         <p className="mt-3 text-sm text-status-error">
-          Failed to generate report: {String(reportMutation.error)}
+          {t('pages:surveys.reportFailed', { error: String(reportMutation.error) })}
         </p>
       )}
     </div>

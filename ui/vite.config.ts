@@ -22,6 +22,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // Locales live beside the Go package that embeds them, not under ui/,
+      // so the backend and the bundle read the same files.
+      '@locales': fileURLToPath(new URL('../internal/i18n/locales', import.meta.url)),
     },
   },
   server: {

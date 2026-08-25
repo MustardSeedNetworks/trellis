@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
+import type { TFunction } from 'i18next';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import { CoverageFindings } from '@/components/CoverageFindings';
 import { HeatmapLegend } from '@/components/HeatmapLegend';
@@ -22,6 +24,8 @@ import type { RollupState } from '@/ui/StatusRollup';
  * but no RPC reaches them, so offering them here would promise a picture the
  * product cannot draw.
  */
+/* Not translated, and not an oversight: RSSI, SNR, dBm and dB are glossary
+   terms the gate requires verbatim in every locale. */
 const METRICS = [
   { id: 'rssi', label: 'RSSI', unit: 'dBm' },
   { id: 'snr', label: 'SNR', unit: 'dB' },
@@ -39,6 +43,7 @@ const MIN_THRESHOLD_DBM = -90;
 const MAX_THRESHOLD_DBM = -40;
 
 export function CoveragePage() {
+  const { t } = useTranslation(['common', 'pages']);
   /* The survey lives in the URL so "Plot coverage" on a survey opens that
      survey's coverage, and so a floor worth showing someone is a link. */
   const [searchParams, setSearchParams] = useSearchParams();
@@ -73,20 +78,23 @@ export function CoveragePage() {
 
   const heatmap = heatmapQuery.data;
   const unit = METRICS.find((m) => m.id === metric)?.unit ?? '';
-  const findings = describeCoverage({
-    threshold,
-    hasSurvey: surveyId !== undefined,
-    loading: coverageQuery.isLoading,
-    error: coverageQuery.error,
-    coverage: coverageQuery.data,
-    sampleCount: heatmap?.sampleCount,
-  });
+  const findings = describeCoverage(
+    {
+      threshold,
+      hasSurvey: surveyId !== undefined,
+      loading: coverageQuery.isLoading,
+      error: coverageQuery.error,
+      coverage: coverageQuery.data,
+      sampleCount: heatmap?.sampleCount,
+    },
+    t,
+  );
 
   return (
     <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
       <div className="panel flex flex-wrap items-center gap-4 p-4">
         <label className="flex items-center gap-2 text-sm" htmlFor="coverage-survey">
-          <span className="kicker">Survey</span>
+          <span className="kicker">{t('common:labels.survey')}</span>
           <select
             id="coverage-survey"
             value={surveyId ?? ''}
@@ -95,7 +103,7 @@ export function CoveragePage() {
             className="rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary disabled:opacity-50"
           >
             {surveyId !== undefined && !listed ? (
-              <option value={surveyId}>{surveyId} · not in the survey list</option>
+              <option value={surveyId}>{t('pages:coverage.notInList', { id: surveyId })}</option>
             ) : null}
             {surveys.map((survey) => (
               <option key={survey.id} value={survey.id}>
@@ -106,7 +114,7 @@ export function CoveragePage() {
         </label>
 
         <div className="flex items-center gap-2">
-          <span className="kicker">Metric</span>
+          <span className="kicker">{t('common:labels.metric')}</span>
           <div className="flex gap-1">
             {METRICS.map((option) => (
               <button
@@ -127,7 +135,7 @@ export function CoveragePage() {
         </div>
 
         <label className="flex items-center gap-2 text-sm" htmlFor="coverage-threshold">
-          <span className="kicker">Dead zone below</span>
+          <span className="kicker">{t('pages:coverage.deadZoneThreshold')}</span>
           <input
             id="coverage-threshold"
             type="number"
@@ -152,23 +160,30 @@ export function CoveragePage() {
 
         {heatmap ? (
           <span className="figure ml-auto text-xs text-text-muted" data-testid="surface-meta">
-            {heatmap.metric} · {heatmap.sampleCount} samples · {formatSignal(heatmap.min, unit)} to{' '}
-            {formatSignal(heatmap.max, unit)}
+            {t('pages:coverage.surfaceMeta', {
+              metric: heatmap.metric,
+              count: heatmap.sampleCount,
+              min: formatSignal(heatmap.min, unit),
+              max: formatSignal(heatmap.max, unit),
+            })}
           </span>
         ) : null}
       </div>
 
       <div className="grid flex-1 grid-cols-1 items-start gap-6 xl:grid-cols-[1fr_320px]">
         <section className="panel flex flex-col gap-4 p-5">
-          {renderSurface({
-            hasSurveys: surveys.length > 0,
-            surveysLoading: surveysQuery.isLoading,
-            surveysError: surveysQuery.error,
-            heatmapLoading: heatmapQuery.isLoading,
-            heatmapError: heatmapQuery.error,
-            heatmap,
-            metric,
-          })}
+          {renderSurface(
+            {
+              hasSurveys: surveys.length > 0,
+              surveysLoading: surveysQuery.isLoading,
+              surveysError: surveysQuery.error,
+              heatmapLoading: heatmapQuery.isLoading,
+              heatmapError: heatmapQuery.error,
+              heatmap,
+              metric,
+            },
+            t,
+          )}
           {heatmap ? <HeatmapLegend stops={heatmap.legend} unit={unit} /> : null}
         </section>
 
@@ -198,33 +213,36 @@ interface SurfaceState {
  * The surface says which of its several failures happened. A blank card would
  * read as "this floor has no coverage" in every one of them.
  */
-function renderSurface({
-  hasSurveys,
-  surveysLoading,
-  surveysError,
-  heatmapLoading,
-  heatmapError,
-  heatmap,
-  metric,
-}: SurfaceState) {
+function renderSurface(
+  {
+    hasSurveys,
+    surveysLoading,
+    surveysError,
+    heatmapLoading,
+    heatmapError,
+    heatmap,
+    metric,
+  }: SurfaceState,
+  t: TFunction<['common', 'pages']>,
+) {
   if (surveysError) {
     return (
       <p className="text-sm text-status-error" data-testid="surface-message">
-        The survey service did not answer: {String(surveysError)}
+        {t('pages:coverage.surveyServiceSilent', { error: String(surveysError) })}
       </p>
     );
   }
   if (surveysLoading) {
     return (
       <p className="text-sm text-text-muted" data-testid="surface-message">
-        Loading surveys…
+        {t('pages:coverage.loadingSurveys')}
       </p>
     );
   }
   if (!hasSurveys) {
     return (
       <p className="text-sm text-text-muted" data-testid="surface-message">
-        No surveys captured yet. Import an AirMapper archive to plot coverage from it.
+        {t('pages:coverage.noSurveys')}
       </p>
     );
   }
@@ -233,21 +251,21 @@ function renderSurface({
        says so in its message — worth quoting rather than replacing. */
     return (
       <p className="text-sm text-status-error" data-testid="surface-message">
-        The heatmap did not render: {String(heatmapError)}
+        {t('pages:coverage.heatmapFailed', { error: String(heatmapError) })}
       </p>
     );
   }
   if (heatmapLoading || !heatmap) {
     return (
       <p className="text-sm text-text-muted" data-testid="surface-message">
-        Rendering the heatmap…
+        {t('pages:coverage.renderingHeatmap')}
       </p>
     );
   }
   return (
     <img
       src={bytesToDataUrl(heatmap.png, 'image/png')}
-      alt={`${metric.toUpperCase()} heatmap of the surveyed floor`}
+      alt={t('pages:coverage.heatmapAlt', { metric: metric.toUpperCase() })}
       width={heatmap.width}
       height={heatmap.height}
       className="max-w-full rounded-[12px] border border-hairline"
@@ -274,19 +292,15 @@ interface CoverageVerdict {
 }
 
 /** Turns the analysis into the sentence the findings panel leads with. */
-function describeCoverage({
-  threshold,
-  hasSurvey,
-  loading,
-  error,
-  coverage,
-  sampleCount,
-}: CoverageState): CoverageVerdict {
+function describeCoverage(
+  { threshold, hasSurvey, loading, error, coverage, sampleCount }: CoverageState,
+  t: TFunction<['common', 'pages']>,
+): CoverageVerdict {
   if (!hasSurvey) {
     return {
       state: 'unknown',
-      headline: 'No survey selected',
-      body: 'Coverage is measured per survey. Choose one to analyse it.',
+      headline: t('pages:coverage.noSurveySelected'),
+      body: t('pages:coverage.noSurveySelectedBody'),
       figures: [],
       recommendations: [],
     };
@@ -294,8 +308,8 @@ function describeCoverage({
   if (error) {
     return {
       state: 'unknown',
-      headline: 'Coverage analysis is not arriving',
-      body: `The survey service did not answer: ${String(error)}`,
+      headline: t('pages:coverage.notArriving'),
+      body: t('pages:coverage.surveyServiceSilent', { error: String(error) }),
       figures: [],
       recommendations: [],
     };
@@ -303,32 +317,33 @@ function describeCoverage({
   if (loading || !coverage) {
     return {
       state: 'unknown',
-      headline: 'Analysing coverage',
+      headline: t('pages:coverage.analysing'),
       figures: [],
       recommendations: [],
     };
   }
 
   const figures = [
-    { label: 'Coverage score', value: formatCoverageScore(coverage.coverageScore) },
-    { label: 'Dead zones', value: String(coverage.deadZoneCount) },
-    { label: 'Samples', value: sampleCount === undefined ? '—' : String(sampleCount) },
+    { label: t('common:labels.coverageScore'), value: formatCoverageScore(coverage.coverageScore) },
+    { label: t('common:labels.deadZones'), value: String(coverage.deadZoneCount) },
+    {
+      label: t('common:labels.samples'),
+      value: sampleCount === undefined ? '—' : String(sampleCount),
+    },
   ];
 
   if (coverage.deadZoneCount === 0) {
     return {
       state: 'ok',
-      headline: `No dead zones below ${threshold} dBm`,
+      headline: t('pages:coverage.noDeadZones', { threshold }),
       figures,
       recommendations: coverage.recommendations,
     };
   }
   return {
     state: 'warn',
-    headline: `${coverage.deadZoneCount} dead zone${
-      coverage.deadZoneCount === 1 ? '' : 's'
-    } below ${threshold} dBm`,
-    body: 'Each is a measured region where signal fell under the threshold.',
+    headline: t('pages:coverage.deadZones', { count: coverage.deadZoneCount, threshold }),
+    body: t('pages:coverage.deadZoneBody'),
     figures,
     recommendations: coverage.recommendations,
   };

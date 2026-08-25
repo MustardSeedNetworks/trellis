@@ -24,6 +24,7 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { Activity, FileText, Layers, Radio, Signal, Upload, Waypoints } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export interface TrellisNavItem {
   label: string;
@@ -37,25 +38,34 @@ export interface TrellisNavGroup {
   items: TrellisNavItem[];
 }
 
-export const navGroups: TrellisNavGroup[] = [
-  {
-    label: 'Capture',
-    items: [
-      { label: 'Surveys', path: '/', icon: Waypoints },
-      { label: 'Import', path: '/import', icon: Upload },
-      { label: 'Floors', path: '/floors', icon: Layers },
-    ],
-  },
-  {
-    label: 'Analysis',
-    items: [
-      { label: 'Coverage', path: '/coverage', icon: Signal },
-      { label: 'Interference', path: '/interference', icon: Radio },
-      { label: 'Capacity', path: '/capacity', icon: Activity },
-    ],
-  },
-  {
-    label: 'Deliver',
-    items: [{ label: 'Reports', path: '/reports', icon: FileText }],
-  },
-];
+/**
+ * A hook rather than a constant because the labels are translated; resolving
+ * them at module load would freeze the language chosen on first render. Keys
+ * are literal so the key checker can see them.
+ */
+export function useNavGroups(): TrellisNavGroup[] {
+  const { t } = useTranslation('common');
+
+  return [
+    {
+      label: t('nav.capture'),
+      items: [
+        { label: t('nav.surveys'), path: '/', icon: Waypoints },
+        { label: t('nav.import'), path: '/import', icon: Upload },
+        { label: t('nav.floors'), path: '/floors', icon: Layers },
+      ],
+    },
+    {
+      label: t('nav.analysis'),
+      items: [
+        { label: t('nav.coverage'), path: '/coverage', icon: Signal },
+        { label: t('nav.interference'), path: '/interference', icon: Radio },
+        { label: t('nav.capacity'), path: '/capacity', icon: Activity },
+      ],
+    },
+    {
+      label: t('nav.deliver'),
+      items: [{ label: t('nav.reports'), path: '/reports', icon: FileText }],
+    },
+  ];
+}

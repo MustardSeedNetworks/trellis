@@ -19,6 +19,7 @@
 import type { LucideIcon } from 'lucide-react';
 import { ChevronRight, HelpCircle } from 'lucide-react';
 import { createElement, type FC, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { iconSizes } from '../constants/sizes';
 
@@ -60,25 +61,32 @@ interface BreadcrumbProps {
   className?: string;
 }
 
-const Breadcrumb: FC<BreadcrumbProps> = ({ items, className = '' }) => (
-  <nav className={`flex items-center gap-tight text-sm ${className}`} aria-label="Breadcrumb">
-    {items.map((item, index) => (
-      <div key={item.label} className="flex items-center gap-tight">
-        {index > 0 && <ChevronRight className={`${iconSizes.md} text-text-disabled`} />}
-        {item.href ? (
-          <Link
-            to={item.href}
-            className="text-text-muted hover:text-text-primary transition-colors"
-          >
-            {item.label}
-          </Link>
-        ) : (
-          <span className="text-text-secondary font-medium">{item.label}</span>
-        )}
-      </div>
-    ))}
-  </nav>
-);
+const Breadcrumb: FC<BreadcrumbProps> = ({ items, className = '' }) => {
+  const { t } = useTranslation('common');
+
+  return (
+    <nav
+      className={`flex items-center gap-tight text-sm ${className}`}
+      aria-label={t('accessibility.breadcrumb')}
+    >
+      {items.map((item, index) => (
+        <div key={item.label} className="flex items-center gap-tight">
+          {index > 0 && <ChevronRight className={`${iconSizes.md} text-text-disabled`} />}
+          {item.href ? (
+            <Link
+              to={item.href}
+              className="text-text-muted hover:text-text-primary transition-colors"
+            >
+              {item.label}
+            </Link>
+          ) : (
+            <span className="text-text-secondary font-medium">{item.label}</span>
+          )}
+        </div>
+      ))}
+    </nav>
+  );
+};
 
 export const PageHeader: FC<PageHeaderProps> = ({
   title,
@@ -92,6 +100,8 @@ export const PageHeader: FC<PageHeaderProps> = ({
   onHelp,
   className = '',
 }) => {
+  const { t } = useTranslation('common');
+
   return (
     <div className={`mb-section animate-fade-in ${className}`}>
       {breadcrumbs && breadcrumbs.length > 0 && (
@@ -123,8 +133,8 @@ export const PageHeader: FC<PageHeaderProps> = ({
             <button
               type="button"
               onClick={onHelp}
-              aria-label={`Open help for ${title}`}
-              title={`What is ${title}?`}
+              aria-label={t('accessibility.openHelp', { title })}
+              title={t('accessibility.whatIs', { title })}
               className="rounded-full p-1.5 text-text-muted hover:bg-surface-hover hover:text-text-primary"
             >
               <HelpCircle className={iconSizes.lg} />
