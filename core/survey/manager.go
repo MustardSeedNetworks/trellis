@@ -16,17 +16,16 @@ import (
 )
 
 // Scanner performs a passive Wi-Fi scan, returning every network currently
-// visible to the capture interface. Trellis's capture daemon implements this
-// against the OS Wi-Fi stack; it corresponds to Seed's *wifi.Scanner (a
-// stateful, OS-specific capture type that stays in the capture daemon rather
-// than core).
+// visible to the capture interface. internal/capture implements this against
+// the OS Wi-Fi stack; it corresponds to Seed's *wifi.Scanner. The OS-specific
+// code stays there — core only ever sees this interface.
 type Scanner interface {
 	Scan(ctx context.Context) ([]wifi.ScannedNetwork, error)
 }
 
 // ConnectionMonitor reports the survey interface's current Wi-Fi association,
-// feeding active-survey samples (SSID/BSSID/RSSI). Trellis's capture daemon
-// implements this; it corresponds to Seed's *wifi.Manager.
+// feeding active-survey samples (SSID/BSSID/RSSI). internal/capture implements
+// this; it corresponds to Seed's *wifi.Manager.
 type ConnectionMonitor interface {
 	ConnectionInfo(ctx context.Context) (ssid, bssid string, rssiDBm int, err error)
 }

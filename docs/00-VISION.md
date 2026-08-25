@@ -26,7 +26,7 @@ All Wi-Fi capability lives here (decided 2026-06-20; Seed exits Wi-Fi entirely).
   - *Calibrate*: fit predictions to measurements so plans are trustworthy.
   - *Report*: templated, versionable PDF/HTML.
 
-Both modes sit on one shared **Wi-Fi/RF/capture core** (the capture daemon + engine).
+Both modes sit on one shared **Wi-Fi/RF/capture core** (`internal/capture` + the engine).
 
 ## What Trellis is *not* (scope discipline)
 - Not wired diagnostics / security / compliance (that's **Seed**).

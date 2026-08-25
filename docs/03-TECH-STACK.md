@@ -10,16 +10,18 @@ it calls, React/TS is the face.** Each is used where it's strongest and nowhere 
 | **Core service** | **Go 1.2x** | `connectrpc` (API), `sqlc` + `modernc.org/sqlite` (pure-Go, cgo-free), Apache Arrow Go, `protobuf` | Productive, great concurrency for the capture/stream pipeline, simple deploys, one binary serves desktop *and* cloud. |
 | **Desktop shell** | Go + **Wails v2/v3** | webview2/WKWebView/webkitgtk | The Go-native Tauri analog: Go host + web UI in one binary, no Electron bloat. |
 | **UI** | **TypeScript + React** | WebGL/WebGPU (custom or regl/deck.gl), TanStack Query, Zustand, Vite | Best UI ecosystem; one codebase serves desktop (Wails) and web (cloud planner). |
-| **Capture daemon** | **Go** (+ contained cgo) | `nl80211`/`AF_PACKET` (Linux), Npcap + Native-WiFi (Windows), CoreWLAN (macOS), libpcap | Concurrency + per-OS build tags; cgo is acceptable *here* because it's isolated. |
+| **Capture** (`internal/capture`, linked into the core — ADR-0006) | **Go** (+ contained cgo) | `nl80211` (Linux), Native Wifi (Windows), CoreWLAN (macOS); `AF_PACKET`/Npcap/libpcap at Tier 2 | Per-OS build tags behind one `Scanner` interface. Tier 1 scanning needs no privilege, so it needs no separate process; cgo is acceptable *here* because CI proves it goes no further. |
 | **Reporter** | Go | Typst **or** HTML + headless Chromium | Versionable templates; kills Crystal Reports. |
 | **Contracts** | **protobuf** | `buf` (lint/breaking/codegen) → Go, TS (`connect-es`), C++ | Single source of truth for all three seams. |
 | **Licensing** | Go | Ed25519 (`crypto/ed25519`) | Offline-verifiable signed tokens; reuse MSN spec. |
 | **Project store** | — | **SQLite** (relational) + **Parquet/Arrow** (measurement clouds) | Right tool per data shape; millions of points belong in columnar, not SQLite. |
 
 ## Hard rules (the seams that keep this clean)
-1. **The Go core is cgo-free.** The engine is a *separate process* (shmem + UDS), not
-   linked in. cgo lives only in the capture daemon (and is avoided even there where a
-   pure-Go path exists, e.g. `modernc.org/sqlite`).
+1. **cgo goes no further than `internal/capture`.** The engine is a *separate
+   process* (shmem + UDS), not linked in. Capture *is* linked in (ADR-0006), so
+   the boundary is a package and a CI check rather than a process; the tree still
+   compiles with `CGO_ENABLED=0`, and only the darwin build needs cgo at all.
+   A pure-Go path is preferred even inside capture, e.g. `modernc.org/sqlite`.
 2. **C++ stays behind a flat C ABI** and never does I/O, DB, or orchestration —
    "give scene/delta, get grids." Resist C++ creeping upward.
 3. **GPU is written once** against wgpu-native/Dawn — no per-API hand-rolling — with a

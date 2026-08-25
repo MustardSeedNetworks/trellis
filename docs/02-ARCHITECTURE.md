@@ -4,17 +4,25 @@ Status: draft for review · Owner: Kris Armstrong / MSN
 
 ## 1. The keystone decision: process-isolated, local-first, transport-agnostic core
 
-Trellis is **not** a monolith. It is four cooperating OS processes, with the Go core
+Trellis is **not** a monolith. It is three cooperating OS processes, with the Go core
 written so the **same binary** runs embedded in the desktop app *or* as a cloud
 server. This one choice buys us:
 
 - **Fault isolation** — a C++/GPU crash or a hung GPU driver can't take down the app.
-- **Clean builds** — the Go core stays **cgo-free** (single static binary); C++ builds
-  independently; cgo is confined to the capture daemon only.
+- **Clean builds** — C++ builds independently; cgo is confined to
+  `internal/capture` and CI proves it (docs/07-RISKS R5). linux and windows
+  builds are cgo-free static binaries; darwin links system frameworks.
 - **Fast big-buffer path** — heatmap grids move between Go and the engine by
   **shared memory**, never JSON.
-- **Privilege isolation** — capture runs as a separate privileged helper.
 - **One codebase, desktop *and* cloud** — the core's API is transport-agnostic.
+
+**Capture is not one of the processes** (ADR-0006). It was, on a privilege-isolation
+argument that turned out not to apply: Tier 1 scanning is unprivileged on every
+platform, and on macOS the gate is TCC — which grants to a *signed bundle*, so the
+process reading the radio has to be the one that is bundled. `internal/capture` is
+therefore linked into the core, and **trellisd itself ships as the signed
+`Trellis.app`**. The `capture.Scanner` interface still hides host-NIC from external
+hardware; only the process boundary is gone.
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
@@ -23,11 +31,12 @@ server. This one choice buys us:
 │   │ (Wails bindings on desktop / gRPC-web+WS in cloud)               │
 ├───┼──────────────────────────────────────────────────────────────── │
 │ Core service (Go)   domain · SQLite/Parquet · orchestration · API ·  │
-│                     capture coord · licensing · reporting trigger    │
-│   │ ctrl(UDS)+shmem        │ local socket(stream)      │ exec        │
-│   ▼                        ▼                            ▼            │
-│ RF Engine (C++/GPU)     Capture daemon (Go,per-OS)   Reporter (Go)   │
-│ pure: scene → grids     radios → measurement stream  + headless PDF  │
+│                     internal/capture (per-OS, cgo) · licensing ·     │
+│                     reporting trigger                                │
+│   │ ctrl(UDS)+shmem                                   │ exec        │
+│   ▼                                                    ▼            │
+│ RF Engine (C++/GPU)                                  Reporter (Go)   │
+│ pure: scene → grids                                  + headless PDF  │
 ├──────────────────────────────────────────────────────────────────── │
 │ Store:  project.sqlite   +   surveys/*.parquet   +   assets/         │
 └────────────────────────────────────────────────────────────────────┘
@@ -58,8 +67,9 @@ Everything that isn't *predictive* math or pixels.
   engine's **predicted** grids, so UI/reports treat them identically.
 - **Orchestration:** AP move → assemble scene *delta* → request compute (shmem) →
   cache grid → notify UI. **Incremental** (only the changed AP/region).
-- **Capture coordination:** consume measurement stream, attach position, persist,
-  trigger interpolation.
+- **Capture:** `internal/capture` reads the host radio in-process (ADR-0006);
+  the core attaches position, persists, and triggers interpolation. External
+  hardware, when it lands, stays a separate process behind the same interface.
 - **API:** one protobuf/Connect surface (streaming for capture + progress), served
   in-process (desktop) or over the network (cloud).
 - **Also:** import/export, report-model assembly, **Ed25519** license verification.
@@ -72,13 +82,18 @@ No domain logic, no math.
 - **State:** TanStack Query over the API; Zustand for view state.
 - **Transport:** Connect/gRPC control + binary channel (Wails or WebSocket) for grids.
 
-### 2.4 Capture Daemon — Go + per-OS + external HW (privileged helper)
-Turns radios into a uniform measurement stream.
-- Backends (build tags): Linux `nl80211`+`AF_PACKET`; Windows Npcap + Native-WiFi;
-  macOS CoreWLAN scan (**monitor mode is dead on modern macOS**).
+### 2.4 Capture — `internal/capture`, linked into the core (ADR-0006)
+Turns radios into `wifi.ScannedNetwork` values behind one `Scanner` interface.
+- Backends (build tags): macOS CoreWLAN (**implemented**); Linux `nl80211`,
+  Windows Native Wifi. Monitor mode is dead on modern macOS.
+- **Tier 1 scanning is unprivileged everywhere** — see
+  [10-WIFI-CAPTURE.md](10-WIFI-CAPTURE.md). macOS instead requires a signed,
+  entitled, LaunchServices-launched bundle, which is why trellisd ships as
+  `Trellis.app`. Tier 2 (monitor mode) needs privilege on every platform and is
+  not implemented; it will want its own process when it lands.
 - **External hardware is first-class** (supported USB radio / NetAlly appliance over
-  USB-IP) — pragmatic primary path; host-NIC is best-effort.
-- **The one place cgo is allowed** (libpcap/Npcap), confined here.
+  USB-IP) — a separate process behind the same `Scanner`, unaffected by ADR-0006.
+- **The one place cgo is allowed**, enforced by `scripts/check-cgo-confinement.py`.
 
 ### 2.5 Reporter — Go + headless renderer
 Go builds a report model → Typst or HTML template → headless Chromium → PDF.
@@ -106,8 +121,10 @@ truth. See [contracts/](contracts/).
   Parquet → periodic interpolation → measured heatmap → UI.
 
 ## 5. Deployment modes (same Go core)
-- **Desktop:** Wails binary = Go core + React UI; bundles the engine + capture daemon
-  as helper processes. Per-OS installers + code signing/notarization.
+- **Desktop:** Wails binary = Go core + React UI, with capture linked in; bundles
+  the engine as a helper process. Per-OS installers + code signing/notarization —
+  on macOS the signed bundle is not optional packaging, it is what makes Wi-Fi
+  network names readable at all (`deploy/macos/build-app.sh`).
 - **Cloud/team (later):** Go core as a server, engine as a GPU service, UI as a web
   planner (no capture); projects sync via object storage.
 - **CI/headless:** engine CPU fallback so tests run without a GPU.

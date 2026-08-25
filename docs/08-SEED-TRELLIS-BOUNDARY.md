@@ -35,7 +35,7 @@ security / compliance only); Trellis is the sole Wi-Fi product, with both a ligh
   grow a lightweight live UX it otherwise wouldn't need.
 
 **B. Share a Wi-Fi/RF/capture core; keep fitting UX in each product (recommended).**
-Extract the hard part — the **capture daemon + RF/measurement library** — as a shared
+Extract the hard part — the **capture backend + RF/measurement library** — as a shared
 component. Trellis builds survey/planning on it; Seed keeps a *thin* live-troubleshooting
 UI on the *same* core. Build the radio/RF stack once, consume it twice.
 - ✓ No duplication; each product keeps the UX that fits; clean ownership (Trellis owns
@@ -45,9 +45,11 @@ UI on the *same* core. Build the radio/RF stack once, consume it twice.
 - ✗ Two RF/capture stacks to maintain. Rejected — this is the thing to avoid.
 
 ## Why B fits the architecture we already chose
-The Trellis design (ADR-0001/0003) already makes capture and the RF engine **standalone
-processes/components with protobuf contracts**. That *is* a shareable core — Seed
-consuming the Trellis capture daemon + a subset of the engine is a natural extension,
+The Trellis design (ADR-0001/0003) already makes the RF engine a **standalone process
+with a protobuf contract**, and capture a standalone *package* behind one `Scanner`
+interface (ADR-0006 — it is linked into the core, because macOS grants Wi-Fi names to
+a signed bundle rather than to a privileged daemon). That *is* a shareable core — Seed
+consuming Trellis's capture package + a subset of the engine is a natural extension,
 not a rewrite. "Move Wi-Fi to Trellis" then means **Trellis owns the Wi-Fi core; Seed
 becomes a consumer of it**, rather than ripping features around.
 

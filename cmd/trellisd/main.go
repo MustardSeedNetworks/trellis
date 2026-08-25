@@ -6,6 +6,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -17,6 +18,8 @@ import (
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1/surveyv1connect"
 	"github.com/MustardSeedNetworks/trellis/internal/api"
+	"github.com/MustardSeedNetworks/trellis/internal/apppaths"
+	"github.com/MustardSeedNetworks/trellis/internal/capture"
 )
 
 const (
@@ -26,7 +29,6 @@ const (
 	// default. An operator who understands the trade-off can override with
 	// TRELLIS_ADDR — and owns adding auth/TLS in front of it.
 	defaultAddr         = "127.0.0.1:8080"
-	defaultDataDir      = "./data"
 	shutdownGracePeriod = 10 * time.Second
 	readHeaderTimeout   = 5 * time.Second
 	readTimeout         = 30 * time.Second
@@ -41,8 +43,12 @@ const (
 )
 
 func main() {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	slog.SetDefault(logger)
+	closeLog, err := installLogger()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	defer func() { _ = closeLog() }()
 
 	if err := run(); err != nil {
 		slog.Error("trellisd exited with error", "error", err)
@@ -53,7 +59,10 @@ func main() {
 func run() error {
 	dataDir := os.Getenv("TRELLIS_DATA_DIR")
 	if dataDir == "" {
-		dataDir = defaultDataDir
+		var err error
+		if dataDir, err = apppaths.DataDir(); err != nil {
+			return err
+		}
 	}
 
 	addr := os.Getenv("TRELLIS_ADDR")
@@ -63,14 +72,22 @@ func run() error {
 
 	manager, err := survey.NewManager(dataDir, nil, nil, nil, nil)
 	if err != nil {
-		slog.Error("open survey store", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("open survey store %s: %w", dataDir, err)
 	}
 	defer func() { _ = manager.Close() }()
 	if err := manager.LoadSurveys(); err != nil {
 		return err
 	}
 	slog.Info("loaded surveys", "count", len(manager.ListSurveys()), "data_dir", dataDir)
+
+	// Capture is linked in rather than run as a helper process (ADR-0006).
+	// A host with no backend still serves imported surveys, so this is
+	// reported and not fatal.
+	if scanner, err := capture.New(); err != nil {
+		slog.Warn("no Wi-Fi capture backend on this host; imported surveys only", "error", err)
+	} else {
+		go reportCaptureReadiness(scanner)
+	}
 
 	mux := http.NewServeMux()
 	path, handler := surveyv1connect.NewSurveyServiceHandler(

@@ -59,10 +59,13 @@ jobs:
         # version is nailed down.
         run: go run github.com/bufbuild/buf/cmd/buf@v1.72.0 lint
 
-  # Every darwin-only file is behind //go:build darwin, so the ubuntu backend job
-  # never compiles the capture backend. It reaches CoreWLAN through cgo and
-  # Objective-C, and a break there would leave every other check green — the
-  # blind spot that let Seed's macOS Wi-Fi rot into dead code unnoticed.
+  # Every darwin-only file is behind //go:build darwin && cgo, so the ubuntu
+  # backend job never compiles the capture backend. It reaches CoreWLAN through
+  # cgo and Objective-C, and a break there would leave every other check green —
+  # the blind spot that let Seed's macOS Wi-Fi rot into dead code unnoticed.
+  #
+  # This job is also the only place docs/07-RISKS R5 can be enforced: cgo is
+  # part of the build on no other runner.
   backend-darwin:
     name: Backend (macOS)
     runs-on: macos-latest
@@ -87,6 +90,19 @@ jobs:
       # and no Location Services grant.
       - name: Test
         run: go test -race ./internal/capture/...
+
+      # R5 promises cgo stays out of the Go core and says "enforce via build/CI
+      # check". This is that check — and it can only run where cgo is actually
+      # in the build, which is here.
+      - name: cgo confinement (docs/07-RISKS R5)
+        run: python3 scripts/check-cgo-confinement.py
+
+      # The capture backend is behind `darwin && cgo`, so the tree has to
+      # compile without cgo too. Getting that constraint wrong fails with
+      # "undefined: corewlan.Scan", which reads like a dependency problem
+      # rather than a build-tag one.
+      - name: Build without cgo
+        run: CGO_ENABLED=0 go build ./...
 
   quality:
     name: Quality Checks
