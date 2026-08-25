@@ -103,10 +103,21 @@ from the Finder or the Dock, which inherit launchd's environment instead.
 
 ```
 npm --prefix ui ci && npm --prefix ui run build
-./deploy/macos/build-app.sh 0.1.30
+./deploy/macos/build-app.sh 0.2.0
+./deploy/macos/notarize-app.sh          # for distribution; see below
 open -a dist/macos-app/Trellis.app
 python3 deploy/macos/location-status.py
 ```
+
+**Notarization is for distribution, not for permission.** Without it a bundle
+copied to another Mac is quarantined and Gatekeeper refuses to open it. It does
+not affect what a scan can see — that is the entitlement plus the launch path —
+and it does not rescue a directly executed inner binary, which was verified
+against a notarized, stapled, authorized bundle returning 0 of 11 BSSIDs.
+
+Notarization also does not disturb an existing Location Services grant:
+re-signing and stapling the same bundle identifier at the same path kept the
+grant, and the bundle went on reporting named BSSIDs.
 
 ### Linux
 
