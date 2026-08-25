@@ -7,12 +7,43 @@ package capture
 import (
 	"bytes"
 	"encoding/binary"
+	"math"
 	"testing"
 )
 
 // ie builds one information element.
+//
+// An element's length field is a single byte, so a fixture longer than 255
+// bytes could not exist on the air either — hence the check rather than a
+// silent truncation.
 func ie(id byte, data ...byte) []byte {
-	return append([]byte{id, byte(len(data))}, data...)
+	return append([]byte{id, uint8Len(data)}, data...)
+}
+
+// uint8Len is the length field of an information element. It saturates rather
+// than wrapping, because a fixture that long is a mistake in the test and a
+// silently wrapped length would make the parser look broken instead.
+func uint8Len(data []byte) uint8 {
+	switch n := len(data); {
+	case n > math.MaxUint8:
+		return math.MaxUint8
+	case n < 0:
+		return 0
+	default:
+		return uint8(n)
+	}
+}
+
+// uint16Count is the same for a two-byte count field.
+func uint16Count(n int) uint16 {
+	switch {
+	case n > math.MaxUint16:
+		return math.MaxUint16
+	case n < 0:
+		return 0
+	default:
+		return uint16(n)
+	}
 }
 
 // rsnIE builds an RSN element advertising the given IEEE AKM suite types.
@@ -22,7 +53,7 @@ func rsnIE(akms ...byte) []byte {
 	b.Write([]byte{0x00, 0x0f, 0xac, 0x04}) // group cipher CCMP
 	_ = binary.Write(&b, binary.LittleEndian, uint16(1))
 	b.Write([]byte{0x00, 0x0f, 0xac, 0x04}) // one pairwise cipher, CCMP
-	_ = binary.Write(&b, binary.LittleEndian, uint16(len(akms)))
+	_ = binary.Write(&b, binary.LittleEndian, uint16Count(len(akms)))
 	for _, akm := range akms {
 		b.Write([]byte{0x00, 0x0f, 0xac, akm})
 	}

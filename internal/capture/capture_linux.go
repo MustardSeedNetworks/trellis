@@ -372,7 +372,10 @@ func networkFromBSS(data []byte, seen time.Time) (wifi.ScannedNetwork, bool, err
 				case nl80211BSSFrequency:
 					freqMHz = int(nad.Uint32())
 				case nl80211BSSSignalMBM:
-					signalDBm = int(int32(nad.Uint32())) / mBmPerDBm
+					// Int32, not Uint32: NL80211_BSS_SIGNAL_MBM is signed, and
+					// reinterpreting the unsigned form would turn every real
+					// (negative) reading into a huge positive one.
+					signalDBm = int(nad.Int32()) / mBmPerDBm
 				case nl80211BSSCapability:
 					capability = nad.Uint16()
 				case nl80211BSSInformationElements:
