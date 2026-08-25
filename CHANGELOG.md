@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.0...v0.2.1) (2026-08-25)
+
+
+### Features
+
+* **capture:** read the radio on Linux and Windows ([#147](https://github.com/MustardSeedNetworks/trellis/issues/147)) ([7d2fc73](https://github.com/MustardSeedNetworks/trellis/commit/7d2fc73ab9d752df2f83ccdd0e252619ed53e35d))
+
 ## [0.2.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.1.29...v0.2.0) (2026-08-25)
 
 
