@@ -22,6 +22,10 @@ cd "$SCAN_ROOT"
 
 baseline_limit() {
     local file=$1
+    # No baseline file is a valid state — it means nothing has been granted
+    # size debt. Reading it unconditionally made the first red flag die in awk
+    # instead of being reported.
+    [ -f "$BASELINE_FILE" ] || return 0
     awk -v target="$file" '$1 == target { print $2; exit }' "$BASELINE_FILE"
 }
 
@@ -45,6 +49,7 @@ echo "  Go source: max ${MAX_GO_LINES}, red flag >${RED_FLAG_GO}"
 echo "  Go tests:  max ${MAX_TEST_LINES}"
 echo "  TS/TSX:    max ${MAX_TS_LINES}, red flag >${RED_FLAG_TS}"
 echo "  Baseline:  ${BASELINE_FILE}"
+echo "  Skipped:   generated code (gen/, ui/src/gen/)"
 echo "==========================================================================="
 
 # Check Go non-test files
@@ -57,7 +62,8 @@ while IFS= read -r -d '' file; do
         echo "⚠️  $file ($lines lines, max: $MAX_GO_LINES)"
         WARNINGS=$((WARNINGS + 1))
     fi
-done < <(find . -name "*.go" -not -name "*_test.go" -not -path "./vendor/*" -print0 2>/dev/null || true)
+done < <(find . -name "*.go" -not -name "*_test.go" -not -path "./vendor/*" \
+    -not -path "./gen/*" -print0 2>/dev/null || true)
 
 # Check Go test files (allow more lines)
 while IFS= read -r -d '' file; do
@@ -67,7 +73,8 @@ while IFS= read -r -d '' file; do
         echo "⚠️  $file ($lines lines, max: $MAX_TEST_LINES)"
         WARNINGS=$((WARNINGS + 1))
     fi
-done < <(find . -name "*_test.go" -not -path "./vendor/*" -print0 2>/dev/null || true)
+done < <(find . -name "*_test.go" -not -path "./vendor/*" \
+    -not -path "./gen/*" -print0 2>/dev/null || true)
 
 # Check TS/TSX files
 if [ -d "ui/src" ]; then
@@ -80,7 +87,8 @@ if [ -d "ui/src" ]; then
             echo "⚠️  $file ($lines lines, max: $MAX_TS_LINES)"
             WARNINGS=$((WARNINGS + 1))
         fi
-    done < <(find ui/src -name "*.ts" -o -name "*.tsx" | tr '\n' '\0' 2>/dev/null || true)
+    done < <(find ui/src -path "ui/src/gen" -prune -o \
+    \( -name "*.ts" -o -name "*.tsx" \) -print | tr '\n' '\0' 2>/dev/null || true)
 fi
 
 echo "==========================================================================="

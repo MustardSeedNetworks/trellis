@@ -61,6 +61,21 @@ const (
 	// SurveyServiceGenerateReportProcedure is the fully-qualified name of the SurveyService's
 	// GenerateReport RPC.
 	SurveyServiceGenerateReportProcedure = "/trellis.survey.v1.SurveyService/GenerateReport"
+	// SurveyServiceCreateSurveyProcedure is the fully-qualified name of the SurveyService's
+	// CreateSurvey RPC.
+	SurveyServiceCreateSurveyProcedure = "/trellis.survey.v1.SurveyService/CreateSurvey"
+	// SurveyServiceStartSurveyProcedure is the fully-qualified name of the SurveyService's StartSurvey
+	// RPC.
+	SurveyServiceStartSurveyProcedure = "/trellis.survey.v1.SurveyService/StartSurvey"
+	// SurveyServicePauseSurveyProcedure is the fully-qualified name of the SurveyService's PauseSurvey
+	// RPC.
+	SurveyServicePauseSurveyProcedure = "/trellis.survey.v1.SurveyService/PauseSurvey"
+	// SurveyServiceCompleteSurveyProcedure is the fully-qualified name of the SurveyService's
+	// CompleteSurvey RPC.
+	SurveyServiceCompleteSurveyProcedure = "/trellis.survey.v1.SurveyService/CompleteSurvey"
+	// SurveyServiceCapturePointProcedure is the fully-qualified name of the SurveyService's
+	// CapturePoint RPC.
+	SurveyServiceCapturePointProcedure = "/trellis.survey.v1.SurveyService/CapturePoint"
 )
 
 // SurveyServiceClient is a client for the trellis.survey.v1.SurveyService service.
@@ -80,6 +95,24 @@ type SurveyServiceClient interface {
 	GetCoverage(context.Context, *connect.Request[v1.GetCoverageRequest]) (*connect.Response[v1.GetCoverageResponse], error)
 	// GenerateReport renders a PDF report for a survey.
 	GenerateReport(context.Context, *connect.Request[v1.GenerateReportRequest]) (*connect.Response[v1.GenerateReportResponse], error)
+	// CreateSurvey opens a new, empty survey to walk. The measured counterpart
+	// of ImportAirMapper: the samples come from this host's radio rather than
+	// from a file.
+	CreateSurvey(context.Context, *connect.Request[v1.CreateSurveyRequest]) (*connect.Response[v1.CreateSurveyResponse], error)
+	// StartSurvey moves a survey into the state that accepts samples.
+	StartSurvey(context.Context, *connect.Request[v1.StartSurveyRequest]) (*connect.Response[v1.StartSurveyResponse], error)
+	// PauseSurvey stops a survey accepting samples without completing it.
+	PauseSurvey(context.Context, *connect.Request[v1.PauseSurveyRequest]) (*connect.Response[v1.PauseSurveyResponse], error)
+	// CompleteSurvey closes a survey to further samples.
+	CompleteSurvey(context.Context, *connect.Request[v1.CompleteSurveyRequest]) (*connect.Response[v1.CompleteSurveyResponse], error)
+	// CapturePoint scans the airspace and records what it sees at a position on
+	// the survey's active floor.
+	//
+	// Unary rather than streaming: an active scan takes seconds and the radio
+	// returns cached values if asked again inside its cache window, so a stream
+	// would deliver duplicates at whatever rate the client asked for. The
+	// surveyor stands at a point, captures it, and moves — one call per point.
+	CapturePoint(context.Context, *connect.Request[v1.CapturePointRequest]) (*connect.Response[v1.CapturePointResponse], error)
 }
 
 // NewSurveyServiceClient constructs a client for the trellis.survey.v1.SurveyService service. By
@@ -135,6 +168,36 @@ func NewSurveyServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(surveyServiceMethods.ByName("GenerateReport")),
 			connect.WithClientOptions(opts...),
 		),
+		createSurvey: connect.NewClient[v1.CreateSurveyRequest, v1.CreateSurveyResponse](
+			httpClient,
+			baseURL+SurveyServiceCreateSurveyProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("CreateSurvey")),
+			connect.WithClientOptions(opts...),
+		),
+		startSurvey: connect.NewClient[v1.StartSurveyRequest, v1.StartSurveyResponse](
+			httpClient,
+			baseURL+SurveyServiceStartSurveyProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("StartSurvey")),
+			connect.WithClientOptions(opts...),
+		),
+		pauseSurvey: connect.NewClient[v1.PauseSurveyRequest, v1.PauseSurveyResponse](
+			httpClient,
+			baseURL+SurveyServicePauseSurveyProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("PauseSurvey")),
+			connect.WithClientOptions(opts...),
+		),
+		completeSurvey: connect.NewClient[v1.CompleteSurveyRequest, v1.CompleteSurveyResponse](
+			httpClient,
+			baseURL+SurveyServiceCompleteSurveyProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("CompleteSurvey")),
+			connect.WithClientOptions(opts...),
+		),
+		capturePoint: connect.NewClient[v1.CapturePointRequest, v1.CapturePointResponse](
+			httpClient,
+			baseURL+SurveyServiceCapturePointProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("CapturePoint")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -147,6 +210,11 @@ type surveyServiceClient struct {
 	getHeatmap      *connect.Client[v1.GetHeatmapRequest, v1.GetHeatmapResponse]
 	getCoverage     *connect.Client[v1.GetCoverageRequest, v1.GetCoverageResponse]
 	generateReport  *connect.Client[v1.GenerateReportRequest, v1.GenerateReportResponse]
+	createSurvey    *connect.Client[v1.CreateSurveyRequest, v1.CreateSurveyResponse]
+	startSurvey     *connect.Client[v1.StartSurveyRequest, v1.StartSurveyResponse]
+	pauseSurvey     *connect.Client[v1.PauseSurveyRequest, v1.PauseSurveyResponse]
+	completeSurvey  *connect.Client[v1.CompleteSurveyRequest, v1.CompleteSurveyResponse]
+	capturePoint    *connect.Client[v1.CapturePointRequest, v1.CapturePointResponse]
 }
 
 // ImportAirMapper calls trellis.survey.v1.SurveyService.ImportAirMapper.
@@ -184,6 +252,31 @@ func (c *surveyServiceClient) GenerateReport(ctx context.Context, req *connect.R
 	return c.generateReport.CallUnary(ctx, req)
 }
 
+// CreateSurvey calls trellis.survey.v1.SurveyService.CreateSurvey.
+func (c *surveyServiceClient) CreateSurvey(ctx context.Context, req *connect.Request[v1.CreateSurveyRequest]) (*connect.Response[v1.CreateSurveyResponse], error) {
+	return c.createSurvey.CallUnary(ctx, req)
+}
+
+// StartSurvey calls trellis.survey.v1.SurveyService.StartSurvey.
+func (c *surveyServiceClient) StartSurvey(ctx context.Context, req *connect.Request[v1.StartSurveyRequest]) (*connect.Response[v1.StartSurveyResponse], error) {
+	return c.startSurvey.CallUnary(ctx, req)
+}
+
+// PauseSurvey calls trellis.survey.v1.SurveyService.PauseSurvey.
+func (c *surveyServiceClient) PauseSurvey(ctx context.Context, req *connect.Request[v1.PauseSurveyRequest]) (*connect.Response[v1.PauseSurveyResponse], error) {
+	return c.pauseSurvey.CallUnary(ctx, req)
+}
+
+// CompleteSurvey calls trellis.survey.v1.SurveyService.CompleteSurvey.
+func (c *surveyServiceClient) CompleteSurvey(ctx context.Context, req *connect.Request[v1.CompleteSurveyRequest]) (*connect.Response[v1.CompleteSurveyResponse], error) {
+	return c.completeSurvey.CallUnary(ctx, req)
+}
+
+// CapturePoint calls trellis.survey.v1.SurveyService.CapturePoint.
+func (c *surveyServiceClient) CapturePoint(ctx context.Context, req *connect.Request[v1.CapturePointRequest]) (*connect.Response[v1.CapturePointResponse], error) {
+	return c.capturePoint.CallUnary(ctx, req)
+}
+
 // SurveyServiceHandler is an implementation of the trellis.survey.v1.SurveyService service.
 type SurveyServiceHandler interface {
 	// ImportAirMapper imports an AirMapper (.amp) archive into a new stored
@@ -201,6 +294,24 @@ type SurveyServiceHandler interface {
 	GetCoverage(context.Context, *connect.Request[v1.GetCoverageRequest]) (*connect.Response[v1.GetCoverageResponse], error)
 	// GenerateReport renders a PDF report for a survey.
 	GenerateReport(context.Context, *connect.Request[v1.GenerateReportRequest]) (*connect.Response[v1.GenerateReportResponse], error)
+	// CreateSurvey opens a new, empty survey to walk. The measured counterpart
+	// of ImportAirMapper: the samples come from this host's radio rather than
+	// from a file.
+	CreateSurvey(context.Context, *connect.Request[v1.CreateSurveyRequest]) (*connect.Response[v1.CreateSurveyResponse], error)
+	// StartSurvey moves a survey into the state that accepts samples.
+	StartSurvey(context.Context, *connect.Request[v1.StartSurveyRequest]) (*connect.Response[v1.StartSurveyResponse], error)
+	// PauseSurvey stops a survey accepting samples without completing it.
+	PauseSurvey(context.Context, *connect.Request[v1.PauseSurveyRequest]) (*connect.Response[v1.PauseSurveyResponse], error)
+	// CompleteSurvey closes a survey to further samples.
+	CompleteSurvey(context.Context, *connect.Request[v1.CompleteSurveyRequest]) (*connect.Response[v1.CompleteSurveyResponse], error)
+	// CapturePoint scans the airspace and records what it sees at a position on
+	// the survey's active floor.
+	//
+	// Unary rather than streaming: an active scan takes seconds and the radio
+	// returns cached values if asked again inside its cache window, so a stream
+	// would deliver duplicates at whatever rate the client asked for. The
+	// surveyor stands at a point, captures it, and moves — one call per point.
+	CapturePoint(context.Context, *connect.Request[v1.CapturePointRequest]) (*connect.Response[v1.CapturePointResponse], error)
 }
 
 // NewSurveyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -252,6 +363,36 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(surveyServiceMethods.ByName("GenerateReport")),
 		connect.WithHandlerOptions(opts...),
 	)
+	surveyServiceCreateSurveyHandler := connect.NewUnaryHandler(
+		SurveyServiceCreateSurveyProcedure,
+		svc.CreateSurvey,
+		connect.WithSchema(surveyServiceMethods.ByName("CreateSurvey")),
+		connect.WithHandlerOptions(opts...),
+	)
+	surveyServiceStartSurveyHandler := connect.NewUnaryHandler(
+		SurveyServiceStartSurveyProcedure,
+		svc.StartSurvey,
+		connect.WithSchema(surveyServiceMethods.ByName("StartSurvey")),
+		connect.WithHandlerOptions(opts...),
+	)
+	surveyServicePauseSurveyHandler := connect.NewUnaryHandler(
+		SurveyServicePauseSurveyProcedure,
+		svc.PauseSurvey,
+		connect.WithSchema(surveyServiceMethods.ByName("PauseSurvey")),
+		connect.WithHandlerOptions(opts...),
+	)
+	surveyServiceCompleteSurveyHandler := connect.NewUnaryHandler(
+		SurveyServiceCompleteSurveyProcedure,
+		svc.CompleteSurvey,
+		connect.WithSchema(surveyServiceMethods.ByName("CompleteSurvey")),
+		connect.WithHandlerOptions(opts...),
+	)
+	surveyServiceCapturePointHandler := connect.NewUnaryHandler(
+		SurveyServiceCapturePointProcedure,
+		svc.CapturePoint,
+		connect.WithSchema(surveyServiceMethods.ByName("CapturePoint")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/trellis.survey.v1.SurveyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case SurveyServiceImportAirMapperProcedure:
@@ -268,6 +409,16 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 			surveyServiceGetCoverageHandler.ServeHTTP(w, r)
 		case SurveyServiceGenerateReportProcedure:
 			surveyServiceGenerateReportHandler.ServeHTTP(w, r)
+		case SurveyServiceCreateSurveyProcedure:
+			surveyServiceCreateSurveyHandler.ServeHTTP(w, r)
+		case SurveyServiceStartSurveyProcedure:
+			surveyServiceStartSurveyHandler.ServeHTTP(w, r)
+		case SurveyServicePauseSurveyProcedure:
+			surveyServicePauseSurveyHandler.ServeHTTP(w, r)
+		case SurveyServiceCompleteSurveyProcedure:
+			surveyServiceCompleteSurveyHandler.ServeHTTP(w, r)
+		case SurveyServiceCapturePointProcedure:
+			surveyServiceCapturePointHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -303,4 +454,24 @@ func (UnimplementedSurveyServiceHandler) GetCoverage(context.Context, *connect.R
 
 func (UnimplementedSurveyServiceHandler) GenerateReport(context.Context, *connect.Request[v1.GenerateReportRequest]) (*connect.Response[v1.GenerateReportResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.GenerateReport is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) CreateSurvey(context.Context, *connect.Request[v1.CreateSurveyRequest]) (*connect.Response[v1.CreateSurveyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.CreateSurvey is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) StartSurvey(context.Context, *connect.Request[v1.StartSurveyRequest]) (*connect.Response[v1.StartSurveyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.StartSurvey is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) PauseSurvey(context.Context, *connect.Request[v1.PauseSurveyRequest]) (*connect.Response[v1.PauseSurveyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.PauseSurvey is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) CompleteSurvey(context.Context, *connect.Request[v1.CompleteSurveyRequest]) (*connect.Response[v1.CompleteSurveyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.CompleteSurvey is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) CapturePoint(context.Context, *connect.Request[v1.CapturePointRequest]) (*connect.Response[v1.CapturePointResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.CapturePoint is not implemented"))
 }

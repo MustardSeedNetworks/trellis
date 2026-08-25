@@ -5,6 +5,7 @@
 package capture
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -35,7 +36,14 @@ func New() (Scanner, error) {
 }
 
 // Scan implements [Scanner].
-func (coreWLANScanner) Scan() ([]wifi.ScannedNetwork, error) {
+func (coreWLANScanner) Scan(ctx context.Context) ([]wifi.ScannedNetwork, error) {
+	// Checked here and not again: CoreWLAN's scan is a blocking cgo call with
+	// no cancellation of its own, so this is the last point at which a
+	// cancelled context can still mean anything.
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
 	observed, err := corewlan.Scan()
 	if err != nil {
 		switch {
