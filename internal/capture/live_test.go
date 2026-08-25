@@ -5,10 +5,15 @@ package capture
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"os"
+	"slices"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/MustardSeedNetworks/trellis/core/wifi"
 )
 
 // TestLiveScan drives the host's real radio.
@@ -96,4 +101,99 @@ func TestLiveScan(t *testing.T) {
 	if named == 0 {
 		t.Error("no network carried an SSID; every AP in range being hidden is not credible")
 	}
+}
+
+// TestLiveScanCadence measures how fast the host's radio can actually be
+// re-scanned, which is the number that decides survey UX: a surveyor walking a
+// floor cannot take points faster than the adapter sweeps.
+//
+// Same hardware gate as TestLiveScan. It reports rather than asserts a rate —
+// the answer is a property of the driver, not of this code — but it does fail
+// when *no* scan came back fresh, because a backend serving nothing but its
+// cache would let a survey record the same observation at every point on the
+// floor and look like it was working.
+//
+// Freshness cannot come from LastSeen: every backend stamps that with
+// time.Now() at parse. It comes from the readings themselves. Real sweeps
+// jitter RSSI across the network set, so two consecutive scans with a
+// byte-identical BSSID-to-signal fingerprint were served from one sweep. That
+// is how a rate-limited Windows WlanScan looks: it returns quickly, reports
+// success, and leaves the BSS list exactly as it was.
+func TestLiveScanCadence(t *testing.T) {
+	if os.Getenv("TRELLIS_LIVE_SCAN") == "" {
+		t.Skip("set TRELLIS_LIVE_SCAN=1 on a host with a Wi-Fi adapter to run this")
+	}
+
+	const (
+		cadenceSamples = 20
+		cadenceWindow  = 60 * time.Second
+	)
+
+	scanner, err := New()
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	if err := Authorize(); err != nil {
+		t.Logf("authorize: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceWindow)
+	defer cancel()
+
+	var (
+		latencies []time.Duration
+		previous  string
+		fresh     int
+	)
+	start := time.Now()
+
+	for len(latencies) < cadenceSamples {
+		before := time.Now()
+		networks, err := scanner.Scan(ctx)
+		if err != nil {
+			if errors.Is(err, context.DeadlineExceeded) {
+				break
+			}
+			t.Fatalf("scan %d: %v", len(latencies)+1, err)
+		}
+		latencies = append(latencies, time.Since(before))
+
+		current := signalFingerprint(networks)
+		if len(latencies) > 1 && current != previous {
+			fresh++
+		}
+		previous = current
+	}
+
+	elapsed := time.Since(start)
+	if len(latencies) == 0 {
+		t.Fatal("no scan completed inside the measurement window")
+	}
+
+	slices.Sort(latencies)
+	t.Logf("%d scans in %s — %.2f scans/s end to end", len(latencies), elapsed.Round(time.Millisecond),
+		float64(len(latencies))/elapsed.Seconds())
+	t.Logf("per-scan latency: min %s median %s max %s",
+		latencies[0].Round(time.Millisecond),
+		latencies[len(latencies)/2].Round(time.Millisecond),
+		latencies[len(latencies)-1].Round(time.Millisecond))
+	t.Logf("%d of %d scans returned changed readings — %.2f fresh sweeps/s",
+		fresh, len(latencies)-1, float64(fresh)/elapsed.Seconds())
+
+	if len(latencies) > 1 && fresh == 0 {
+		t.Errorf("every scan after the first returned identical readings: the backend is "+
+			"serving a cache, and a survey would record %d copies of one observation",
+			len(latencies))
+	}
+}
+
+// signalFingerprint reduces a scan to the part that moves between real sweeps:
+// which BSSIDs were seen and how strong each was.
+func signalFingerprint(networks []wifi.ScannedNetwork) string {
+	readings := make([]string, 0, len(networks))
+	for _, n := range networks {
+		readings = append(readings, fmt.Sprintf("%s=%d", n.BSSID, n.Signal))
+	}
+	slices.Sort(readings)
+	return strings.Join(readings, ",")
 }
