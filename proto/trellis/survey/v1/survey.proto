@@ -34,7 +34,31 @@ service SurveyService {
 
   // GenerateReport renders a PDF report for a survey.
   rpc GenerateReport(GenerateReportRequest) returns (GenerateReportResponse);
+
+  // CreateSurvey opens a new, empty survey to walk. The measured counterpart
+  // of ImportAirMapper: the samples come from this host's radio rather than
+  // from a file.
+  rpc CreateSurvey(CreateSurveyRequest) returns (CreateSurveyResponse);
+
+  // StartSurvey moves a survey into the state that accepts samples.
+  rpc StartSurvey(StartSurveyRequest) returns (StartSurveyResponse);
+
+  // PauseSurvey stops a survey accepting samples without completing it.
+  rpc PauseSurvey(PauseSurveyRequest) returns (PauseSurveyResponse);
+
+  // CompleteSurvey closes a survey to further samples.
+  rpc CompleteSurvey(CompleteSurveyRequest) returns (CompleteSurveyResponse);
+
+  // CapturePoint scans the airspace and records what it sees at a position on
+  // the survey's active floor.
+  //
+  // Unary rather than streaming: an active scan takes seconds and the radio
+  // returns cached values if asked again inside its cache window, so a stream
+  // would deliver duplicates at whatever rate the client asked for. The
+  // surveyor stands at a point, captures it, and moves — one call per point.
+  rpc CapturePoint(CapturePointRequest) returns (CapturePointResponse);
 }
+
 
 // SurveySummary is the lightweight survey representation used in list and
 // single-survey replies.
@@ -146,4 +170,84 @@ message ReportOptions {
 
 message GenerateReportResponse {
   bytes pdf = 1;
+}
+
+message CreateSurveyRequest {
+  string name = 1;
+  string description = 2;
+  // Wi-Fi interface to survey with, as the host names it ("en0", "wlan0").
+  string interface = 3;
+  // No survey-type field: passive scanning is the only kind this service can
+  // gather. core/survey has other types, but nothing implements them, so
+  // offering the choice would only let a caller ask for a survey that silently
+  // came back passive. Add the field when there is a second real value.
+}
+
+message CreateSurveyResponse {
+  SurveySummary survey = 1;
+}
+
+message StartSurveyRequest {
+  string id = 1;
+}
+
+message StartSurveyResponse {
+  SurveySummary survey = 1;
+}
+
+message PauseSurveyRequest {
+  string id = 1;
+}
+
+message PauseSurveyResponse {
+  SurveySummary survey = 1;
+}
+
+message CompleteSurveyRequest {
+  string id = 1;
+}
+
+message CompleteSurveyResponse {
+  SurveySummary survey = 1;
+}
+
+message CapturePointRequest {
+  string survey_id = 1;
+  // Position on the active floor plan, in floor-plan pixel coordinates — the
+  // same space imported samples use.
+  int32 x = 2;
+  int32 y = 3;
+}
+
+message CapturePointResponse {
+  // Every BSS observed at this point, strongest signal first.
+  repeated ScannedNetwork networks = 1;
+
+  // Aggregations the heatmap and coverage analysis read, computed over the
+  // networks above so a client does not recompute them.
+  int32 unique_ssids = 2;
+  int32 unique_bssids = 3;
+  int32 ap_count_2_4ghz = 4;
+  int32 ap_count_5ghz = 5;
+  int32 ap_count_6ghz = 6;
+  int32 co_channel_aps = 7;
+  int32 adj_channel_aps = 8;
+}
+
+// ScannedNetwork is one observed BSS at one moment, mirroring
+// core/wifi.ScannedNetwork.
+message ScannedNetwork {
+  string ssid = 1;
+  string bssid = 2;
+  int32 signal_dbm = 3;
+  int32 channel = 4;
+  int32 frequency_mhz = 5;
+  string security = 6;
+  int32 channel_width_mhz = 7;
+  int32 noise_floor_dbm = 8;
+  int32 snr_db = 9;
+  // Widest PHY carrying this channel width: "HT20", "VHT80", "EHT320", ...
+  string ht_mode = 10;
+  // Channel requires radar detection (DFS).
+  bool is_dfs = 11;
 }

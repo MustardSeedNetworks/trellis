@@ -18,7 +18,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file trellis/survey/v1/survey.proto.
  */
 export const file_trellis_survey_v1_survey: GenFile = /*@__PURE__*/
-  fileDesc("Ch50cmVsbGlzL3N1cnZleS92MS9zdXJ2ZXkucHJvdG8SEXRyZWxsaXMuc3VydmV5LnYxInwKDVN1cnZleVN1bW1hcnkSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIOCgZzdGF0dXMYAyABKAkSEwoLZmxvb3JfY291bnQYBCABKAUSFAoMc2FtcGxlX2NvdW50GAUgASgFEhYKDmhhc19mbG9vcl9wbGFuGAYgASgIIjgKFkltcG9ydEFpck1hcHBlclJlcXVlc3QSDAoEbmFtZRgBIAEoCRIQCghhbXBfZGF0YRgCIAEoDCJLChdJbXBvcnRBaXJNYXBwZXJSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5IhQKEkxpc3RTdXJ2ZXlzUmVxdWVzdCJIChNMaXN0U3VydmV5c1Jlc3BvbnNlEjEKB3N1cnZleXMYASADKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5Ih4KEEdldFN1cnZleVJlcXVlc3QSCgoCaWQYASABKAkiRQoRR2V0U3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIhChNEZWxldGVTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIhYKFERlbGV0ZVN1cnZleVJlc3BvbnNlIjYKEUdldEhlYXRtYXBSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIOCgZtZXRyaWMYAiABKAkirwEKEkdldEhlYXRtYXBSZXNwb25zZRILCgNwbmcYASABKAwSDQoFd2lkdGgYAiABKAUSDgoGaGVpZ2h0GAMgASgFEgsKA21pbhgEIAEoARILCgNtYXgYBSABKAESFAoMc2FtcGxlX2NvdW50GAYgASgFEg4KBm1ldHJpYxgHIAEoCRItCgZsZWdlbmQYCCADKAsyHS50cmVsbGlzLnN1cnZleS52MS5MZWdlbmRTdG9wIioKCkxlZ2VuZFN0b3ASDQoFdmFsdWUYASABKAESDQoFY29sb3IYAiABKAkiPgoSR2V0Q292ZXJhZ2VSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIVCg10aHJlc2hvbGRfZGJtGAIgASgFIl8KE0dldENvdmVyYWdlUmVzcG9uc2USFgoOY292ZXJhZ2Vfc2NvcmUYASABKAESFwoPZGVhZF96b25lX2NvdW50GAIgASgFEhcKD3JlY29tbWVuZGF0aW9ucxgDIAMoCSJdChVHZW5lcmF0ZVJlcG9ydFJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEjEKB29wdGlvbnMYAiABKAsyIC50cmVsbGlzLnN1cnZleS52MS5SZXBvcnRPcHRpb25zIp0BCg1SZXBvcnRPcHRpb25zEhgKEGluY2x1ZGVfaGVhdG1hcHMYASABKAgSGAoQaW5jbHVkZV9yYXdfZGF0YRgCIAEoCBIfChdpbmNsdWRlX3JlY29tbWVuZGF0aW9ucxgDIAEoCBIhChlpbmNsdWRlX2V4ZWN1dGl2ZV9zdW1tYXJ5GAQgASgIEhQKDGNvbXBhbnlfbmFtZRgFIAEoCSIlChZHZW5lcmF0ZVJlcG9ydFJlc3BvbnNlEgsKA3BkZhgBIAEoDDKwBQoNU3VydmV5U2VydmljZRJoCg9JbXBvcnRBaXJNYXBwZXISKS50cmVsbGlzLnN1cnZleS52MS5JbXBvcnRBaXJNYXBwZXJSZXF1ZXN0GioudHJlbGxpcy5zdXJ2ZXkudjEuSW1wb3J0QWlyTWFwcGVyUmVzcG9uc2USXAoLTGlzdFN1cnZleXMSJS50cmVsbGlzLnN1cnZleS52MS5MaXN0U3VydmV5c1JlcXVlc3QaJi50cmVsbGlzLnN1cnZleS52MS5MaXN0U3VydmV5c1Jlc3BvbnNlElYKCUdldFN1cnZleRIjLnRyZWxsaXMuc3VydmV5LnYxLkdldFN1cnZleVJlcXVlc3QaJC50cmVsbGlzLnN1cnZleS52MS5HZXRTdXJ2ZXlSZXNwb25zZRJfCgxEZWxldGVTdXJ2ZXkSJi50cmVsbGlzLnN1cnZleS52MS5EZWxldGVTdXJ2ZXlSZXF1ZXN0GicudHJlbGxpcy5zdXJ2ZXkudjEuRGVsZXRlU3VydmV5UmVzcG9uc2USWQoKR2V0SGVhdG1hcBIkLnRyZWxsaXMuc3VydmV5LnYxLkdldEhlYXRtYXBSZXF1ZXN0GiUudHJlbGxpcy5zdXJ2ZXkudjEuR2V0SGVhdG1hcFJlc3BvbnNlElwKC0dldENvdmVyYWdlEiUudHJlbGxpcy5zdXJ2ZXkudjEuR2V0Q292ZXJhZ2VSZXF1ZXN0GiYudHJlbGxpcy5zdXJ2ZXkudjEuR2V0Q292ZXJhZ2VSZXNwb25zZRJlCg5HZW5lcmF0ZVJlcG9ydBIoLnRyZWxsaXMuc3VydmV5LnYxLkdlbmVyYXRlUmVwb3J0UmVxdWVzdBopLnRyZWxsaXMuc3VydmV5LnYxLkdlbmVyYXRlUmVwb3J0UmVzcG9uc2VCR1pFZ2l0aHViLmNvbS9NdXN0YXJkU2VlZE5ldHdvcmtzL3RyZWxsaXMvZ2VuL3RyZWxsaXMvc3VydmV5L3YxO3N1cnZleXYxYgZwcm90bzM");
+  fileDesc("Ch50cmVsbGlzL3N1cnZleS92MS9zdXJ2ZXkucHJvdG8SEXRyZWxsaXMuc3VydmV5LnYxInwKDVN1cnZleVN1bW1hcnkSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIOCgZzdGF0dXMYAyABKAkSEwoLZmxvb3JfY291bnQYBCABKAUSFAoMc2FtcGxlX2NvdW50GAUgASgFEhYKDmhhc19mbG9vcl9wbGFuGAYgASgIIjgKFkltcG9ydEFpck1hcHBlclJlcXVlc3QSDAoEbmFtZRgBIAEoCRIQCghhbXBfZGF0YRgCIAEoDCJLChdJbXBvcnRBaXJNYXBwZXJSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5IhQKEkxpc3RTdXJ2ZXlzUmVxdWVzdCJIChNMaXN0U3VydmV5c1Jlc3BvbnNlEjEKB3N1cnZleXMYASADKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5Ih4KEEdldFN1cnZleVJlcXVlc3QSCgoCaWQYASABKAkiRQoRR2V0U3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIhChNEZWxldGVTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIhYKFERlbGV0ZVN1cnZleVJlc3BvbnNlIjYKEUdldEhlYXRtYXBSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIOCgZtZXRyaWMYAiABKAkirwEKEkdldEhlYXRtYXBSZXNwb25zZRILCgNwbmcYASABKAwSDQoFd2lkdGgYAiABKAUSDgoGaGVpZ2h0GAMgASgFEgsKA21pbhgEIAEoARILCgNtYXgYBSABKAESFAoMc2FtcGxlX2NvdW50GAYgASgFEg4KBm1ldHJpYxgHIAEoCRItCgZsZWdlbmQYCCADKAsyHS50cmVsbGlzLnN1cnZleS52MS5MZWdlbmRTdG9wIioKCkxlZ2VuZFN0b3ASDQoFdmFsdWUYASABKAESDQoFY29sb3IYAiABKAkiPgoSR2V0Q292ZXJhZ2VSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIVCg10aHJlc2hvbGRfZGJtGAIgASgFIl8KE0dldENvdmVyYWdlUmVzcG9uc2USFgoOY292ZXJhZ2Vfc2NvcmUYASABKAESFwoPZGVhZF96b25lX2NvdW50GAIgASgFEhcKD3JlY29tbWVuZGF0aW9ucxgDIAMoCSJdChVHZW5lcmF0ZVJlcG9ydFJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEjEKB29wdGlvbnMYAiABKAsyIC50cmVsbGlzLnN1cnZleS52MS5SZXBvcnRPcHRpb25zIp0BCg1SZXBvcnRPcHRpb25zEhgKEGluY2x1ZGVfaGVhdG1hcHMYASABKAgSGAoQaW5jbHVkZV9yYXdfZGF0YRgCIAEoCBIfChdpbmNsdWRlX3JlY29tbWVuZGF0aW9ucxgDIAEoCBIhChlpbmNsdWRlX2V4ZWN1dGl2ZV9zdW1tYXJ5GAQgASgIEhQKDGNvbXBhbnlfbmFtZRgFIAEoCSIlChZHZW5lcmF0ZVJlcG9ydFJlc3BvbnNlEgsKA3BkZhgBIAEoDCJLChNDcmVhdGVTdXJ2ZXlSZXF1ZXN0EgwKBG5hbWUYASABKAkSEwoLZGVzY3JpcHRpb24YAiABKAkSEQoJaW50ZXJmYWNlGAMgASgJIkgKFENyZWF0ZVN1cnZleVJlc3BvbnNlEjAKBnN1cnZleRgBIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLlN1cnZleVN1bW1hcnkiIAoSU3RhcnRTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIkcKE1N0YXJ0U3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIgChJQYXVzZVN1cnZleVJlcXVlc3QSCgoCaWQYASABKAkiRwoTUGF1c2VTdXJ2ZXlSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5IiMKFUNvbXBsZXRlU3VydmV5UmVxdWVzdBIKCgJpZBgBIAEoCSJKChZDb21wbGV0ZVN1cnZleVJlc3BvbnNlEjAKBnN1cnZleRgBIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLlN1cnZleVN1bW1hcnkiPgoTQ2FwdHVyZVBvaW50UmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSCQoBeBgCIAEoBRIJCgF5GAMgASgFIvABChRDYXB0dXJlUG9pbnRSZXNwb25zZRIzCghuZXR3b3JrcxgBIAMoCzIhLnRyZWxsaXMuc3VydmV5LnYxLlNjYW5uZWROZXR3b3JrEhQKDHVuaXF1ZV9zc2lkcxgCIAEoBRIVCg11bmlxdWVfYnNzaWRzGAMgASgFEhcKD2FwX2NvdW50XzJfNGdoehgEIAEoBRIVCg1hcF9jb3VudF81Z2h6GAUgASgFEhUKDWFwX2NvdW50XzZnaHoYBiABKAUSFgoOY29fY2hhbm5lbF9hcHMYByABKAUSFwoPYWRqX2NoYW5uZWxfYXBzGAggASgFIuABCg5TY2FubmVkTmV0d29yaxIMCgRzc2lkGAEgASgJEg0KBWJzc2lkGAIgASgJEhIKCnNpZ25hbF9kYm0YAyABKAUSDwoHY2hhbm5lbBgEIAEoBRIVCg1mcmVxdWVuY3lfbWh6GAUgASgFEhAKCHNlY3VyaXR5GAYgASgJEhkKEWNoYW5uZWxfd2lkdGhfbWh6GAcgASgFEhcKD25vaXNlX2Zsb29yX2RibRgIIAEoBRIOCgZzbnJfZGIYCSABKAUSDwoHaHRfbW9kZRgKIAEoCRIOCgZpc19kZnMYCyABKAgylQkKDVN1cnZleVNlcnZpY2USaAoPSW1wb3J0QWlyTWFwcGVyEikudHJlbGxpcy5zdXJ2ZXkudjEuSW1wb3J0QWlyTWFwcGVyUmVxdWVzdBoqLnRyZWxsaXMuc3VydmV5LnYxLkltcG9ydEFpck1hcHBlclJlc3BvbnNlElwKC0xpc3RTdXJ2ZXlzEiUudHJlbGxpcy5zdXJ2ZXkudjEuTGlzdFN1cnZleXNSZXF1ZXN0GiYudHJlbGxpcy5zdXJ2ZXkudjEuTGlzdFN1cnZleXNSZXNwb25zZRJWCglHZXRTdXJ2ZXkSIy50cmVsbGlzLnN1cnZleS52MS5HZXRTdXJ2ZXlSZXF1ZXN0GiQudHJlbGxpcy5zdXJ2ZXkudjEuR2V0U3VydmV5UmVzcG9uc2USXwoMRGVsZXRlU3VydmV5EiYudHJlbGxpcy5zdXJ2ZXkudjEuRGVsZXRlU3VydmV5UmVxdWVzdBonLnRyZWxsaXMuc3VydmV5LnYxLkRlbGV0ZVN1cnZleVJlc3BvbnNlElkKCkdldEhlYXRtYXASJC50cmVsbGlzLnN1cnZleS52MS5HZXRIZWF0bWFwUmVxdWVzdBolLnRyZWxsaXMuc3VydmV5LnYxLkdldEhlYXRtYXBSZXNwb25zZRJcCgtHZXRDb3ZlcmFnZRIlLnRyZWxsaXMuc3VydmV5LnYxLkdldENvdmVyYWdlUmVxdWVzdBomLnRyZWxsaXMuc3VydmV5LnYxLkdldENvdmVyYWdlUmVzcG9uc2USZQoOR2VuZXJhdGVSZXBvcnQSKC50cmVsbGlzLnN1cnZleS52MS5HZW5lcmF0ZVJlcG9ydFJlcXVlc3QaKS50cmVsbGlzLnN1cnZleS52MS5HZW5lcmF0ZVJlcG9ydFJlc3BvbnNlEl8KDENyZWF0ZVN1cnZleRImLnRyZWxsaXMuc3VydmV5LnYxLkNyZWF0ZVN1cnZleVJlcXVlc3QaJy50cmVsbGlzLnN1cnZleS52MS5DcmVhdGVTdXJ2ZXlSZXNwb25zZRJcCgtTdGFydFN1cnZleRIlLnRyZWxsaXMuc3VydmV5LnYxLlN0YXJ0U3VydmV5UmVxdWVzdBomLnRyZWxsaXMuc3VydmV5LnYxLlN0YXJ0U3VydmV5UmVzcG9uc2USXAoLUGF1c2VTdXJ2ZXkSJS50cmVsbGlzLnN1cnZleS52MS5QYXVzZVN1cnZleVJlcXVlc3QaJi50cmVsbGlzLnN1cnZleS52MS5QYXVzZVN1cnZleVJlc3BvbnNlEmUKDkNvbXBsZXRlU3VydmV5EigudHJlbGxpcy5zdXJ2ZXkudjEuQ29tcGxldGVTdXJ2ZXlSZXF1ZXN0GikudHJlbGxpcy5zdXJ2ZXkudjEuQ29tcGxldGVTdXJ2ZXlSZXNwb25zZRJfCgxDYXB0dXJlUG9pbnQSJi50cmVsbGlzLnN1cnZleS52MS5DYXB0dXJlUG9pbnRSZXF1ZXN0GicudHJlbGxpcy5zdXJ2ZXkudjEuQ2FwdHVyZVBvaW50UmVzcG9uc2VCR1pFZ2l0aHViLmNvbS9NdXN0YXJkU2VlZE5ldHdvcmtzL3RyZWxsaXMvZ2VuL3RyZWxsaXMvc3VydmV5L3YxO3N1cnZleXYxYgZwcm90bzM");
 
 /**
  * SurveySummary is the lightweight survey representation used in list and
@@ -455,6 +455,320 @@ export const GenerateReportResponseSchema: GenMessage<GenerateReportResponse> = 
   messageDesc(file_trellis_survey_v1_survey, 16);
 
 /**
+ * @generated from message trellis.survey.v1.CreateSurveyRequest
+ */
+export type CreateSurveyRequest = Message<"trellis.survey.v1.CreateSurveyRequest"> & {
+  /**
+   * @generated from field: string name = 1;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string description = 2;
+   */
+  description: string;
+
+  /**
+   * Wi-Fi interface to survey with, as the host names it ("en0", "wlan0").
+   *
+   * No survey-type field: passive scanning is the only kind this service can
+   * gather. core/survey has other types, but nothing implements them, so
+   * offering the choice would only let a caller ask for a survey that silently
+   * came back passive. Add the field when there is a second real value.
+   *
+   * @generated from field: string interface = 3;
+   */
+  interface: string;
+};
+
+/**
+ * Describes the message trellis.survey.v1.CreateSurveyRequest.
+ * Use `create(CreateSurveyRequestSchema)` to create a new message.
+ */
+export const CreateSurveyRequestSchema: GenMessage<CreateSurveyRequest> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 17);
+
+/**
+ * @generated from message trellis.survey.v1.CreateSurveyResponse
+ */
+export type CreateSurveyResponse = Message<"trellis.survey.v1.CreateSurveyResponse"> & {
+  /**
+   * @generated from field: trellis.survey.v1.SurveySummary survey = 1;
+   */
+  survey?: SurveySummary | undefined;
+};
+
+/**
+ * Describes the message trellis.survey.v1.CreateSurveyResponse.
+ * Use `create(CreateSurveyResponseSchema)` to create a new message.
+ */
+export const CreateSurveyResponseSchema: GenMessage<CreateSurveyResponse> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 18);
+
+/**
+ * @generated from message trellis.survey.v1.StartSurveyRequest
+ */
+export type StartSurveyRequest = Message<"trellis.survey.v1.StartSurveyRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message trellis.survey.v1.StartSurveyRequest.
+ * Use `create(StartSurveyRequestSchema)` to create a new message.
+ */
+export const StartSurveyRequestSchema: GenMessage<StartSurveyRequest> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 19);
+
+/**
+ * @generated from message trellis.survey.v1.StartSurveyResponse
+ */
+export type StartSurveyResponse = Message<"trellis.survey.v1.StartSurveyResponse"> & {
+  /**
+   * @generated from field: trellis.survey.v1.SurveySummary survey = 1;
+   */
+  survey?: SurveySummary | undefined;
+};
+
+/**
+ * Describes the message trellis.survey.v1.StartSurveyResponse.
+ * Use `create(StartSurveyResponseSchema)` to create a new message.
+ */
+export const StartSurveyResponseSchema: GenMessage<StartSurveyResponse> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 20);
+
+/**
+ * @generated from message trellis.survey.v1.PauseSurveyRequest
+ */
+export type PauseSurveyRequest = Message<"trellis.survey.v1.PauseSurveyRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message trellis.survey.v1.PauseSurveyRequest.
+ * Use `create(PauseSurveyRequestSchema)` to create a new message.
+ */
+export const PauseSurveyRequestSchema: GenMessage<PauseSurveyRequest> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 21);
+
+/**
+ * @generated from message trellis.survey.v1.PauseSurveyResponse
+ */
+export type PauseSurveyResponse = Message<"trellis.survey.v1.PauseSurveyResponse"> & {
+  /**
+   * @generated from field: trellis.survey.v1.SurveySummary survey = 1;
+   */
+  survey?: SurveySummary | undefined;
+};
+
+/**
+ * Describes the message trellis.survey.v1.PauseSurveyResponse.
+ * Use `create(PauseSurveyResponseSchema)` to create a new message.
+ */
+export const PauseSurveyResponseSchema: GenMessage<PauseSurveyResponse> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 22);
+
+/**
+ * @generated from message trellis.survey.v1.CompleteSurveyRequest
+ */
+export type CompleteSurveyRequest = Message<"trellis.survey.v1.CompleteSurveyRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message trellis.survey.v1.CompleteSurveyRequest.
+ * Use `create(CompleteSurveyRequestSchema)` to create a new message.
+ */
+export const CompleteSurveyRequestSchema: GenMessage<CompleteSurveyRequest> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 23);
+
+/**
+ * @generated from message trellis.survey.v1.CompleteSurveyResponse
+ */
+export type CompleteSurveyResponse = Message<"trellis.survey.v1.CompleteSurveyResponse"> & {
+  /**
+   * @generated from field: trellis.survey.v1.SurveySummary survey = 1;
+   */
+  survey?: SurveySummary | undefined;
+};
+
+/**
+ * Describes the message trellis.survey.v1.CompleteSurveyResponse.
+ * Use `create(CompleteSurveyResponseSchema)` to create a new message.
+ */
+export const CompleteSurveyResponseSchema: GenMessage<CompleteSurveyResponse> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 24);
+
+/**
+ * @generated from message trellis.survey.v1.CapturePointRequest
+ */
+export type CapturePointRequest = Message<"trellis.survey.v1.CapturePointRequest"> & {
+  /**
+   * @generated from field: string survey_id = 1;
+   */
+  surveyId: string;
+
+  /**
+   * Position on the active floor plan, in floor-plan pixel coordinates — the
+   * same space imported samples use.
+   *
+   * @generated from field: int32 x = 2;
+   */
+  x: number;
+
+  /**
+   * @generated from field: int32 y = 3;
+   */
+  y: number;
+};
+
+/**
+ * Describes the message trellis.survey.v1.CapturePointRequest.
+ * Use `create(CapturePointRequestSchema)` to create a new message.
+ */
+export const CapturePointRequestSchema: GenMessage<CapturePointRequest> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 25);
+
+/**
+ * @generated from message trellis.survey.v1.CapturePointResponse
+ */
+export type CapturePointResponse = Message<"trellis.survey.v1.CapturePointResponse"> & {
+  /**
+   * Every BSS observed at this point, strongest signal first.
+   *
+   * @generated from field: repeated trellis.survey.v1.ScannedNetwork networks = 1;
+   */
+  networks: ScannedNetwork[];
+
+  /**
+   * Aggregations the heatmap and coverage analysis read, computed over the
+   * networks above so a client does not recompute them.
+   *
+   * @generated from field: int32 unique_ssids = 2;
+   */
+  uniqueSsids: number;
+
+  /**
+   * @generated from field: int32 unique_bssids = 3;
+   */
+  uniqueBssids: number;
+
+  /**
+   * @generated from field: int32 ap_count_2_4ghz = 4;
+   */
+  apCount24ghz: number;
+
+  /**
+   * @generated from field: int32 ap_count_5ghz = 5;
+   */
+  apCount5ghz: number;
+
+  /**
+   * @generated from field: int32 ap_count_6ghz = 6;
+   */
+  apCount6ghz: number;
+
+  /**
+   * @generated from field: int32 co_channel_aps = 7;
+   */
+  coChannelAps: number;
+
+  /**
+   * @generated from field: int32 adj_channel_aps = 8;
+   */
+  adjChannelAps: number;
+};
+
+/**
+ * Describes the message trellis.survey.v1.CapturePointResponse.
+ * Use `create(CapturePointResponseSchema)` to create a new message.
+ */
+export const CapturePointResponseSchema: GenMessage<CapturePointResponse> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 26);
+
+/**
+ * ScannedNetwork is one observed BSS at one moment, mirroring
+ * core/wifi.ScannedNetwork.
+ *
+ * @generated from message trellis.survey.v1.ScannedNetwork
+ */
+export type ScannedNetwork = Message<"trellis.survey.v1.ScannedNetwork"> & {
+  /**
+   * @generated from field: string ssid = 1;
+   */
+  ssid: string;
+
+  /**
+   * @generated from field: string bssid = 2;
+   */
+  bssid: string;
+
+  /**
+   * @generated from field: int32 signal_dbm = 3;
+   */
+  signalDbm: number;
+
+  /**
+   * @generated from field: int32 channel = 4;
+   */
+  channel: number;
+
+  /**
+   * @generated from field: int32 frequency_mhz = 5;
+   */
+  frequencyMhz: number;
+
+  /**
+   * @generated from field: string security = 6;
+   */
+  security: string;
+
+  /**
+   * @generated from field: int32 channel_width_mhz = 7;
+   */
+  channelWidthMhz: number;
+
+  /**
+   * @generated from field: int32 noise_floor_dbm = 8;
+   */
+  noiseFloorDbm: number;
+
+  /**
+   * @generated from field: int32 snr_db = 9;
+   */
+  snrDb: number;
+
+  /**
+   * Widest PHY carrying this channel width: "HT20", "VHT80", "EHT320", ...
+   *
+   * @generated from field: string ht_mode = 10;
+   */
+  htMode: string;
+
+  /**
+   * Channel requires radar detection (DFS).
+   *
+   * @generated from field: bool is_dfs = 11;
+   */
+  isDfs: boolean;
+};
+
+/**
+ * Describes the message trellis.survey.v1.ScannedNetwork.
+ * Use `create(ScannedNetworkSchema)` to create a new message.
+ */
+export const ScannedNetworkSchema: GenMessage<ScannedNetwork> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 27);
+
+/**
  * SurveyService serves measured Wi-Fi site surveys backed by core/survey.
  *
  * @generated from service trellis.survey.v1.SurveyService
@@ -530,6 +844,64 @@ export const SurveyService: GenService<{
     methodKind: "unary";
     input: typeof GenerateReportRequestSchema;
     output: typeof GenerateReportResponseSchema;
+  },
+  /**
+   * CreateSurvey opens a new, empty survey to walk. The measured counterpart
+   * of ImportAirMapper: the samples come from this host's radio rather than
+   * from a file.
+   *
+   * @generated from rpc trellis.survey.v1.SurveyService.CreateSurvey
+   */
+  createSurvey: {
+    methodKind: "unary";
+    input: typeof CreateSurveyRequestSchema;
+    output: typeof CreateSurveyResponseSchema;
+  },
+  /**
+   * StartSurvey moves a survey into the state that accepts samples.
+   *
+   * @generated from rpc trellis.survey.v1.SurveyService.StartSurvey
+   */
+  startSurvey: {
+    methodKind: "unary";
+    input: typeof StartSurveyRequestSchema;
+    output: typeof StartSurveyResponseSchema;
+  },
+  /**
+   * PauseSurvey stops a survey accepting samples without completing it.
+   *
+   * @generated from rpc trellis.survey.v1.SurveyService.PauseSurvey
+   */
+  pauseSurvey: {
+    methodKind: "unary";
+    input: typeof PauseSurveyRequestSchema;
+    output: typeof PauseSurveyResponseSchema;
+  },
+  /**
+   * CompleteSurvey closes a survey to further samples.
+   *
+   * @generated from rpc trellis.survey.v1.SurveyService.CompleteSurvey
+   */
+  completeSurvey: {
+    methodKind: "unary";
+    input: typeof CompleteSurveyRequestSchema;
+    output: typeof CompleteSurveyResponseSchema;
+  },
+  /**
+   * CapturePoint scans the airspace and records what it sees at a position on
+   * the survey's active floor.
+   *
+   * Unary rather than streaming: an active scan takes seconds and the radio
+   * returns cached values if asked again inside its cache window, so a stream
+   * would deliver duplicates at whatever rate the client asked for. The
+   * surveyor stands at a point, captures it, and moves — one call per point.
+   *
+   * @generated from rpc trellis.survey.v1.SurveyService.CapturePoint
+   */
+  capturePoint: {
+    methodKind: "unary";
+    input: typeof CapturePointRequestSchema;
+    output: typeof CapturePointResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_trellis_survey_v1_survey, 0);

@@ -9,6 +9,7 @@
 package capture
 
 import (
+	"context"
 	"errors"
 
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
@@ -56,9 +57,17 @@ const (
 )
 
 // Scanner observes nearby BSSs.
+//
+// This is the same shape as core/survey.Scanner, deliberately: the survey
+// engine consumes a capture backend directly, with no adapter in between.
 type Scanner interface {
 	// Scan returns every BSS currently observable, including hidden networks.
-	Scan() ([]wifi.ScannedNetwork, error)
+	//
+	// Cancellation is coarse. An active scan is a blocking call into the OS
+	// radio stack — three to four seconds on macOS — and no platform offers a
+	// way to abort one in flight. ctx is honoured before the call starts, so a
+	// cancelled context prevents a scan rather than interrupting one.
+	Scan(ctx context.Context) ([]wifi.ScannedNetwork, error)
 }
 
 // channelToFrequency converts a channel to MHz using the band the driver

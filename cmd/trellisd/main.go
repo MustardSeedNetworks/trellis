@@ -70,7 +70,23 @@ func run() error {
 		addr = defaultAddr
 	}
 
-	manager, err := survey.NewManager(dataDir, nil, nil, nil, nil)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	// Capture is linked in rather than run as a helper process (ADR-0006), and
+	// the survey engine consumes it directly rather than through an adapter:
+	// capture.Scanner and survey.Scanner are deliberately the same shape. A
+	// host with no backend still serves imported surveys, so a missing backend
+	// is reported and not fatal.
+	var scanner survey.Scanner
+	if backend, err := capture.New(); err != nil {
+		slog.Warn("no Wi-Fi capture backend on this host; imported surveys only", "error", err)
+	} else {
+		scanner = backend
+		go reportCaptureReadiness(ctx, backend)
+	}
+
+	manager, err := survey.NewManager(dataDir, scanner, nil, nil, nil)
 	if err != nil {
 		return fmt.Errorf("open survey store %s: %w", dataDir, err)
 	}
@@ -79,15 +95,6 @@ func run() error {
 		return err
 	}
 	slog.Info("loaded surveys", "count", len(manager.ListSurveys()), "data_dir", dataDir)
-
-	// Capture is linked in rather than run as a helper process (ADR-0006).
-	// A host with no backend still serves imported surveys, so this is
-	// reported and not fatal.
-	if scanner, err := capture.New(); err != nil {
-		slog.Warn("no Wi-Fi capture backend on this host; imported surveys only", "error", err)
-	} else {
-		go reportCaptureReadiness(scanner)
-	}
 
 	mux := http.NewServeMux()
 	path, handler := surveyv1connect.NewSurveyServiceHandler(
@@ -131,9 +138,6 @@ func run() error {
 		}
 		serveErr <- nil
 	}()
-
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
 
 	select {
 	case <-ctx.Done():
