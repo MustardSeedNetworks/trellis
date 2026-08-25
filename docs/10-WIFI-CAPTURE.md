@@ -95,6 +95,13 @@ So the bundled daemon keeps its survey store at
 capture-readiness line at startup is where an operator sees whether this launch
 can read network names.
 
+The same log is the only place a bundle announces its address. `trellisd` binds
+`127.0.0.1:8080`, and walks `8081..8089` when something already holds the port —
+the fleet convention, and the difference here between an app that moved and an
+app that appears not to start at all. The `trellisd listening` line names the
+address to open; a `TRELLIS_ADDR` given by an operator is taken literally and
+fails rather than moving.
+
 Environment variables *do* reach the app when it is launched with `open` from a
 shell (`TRELLIS_ADDR=… open -a Trellis.app` works), but not when it is started
 from the Finder or the Dock, which inherit launchd's environment instead.
