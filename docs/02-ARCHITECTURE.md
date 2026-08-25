@@ -17,9 +17,11 @@ server. This one choice buys us:
 - **One codebase, desktop *and* cloud** — the core's API is transport-agnostic.
 
 **Capture is not one of the processes** (ADR-0006). It was, on a privilege-isolation
-argument that turned out not to apply: Tier 1 scanning is unprivileged on every
-platform, and on macOS the gate is TCC — which grants to a *signed bundle*, so the
-process reading the radio has to be the one that is bundled. `internal/capture` is
+argument that does not hold where it was applied: on macOS the gate is TCC, which
+grants to a *signed bundle*, so the process reading the radio has to be the one that
+is bundled, and a privileged daemon gets strictly less. (Linux *does* need
+`CAP_NET_ADMIN` to trigger a scan — measured — which argues for one small
+platform-specific helper behind the same interface, not a fleet-wide split.) `internal/capture` is
 therefore linked into the core, and **trellisd itself ships as the signed
 `Trellis.app`**. The `capture.Scanner` interface still hides host-NIC from external
 hardware; only the process boundary is gone.
@@ -86,10 +88,11 @@ No domain logic, no math.
 Turns radios into `wifi.ScannedNetwork` values behind one `Scanner` interface.
 - Backends (build tags): macOS CoreWLAN (**implemented**); Linux `nl80211`,
   Windows Native Wifi. Monitor mode is dead on modern macOS.
-- **Tier 1 scanning is unprivileged everywhere** — see
-  [10-WIFI-CAPTURE.md](10-WIFI-CAPTURE.md). macOS instead requires a signed,
-  entitled, LaunchServices-launched bundle, which is why trellisd ships as
-  `Trellis.app`. Tier 2 (monitor mode) needs privilege on every platform and is
+- **Tier 1 privilege is per-platform** — see
+  [10-WIFI-CAPTURE.md](10-WIFI-CAPTURE.md). macOS needs none but requires a
+  signed, entitled, LaunchServices-launched bundle, which is why trellisd ships
+  as `Trellis.app`. Linux needs `CAP_NET_ADMIN` to *trigger* a scan (not to read
+  the cache); Windows needs none. Tier 2 (monitor mode) needs privilege on every platform and is
   not implemented; it will want its own process when it lands.
 - **External hardware is first-class** (supported USB radio / NetAlly appliance over
   USB-IP) — a separate process behind the same `Scanner`, unaffected by ADR-0006.

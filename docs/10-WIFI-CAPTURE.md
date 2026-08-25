@@ -21,6 +21,10 @@ utilisation, retry rates, airtime, and per-frame rather than per-scan RSSI. It
 requires elevated privilege everywhere and takes the interface off the network
 while it runs.
 
+Tier 1 is *mostly* unprivileged, with one measured exception — Linux needs
+`CAP_NET_ADMIN` to trigger a scan, though not to read the cache. That is why the
+privilege claim below is stated per platform rather than as a blanket.
+
 Trellis implements Tier 1 today. Tier 2 is not implemented on any platform.
 
 ## Tier 1 — what is implemented
@@ -112,6 +116,21 @@ scan-results notification, which is the same shape as the macOS event and has
 no equivalent cache-window restriction. Linux also has the strongest monitor
 mode support of the three platforms, so it is the natural first host for Tier 2.
 
+**Privilege, measured** (RTL8723BU USB adapter):
+
+| | |
+|---|---|
+| root, trigger scan | 11 BSSes |
+| unprivileged, trigger scan | `Operation not permitted` (EPERM) |
+| unprivileged, `scan dump` (cached) | 11 BSSes |
+
+Triggering needs `CAP_NET_ADMIN`; reading the cache does not. Unlike macOS this
+is a real privilege boundary, and where the capability comes from — a file
+capability on trellisd, a minimal helper that only triggers, or cached-only
+results — is open (ADR-0006, "Open question for the Linux backend").
+Cached-only is not a free option: the cache is stale, and stays empty if nothing
+else on the host ever scans.
+
 ### Windows
 
 Not implemented. `capture.New()` returns `ErrUnsupported`.
@@ -134,12 +153,14 @@ Tier 1 API on any platform. They require monitor mode.
   `CAP_NET_ADMIN` / `CAP_NET_RAW`.
 - **Windows:** Npcap, with the weakest monitor-mode support of the three.
 
-Note the architectural consequence, which is the whole of ADR-0006. Tier 1 needs
-**no** privilege — on macOS the gate is TCC, not root, and a root daemon gets
+Note the architectural consequence, which is the whole of ADR-0006. On macOS
+Tier 1 needs **no** privilege — the gate is TCC, not root, and a root daemon gets
 *less* than a user-session bundle, because TCC grants to a signed bundle
-identity. Tier 2 needs privilege on every platform. A separate, privileged
-capture process is therefore justified by Tier 2 and not by Tier 1, which is why
-capture is linked into `trellisd` today rather than split out.
+identity. Tier 2 needs privilege on every platform, and Linux needs it for Tier 1
+scan triggering too. A separate, privileged capture process is therefore
+justified by Tier 2, and arguably by Linux Tier 1 — but not by macOS Tier 1,
+where it costs a working permission model and buys nothing. That is why capture
+is linked into `trellisd` today rather than split out.
 
 ## What is honest to claim
 
