@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.4](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.3...v0.2.4) (2026-08-25)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @tanstack/react-query to v5.102.0 ([#165](https://github.com/MustardSeedNetworks/trellis/issues/165)) ([2d58260](https://github.com/MustardSeedNetworks/trellis/commit/2d582608923ae609ab05dbb2cc5a683f8c89c65a))
+
 ## [0.2.3](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.2...v0.2.3) (2026-08-25)
 
 
