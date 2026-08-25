@@ -66,7 +66,8 @@ floorplan, decoded by the migrated pipeline).
 - **Exit:** all predictive metrics; perf budget met; ray-trace available for "final".
 
 ## Phase 5 — Capture + survey loop
-- Capture daemon: **external-HW backend first**, then host-NIC per OS.
+- Capture: macOS host-NIC backend **done** (0.1.29, linked into trellisd by
+  ADR-0006); Linux `nl80211` and Windows Native Wifi next, then external HW.
 - Measurement streaming → geotag → Parquet → interpolation → measured heatmap.
 - **Calibration**: fit model to measurements; measured-vs-predicted compare.
 - **Exit:** walk a real site, capture, see measured heatmap + calibrated prediction.

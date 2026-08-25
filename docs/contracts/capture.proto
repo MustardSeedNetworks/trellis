@@ -1,5 +1,12 @@
-// Trellis Go core <-> Capture daemon. The daemon abstracts a "radio source" (host NIC
-// or external HW/appliance) into a uniform measurement stream. DRAFT.
+// Trellis Go core <-> an out-of-process radio source. DRAFT.
+//
+// Scope narrowed by ADR-0006: the host NIC is no longer behind this seam. Tier 1
+// scanning needs no privilege, and on macOS the permission is granted to a signed
+// bundle rather than to a daemon, so internal/capture is linked into the core and
+// host-NIC backends implement capture.Scanner directly.
+//
+// What remains for this contract is what is genuinely another process or another
+// box: a USB radio driven by a helper, or a NetAlly appliance over USB-IP.
 syntax = "proto3";
 package trellis.capture.v1;
 option go_package = "github.com/MustardSeedNetworks/trellis/contracts/capture/v1;capturev1";

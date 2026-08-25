@@ -23,7 +23,10 @@
 #     inventing a systemd service and package metadata for it would be
 #     infrastructure the product doesn't have yet. Archives are the
 #     published artifact until that changes.
-#   - Native C dataplane — Trellis has no C dataplane; it's pure Go.
+#   - Native C dataplane — Trellis has no C dataplane.
+#   - The signed macOS .app — deploy/macos/build-app.sh builds and signs it.
+#     Only a signed, entitled bundle can read Wi-Fi network names; the archive
+#     below ships the bare daemon.
 #
 # Handled outside goreleaser:
 #   - UI frontend build — runs in the build-ui job inside release.yml;
@@ -70,33 +73,17 @@ builds:
       - -buildvcs=false
     ldflags: *ldflags
 
+  # darwin is the one target built with cgo: trellisd links its Wi-Fi capture
+  # backend directly (ADR-0006) and that backend binds CoreWLAN. Built with
+  # CGO_ENABLED=0 the tree still compiles, but capture.New() reports
+  # ErrUnsupported and the binary can never scan — so this must stay 1.
   - id: trellis-darwin
     main: ./cmd/trellisd
     binary: trellisd
     env:
-      - CGO_ENABLED=0
-    goos: [darwin]
-    # Intel macOS (amd64) support dropped fleet-wide 2026-06-08 — Apple Silicon only.
-    goarch: [arm64]
-    flags:
-      - -trimpath
-      - -buildvcs=false
-    ldflags: *ldflags
-
-  # Capture is a separate binary from trellisd so cgo and OS radio APIs stay out
-  # of the Go core (docs/02-ARCHITECTURE, docs/07-RISKS R5). It is the only
-  # target built with cgo, and darwin-only until the Linux and Windows host-NIC
-  # backends land (docs/06-ROADMAP).
-  #
-  # It is shipped for completeness; on its own it cannot read network names.
-  # macOS grants that only to a signed, entitled .app — see
-  # deploy/macos/build-capture.sh.
-  - id: trellis-capture-darwin
-    main: ./cmd/trellis-capture
-    binary: trellis-capture
-    env:
       - CGO_ENABLED=1
     goos: [darwin]
+    # Intel macOS (amd64) support dropped fleet-wide 2026-06-08 — Apple Silicon only.
     goarch: [arm64]
     flags:
       - -trimpath
@@ -130,8 +117,12 @@ archives:
     formats: [tar.gz]
 
   - id: darwin-archive
-    # Capture ships alongside trellisd so a macOS archive carries both halves.
-    ids: [trellis-darwin, trellis-capture-darwin]
+    # A bare trellisd, not the signed Trellis.app. It serves imported surveys
+    # and will scan, but macOS gives Wi-Fi network names only to a signed,
+    # entitled, LaunchServices-launched bundle — built by
+    # deploy/macos/build-app.sh, not by goreleaser, because it needs signing
+    # identities this pipeline does not carry.
+    ids: [trellis-darwin]
     name_template: "trellis-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     formats: [tar.gz]
 

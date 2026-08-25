@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 
-//go:build darwin
+//go:build darwin && cgo
 
 package capture
 
@@ -103,4 +103,24 @@ func securityName(security string) string {
 	default:
 		return ""
 	}
+}
+
+// authorizationWait bounds the startup permission request. Requesting is also
+// what registers the bundle with locationd, which is what makes it appear in
+// System Settings at all — a process that never asks is never listed, and an
+// operator then has nothing to switch on.
+const authorizationWait = 5 * time.Second
+
+// Authorize asks macOS for Location Services authorization, which is what
+// decides whether a scan can see network names at all, and waits briefly for an
+// answer.
+//
+// It returns [ErrPermission] wrapping the status macOS reported. Scanning still
+// works in that state; it just names nothing, which is why this is worth
+// reporting at startup rather than at the first survey point.
+func Authorize() error {
+	if status := corewlan.RequestAuthorization(authorizationWait); status != corewlan.AuthAuthorized {
+		return fmt.Errorf("%w (location services %s)", ErrPermission, status)
+	}
+	return nil
 }
