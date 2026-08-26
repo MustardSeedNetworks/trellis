@@ -1,0 +1,3 @@
+
+# Nothing. Every internal package in trellis is reachable from a binary, and
+# the gate is here to keep it that way.
