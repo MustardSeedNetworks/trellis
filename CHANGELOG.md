@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.5](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.4...v0.2.5) (2026-08-26)
+
+
+### Bug Fixes
+
+* **ci:** request the workflows scope for the release-please token ([#168](https://github.com/MustardSeedNetworks/trellis/issues/168)) ([af0ead4](https://github.com/MustardSeedNetworks/trellis/commit/af0ead4d49d2b6a0dbb75aab94a857379ac94746))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#169](https://github.com/MustardSeedNetworks/trellis/issues/169)) ([4e51037](https://github.com/MustardSeedNetworks/trellis/commit/4e51037849797de83bddb9ad8dd3c8e544446e27))
+
 ## [0.2.4](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.3...v0.2.4) (2026-08-25)
 
 
