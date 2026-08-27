@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.8](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.7...v0.2.8) (2026-08-27)
+
+
+### Continuous Integration
+
+* adopt shared-workflow v1.8.0 ([#186](https://github.com/MustardSeedNetworks/trellis/issues/186)) ([efd3046](https://github.com/MustardSeedNetworks/trellis/commit/efd30467eaba6df62ac3c2a795244624fe382866))
+* make .nvmrc the only source for the Node version ([#188](https://github.com/MustardSeedNetworks/trellis/issues/188)) ([9322e7f](https://github.com/MustardSeedNetworks/trellis/commit/9322e7f5bfa424fe40f72b5ac117854136c7013b))
+* refuse to release a tag whose commit never passed CI ([#190](https://github.com/MustardSeedNetworks/trellis/issues/190)) ([da8b21e](https://github.com/MustardSeedNetworks/trellis/commit/da8b21e09ba36928913d5bc9b929b214c6fffb9f))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#182](https://github.com/MustardSeedNetworks/trellis/issues/182)) ([8ce3621](https://github.com/MustardSeedNetworks/trellis/commit/8ce36217a5c8b326e4553954bb2859923e361f68))
+* **deps:** move golang.org/x/mod off the advisory versions, stop passing on no tests ([#193](https://github.com/MustardSeedNetworks/trellis/issues/193)) ([cac7cc2](https://github.com/MustardSeedNetworks/trellis/commit/cac7cc2f35664b6f126fb4c59ae3137fc66461c8))
+
 ## [0.2.7](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.6...v0.2.7) (2026-08-27)
 
 
