@@ -159,10 +159,15 @@ release:
   github:
     owner: MustardSeedNetworks
     name: trellis
-  replace_existing_artifacts: true
+  # Published artifacts are immutable. `replace_existing_artifacts` +
+  # `mode: replace` let a re-run of the same tag overwrite assets that people
+  # may already have downloaded, verified against a checksum, or pinned — which
+  # defeats the signatures and provenance produced two steps later. A corrected
+  # release gets a new patch tag instead.
+  replace_existing_artifacts: false
   draft: false
   prerelease: auto
-  mode: replace
+  mode: keep-existing
   header: |
     Trellis {{ .Tag }} — Wi-Fi Survey & Planning by Mustard Seed Networks.
 

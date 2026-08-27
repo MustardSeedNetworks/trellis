@@ -53,6 +53,46 @@ permissions:
   contents: read
 
 jobs:
+  # A v* tag is enough to start a release: no ruleset restricts tag creation in
+  # any fleet repo (verified 2026-08-27 — the only ruleset present is
+  # merge-queue, and it targets branches). Until tag protection lands, this is
+  # the gate. It refuses to build a tag whose commit never passed CI, so an
+  # accidental or unauthorised tag fails here instead of producing signed,
+  # published artifacts.
+  #
+  # The assertion is skipped for workflow_dispatch, which is the deliberate
+  # dry-run path and carries no tag — but the job itself still runs and
+  # succeeds, so nothing downstream is skipped.
+  verify-tag:
+    name: Verify tagged commit passed CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      checks: read
+      contents: read
+    steps:
+      # The condition is on the step, not the job. A job-level `if:` that
+      # evaluated false would leave this SKIPPED, and a skipped `needs:` entry
+      # skips everything downstream through the implicit success() — the whole
+      # dry-run path would silently do nothing. As a step, the job still
+      # reports success and dependents run normally.
+      - name: Assert CI Complete succeeded for this commit
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # index() returns 0 for a first-element match, and jq's // only fires
+          # on null/false — so a match at position 0 still prints 0 and passes.
+          found=$(gh api \
+            "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/check-runs?per_page=100" \
+            --jq '[.check_runs[] | select(.name == "CI Complete") | .conclusion] | index("success") // empty')
+          if [ -z "$found" ]; then
+            echo "::error::No successful 'CI Complete' check run for ${GITHUB_SHA}. Refusing to release an unvalidated commit."
+            exit 1
+          fi
+          echo "CI Complete succeeded for ${GITHUB_SHA}"
+
   # =========================================================================
   # UI build - done outside the goreleaser-cross container because that
   # image is Go-focused and doesn't ship Node. Vite writes directly to
@@ -61,6 +101,7 @@ jobs:
   build-ui:
     name: Build UI
     if: ${{ !inputs.provenance_only }}
+    needs: [verify-tag]
     runs-on: ubuntu-latest
     outputs:
       ui_hash: ${{ steps.ui-hash.outputs.hash }}
@@ -154,11 +195,24 @@ jobs:
           tar -xzf syft.tar.gz -C /usr/local/bin syft
           chmod +x /usr/local/bin/syft
 
+      # Downloaded and executed in a job holding contents: write and
+      # id-token: write, so an unverified binary here signs the release. Syft
+      # two steps above was already checksummed; cosign was the outlier.
+      # Checksum from the upstream cosign_checksums.txt for v3.1.3, verified
+      # against sigstore's published file. Rotate both together on upgrade.
       - name: Install Cosign inside container
+        shell: bash
+        env:
+          COSIGN_VERSION: "v3.1.3"
+          COSIGN_SHA256: "4629c757b7618056f8ddd7e2625ae9fdd94c0372a65049520bc7d9df9efc7f71"
         run: |
-          COSIGN_VERSION=v2.4.1
-          curl -sSfL -o /usr/local/bin/cosign "https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-linux-amd64"
-          chmod +x /usr/local/bin/cosign
+          set -euo pipefail
+          cosign_dir=$(mktemp -d)
+          trap 'rm -rf "$cosign_dir"' EXIT
+          curl -sSfL -o "$cosign_dir/cosign-linux-amd64" \
+            "https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-linux-amd64"
+          echo "${COSIGN_SHA256}  $cosign_dir/cosign-linux-amd64" | sha256sum -c -
+          install -m 0755 "$cosign_dir/cosign-linux-amd64" /usr/local/bin/cosign
 
       - name: Run goreleaser (snapshot/dry-run)
         if: inputs.dry_run
