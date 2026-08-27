@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.2.6](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.5...v0.2.6) (2026-08-27)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @tanstack/react-query to v5.102.1 ([#171](https://github.com/MustardSeedNetworks/trellis/issues/171)) ([02a2b5b](https://github.com/MustardSeedNetworks/trellis/commit/02a2b5b92cb54544a468e014c12be6d672c5833b))
+* **deps:** update dependency @tanstack/react-query to v5.102.2 ([#176](https://github.com/MustardSeedNetworks/trellis/issues/176)) ([ef0daae](https://github.com/MustardSeedNetworks/trellis/commit/ef0daaea3917d1f5319c8e45cbd029aff0d72616))
+
+
+### Continuous Integration
+
+* **dead-code:** make one step actually gate, on reachability ([#175](https://github.com/MustardSeedNetworks/trellis/issues/175)) ([f8d4080](https://github.com/MustardSeedNetworks/trellis/commit/f8d40807e9db2d6a0554e206e97e13595d2e279d))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#173](https://github.com/MustardSeedNetworks/trellis/issues/173)) ([6ddb096](https://github.com/MustardSeedNetworks/trellis/commit/6ddb096e6659794e3a46c63e5fd3c0366e9e7fd7))
+* **deps:** update dependency @types/react-dom to v19.2.5 ([#178](https://github.com/MustardSeedNetworks/trellis/issues/178)) ([59e0c04](https://github.com/MustardSeedNetworks/trellis/commit/59e0c0488100dcb79a40ebc488895d923065c2c0))
+* **deps:** update node.js to v26.8.0 ([#172](https://github.com/MustardSeedNetworks/trellis/issues/172)) ([1a86337](https://github.com/MustardSeedNetworks/trellis/commit/1a863372635bf75d1612bfca7856a640bb519b71))
+* **deps:** update node.js to v26.8.1 ([#179](https://github.com/MustardSeedNetworks/trellis/issues/179)) ([b208e70](https://github.com/MustardSeedNetworks/trellis/commit/b208e70817889dc21d2a8fd43a7f351ae76036e0))
+
 ## [0.2.5](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.4...v0.2.5) (2026-08-26)
 
 
