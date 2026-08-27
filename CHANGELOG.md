@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.9](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.8...v0.2.9) (2026-08-27)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @tanstack/react-query to v5.102.3 ([#195](https://github.com/MustardSeedNetworks/trellis/issues/195)) ([e00789d](https://github.com/MustardSeedNetworks/trellis/commit/e00789da71d1e5fa0c59d946e9a5ec43a8c5ba38))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#197](https://github.com/MustardSeedNetworks/trellis/issues/197)) ([9714003](https://github.com/MustardSeedNetworks/trellis/commit/97140030ce28e981c57744e16e38921dd3367926))
+* **deps:** lock file maintenance ([#198](https://github.com/MustardSeedNetworks/trellis/issues/198)) ([f736ceb](https://github.com/MustardSeedNetworks/trellis/commit/f736cebfef2c8f19f2123400d953c7523a448552))
+* **deps:** update dependency @types/node to v26.3.0 ([#196](https://github.com/MustardSeedNetworks/trellis/issues/196)) ([e3cd6e4](https://github.com/MustardSeedNetworks/trellis/commit/e3cd6e49ae03d408972576ca2a86c210dd95d6a1))
+
 ## [0.2.8](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.7...v0.2.8) (2026-08-27)
 
 
