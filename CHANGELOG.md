@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.7](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.6...v0.2.7) (2026-08-27)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.34.0 ([#180](https://github.com/MustardSeedNetworks/trellis/issues/180)) ([1b6a445](https://github.com/MustardSeedNetworks/trellis/commit/1b6a445edab1af8b007c673b1ad34f3baebf45b6))
+
 ## [0.2.6](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.5...v0.2.6) (2026-08-27)
 
 
