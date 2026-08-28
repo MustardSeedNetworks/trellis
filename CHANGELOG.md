@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.14](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.13...v0.2.14) (2026-08-28)
+
+
+### Continuous Integration
+
+* bring security scanning to parity with the sibling repos ([#217](https://github.com/MustardSeedNetworks/trellis/issues/217)) ([701973b](https://github.com/MustardSeedNetworks/trellis/commit/701973bf3631b9182db2acda53b03f73c07f7c98)), closes [#216](https://github.com/MustardSeedNetworks/trellis/issues/216)
+
 ## [0.2.13](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.12...v0.2.13) (2026-08-28)
 
 
