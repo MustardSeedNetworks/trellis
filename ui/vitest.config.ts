@@ -24,5 +24,10 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
     globals: false,
+    // Scoped to src/. Vitest's default include is **/*.{test,spec}.* , which
+    // also matches the Playwright specs under e2e/ -- Vitest then collects them
+    // and Playwright rejects the call with "Playwright Test did not expect
+    // test() to be called here". Same shape as seed's config.
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
   },
 });

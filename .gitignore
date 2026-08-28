@@ -23,3 +23,8 @@ internal/api/ui/*
 # nowhere near the cause. The repo must be self-contained whatever any
 # developer config says. seed carries the same un-ignore for the same reason.
 !core/survey/migrations/*.sql
+
+# Playwright E2E output
+ui/playwright-report/
+ui/test-results/
+bin/
