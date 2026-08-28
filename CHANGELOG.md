@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.15](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.14...v0.2.15) (2026-08-28)
+
+
+### Tests
+
+* add browser coverage against the daemon-served UI ([#214](https://github.com/MustardSeedNetworks/trellis/issues/214)) ([d1334f2](https://github.com/MustardSeedNetworks/trellis/commit/d1334f2e146afe50a69176cbd83480f51f3e9ae5))
+
 ## [0.2.14](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.13...v0.2.14) (2026-08-28)
 
 
