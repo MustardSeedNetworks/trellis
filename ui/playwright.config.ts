@@ -47,13 +47,17 @@ export default defineConfig({
   webServer: {
     // TRELLIS_DATA_DIR is per-run so a survey written by one run cannot leak
     // into the next and make an assertion pass for the wrong reason.
+    // A fixed path under the repo, not $TMPDIR: TMPDIR is a macOS convention
+    // and is unset on the Ubuntu runners, so the path collapsed to
+    // /trellisd-e2e and the webServer never started.
+    //
     // `go build` then run, not `go run`. go run does not stamp VCS metadata, so
     // /__version reports commit "unknown" and the build-contract assertion in
     // handshake.spec.ts fails for a reason that has nothing to do with the
     // product. Building first is also closer to what ships.
     command:
-      'cd .. && go build -o "$TMPDIR/trellisd-e2e" ./cmd/trellisd && ' +
-      'TRELLIS_ADDR=127.0.0.1:18446 TRELLIS_DATA_DIR="$(mktemp -d)" "$TMPDIR/trellisd-e2e"',
+      'cd .. && go build -o bin/trellisd-e2e ./cmd/trellisd && ' +
+      'TRELLIS_ADDR=127.0.0.1:18446 TRELLIS_DATA_DIR="$(mktemp -d)" bin/trellisd-e2e',
     url: `${baseURL}/__version`,
     reuseExistingServer: false,
     timeout: 180_000,

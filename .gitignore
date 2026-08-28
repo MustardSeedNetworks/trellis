@@ -27,3 +27,4 @@ internal/api/ui/*
 # Playwright E2E output
 ui/playwright-report/
 ui/test-results/
+bin/
