@@ -47,7 +47,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
-          version: v2.13.1
+          version: v2.13.2
           # The repo ships .golangci.yml and `make lint` runs it, but CI never
           # did — the other three products have gated on it for months. Full
           # tree verified clean (0 issues) before this gate was added.
@@ -258,11 +258,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Validate i18n (parity, glossary, banned vocab, etc.)
-        uses: MustardSeedNetworks/.github/.github/actions/i18n-validate@e6d74ebd42168c9b89f2b93f14841f58b90edece # v1.5.0
+        uses: MustardSeedNetworks/.github/.github/actions/i18n-validate@a146506fd53fe5e01fdc01892dd838c10081d183 # v1.9.0
 
   # Fleet-shared SAST gate (MustardSeedNetworks/.github, pinned).
   semgrep:
-    uses: MustardSeedNetworks/.github/.github/workflows/semgrep.yml@3c9b3aadab847d2faab5116c6af07eb05d978d62 # v1.8.0
+    uses: MustardSeedNetworks/.github/.github/workflows/semgrep.yml@a146506fd53fe5e01fdc01892dd838c10081d183 # v1.9.0
     permissions:
       contents: read
       # v1.8.0 publishes the all-severity SARIF to code scanning. The
@@ -278,7 +278,7 @@ jobs:
   # Defined once in MustardSeedNetworks/.github (fleet-shared); ci-complete
   # still needs: [ci-conformance].
   ci-conformance:
-    uses: MustardSeedNetworks/.github/.github/workflows/ci-conformance.yml@3c9b3aadab847d2faab5116c6af07eb05d978d62 # v1.8.0
+    uses: MustardSeedNetworks/.github/.github/workflows/ci-conformance.yml@a146506fd53fe5e01fdc01892dd838c10081d183 # v1.9.0
     permissions:
       contents: read
 
