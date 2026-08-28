@@ -198,6 +198,88 @@ jobs:
           fi
           echo "No unsafe logging patterns found"
 
+  # ===========================================================================
+  # Security Scanning
+  # ===========================================================================
+  # trellis gated govulncheck and Semgrep but had no secret scanning, no
+  # dependency audit and no filesystem scan -- thinner than seed, stem and niac,
+  # which all run the full set. Same tools, same pins, same fail-closed posture.
+  security:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      # Only for the SARIF upload below.
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # gitleaks scans history, not just the tip.
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-node
+
+      - name: Run npm audit
+        working-directory: ui
+        run: |
+          npm ci
+          npm audit --audit-level=high
+
+      # gitleaks-action needs a paid licence for organisation repos and fails
+      # red without ever scanning. The MIT-licensed CLI is the same engine.
+      # Verified against trellis history before this was made blocking:
+      # 167 commits scanned, no leaks -- so it starts clean rather than
+      # arriving with an allowlist written to hide day-one findings.
+      - name: Run gitleaks
+        env:
+          GITLEAKS_VERSION: "8.30.0"
+          # SHA-256 of gitleaks_8.30.0_linux_x64.tar.gz from the upstream
+          # checksums.txt. Rotate with GITLEAKS_VERSION on upgrade.
+          GITLEAKS_SHA256: "79a3ab579b53f71efd634f3aaf7e04a0fa0cf206b7ed434638d1547a2470a66e"
+        run: |
+          set -euo pipefail
+          curl -sSfL -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+          ./gitleaks git . --redact --no-banner --exit-code 1
+
+      - name: Run Trivy vulnerability scanner
+        # exit-code 0 so the SARIF is always written; the explicit check below
+        # is what fails CI, so a scanner error cannot pass as "no findings".
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
+
+      # Not continue-on-error: a silent upload failure leaves the Security tab
+      # showing an older scan, so the dashboard reads "clean" because nothing
+      # new arrived rather than because nothing was found.
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        if: always() && hashFiles('trivy-results.sarif') != ''
+        with:
+          sarif_file: trivy-results.sarif
+
+      - name: Fail on CRITICAL/HIGH findings
+        run: |
+          set -euo pipefail
+          if [ ! -f trivy-results.sarif ]; then
+            echo "::error::Trivy produced no SARIF -- the scan did not run, which is a failure, not a pass"
+            exit 1
+          fi
+          count=$(python3 -c "import json,sys; d=json.load(open('trivy-results.sarif')); print(sum(len(r.get('results',[])) for r in d.get('runs',[])))")
+          echo "Trivy CRITICAL/HIGH findings: ${count}"
+          if [ "$count" -gt 0 ]; then
+            echo "::error::Trivy reported ${count} CRITICAL/HIGH finding(s)"
+            exit 1
+          fi
+
   govulncheck:
     name: govulncheck
     runs-on: ubuntu-latest
@@ -302,6 +384,7 @@ jobs:
       - backend-windows
       - quality
       - govulncheck
+      - security
       - frontend
       - i18n
       - semgrep
