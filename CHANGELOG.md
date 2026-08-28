@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.12](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.11...v0.2.12) (2026-08-28)
+
+
+### Tests
+
+* stop i18next debug logging in the test run ([#207](https://github.com/MustardSeedNetworks/trellis/issues/207)) ([d1abed0](https://github.com/MustardSeedNetworks/trellis/commit/d1abed0c2a061e9d5eba83c280a4376a592b38f9)), closes [#206](https://github.com/MustardSeedNetworks/trellis/issues/206)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#208](https://github.com/MustardSeedNetworks/trellis/issues/208)) ([c7713bc](https://github.com/MustardSeedNetworks/trellis/commit/c7713bc3fabc3db81104fd3e471a3b0f2f6483fe))
+
 ## [0.2.11](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.10...v0.2.11) (2026-08-28)
 
 
