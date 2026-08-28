@@ -53,7 +53,11 @@ i18n
       // React escapes values already.
       escapeValue: false,
     },
-    debug: import.meta.env.DEV,
+    // DEV is true under Vitest too, so this printed 36 lines of i18next
+    // initialisation into every test run -- persistent known-noise is exactly
+    // what makes a new warning invisible. Dev server keeps the debug output;
+    // the test run does not.
+    debug: import.meta.env.DEV && import.meta.env.MODE !== 'test',
   });
 
 export default i18n;
