@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.13](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.12...v0.2.13) (2026-08-28)
+
+
+### Tests
+
+* split survey tests and assert what ListSurveys returns ([#211](https://github.com/MustardSeedNetworks/trellis/issues/211)) ([d342e75](https://github.com/MustardSeedNetworks/trellis/commit/d342e75ce4a6ee2721e5907c2cf629dc5f3ebb65)), closes [#210](https://github.com/MustardSeedNetworks/trellis/issues/210)
+
 ## [0.2.12](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.11...v0.2.12) (2026-08-28)
 
 
