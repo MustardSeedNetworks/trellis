@@ -1,12 +1,9 @@
+// Manager construction and survey CRUD.
 package survey_test
 
 import (
 	"context"
-	"os"
-	"path/filepath"
-	"sync"
 	"testing"
-	"time"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
@@ -19,11 +16,15 @@ type fakeScanner struct{}
 func (fakeScanner) Scan(context.Context) ([]wifi.ScannedNetwork, error) { return nil, nil }
 
 // fakeConnMonitor is a no-op survey.ConnectionMonitor.
+
+// fakeConnMonitor is a no-op survey.ConnectionMonitor.
 type fakeConnMonitor struct{}
 
 func (fakeConnMonitor) ConnectionInfo(context.Context) (string, string, int, error) {
 	return "", "", 0, nil
 }
+
+// fakeThroughputMeter is a no-op survey.ThroughputMeter.
 
 // fakeThroughputMeter is a no-op survey.ThroughputMeter.
 type fakeThroughputMeter struct{}
@@ -62,6 +63,8 @@ func TestNewManager(t *testing.T) {
 }
 
 // createSurveyTestCase defines a test case for TestCreateSurvey.
+
+// createSurveyTestCase defines a test case for TestCreateSurvey.
 type createSurveyTestCase struct {
 	name        string
 	surveyName  string
@@ -70,6 +73,8 @@ type createSurveyTestCase struct {
 	surveyType  survey.Type
 	wantErr     bool
 }
+
+// assertSurveyFields validates basic survey fields match expected values.
 
 // assertSurveyFields validates basic survey fields match expected values.
 func assertSurveyFields(t *testing.T, s *survey.Survey, tc createSurveyTestCase) {
@@ -96,6 +101,8 @@ func assertSurveyFields(t *testing.T, s *survey.Survey, tc createSurveyTestCase)
 }
 
 // assertSurveyFloors validates survey has proper floor structure.
+
+// assertSurveyFloors validates survey has proper floor structure.
 func assertSurveyFloors(t *testing.T, s *survey.Survey) {
 	t.Helper()
 
@@ -111,6 +118,8 @@ func assertSurveyFloors(t *testing.T, s *survey.Survey) {
 		t.Error("Active floor Samples is nil")
 	}
 }
+
+// assertSurveyTimestamps validates survey timestamps are set.
 
 // assertSurveyTimestamps validates survey timestamps are set.
 func assertSurveyTimestamps(t *testing.T, s *survey.Survey) {
@@ -267,17 +276,44 @@ func TestListSurveys(t *testing.T) {
 		t.Fatalf("CreateSurvey() failed: %v", err)
 	}
 
-	// Should now have 3 surveys.
-	surveys = mgr.ListSurveys()
-	if len(surveys) != 3 {
-		t.Errorf("ListSurveys() returned %d surveys, want 3", len(surveys))
+	// Assert what came back, not how much. Counting alone passes if ListSurveys
+	// returns the same survey three times, or three surveys carrying the wrong
+	// names and types -- the exact shape of the heatmap defects in this package,
+	// which held a correct count while every value was wrong.
+	want := map[string]survey.Type{
+		"Survey 1": survey.TypePassive,
+		"Survey 2": survey.TypeActive,
+		"Survey 3": survey.TypeThroughput,
 	}
 
-	// Verify surveys are not nil.
+	surveys = mgr.ListSurveys()
+	if len(surveys) != len(want) {
+		t.Fatalf("ListSurveys() returned %d surveys, want %d", len(surveys), len(want))
+	}
+
+	seenIDs := make(map[string]bool, len(surveys))
 	for i, s := range surveys {
 		if s == nil {
-			t.Errorf("Survey at index %d is nil", i)
+			t.Fatalf("survey at index %d is nil", i)
 		}
+		if seenIDs[s.ID] {
+			t.Errorf("survey %q returned more than once (ID %s)", s.Name, s.ID)
+		}
+		seenIDs[s.ID] = true
+
+		wantType, ok := want[s.Name]
+		if !ok {
+			t.Errorf("unexpected survey %q in listing", s.Name)
+			continue
+		}
+		if s.SurveyType != wantType {
+			t.Errorf("survey %q has type %v, want %v", s.Name, s.SurveyType, wantType)
+		}
+		delete(want, s.Name)
+	}
+
+	for name := range want {
+		t.Errorf("survey %q was created but not returned by ListSurveys()", name)
 	}
 }
 
@@ -328,885 +364,5 @@ func TestDeleteSurvey(t *testing.T) {
 				t.Error("GetSurvey() after delete succeeded, want error")
 			}
 		})
-	}
-}
-
-func TestStartSurvey(t *testing.T) {
-	tmpDir := t.TempDir()
-	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
-
-	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
-	if err != nil {
-		t.Fatalf("CreateSurvey() failed: %v", err)
-	}
-
-	tests := []struct {
-		name        string
-		id          string
-		setupStatus survey.Status
-		wantErr     bool
-	}{
-		{
-			name:        "start created survey",
-			id:          s.ID,
-			setupStatus: survey.StatusCreated,
-			wantErr:     false,
-		},
-		{
-			name:        "start non-existent survey",
-			id:          "non-existent-id",
-			setupStatus: survey.StatusCreated,
-			wantErr:     true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			startErr := mgr.StartSurvey(tt.id)
-
-			if tt.wantErr {
-				if startErr == nil {
-					t.Error("StartSurvey() error = nil, want error")
-				}
-				return
-			}
-
-			if startErr != nil {
-				t.Errorf("StartSurvey() error = %v, want nil", startErr)
-				return
-			}
-
-			// Verify status changed.
-			result, getErr := mgr.GetSurvey(tt.id)
-			if getErr != nil {
-				t.Fatalf("GetSurvey() failed: %v", getErr)
-			}
-
-			if result.Status != survey.StatusInProgress {
-				t.Errorf("Survey Status = %v, want %v", result.Status, survey.StatusInProgress)
-			}
-		})
-	}
-}
-
-func TestPauseSurvey(t *testing.T) {
-	tmpDir := t.TempDir()
-	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
-
-	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
-	if err != nil {
-		t.Fatalf("CreateSurvey() failed: %v", err)
-	}
-
-	// Start survey first.
-	err = mgr.StartSurvey(s.ID)
-	if err != nil {
-		t.Fatalf("StartSurvey() failed: %v", err)
-	}
-
-	tests := []struct {
-		name    string
-		id      string
-		wantErr bool
-	}{
-		{
-			name:    "pause in-progress survey",
-			id:      s.ID,
-			wantErr: false,
-		},
-		{
-			name:    "pause non-existent survey",
-			id:      "non-existent-id",
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			pauseErr := mgr.PauseSurvey(tt.id)
-
-			if tt.wantErr {
-				if pauseErr == nil {
-					t.Error("PauseSurvey() error = nil, want error")
-				}
-				return
-			}
-
-			if pauseErr != nil {
-				t.Errorf("PauseSurvey() error = %v, want nil", pauseErr)
-				return
-			}
-
-			// Verify status changed.
-			result, getErr := mgr.GetSurvey(tt.id)
-			if getErr != nil {
-				t.Fatalf("GetSurvey() failed: %v", getErr)
-			}
-
-			if result.Status != survey.StatusPaused {
-				t.Errorf("Survey Status = %v, want %v", result.Status, survey.StatusPaused)
-			}
-		})
-	}
-}
-
-func TestCompleteSurvey(t *testing.T) {
-	tmpDir := t.TempDir()
-	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
-
-	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
-	if err != nil {
-		t.Fatalf("CreateSurvey() failed: %v", err)
-	}
-
-	// Start survey first.
-	err = mgr.StartSurvey(s.ID)
-	if err != nil {
-		t.Fatalf("StartSurvey() failed: %v", err)
-	}
-
-	tests := []struct {
-		name    string
-		id      string
-		wantErr bool
-	}{
-		{
-			name:    "complete in-progress survey",
-			id:      s.ID,
-			wantErr: false,
-		},
-		{
-			name:    "complete non-existent survey",
-			id:      "non-existent-id",
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			completeErr := mgr.CompleteSurvey(tt.id)
-
-			if tt.wantErr {
-				if completeErr == nil {
-					t.Error("CompleteSurvey() error = nil, want error")
-				}
-				return
-			}
-
-			if completeErr != nil {
-				t.Errorf("CompleteSurvey() error = %v, want nil", completeErr)
-				return
-			}
-
-			// Verify status changed.
-			result, getErr := mgr.GetSurvey(tt.id)
-			if getErr != nil {
-				t.Fatalf("GetSurvey() failed: %v", getErr)
-			}
-
-			if result.Status != survey.StatusCompleted {
-				t.Errorf("Survey Status = %v, want %v", result.Status, survey.StatusCompleted)
-			}
-		})
-	}
-}
-
-func TestStateTransitions(t *testing.T) {
-	tmpDir := t.TempDir()
-	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
-
-	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
-	if err != nil {
-		t.Fatalf("CreateSurvey() failed: %v", err)
-	}
-
-	// Test valid state transitions.
-	// Created -> InProgress.
-	err = mgr.StartSurvey(s.ID)
-	if err != nil {
-		t.Errorf("Created -> InProgress failed: %v", err)
-	}
-
-	// InProgress -> Paused.
-	err = mgr.PauseSurvey(s.ID)
-	if err != nil {
-		t.Errorf("InProgress -> Paused failed: %v", err)
-	}
-
-	// Paused -> InProgress (resume).
-	err = mgr.StartSurvey(s.ID)
-	if err != nil {
-		t.Errorf("Paused -> InProgress failed: %v", err)
-	}
-
-	// InProgress -> Completed.
-	err = mgr.CompleteSurvey(s.ID)
-	if err != nil {
-		t.Errorf("InProgress -> Completed failed: %v", err)
-	}
-
-	// Verify final state.
-	result, _ := mgr.GetSurvey(s.ID)
-	if result.Status != survey.StatusCompleted {
-		t.Errorf("Final status = %v, want %v", result.Status, survey.StatusCompleted)
-	}
-}
-
-// updateFloorPlanTestCase defines a test case for TestUpdateFloorPlan.
-type updateFloorPlanTestCase struct {
-	name      string
-	id        string
-	floorPlan *survey.FloorPlan
-	wantErr   bool
-}
-
-// assertFloorPlanUpdated verifies that the floor plan was correctly updated on the survey.
-func assertFloorPlanUpdated(
-	t *testing.T,
-	mgr *survey.Manager,
-	surveyID string,
-	expected *survey.FloorPlan,
-) {
-	t.Helper()
-
-	result, getErr := mgr.GetSurvey(surveyID)
-	if getErr != nil {
-		t.Fatalf("GetSurvey() failed: %v", getErr)
-	}
-
-	activeFloor := result.GetActiveFloor()
-	if activeFloor == nil {
-		t.Fatal("No active floor found")
-	}
-
-	if activeFloor.FloorPlan == nil {
-		t.Fatal("FloorPlan is nil after update")
-	}
-
-	if activeFloor.FloorPlan.Width != expected.Width {
-		t.Errorf("FloorPlan Width = %v, want %v", activeFloor.FloorPlan.Width, expected.Width)
-	}
-
-	if activeFloor.FloorPlan.Height != expected.Height {
-		t.Errorf("FloorPlan Height = %v, want %v", activeFloor.FloorPlan.Height, expected.Height)
-	}
-}
-
-// runUpdateFloorPlanTest executes a single update floor plan test case.
-func runUpdateFloorPlanTest(
-	t *testing.T,
-	mgr *survey.Manager,
-	tc updateFloorPlanTestCase,
-) {
-	t.Helper()
-
-	updateErr := mgr.UpdateFloorPlan(tc.id, tc.floorPlan)
-
-	if tc.wantErr {
-		if updateErr == nil {
-			t.Error("UpdateFloorPlan() error = nil, want error")
-		}
-		return
-	}
-
-	if updateErr != nil {
-		t.Errorf("UpdateFloorPlan() error = %v, want nil", updateErr)
-		return
-	}
-
-	assertFloorPlanUpdated(t, mgr, tc.id, tc.floorPlan)
-}
-
-func TestUpdateFloorPlan(t *testing.T) {
-	tmpDir := t.TempDir()
-	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
-
-	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
-	if err != nil {
-		t.Fatalf("CreateSurvey() failed: %v", err)
-	}
-
-	floorPlan := &survey.FloorPlan{
-		ImageData: "base64encodeddata",
-		Width:     1000,
-		Height:    800,
-	}
-
-	tests := []updateFloorPlanTestCase{
-		{
-			name:      "update with valid floor plan",
-			id:        s.ID,
-			floorPlan: floorPlan,
-			wantErr:   false,
-		},
-		{
-			name:      "update non-existent survey",
-			id:        "non-existent-id",
-			floorPlan: floorPlan,
-			wantErr:   true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			runUpdateFloorPlanTest(t, mgr, tt)
-		})
-	}
-}
-
-// addSampleTestCase defines test parameters for TestAddSample.
-type addSampleTestCase struct {
-	name       string
-	id         string
-	x          int
-	y          int
-	sampleData map[string]any
-	wantErr    bool
-}
-
-// addSampleTestFixture holds shared test resources for AddSample tests.
-type addSampleTestFixture struct {
-	mgr         *survey.Manager
-	validID     string
-	passiveData map[string]any
-}
-
-// setupAddSampleTest creates a test fixture with a started survey.
-func setupAddSampleTest(t *testing.T) *addSampleTestFixture {
-	t.Helper()
-	tmpDir := t.TempDir()
-	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
-
-	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
-	if err != nil {
-		t.Fatalf("CreateSurvey() failed: %v", err)
-	}
-
-	err = mgr.StartSurvey(s.ID)
-	if err != nil {
-		t.Fatalf("StartSurvey() failed: %v", err)
-	}
-
-	passiveData := map[string]any{
-		"networks": []any{
-			map[string]any{
-				"ssid":  "TestNetwork",
-				"bssid": "00:11:22:33:44:55",
-				"rssi":  -50,
-			},
-		},
-	}
-
-	return &addSampleTestFixture{
-		mgr:         mgr,
-		validID:     s.ID,
-		passiveData: passiveData,
-	}
-}
-
-// assertSampleAdded verifies that a sample was correctly added to the survey.
-func assertSampleAdded(t *testing.T, mgr *survey.Manager, surveyID string, wantX, wantY int) {
-	t.Helper()
-	result, err := mgr.GetSurvey(surveyID)
-	if err != nil {
-		t.Fatalf("GetSurvey() failed: %v", err)
-	}
-
-	samples := result.GetAllSamples()
-	if len(samples) == 0 {
-		t.Fatal("No samples found after AddSample()")
-	}
-
-	lastSample := samples[len(samples)-1]
-	if lastSample.X != wantX {
-		t.Errorf("Sample X = %v, want %v", lastSample.X, wantX)
-	}
-	if lastSample.Y != wantY {
-		t.Errorf("Sample Y = %v, want %v", lastSample.Y, wantY)
-	}
-	if lastSample.Timestamp.IsZero() {
-		t.Error("Sample Timestamp is zero")
-	}
-}
-
-func TestAddSample(t *testing.T) {
-	fixture := setupAddSampleTest(t)
-
-	tests := []addSampleTestCase{
-		{
-			name:       "add valid sample",
-			id:         fixture.validID,
-			x:          100,
-			y:          200,
-			sampleData: fixture.passiveData,
-			wantErr:    false,
-		},
-		{
-			name:       "add sample to non-existent survey",
-			id:         "non-existent-id",
-			x:          100,
-			y:          200,
-			sampleData: fixture.passiveData,
-			wantErr:    true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := fixture.mgr.AddSample(tt.id, tt.x, tt.y, tt.sampleData)
-
-			if tt.wantErr {
-				if err == nil {
-					t.Error("AddSample() error = nil, want error")
-				}
-				return
-			}
-
-			if err != nil {
-				t.Fatalf("AddSample() error = %v, want nil", err)
-			}
-
-			assertSampleAdded(t, fixture.mgr, tt.id, tt.x, tt.y)
-		})
-	}
-}
-
-func TestPersistence(t *testing.T) {
-	tmpDir := t.TempDir()
-	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
-
-	// Create a survey.
-	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
-	if err != nil {
-		t.Fatalf("CreateSurvey() failed: %v", err)
-	}
-
-	// Verify the store exists. A survey is a row now, not a file, so this
-	// asserts the database was created rather than looking for <id>.json —
-	// the round-trip below is what proves the survey itself persisted.
-	dbPath := filepath.Join(tmpDir, "surveys.db")
-	if _, statErr := os.Stat(dbPath); os.IsNotExist(statErr) {
-		t.Errorf("survey store not created at %s", dbPath)
-	}
-
-	// Create new manager to load surveys.
-	mgr2 := mustManager(t, tmpDir, nil, nil, nil, nil)
-
-	// Load surveys from disk.
-	err = mgr2.LoadSurveys()
-	if err != nil {
-		t.Fatalf("LoadSurveys() failed: %v", err)
-	}
-
-	// Verify survey was loaded.
-	loaded, err := mgr2.GetSurvey(s.ID)
-	if err != nil {
-		t.Errorf("Failed to load survey: %v", err)
-	}
-
-	if loaded == nil {
-		t.Fatal("Loaded survey is nil")
-	}
-
-	if loaded.Name != s.Name {
-		t.Errorf("Loaded survey Name = %v, want %v", loaded.Name, s.Name)
-	}
-
-	if loaded.Description != s.Description {
-		t.Errorf("Loaded survey Description = %v, want %v", loaded.Description, s.Description)
-	}
-
-	// Delete, then prove it is gone from the store rather than from the
-	// filesystem: a third manager reloads from SQLite and must not find it.
-	if err = mgr2.DeleteSurvey(s.ID); err != nil {
-		t.Errorf("DeleteSurvey() failed: %v", err)
-	}
-
-	mgr3 := mustManager(t, tmpDir, nil, nil, nil, nil)
-	if err := mgr3.LoadSurveys(); err != nil {
-		t.Fatalf("LoadSurveys() after delete: %v", err)
-	}
-	if _, err := mgr3.GetSurvey(s.ID); err == nil {
-		t.Error("deleted survey still present after reload")
-	}
-}
-
-func TestConcurrentOperations(t *testing.T) {
-	tmpDir := t.TempDir()
-	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
-
-	var wg sync.WaitGroup
-	numGoroutines := 10
-
-	// Concurrent creates.
-	for i := range numGoroutines {
-		wg.Add(1)
-		go func(_ int) {
-			defer wg.Done()
-			_, err := mgr.CreateSurvey("Survey", "Desc", "wlan0", survey.TypePassive)
-			if err != nil {
-				t.Errorf("Concurrent CreateSurvey() failed: %v", err)
-			}
-		}(i)
-	}
-
-	wg.Wait()
-
-	// Should have created all surveys.
-	surveys := mgr.ListSurveys()
-	if len(surveys) != numGoroutines {
-		t.Errorf("Expected %d surveys, got %d", numGoroutines, len(surveys))
-	}
-}
-
-func TestConcurrentSampleAddition(t *testing.T) {
-	tmpDir := t.TempDir()
-	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
-
-	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
-	if err != nil {
-		t.Fatalf("CreateSurvey() failed: %v", err)
-	}
-
-	err = mgr.StartSurvey(s.ID)
-	if err != nil {
-		t.Fatalf("StartSurvey() failed: %v", err)
-	}
-
-	var wg sync.WaitGroup
-	numSamples := 50
-
-	sampleData := map[string]any{
-		"networks": []any{
-			map[string]any{
-				"ssid": "Test",
-				"rssi": -60,
-			},
-		},
-	}
-
-	// Concurrent sample additions.
-	for i := range numSamples {
-		wg.Add(1)
-		go func(n int) {
-			defer wg.Done()
-			addErr := mgr.AddSample(s.ID, n, n, sampleData)
-			if addErr != nil {
-				t.Errorf("Concurrent AddSample() failed: %v", addErr)
-			}
-		}(i)
-	}
-
-	wg.Wait()
-
-	// Verify all samples added (now on the active floor).
-	result, err := mgr.GetSurvey(s.ID)
-	if err != nil {
-		t.Fatalf("GetSurvey() failed: %v", err)
-	}
-
-	samples := result.GetAllSamples()
-	if len(samples) != numSamples {
-		t.Errorf("Expected %d samples, got %d", numSamples, len(samples))
-	}
-}
-
-func TestSurveyTimestamps(t *testing.T) {
-	tmpDir := t.TempDir()
-	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
-
-	beforeCreate := time.Now()
-	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
-	if err != nil {
-		t.Fatalf("CreateSurvey() failed: %v", err)
-	}
-	afterCreate := time.Now()
-
-	// Verify CreatedAt is within expected time range.
-	if s.CreatedAt.Before(beforeCreate) || s.CreatedAt.After(afterCreate) {
-		t.Error("CreatedAt timestamp out of expected range")
-	}
-
-	// Verify UpdatedAt is set.
-	if s.UpdatedAt.Before(beforeCreate) || s.UpdatedAt.After(afterCreate) {
-		t.Error("UpdatedAt timestamp out of expected range")
-	}
-
-	// Complete survey.
-	err = mgr.StartSurvey(s.ID)
-	if err != nil {
-		t.Fatalf("StartSurvey() failed: %v", err)
-	}
-
-	err = mgr.CompleteSurvey(s.ID)
-	if err != nil {
-		t.Fatalf("CompleteSurvey() failed: %v", err)
-	}
-
-	result, _ := mgr.GetSurvey(s.ID)
-	if result.Status != survey.StatusCompleted {
-		t.Error("Survey not marked as completed")
-	}
-}
-
-func TestSampleCount(t *testing.T) {
-	tmpDir := t.TempDir()
-	mgr := mustManager(t, tmpDir, nil, nil, nil, nil)
-
-	s, err := mgr.CreateSurvey("Test Survey", "Description", "wlan0", survey.TypePassive)
-	if err != nil {
-		t.Fatalf("CreateSurvey() failed: %v", err)
-	}
-
-	err = mgr.StartSurvey(s.ID)
-	if err != nil {
-		t.Fatalf("StartSurvey() failed: %v", err)
-	}
-
-	sampleData := map[string]any{
-		"networks": []any{
-			map[string]any{"ssid": "Test", "rssi": -60},
-		},
-	}
-
-	// Add multiple samples.
-	for i := range 5 {
-		err = mgr.AddSample(s.ID, i*10, i*10, sampleData)
-		if err != nil {
-			t.Errorf("AddSample() failed: %v", err)
-		}
-	}
-
-	result, err := mgr.GetSurvey(s.ID)
-	if err != nil {
-		t.Fatalf("GetSurvey() failed: %v", err)
-	}
-
-	// With multi-floor support, samples are on the active floor.
-	samples := result.GetAllSamples()
-	if len(samples) != 5 {
-		t.Errorf("Sample count = %d, want 5", len(samples))
-	}
-}
-
-func TestPassiveSampleAggregations(t *testing.T) {
-	tests := []struct {
-		name     string
-		networks []*wifi.ScannedNetwork
-		want     survey.PassiveSample
-	}{
-		{
-			name:     "empty networks",
-			networks: []*wifi.ScannedNetwork{},
-			want: survey.PassiveSample{
-				Networks:      []*wifi.ScannedNetwork{},
-				UniqueSSIDs:   0,
-				UniqueBSSIDs:  0,
-				APCount2_4:    0,
-				APCount5:      0,
-				APCount6:      0,
-				CoChannelAPs:  0,
-				AdjChannelAPs: 0,
-			},
-		},
-		{
-			name:     "nil networks",
-			networks: nil,
-			want: survey.PassiveSample{
-				Networks:      nil,
-				UniqueSSIDs:   0,
-				UniqueBSSIDs:  0,
-				APCount2_4:    0,
-				APCount5:      0,
-				APCount6:      0,
-				CoChannelAPs:  0,
-				AdjChannelAPs: 0,
-			},
-		},
-		{
-			name: "single 2.4GHz network",
-			networks: []*wifi.ScannedNetwork{
-				{
-					SSID:      "TestNet",
-					BSSID:     "00:11:22:33:44:55",
-					Channel:   6,
-					Frequency: 2437,
-					Signal:    -50,
-				},
-			},
-			want: survey.PassiveSample{
-				UniqueSSIDs:   1,
-				UniqueBSSIDs:  1,
-				APCount2_4:    1,
-				APCount5:      0,
-				APCount6:      0,
-				CoChannelAPs:  1, // Same as strongest (itself).
-				AdjChannelAPs: 0,
-			},
-		},
-		{
-			name: "multiple bands and channels",
-			networks: []*wifi.ScannedNetwork{
-				// Strongest AP on channel 36 (5GHz).
-				{
-					SSID:      "Net5G",
-					BSSID:     "00:11:22:33:44:55",
-					Channel:   36,
-					Frequency: 5180,
-					Signal:    -40,
-				},
-				// Co-channel AP.
-				{
-					SSID:      "Net5G-2",
-					BSSID:     "00:11:22:33:44:66",
-					Channel:   36,
-					Frequency: 5180,
-					Signal:    -50,
-				},
-				// Adjacent channel (+-1).
-				{
-					SSID:      "Net5G-3",
-					BSSID:     "00:11:22:33:44:77",
-					Channel:   37,
-					Frequency: 5185,
-					Signal:    -55,
-				},
-				// Adjacent channel (+-2).
-				{
-					SSID:      "Net5G-4",
-					BSSID:     "00:11:22:33:44:88",
-					Channel:   38,
-					Frequency: 5190,
-					Signal:    -60,
-				},
-				// 2.4GHz networks.
-				{
-					SSID:      "Net2.4",
-					BSSID:     "AA:BB:CC:DD:EE:FF",
-					Channel:   1,
-					Frequency: 2412,
-					Signal:    -65,
-				},
-				{
-					SSID:      "Net2.4-2",
-					BSSID:     "AA:BB:CC:DD:EE:AA",
-					Channel:   6,
-					Frequency: 2437,
-					Signal:    -70,
-				},
-				// 6GHz network.
-				{
-					SSID:      "Net6G",
-					BSSID:     "FF:EE:DD:CC:BB:AA",
-					Channel:   1,
-					Frequency: 5955,
-					Signal:    -45,
-				},
-			},
-			want: survey.PassiveSample{
-				UniqueSSIDs:   7,
-				UniqueBSSIDs:  7,
-				APCount2_4:    2,
-				APCount5:      4,
-				APCount6:      1,
-				CoChannelAPs:  2, // Two APs on channel 36.
-				AdjChannelAPs: 2, // Channels 37 and 38.
-			},
-		},
-		{
-			name: "duplicate SSIDs different BSSIDs",
-			networks: []*wifi.ScannedNetwork{
-				{
-					SSID:      "SameNet",
-					BSSID:     "00:11:22:33:44:55",
-					Channel:   1,
-					Frequency: 2412,
-					Signal:    -50,
-				},
-				{
-					SSID:      "SameNet",
-					BSSID:     "00:11:22:33:44:66",
-					Channel:   1,
-					Frequency: 2412,
-					Signal:    -55,
-				},
-				{
-					SSID:      "SameNet",
-					BSSID:     "00:11:22:33:44:77",
-					Channel:   1,
-					Frequency: 2412,
-					Signal:    -60,
-				},
-			},
-			want: survey.PassiveSample{
-				UniqueSSIDs:   1, // Only one unique SSID.
-				UniqueBSSIDs:  3, // Three different APs.
-				APCount2_4:    3,
-				APCount5:      0,
-				APCount6:      0,
-				CoChannelAPs:  3, // All on channel 1.
-				AdjChannelAPs: 0,
-			},
-		},
-		{
-			name: "hidden SSID handling",
-			networks: []*wifi.ScannedNetwork{
-				{SSID: "", BSSID: "00:11:22:33:44:55", Channel: 6, Frequency: 2437, Signal: -50},
-				{
-					SSID:      "VisibleNet",
-					BSSID:     "00:11:22:33:44:66",
-					Channel:   6,
-					Frequency: 2437,
-					Signal:    -55,
-				},
-			},
-			want: survey.PassiveSample{
-				UniqueSSIDs:   1, // Hidden SSID not counted.
-				UniqueBSSIDs:  2, // Both BSSIDs counted.
-				APCount2_4:    2,
-				APCount5:      0,
-				APCount6:      0,
-				CoChannelAPs:  2,
-				AdjChannelAPs: 0,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sample := survey.PassiveSample{
-				Networks: tt.networks,
-			}
-			sample.CalculateAggregations()
-			assertPassiveSampleAggregations(t, sample, tt.want)
-		})
-	}
-}
-
-// assertPassiveSampleAggregations compares the aggregation fields of a PassiveSample
-// and reports any mismatches. This helper reduces cognitive complexity in the test.
-func assertPassiveSampleAggregations(t *testing.T, got, want survey.PassiveSample) {
-	t.Helper()
-
-	if got.UniqueSSIDs != want.UniqueSSIDs {
-		t.Errorf("UniqueSSIDs = %d, want %d", got.UniqueSSIDs, want.UniqueSSIDs)
-	}
-	if got.UniqueBSSIDs != want.UniqueBSSIDs {
-		t.Errorf("UniqueBSSIDs = %d, want %d", got.UniqueBSSIDs, want.UniqueBSSIDs)
-	}
-	if got.APCount2_4 != want.APCount2_4 {
-		t.Errorf("APCount2_4 = %d, want %d", got.APCount2_4, want.APCount2_4)
-	}
-	if got.APCount5 != want.APCount5 {
-		t.Errorf("APCount5 = %d, want %d", got.APCount5, want.APCount5)
-	}
-	if got.APCount6 != want.APCount6 {
-		t.Errorf("APCount6 = %d, want %d", got.APCount6, want.APCount6)
-	}
-	if got.CoChannelAPs != want.CoChannelAPs {
-		t.Errorf("CoChannelAPs = %d, want %d", got.CoChannelAPs, want.CoChannelAPs)
-	}
-	if got.AdjChannelAPs != want.AdjChannelAPs {
-		t.Errorf("AdjChannelAPs = %d, want %d", got.AdjChannelAPs, want.AdjChannelAPs)
 	}
 }
