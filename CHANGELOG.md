@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.11](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.10...v0.2.11) (2026-08-28)
+
+
+### Continuous Integration
+
+* use the App Client ID instead of the deprecated app-id input ([#200](https://github.com/MustardSeedNetworks/trellis/issues/200)) ([42e30fb](https://github.com/MustardSeedNetworks/trellis/commit/42e30fbe1c1739ae34f524d6650dbf14f8bdfefe))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#204](https://github.com/MustardSeedNetworks/trellis/issues/204)) ([0b7b60d](https://github.com/MustardSeedNetworks/trellis/commit/0b7b60d13ff491dd0e2e2414e228ccd48098a36e))
+
 ## [0.2.10](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.9...v0.2.10) (2026-08-28)
 
 
