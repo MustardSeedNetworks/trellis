@@ -14,7 +14,9 @@
       "!dist",
       "!coverage",
       "!**/package-lock.json",
-      "!**/src/gen"
+      "!**/src/gen",
+      "!playwright-report",
+      "!test-results"
     ]
   },
   "formatter": {

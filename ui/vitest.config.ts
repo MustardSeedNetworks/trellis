@@ -45,7 +45,14 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
-      exclude: ['node_modules/', 'src/test-setup.ts', '**/*.d.ts', '**/*.config.*', 'dist/', 'src/gen/'],
+      exclude: [
+        'node_modules/',
+        'src/test-setup.ts',
+        '**/*.d.ts',
+        '**/*.config.*',
+        'dist/',
+        'src/gen/',
+      ],
       // This project had no coverage gate at all: no `test:coverage` script, no
       // thresholds, and CI running plain `npm run test`. Coverage passed
       // because nothing was being asked -- while SurveyDetail.tsx,
