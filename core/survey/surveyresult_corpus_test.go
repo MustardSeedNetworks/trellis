@@ -63,9 +63,15 @@ func readAMP(t *testing.T, path string) ampParts {
 			var meta struct {
 				SurveyPointCount int `json:"surveyPointCount"`
 			}
-			if json.Unmarshal(data, &meta) == nil {
-				out.declaredPoints = meta.SurveyPointCount
+			// Swallowing a decode error here left declaredPoints at 0, which
+			// silently disabled the exact-count oracle below -- the one thing
+			// that makes this a test of correctness rather than of not
+			// crashing. A malformed sidecar is a corpus problem to fix, not a
+			// reason to check less.
+			if err := json.Unmarshal(data, &meta); err != nil {
+				t.Fatalf("decode %s: %v", f.Name, err)
 			}
+			out.declaredPoints = meta.SurveyPointCount
 		case strings.HasSuffix(name, ".surveyresult"):
 			out.surveyResult = data
 		}
@@ -93,8 +99,10 @@ func TestParseSurveyResultAgainstRealCaptures(t *testing.T) {
 	for _, path := range files {
 		t.Run(filepath.Base(path), func(t *testing.T) {
 			parts := readAMP(t, path)
+			// Skipping here turned a corpus of unreadable archives into a
+			// passing run. Every .amp in the corpus carries measurements.
 			if parts.surveyResult == nil {
-				t.Skip("archive carries no .SurveyResult member")
+				t.Fatal("archive carries no .SurveyResult member")
 			}
 
 			points, parseErr := survey.ParseSurveyResult(parts.surveyResult)
@@ -102,8 +110,15 @@ func TestParseSurveyResultAgainstRealCaptures(t *testing.T) {
 				t.Fatalf("ParseSurveyResult: %v", parseErr)
 			}
 
-			// The file's own declared count is the oracle.
-			if parts.declaredPoints > 0 && len(points) != parts.declaredPoints {
+			// The file's own declared count is the oracle, so it has to be
+			// present. Guarding this with `declaredPoints > 0` meant an
+			// archive that declared nothing was checked against nothing and
+			// still passed.
+			if parts.declaredPoints <= 0 {
+				t.Fatalf("archive declares %d survey points; the oracle needs a positive count",
+					parts.declaredPoints)
+			}
+			if len(points) != parts.declaredPoints {
 				t.Errorf("recovered %d points, the archive declares %d",
 					len(points), parts.declaredPoints)
 			}
@@ -149,4 +164,12 @@ func TestParseSurveyResultAgainstRealCaptures(t *testing.T) {
 	}
 	t.Logf("corpus totals: %d points, %d passive observations, %d active associations across %d files",
 		totalPoints, totalObs, totalActive, len(files))
+
+	// Without these the whole corpus could decode to nothing and still pass.
+	if totalPoints == 0 {
+		t.Error("corpus yielded no survey points at all")
+	}
+	if totalObs+totalActive == 0 {
+		t.Error("corpus yielded no measurements of either kind")
+	}
 }
