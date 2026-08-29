@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.16](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.15...v0.2.16) (2026-08-29)
+
+
+### Tests
+
+* **survey:** assert heatmap and dead-zone values, not just non-nil ([#223](https://github.com/MustardSeedNetworks/trellis/issues/223)) ([8add777](https://github.com/MustardSeedNetworks/trellis/commit/8add777861730db3a5a669b60b550c06589759d8)), closes [#222](https://github.com/MustardSeedNetworks/trellis/issues/222)
+
 ## [0.2.15](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.14...v0.2.15) (2026-08-28)
 
 
