@@ -285,7 +285,12 @@ func parseObservation(data []byte) (*wifi.ScannedNetwork, error) {
 	// A reading a receiver could not produce means the field map is wrong for
 	// this file, not that the air was unusual. Drop it rather than persist a
 	// number the schema would reject anyway.
-	if n.Signal >= invalidDBm || n.Signal > 0 || n.Signal < radioFloorDBm {
+	//
+	// Zero is rejected with the positives. No receiver reports 0 dBm -- that is
+	// a milliwatt at the antenna -- so a zero here means field 21 was absent
+	// and Signal is Go's zero value, not a measurement. The corpus agrees:
+	// 30,482 observations across the reference captures are all negative.
+	if n.Signal >= 0 || n.Signal < radioFloorDBm {
 		return nil, nil
 	}
 	if n.NoiseFloor < 0 && n.Signal >= n.NoiseFloor {
@@ -332,9 +337,9 @@ func parseAssociation(data []byte) (*ActiveSample, error) {
 			_ = val // channel is carried but ActiveSample does not model it
 		}
 	}
-	// Same rule as a passive observation: a reading no receiver could produce
-	// means the field map is wrong for this file, not that the air was odd.
-	if a.RSSI >= invalidDBm || a.RSSI > 0 || a.RSSI < radioFloorDBm {
+	// Same rule as a passive observation, zero included: an absent field 6 is
+	// indistinguishable from a 0 dBm reading, and neither is a measurement.
+	if a.RSSI >= 0 || a.RSSI < radioFloorDBm {
 		return nil, nil
 	}
 	return a, nil
