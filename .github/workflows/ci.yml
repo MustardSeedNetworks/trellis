@@ -373,8 +373,12 @@ jobs:
       - name: Lint (Biome)
         run: npm run lint
 
-      - name: Test (Vitest)
-        run: npm run test
+      # test:coverage, not test: the thresholds in ui/vitest.config.ts are the
+      # gate. Running plain `npm run test` executed every case and asked
+      # nothing about what they covered, which is how three survey files
+      # reached 0% unnoticed.
+      - name: Test (Vitest, coverage-gated)
+        run: npm run test:coverage
 
       - name: Build (tsc strict + vite)
         run: npm run build
