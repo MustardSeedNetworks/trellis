@@ -29,6 +29,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup-go
 
@@ -186,6 +188,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Enforce customer-facing vocabulary policy
         run: python3 scripts/check-banned-vocabulary.py
@@ -259,6 +263,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           # gitleaks scans history, not just the tip.
           fetch-depth: 0
 
@@ -330,6 +335,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup-go
       - name: Run govulncheck
         # Pinned, not @latest. govulncheck is a hard gate per fleet policy, and
@@ -356,6 +363,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup-go
 
@@ -408,6 +417,8 @@ jobs:
         working-directory: ui
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup-node
 
@@ -445,6 +456,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Validate i18n (parity, glossary, banned vocab, etc.)
         uses: MustardSeedNetworks/.github/.github/actions/i18n-validate@a146506fd53fe5e01fdc01892dd838c10081d183 # v1.9.0
