@@ -166,9 +166,6 @@ func TestLiveScanCadence(t *testing.T) {
 	}
 
 	elapsed := time.Since(start)
-	if len(latencies) == 0 {
-		t.Fatal("no scan completed inside the measurement window")
-	}
 
 	slices.Sort(latencies)
 	t.Logf("%d scans in %s — %.2f scans/s end to end", len(latencies), elapsed.Round(time.Millisecond),
@@ -180,11 +177,35 @@ func TestLiveScanCadence(t *testing.T) {
 	t.Logf("%d of %d scans returned changed readings — %.2f fresh sweeps/s",
 		fresh, len(latencies)-1, float64(fresh)/elapsed.Seconds())
 
-	if len(latencies) > 1 && fresh == 0 {
-		t.Errorf("every scan after the first returned identical readings: the backend is "+
-			"serving a cache, and a survey would record %d copies of one observation",
-			len(latencies))
+	if err := assessCadence(len(latencies), fresh); err != nil {
+		t.Error(err)
 	}
+}
+
+// minCadenceSamples is the smallest number of completed scans that can say
+// anything about freshness. One scan has nothing to differ from.
+const minCadenceSamples = 2
+
+// assessCadence decides whether a cadence run proved anything.
+//
+// The freshness check used to be guarded by `len(latencies) > 1`, so exactly
+// one completed scan inside the window skipped it and the test passed having
+// made zero comparisons -- the precise case a rate-limited backend produces.
+// Separated from the measurement loop so it can be tested without a radio.
+func assessCadence(scans, fresh int) error {
+	if scans < minCadenceSamples {
+		return fmt.Errorf(
+			"%d scan(s) completed inside the measurement window, need at least %d: "+
+				"a single scan has nothing to compare against, so freshness was never tested",
+			scans, minCadenceSamples)
+	}
+	if fresh == 0 {
+		return fmt.Errorf(
+			"every scan after the first returned identical readings: the backend is "+
+				"serving a cache, and a survey would record %d copies of one observation",
+			scans)
+	}
+	return nil
 }
 
 // signalFingerprint reduces a scan to the part that moves between real sweeps:
@@ -196,4 +217,74 @@ func signalFingerprint(networks []wifi.ScannedNetwork) string {
 	}
 	slices.Sort(readings)
 	return strings.Join(readings, ",")
+}
+
+// TestAssessCadence pins the decision the live cadence run makes, so the rule
+// is verified on every CI run rather than only on a host with a radio.
+func TestAssessCadence(t *testing.T) {
+	tests := []struct {
+		name    string
+		scans   int
+		fresh   int
+		wantErr string
+	}{
+		{
+			name:    "no scan completed",
+			scans:   0,
+			fresh:   0,
+			wantErr: "need at least 2",
+		},
+		{
+			// The case the old guard let through: one scan, zero comparisons,
+			// green.
+			name:    "one scan proves nothing",
+			scans:   1,
+			fresh:   0,
+			wantErr: "need at least 2",
+		},
+		{
+			name:    "two scans, both identical",
+			scans:   2,
+			fresh:   0,
+			wantErr: "serving a cache",
+		},
+		{
+			name:    "twenty scans, none fresh",
+			scans:   20,
+			fresh:   0,
+			wantErr: "serving a cache",
+		},
+		{
+			name:    "two scans, one fresh",
+			scans:   2,
+			fresh:   1,
+			wantErr: "",
+		},
+		{
+			name:    "twenty scans, all fresh",
+			scans:   20,
+			fresh:   19,
+			wantErr: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := assessCadence(tt.scans, tt.fresh)
+			if tt.wantErr == "" {
+				if err != nil {
+					t.Fatalf("assessCadence(%d, %d) = %v, want nil", tt.scans, tt.fresh, err)
+				}
+				return
+			}
+			if err == nil {
+				t.Fatalf("assessCadence(%d, %d) = nil, want error containing %q",
+					tt.scans, tt.fresh, tt.wantErr)
+			}
+			if !strings.Contains(err.Error(), tt.wantErr) {
+				t.Errorf("assessCadence(%d, %d) = %q, want it to contain %q",
+					tt.scans, tt.fresh, err, tt.wantErr)
+			}
+		})
+	}
 }
