@@ -123,7 +123,7 @@ jobs:
         run: npm ci
 
       - name: Install ts-prune
-        run: npm install -g ts-prune
+        run: npm install -g ts-prune@0.10.3
 
       - name: Check for unused exports
         working-directory: ui
@@ -150,7 +150,7 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "### Unused npm Dependencies" >> "$GITHUB_STEP_SUMMARY"
 
-          npx depcheck --json 2>/dev/null | tee depcheck-output.json || true
+          npx --yes depcheck@1.4.7 --json 2>/dev/null | tee depcheck-output.json || true
 
           # Parse results
           UNUSED=$(jq -r '.dependencies[]' depcheck-output.json 2>/dev/null | wc -l || echo "0")
