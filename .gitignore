@@ -17,6 +17,11 @@ internal/api/ui/*
 *.dylib
 .DS_Store
 
+# Go coverage profile produced by `go test -coverprofile` and by the backend CI
+# job. Listed here rather than relied on from a developer's global gitignore, so
+# the working tree is clean for everyone after a coverage run.
+coverage.out
+
 # Migrations are source, not scratch output. A developer global gitignore may
 # exclude *.sql (this one does), which drops them from commits silently — the
 # build then fails at the //go:embed directive with "no matching files found",

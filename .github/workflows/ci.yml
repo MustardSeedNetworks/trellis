@@ -39,7 +39,51 @@ jobs:
         run: go vet ./...
 
       - name: Test
-        run: go test -race ./...
+        # -covermode=atomic because the suite runs under -race: the default
+        # set/count modes are not race-safe, and a coverage counter data race
+        # would be reported as a test failure rather than as a coverage problem.
+        run: go test -race -covermode=atomic -coverprofile=coverage.out ./...
+
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(go tool cover -func=coverage.out | grep total: | awk '{print $3}' | sed 's/%//')
+          echo "Current coverage: ${COVERAGE}%"
+
+          # Anti-regression floor, not an aspiration. Measured coverage on Linux
+          # at the commit this gate was added was 67.4% (identical with and
+          # without -race), so 62 leaves roughly five points of headroom for
+          # ordinary refactoring while still catching a real drop. The fleet
+          # minimum is 50; setting it there would leave a 17-point hole a
+          # regression could fall through unnoticed, which is exactly the
+          # critique seed's own threshold comment makes of its previous floor.
+          #
+          # Ratchet plan (#235): raise as coverage rises. Never lower it to make
+          # a red build green -- fix or add the tests instead.
+          #   2026-Q3: 62 (current)
+          #   2027-Q2: 70
+          MIN_COVERAGE=62
+
+          if (( $(echo "$COVERAGE < $MIN_COVERAGE" | bc -l) )); then
+            echo "::error::Coverage ${COVERAGE}% is below the minimum of ${MIN_COVERAGE}%"
+            exit 1
+          fi
+
+      - name: Coverage summary
+        run: |
+          {
+            echo "### Go coverage"
+            echo
+            echo '```'
+            go tool cover -func=coverage.out | tail -n 20
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage profile
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: go-coverage-profile
+          path: coverage.out
+          retention-days: 14
 
       - name: Format check
         run: test -z "$(gofmt -l .)"
