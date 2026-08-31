@@ -9,14 +9,23 @@ The CI pipeline runs on every push and PR. **All checks must pass.**
 | Job | Description | Checks |
 | --- | --- | --- |
 | `backend` | Go checks | build, vet, test -race, gofmt |
+| `backend-darwin` | Go checks (macOS) | Builds and tests on `macos-latest`; only compiler for `*_darwin.go` |
+| `backend-windows` | Go checks (Windows) | Builds and tests on `windows-latest` |
 | `govulncheck` | Go vulnerability scan | `govulncheck` (hard gate) |
 | `frontend` | React/TS checks | Biome lint, Vitest, tsc + Vite build |
+| `e2e` | Browser tests | Playwright, chromium + webkit |
+| `i18n` | Internationalization | Fleet-shared i18n validator |
+| `quality` | Code quality gates | banned vocabulary, file-size ratchet, theme contract |
+| `security` | Security scans | npm audit, gitleaks, Trivy |
 | `semgrep` | SAST | Fleet-shared Semgrep rules (`MustardSeedNetworks/.github`) |
+| `ci-conformance` | Fleet CI conformance | Reusable, from `MustardSeedNetworks/.github` |
+| `codeql-alert-gate` | CodeQL alert gate | Fails on open High/Critical alerts |
+| `ci-complete` | Aggregate gate | The required status check |
 
-Trellis has no C dataplane, no Playwright/E2E, no i18n, no Storybook, and no
-path-filtered `changes`/`ci-complete` dispatcher — it is a much smaller
-surface than seed/stem/niac today. Every job in `ci.yml` is a required
-status check directly; there is no aggregator to keep in sync.
+Trellis has no C dataplane and no Storybook, so it carries no `c-lint` or
+Storybook job. It does have E2E, i18n and a `ci-complete` aggregate — this
+section previously said it had none of those, which stopped being true as the
+jobs were added and nobody updated the page.
 
 ### Other Workflows
 
@@ -87,14 +96,18 @@ The npm version is still declared in the composite; `packageManager` in
 
 ```bash
 gh pr create --fill
-gh pr merge --auto --squash --delete-branch
+gh pr merge --auto
 ```
+
+`main` uses a **merge queue**, which rejects `--squash` and `--delete-branch`
+on `gh pr merge`: the queue owns the merge method. A queued PR reports
+`BLOCKED` with an entry under `mergeQueue`, not `CLEAN`.
 
 Fix issues locally first:
 
 ```bash
 go build ./... && go vet ./... && go test -race ./... && gofmt -l .
-cd ui && npm run lint && npm run test && npm run build
+cd ui && npm run lint && npm run test && npm run build && npm run test:e2e
 ```
 
 ## The Universal Build Contract
