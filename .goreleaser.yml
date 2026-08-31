@@ -46,6 +46,7 @@ before:
 builds:
   - id: trellis-linux-amd64
     main: ./cmd/trellisd
+    mod_timestamp: "{{ .CommitTimestamp }}"
     binary: trellisd
     env:
       - CGO_ENABLED=0
@@ -58,11 +59,12 @@ builds:
       - -s -w
       - -X github.com/MustardSeedNetworks/trellis/internal/version.Version={{.Version}}
       - -X github.com/MustardSeedNetworks/trellis/internal/version.Commit={{.Commit}}
-      - -X github.com/MustardSeedNetworks/trellis/internal/version.BuildTime={{.Date}}
+      - -X github.com/MustardSeedNetworks/trellis/internal/version.BuildTime={{.CommitDate}}
       - -X github.com/MustardSeedNetworks/trellis/internal/version.UIBuildHash={{.Env.UI_BUILD_HASH}}
 
   - id: trellis-linux-arm64
     main: ./cmd/trellisd
+    mod_timestamp: "{{ .CommitTimestamp }}"
     binary: trellisd
     env:
       - CGO_ENABLED=0
@@ -79,6 +81,7 @@ builds:
   # ErrUnsupported and the binary can never scan — so this must stay 1.
   - id: trellis-darwin
     main: ./cmd/trellisd
+    mod_timestamp: "{{ .CommitTimestamp }}"
     binary: trellisd
     env:
       - CGO_ENABLED=1
@@ -100,6 +103,7 @@ builds:
 
   - id: trellis-windows
     main: ./cmd/trellisd
+    mod_timestamp: "{{ .CommitTimestamp }}"
     binary: trellisd
     env:
       - CGO_ENABLED=0
