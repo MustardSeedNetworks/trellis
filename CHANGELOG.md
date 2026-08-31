@@ -1,5 +1,47 @@
 # Changelog
 
+## [0.2.17](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.16...v0.2.17) (2026-08-31)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @tanstack/react-query to v5.102.5 ([#225](https://github.com/MustardSeedNetworks/trellis/issues/225)) ([090ab13](https://github.com/MustardSeedNetworks/trellis/commit/090ab1375c9f8d6099f4324e3f461a5ade204849))
+* **deps:** update dependency @tanstack/react-query to v5.102.6 ([#233](https://github.com/MustardSeedNetworks/trellis/issues/233)) ([a652cbe](https://github.com/MustardSeedNetworks/trellis/commit/a652cbee8f6cbfe3efd4d6b88c750667bb4a7f54))
+* **deps:** update dependency @tanstack/react-query to v5.102.7 ([#237](https://github.com/MustardSeedNetworks/trellis/issues/237)) ([06b268c](https://github.com/MustardSeedNetworks/trellis/commit/06b268cabf59a1b505b53f42af83c927bd04c7ee))
+* **deps:** update dependency @tanstack/react-query to v5.102.8 ([#242](https://github.com/MustardSeedNetworks/trellis/issues/242)) ([5ffa551](https://github.com/MustardSeedNetworks/trellis/commit/5ffa5510b85932c1e857217ebb0c9c60c6e7cd8d))
+
+
+### Documentation
+
+* add a security policy that leads with the unauthenticated daemon ([#253](https://github.com/MustardSeedNetworks/trellis/issues/253)) ([ae6d9af](https://github.com/MustardSeedNetworks/trellis/commit/ae6d9afff0a23cc268316baeb36182a332d85863))
+* reconcile CI.md with the pipeline it describes ([#255](https://github.com/MustardSeedNetworks/trellis/issues/255)) ([a165252](https://github.com/MustardSeedNetworks/trellis/commit/a16525279eb51c42abd2547173c55c7b041f01c0))
+
+
+### Tests
+
+* **capture:** fail a cadence run that completed one scan ([#251](https://github.com/MustardSeedNetworks/trellis/issues/251)) ([1aff054](https://github.com/MustardSeedNetworks/trellis/commit/1aff0548f35fd89d0db9a1f033981b6b52b56e23))
+* **survey:** cover the .SurveyResult decoder and stop its oracle self-disabling ([#230](https://github.com/MustardSeedNetworks/trellis/issues/230)) ([dec4d92](https://github.com/MustardSeedNetworks/trellis/commit/dec4d92c51db143579aeac896a647f10324a29aa)), closes [#229](https://github.com/MustardSeedNetworks/trellis/issues/229)
+* turn off Node's unused webstorage global instead of warning per file ([#228](https://github.com/MustardSeedNetworks/trellis/issues/228)) ([a198a93](https://github.com/MustardSeedNetworks/trellis/commit/a198a931df4105236b115f9c5ca327d6db59b01b)), closes [#227](https://github.com/MustardSeedNetworks/trellis/issues/227)
+* **ui:** cover the survey pages and gate frontend coverage ([#232](https://github.com/MustardSeedNetworks/trellis/issues/232)) ([9b7648e](https://github.com/MustardSeedNetworks/trellis/commit/9b7648e773589b0d5b94c11dc43c7489f882c3da))
+
+
+### Continuous Integration
+
+* collect Go coverage and enforce an anti-regression floor ([#236](https://github.com/MustardSeedNetworks/trellis/issues/236)) ([5cae57f](https://github.com/MustardSeedNetworks/trellis/commit/5cae57fbe4dd292c49f1198c9626a21cc144aa74)), closes [#235](https://github.com/MustardSeedNetworks/trellis/issues/235)
+* fail the build on open High CodeQL alerts ([#239](https://github.com/MustardSeedNetworks/trellis/issues/239)) ([cbfc530](https://github.com/MustardSeedNetworks/trellis/commit/cbfc53004904f6074b3c9169230f42c7c906fe0a)), closes [#238](https://github.com/MustardSeedNetworks/trellis/issues/238)
+* make release builds reproducible ([#257](https://github.com/MustardSeedNetworks/trellis/issues/257)) ([34a3696](https://github.com/MustardSeedNetworks/trellis/commit/34a3696ed1f0693cc582c021bd1b394158db89aa))
+* pin the dead-code analysis tools ([#244](https://github.com/MustardSeedNetworks/trellis/issues/244)) ([a8aaabb](https://github.com/MustardSeedNetworks/trellis/commit/a8aaabb99fa950e767626ec5f4bd98f2220cb407)), closes [#243](https://github.com/MustardSeedNetworks/trellis/issues/243)
+* stop checkout persisting credentials into the workspace ([#241](https://github.com/MustardSeedNetworks/trellis/issues/241)) ([58c12ea](https://github.com/MustardSeedNetworks/trellis/commit/58c12eaa79a6ddb2f722504dfd132043140b4411)), closes [#240](https://github.com/MustardSeedNetworks/trellis/issues/240)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#245](https://github.com/MustardSeedNetworks/trellis/issues/245)) ([2f31550](https://github.com/MustardSeedNetworks/trellis/commit/2f315500c9b5abb49fc0281f35746f1969207b1f))
+* **deps:** update dependency @biomejs/biome to v2.5.11 ([#249](https://github.com/MustardSeedNetworks/trellis/issues/249)) ([644d81f](https://github.com/MustardSeedNetworks/trellis/commit/644d81f8f9b946649958dfc5e1633dc2b78b58fe))
+* **deps:** update dependency @testing-library/react to v16.3.3 ([#246](https://github.com/MustardSeedNetworks/trellis/issues/246)) ([98a0e33](https://github.com/MustardSeedNetworks/trellis/commit/98a0e339bed83a825efabfaf4e3d75f479bd7d94))
+* **deps:** update dependency @types/node to v26.4.0 ([#234](https://github.com/MustardSeedNetworks/trellis/issues/234)) ([ca3d06d](https://github.com/MustardSeedNetworks/trellis/commit/ca3d06d6c1afe63777de409ec1fdb42f44356b8f))
+* **npm:** soak package releases for seven days before resolving them ([#248](https://github.com/MustardSeedNetworks/trellis/issues/248)) ([9d6cbcf](https://github.com/MustardSeedNetworks/trellis/commit/9d6cbcfbfa0c7c592310e253a0d3faa6b8c17e8e))
+
 ## [0.2.16](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.15...v0.2.16) (2026-08-29)
 
 
