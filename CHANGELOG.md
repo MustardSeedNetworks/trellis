@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.18](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.17...v0.2.18) (2026-09-01)
+
+
+### Bug Fixes
+
+* **ci:** make the issue-title gate clear itself and accept the house style ([#262](https://github.com/MustardSeedNetworks/trellis/issues/262)) ([aa1f70e](https://github.com/MustardSeedNetworks/trellis/commit/aa1f70edbd46f520431be0ae4519fee28cbb1e3f))
+
+
+### Continuous Integration
+
+* never cancel a CI run on main ([#260](https://github.com/MustardSeedNetworks/trellis/issues/260)) ([33c1595](https://github.com/MustardSeedNetworks/trellis/commit/33c1595e0cd78de1152ac760fb29bc2774ae9f4a))
+
 ## [0.2.17](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.16...v0.2.17) (2026-08-31)
 
 
