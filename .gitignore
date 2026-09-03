@@ -33,3 +33,4 @@ coverage.out
 ui/playwright-report/
 ui/test-results/
 bin/
+ui/storybook-static/
