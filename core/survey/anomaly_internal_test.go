@@ -38,7 +38,7 @@ func surveyWith(samples ...*SamplePoint) *Survey {
 	}
 }
 
-func TestSurveyBSSViewsDedupKeepsStrongest(t *testing.T) {
+func TestBSSViewsDedupKeepsStrongest(t *testing.T) {
 	now := time.Unix(1000, 0)
 	later := time.Unix(2000, 0)
 	s := surveyWith(
@@ -50,7 +50,7 @@ func TestSurveyBSSViewsDedupKeepsStrongest(t *testing.T) {
 		}}},
 	)
 
-	views, at := surveyBSSViews(s)
+	views, at := bssViews(s.GetAllSamples())
 	if len(views) != 1 {
 		t.Fatalf("views = %d, want 1 (deduped by BSSID)", len(views))
 	}

@@ -568,3 +568,154 @@ func createTestSurveyWithThroughput() *survey.Survey {
 		},
 	}
 }
+
+// A floor walked before any plan was imported has samples and no plan, which
+// is every live survey until floorplan import exists. Sizing that floor from
+// its own measurements is what keeps its heatmap renderable; requiring a plan
+// here silently broke the walk when per-floor rendering was introduced.
+func TestGenerateFloorHeatmap_NoPlanSizesFromSamples(t *testing.T) {
+	t.Parallel()
+
+	floor := &survey.Floor{
+		ID:   "floor-1",
+		Name: "Floor 1",
+		Samples: []*survey.SamplePoint{
+			{X: 40, Y: 30, Timestamp: time.Now(), SampleData: &survey.PassiveSample{
+				Networks: []*wifi.ScannedNetwork{{Signal: -55, SNR: 30}},
+			}},
+			{X: 160, Y: 120, Timestamp: time.Now(), SampleData: &survey.PassiveSample{
+				Networks: []*wifi.ScannedNetwork{{Signal: -72, SNR: 18}},
+			}},
+		},
+	}
+
+	result, err := survey.GenerateFloorHeatmap(floor, survey.DefaultHeatmapConfig())
+	if err != nil {
+		t.Fatalf("GenerateFloorHeatmap on a plan-less floor: %v", err)
+	}
+	// The bounding box of the samples plus the renderer's padding, not a
+	// default canvas: a fixed size would crop or float the measurements.
+	if result.Width != 210 || result.Height != 170 {
+		t.Errorf("size = %dx%d, want 210x170 (max sample + padding)", result.Width, result.Height)
+	}
+	if result.SampleCount != 2 {
+		t.Errorf("SampleCount = %d, want 2", result.SampleCount)
+	}
+	if len(result.Image) == 0 {
+		t.Error("no PNG bytes for a floor that has measurements")
+	}
+}
+
+func TestGenerateFloorHeatmap_NoPlanNoSamples(t *testing.T) {
+	t.Parallel()
+
+	_, err := survey.GenerateFloorHeatmap(&survey.Floor{ID: "empty"}, survey.DefaultHeatmapConfig())
+	if err == nil {
+		t.Fatal("GenerateFloorHeatmap on an empty floor: want an error, got none")
+	}
+}
+
+// Each floor is drawn from its own measurements. Before per-floor rendering
+// every floor's samples were interpolated onto whichever plan was active, so
+// the two floors below would have produced the same picture.
+func TestGenerateFloorHeatmap_IsPerFloor(t *testing.T) {
+	t.Parallel()
+
+	plan := &survey.FloorPlan{Width: 200, Height: 200}
+	ground := &survey.Floor{ID: "g", Name: "Ground", FloorPlan: plan, Samples: []*survey.SamplePoint{
+		{X: 50, Y: 50, Timestamp: time.Now(), SampleData: &survey.PassiveSample{
+			Networks: []*wifi.ScannedNetwork{{Signal: -50, SNR: 40}},
+		}},
+	}}
+	upper := &survey.Floor{ID: "u", Name: "Upper", FloorPlan: plan, Samples: []*survey.SamplePoint{
+		{X: 50, Y: 50, Timestamp: time.Now(), SampleData: &survey.PassiveSample{
+			Networks: []*wifi.ScannedNetwork{{Signal: -85, SNR: 8}},
+		}},
+		{X: 150, Y: 150, Timestamp: time.Now(), SampleData: &survey.PassiveSample{
+			Networks: []*wifi.ScannedNetwork{{Signal: -80, SNR: 10}},
+		}},
+	}}
+
+	groundMap, err := survey.GenerateFloorHeatmap(ground, survey.DefaultHeatmapConfig())
+	if err != nil {
+		t.Fatalf("ground floor: %v", err)
+	}
+	upperMap, err := survey.GenerateFloorHeatmap(upper, survey.DefaultHeatmapConfig())
+	if err != nil {
+		t.Fatalf("upper floor: %v", err)
+	}
+
+	if groundMap.SampleCount != 1 || upperMap.SampleCount != 2 {
+		t.Errorf("sample counts = %d and %d, want 1 and 2 — each floor's own",
+			groundMap.SampleCount, upperMap.SampleCount)
+	}
+	// -50 dBm against -85/-80: the strong floor's own minimum must not be
+	// dragged down by the weak floor's measurements.
+	if groundMap.Stats.Min < -60 {
+		t.Errorf("ground floor min = %.1f dBm, want its own (~-50), not the upper floor's",
+			groundMap.Stats.Min)
+	}
+	if upperMap.Stats.Max > -70 {
+		t.Errorf("upper floor max = %.1f dBm, want its own (~-80)", upperMap.Stats.Max)
+	}
+}
+
+// The same split for coverage: a per-floor score is about that storey.
+func TestDetectFloorDeadZones_ScoresOneFloor(t *testing.T) {
+	t.Parallel()
+
+	strong := &survey.Floor{ID: "g", Name: "Ground", Samples: []*survey.SamplePoint{
+		{X: 10, Y: 10, Timestamp: time.Now(), SampleData: &survey.PassiveSample{
+			Networks: []*wifi.ScannedNetwork{{Signal: -50, SNR: 40}},
+		}},
+		{X: 90, Y: 90, Timestamp: time.Now(), SampleData: &survey.PassiveSample{
+			Networks: []*wifi.ScannedNetwork{{Signal: -55, SNR: 35}},
+		}},
+	}}
+	weak := &survey.Floor{ID: "u", Name: "Upper", Samples: []*survey.SamplePoint{
+		{X: 10, Y: 10, Timestamp: time.Now(), SampleData: &survey.PassiveSample{
+			Networks: []*wifi.ScannedNetwork{{Signal: -88, SNR: 6}},
+		}},
+		{X: 90, Y: 90, Timestamp: time.Now(), SampleData: &survey.PassiveSample{
+			Networks: []*wifi.ScannedNetwork{{Signal: -86, SNR: 7}},
+		}},
+	}}
+
+	strongAnalysis, err := survey.DetectFloorDeadZones("svy", strong, -75, nil)
+	if err != nil {
+		t.Fatalf("strong floor: %v", err)
+	}
+	weakAnalysis, err := survey.DetectFloorDeadZones("svy", weak, -75, nil)
+	if err != nil {
+		t.Fatalf("weak floor: %v", err)
+	}
+
+	if strongAnalysis.CoverageScore != 100 {
+		t.Errorf("strong floor score = %.1f, want 100 — no sample is below -75",
+			strongAnalysis.CoverageScore)
+	}
+	if len(strongAnalysis.DeadZones) != 0 {
+		t.Errorf("strong floor dead zones = %d, want 0", len(strongAnalysis.DeadZones))
+	}
+	if weakAnalysis.CoverageScore != 0 {
+		t.Errorf("weak floor score = %.1f, want 0 — every sample is below -75",
+			weakAnalysis.CoverageScore)
+	}
+	if len(weakAnalysis.DeadZones) == 0 {
+		t.Error("weak floor dead zones = 0, want at least one")
+	}
+	if weakAnalysis.SurveyID != "svy" {
+		t.Errorf("SurveyID = %q, want the survey's", weakAnalysis.SurveyID)
+	}
+}
+
+func TestDetectFloorDeadZones_EmptyFloor(t *testing.T) {
+	t.Parallel()
+
+	if _, err := survey.DetectFloorDeadZones("svy", &survey.Floor{ID: "e"}, -75, nil); err == nil {
+		t.Fatal("DetectFloorDeadZones on a floor with no samples: want an error, got none")
+	}
+	if _, err := survey.DetectFloorDeadZones("svy", nil, -75, nil); err == nil {
+		t.Fatal("DetectFloorDeadZones(nil): want an error, got none")
+	}
+}

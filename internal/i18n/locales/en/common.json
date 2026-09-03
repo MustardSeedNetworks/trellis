@@ -18,6 +18,7 @@
     "companyName": "Company name",
     "coverageScore": "Coverage score",
     "deadZones": "Dead zones",
+    "floor": "Floor",
     "floorPlan": "Floor plan",
     "floors": "Floors",
     "metric": "Metric",

@@ -34,6 +34,12 @@ service SurveyService {
   // GetCoverage runs dead-zone detection over a survey's measured samples.
   rpc GetCoverage(GetCoverageRequest) returns (GetCoverageResponse);
 
+  // ListFloors returns every floor of a survey, lowest level first.
+  rpc ListFloors(ListFloorsRequest) returns (ListFloorsResponse);
+
+  // GetFloor returns one floor of a survey by ID.
+  rpc GetFloor(GetFloorRequest) returns (GetFloorResponse);
+
   // GenerateReport renders a PDF report for a survey.
   rpc GenerateReport(GenerateReportRequest) returns (GenerateReportResponse);
 
@@ -107,10 +113,49 @@ message DeleteSurveyRequest {
 
 message DeleteSurveyResponse {}
 
+// Floor is one storey of a surveyed building, with the counts a caller needs
+// to decide whether it is worth drawing.
+message Floor {
+  string id = 1;
+  // Operator-facing name: "Floor 1", "Basement".
+  string name = 2;
+  // Storey number, which may be negative. Floors are ordered by it.
+  int32 level = 3;
+  int32 sample_count = 4;
+  bool has_floor_plan = 5;
+  // The floor the survey collects onto, and the one the heatmap and coverage
+  // RPCs read when a request names no floor.
+  bool is_active = 6;
+}
+
+message ListFloorsRequest {
+  string survey_id = 1;
+}
+
+message ListFloorsResponse {
+  repeated Floor floors = 1;
+}
+
+message GetFloorRequest {
+  string survey_id = 1;
+  string floor_id = 2;
+}
+
+message GetFloorResponse {
+  Floor floor = 1;
+}
+
 message GetHeatmapRequest {
   string survey_id = 1;
   // Heatmap metric: "rssi" or "snr". Defaults to "rssi".
   string metric = 2;
+  // Floor to render. Empty means the survey's active floor.
+  //
+  // Naming a floor renders that floor's own samples on its own plan. Without
+  // it a multi-floor survey interpolates every floor's measurements onto
+  // whichever plan happens to be active, which is only right when there is
+  // one floor.
+  string floor_id = 3;
 }
 
 message GetHeatmapResponse {
@@ -143,6 +188,9 @@ message GetCoverageRequest {
   string survey_id = 1;
   // Dead-zone threshold in dBm. Defaults to -75.
   int32 threshold_dbm = 2;
+  // Floor to analyse. Empty means every floor's samples together, which is
+  // the whole-survey verdict; naming a floor scores that floor alone.
+  string floor_id = 3;
 }
 
 message GetCoverageResponse {
