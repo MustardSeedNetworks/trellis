@@ -28,26 +28,38 @@ func newScanner() (survey.Scanner, error) {
 }
 
 // scriptedScanner answers every scan with the same three BSSs, one of which
-// weakens a little on each call. A perfectly flat field is a degenerate heatmap
-// with an empty colour range; a field with some variation is the picture an
-// operator would expect from three points on a floor.
+// weakens on each call and then recovers, cycling through four levels. A
+// perfectly flat field is a degenerate heatmap with an empty colour range; a
+// field with some variation is the picture an operator would expect from three
+// points on a floor.
+//
+// The fade cycles rather than accumulates because the counter is shared by
+// every survey the daemon serves. Two browser projects walking in parallel
+// drove an earlier version past the store's -110 dBm floor by the twelfth scan,
+// and every capture after that was refused.
 type scriptedScanner struct {
 	scans atomic.Int64
 }
 
-// fadePerScanDBm is how much the walked-away-from AP loses per capture.
-const fadePerScanDBm = 6
+// fadePerScanDBm is how much the walked-away-from AP loses per capture, and
+// fadeSteps how many captures it fades for before the cycle restarts. The
+// weakest level, -66 dBm, stays above the default -75 dBm dead-zone floor so a
+// walk reads as covered until the threshold is raised.
+const (
+	fadePerScanDBm = 6
+	fadeSteps      = 4
+)
 
 func (s *scriptedScanner) Scan(ctx context.Context) ([]wifi.ScannedNetwork, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	n := int(s.scans.Add(1))
+	fade := int((s.scans.Add(1)-1)%fadeSteps) * fadePerScanDBm
 	seen := time.Now().UTC()
 	return []wifi.ScannedNetwork{
-		{SSID: "Trellis Lab", BSSID: "02:00:00:00:00:01", Signal: -48 - n*fadePerScanDBm,
+		{SSID: "Trellis Lab", BSSID: "02:00:00:00:00:01", Signal: -48 - fade,
 			Channel: 36, Frequency: 5180, Security: "WPA3", ChannelWidth: 80,
-			NoiseFloor: -95, SNR: 47 - n*fadePerScanDBm, HTMode: "VHT80", LastSeen: seen},
+			NoiseFloor: -95, SNR: 47 - fade, HTMode: "VHT80", LastSeen: seen},
 		{SSID: "Trellis Lab", BSSID: "02:00:00:00:00:02", Signal: -62,
 			Channel: 6, Frequency: 2437, Security: "WPA2", ChannelWidth: 20,
 			NoiseFloor: -95, SNR: 33, HTMode: "HT20", LastSeen: seen},

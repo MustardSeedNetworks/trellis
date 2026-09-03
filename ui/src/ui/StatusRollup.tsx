@@ -108,6 +108,7 @@ export const StatusRollup: FC<StatusRollupProps> = ({
   return (
     <section
       data-state={state}
+      data-testid="status-rollup"
       aria-live="polite"
       className={`relative overflow-hidden rounded-[18px] border border-hairline bg-surface-raised ${styles.wash} ${className}`}
     >
