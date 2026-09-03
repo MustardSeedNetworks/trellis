@@ -51,16 +51,17 @@ export default defineConfig({
     // and is unset on the Ubuntu runners, so the path collapsed to
     // /trellisd-e2e and the webServer never started.
     //
-    // `go build` then run, not `go run`. go run does not stamp VCS metadata, so
-    // /__version reports commit "unknown" and the build-contract assertion in
-    // handshake.spec.ts fails for a reason that has nothing to do with the
-    // product. Building first is also closer to what ships.
+    // Built through the Makefile, not `go run` or a bare `go build`: the
+    // contract's ldflags are what stamp version, commit, build time and the UI
+    // hash into /__version, and handshake.spec.ts asserts all four. A bare
+    // build passes three of them by VCS fallback and fails the hash, which is
+    // the exact gap the assertion exists to catch.
     //
-    // `-tags e2e` swaps the radio for a scripted scanner (cmd/trellisd/
+    // build-e2e swaps the radio for a scripted scanner (cmd/trellisd/
     // scanner_e2e.go) and nothing else: the runners have no Wi-Fi adapter, so
     // the walk in survey-walk.spec.ts could not otherwise store a point.
     command:
-      'cd .. && go build -tags e2e -o bin/trellisd-e2e ./cmd/trellisd && ' +
+      'cd .. && make build-e2e && ' +
       'TRELLIS_ADDR=127.0.0.1:18446 TRELLIS_DATA_DIR="$(mktemp -d)" bin/trellisd-e2e',
     url: `${baseURL}/__version`,
     reuseExistingServer: false,

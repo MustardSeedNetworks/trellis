@@ -130,7 +130,9 @@ jobs:
       - name: Compute UI build hash
         id: ui-hash
         run: |
-          UI_BUILD_HASH=$(find internal/api/ui -type f -exec md5sum {} \; | sort | md5sum | cut -d' ' -f1)
+          # The same script the Makefile, the macOS bundle and the E2E daemon
+          # use, so a released binary and a `make build` agree on the hash.
+          UI_BUILD_HASH=$(./scripts/ui-build-hash.sh)
           echo "hash=$UI_BUILD_HASH" >> "$GITHUB_OUTPUT"
 
       - name: Upload UI dist

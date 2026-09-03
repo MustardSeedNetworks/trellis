@@ -51,7 +51,7 @@ if [ ! -f "$REPO_ROOT/internal/api/ui/index.html" ]; then
     exit 1
 fi
 
-UI_BUILD_HASH="$(find "$REPO_ROOT/internal/api/ui" -type f -exec md5 -q {} + | sort | md5 -q)"
+UI_BUILD_HASH="$("$REPO_ROOT/scripts/ui-build-hash.sh" "$REPO_ROOT/internal/api/ui")"
 COMMIT="$(git -C "$REPO_ROOT" rev-parse --short HEAD)"
 BUILD_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
