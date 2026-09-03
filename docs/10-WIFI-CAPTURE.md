@@ -100,7 +100,10 @@ The same log is the only place a bundle announces its address. `trellisd` binds
 the fleet convention, and the difference here between an app that moved and an
 app that appears not to start at all. The `trellisd listening` line names the
 address to open; a `TRELLIS_ADDR` given by an operator is taken literally and
-fails rather than moving.
+fails rather than moving. It must also be a loopback address: the daemon has no
+authentication or TLS, so a routable address is refused at startup with a
+message pointing at #160, where serving another device is tracked as a feature
+gated on both.
 
 Environment variables *do* reach the app when it is launched with `open` from a
 shell (`TRELLIS_ADDR=… open -a Trellis.app` works), but not when it is started

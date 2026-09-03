@@ -22,11 +22,10 @@ import (
 )
 
 const (
-	// defaultAddr binds loopback only. This server currently has no
-	// authentication or TLS (both are tracked follow-ups before any
-	// non-local deployment), so it must not be exposed on all interfaces by
-	// default. An operator who understands the trade-off can override with
-	// TRELLIS_ADDR — and owns adding auth/TLS in front of it.
+	// defaultAddr binds loopback only, and so must any TRELLIS_ADDR: the
+	// server has no authentication, TLS or CSRF, and requireLoopback refuses
+	// an address that would put it on a network. Serving another device is
+	// #160, a feature gated on those three landing first.
 	defaultAddr         = "127.0.0.1:8446"
 	shutdownGracePeriod = 10 * time.Second
 	readHeaderTimeout   = 5 * time.Second
@@ -68,6 +67,9 @@ func run() error {
 	explicitAddr := addr != ""
 	if !explicitAddr {
 		addr = defaultAddr
+	}
+	if err := requireLoopback(addr); err != nil {
+		return err
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
