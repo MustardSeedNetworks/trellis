@@ -1,10 +1,10 @@
 # Seed → Trellis — Survey Migration Inventory
 
 Seed already grew a **mature, tested, measured-survey subsystem** (a licensed Wi-Fi
-feature). Under the "all Wi-Fi → Trellis" decision (`08-SEED-TRELLIS-BOUNDARY.md`) it
-migrates here. This doc inventories what moves, what's reused as-is, and what's net-new
-— so Trellis is a **migrate-and-extend**, not a greenfield, for everything except the
-predictive engine.
+feature). Under the survey/planning-ownership decision (`08-SEED-TRELLIS-BOUNDARY.md`,
+2026-09-03: Trellis owns survey/planning) it migrates here. This doc inventories what
+moves, what's reused as-is, and what's net-new — so Trellis is a **migrate-and-extend**,
+not a greenfield, for everything except the predictive engine.
 
 ## What Seed has today (measured-survey only — confirmed)
 `seed/internal/wifi/survey/` — **~3,868 LOC Go, 10 src + 12 test files**, plus API
