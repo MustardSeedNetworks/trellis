@@ -179,7 +179,16 @@ func parseSerialFile(file *zip.File) (*SerialMetadata, error) {
 	return &serial, nil
 }
 
-// readZipFile reads the contents of a file from a ZIP archive.
+// maxArchiveEntryBytes caps what a single archive member may inflate to. The
+// daemon already caps the compressed request at 64 MiB; a member is allowed
+// the same, which no real floor plan or .SurveyResult approaches, while a
+// crafted archive that is small on the wire and huge inflated is stopped here
+// rather than in the allocator.
+const maxArchiveEntryBytes = 64 << 20
+
+// readZipFile reads one member of the archive, refusing it once it inflates
+// past maxArchiveEntryBytes. The header's own size claim is not consulted: a
+// hostile archive can write whatever it likes there.
 func readZipFile(file *zip.File) ([]byte, error) {
 	rc, err := file.Open()
 	if err != nil {
@@ -187,7 +196,16 @@ func readZipFile(file *zip.File) ([]byte, error) {
 	}
 	defer func() { _ = rc.Close() }()
 
-	return io.ReadAll(rc)
+	// One byte past the cap is read so overflow is observable: a reader limited
+	// to exactly the cap returns a full buffer for both "fits" and "too big".
+	data, err := io.ReadAll(io.LimitReader(rc, maxArchiveEntryBytes+1))
+	if err != nil {
+		return nil, err
+	}
+	if len(data) > maxArchiveEntryBytes {
+		return nil, fmt.Errorf("%w: %s inflates past %d bytes", ErrArchiveEntryTooLarge, file.Name, maxArchiveEntryBytes)
+	}
+	return data, nil
 }
 
 // ToImportResult converts an AirMapperFile to an AirMapperImportResult.
