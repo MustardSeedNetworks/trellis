@@ -16,6 +16,7 @@
       "!**/package-lock.json",
       "!**/src/gen",
       "!playwright-report",
+      "!storybook-static",
       "!test-results"
     ]
   },

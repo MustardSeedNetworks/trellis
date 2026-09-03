@@ -28,5 +28,5 @@
     },
     "resolveJsonModule": true
   },
-  "include": ["src", "../internal/i18n/locales"]
+  "include": ["src", ".storybook", "../internal/i18n/locales"]
 }

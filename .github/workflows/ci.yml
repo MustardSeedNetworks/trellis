@@ -463,6 +463,11 @@ jobs:
       - name: Lint (Biome)
         run: npm run lint
 
+      # Blocking, like the other three repos (#145). The script sat in the tree
+      # with no workflow running it, which is a gate that enforces nothing.
+      - name: Design token discipline
+        run: ../scripts/check-token-discipline.sh
+
       # test:coverage, not test: the thresholds in ui/vitest.config.ts are the
       # gate. Running plain `npm run test` executed every case and asked
       # nothing about what they covered, which is how three survey files
@@ -472,6 +477,70 @@ jobs:
 
       - name: Build (tsc strict + vite)
         run: npm run build
+
+  # ============================================================================
+  # Storybook interaction and accessibility checks
+  # ============================================================================
+  # Trellis was the only UI repo without this gate. Stories render every
+  # component in real chromium with axe set to error, which is the one place
+  # colour contrast can be evaluated: jsdom has no canvas, so axe files it as
+  # 'incomplete' there and nothing fails.
+  storybook:
+    name: Storybook interactions and accessibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: ui
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-node
+
+      - name: Install
+        run: npm ci
+
+      # Split from the browser download because `--with-deps` runs apt, and
+      # bundling them leaves the apt half with no step budget and no dpkg lock
+      # bound. seed lost a whole job budget to exactly that.
+      - name: Install Chromium OS dependencies
+        uses: MustardSeedNetworks/.github/.github/actions/apt-install@a146506fd53fe5e01fdc01892dd838c10081d183 # v1.9.0
+        timeout-minutes: 10
+        with:
+          # cd ui explicitly: the job's defaults.run.working-directory does not
+          # reach inside a composite action's own steps.
+          command: cd ui && node ./node_modules/playwright/cli.js install-deps chromium
+
+      # Retried: the download fails intermittently with exit code 100, and an
+      # unretried failure has taken down merge-queue runs in the sibling repos.
+      - name: Install Chromium
+        timeout-minutes: 10
+        run: |
+          for attempt in 1 2 3; do
+            if node ./node_modules/playwright/cli.js install chromium; then
+              exit 0
+            fi
+            echo "::warning::Chromium download failed (attempt ${attempt}/3)"
+            sleep $((attempt * 15))
+          done
+          echo "::error::Chromium download failed after 3 attempts"
+          exit 1
+
+      - name: Run interaction and accessibility tests
+        env:
+          STORYBOOK_DISABLE_TELEMETRY: "1"
+        run: npm run test:storybook
+
+      # A harness that has never been shown to fail is not worth trusting.
+      # This re-runs the gate story with a defect injected — once a broken
+      # interaction, once an accessibility violation — and requires red.
+      - name: Verify injected defects fail the gate
+        env:
+          STORYBOOK_DISABLE_TELEMETRY: "1"
+        run: npm run test:storybook:contract
 
   # ============================================================================
   # Internationalization (i18n) Validation
@@ -553,6 +622,7 @@ jobs:
       - govulncheck
       - security
       - frontend
+      - storybook
       - e2e
       - i18n
       - semgrep
