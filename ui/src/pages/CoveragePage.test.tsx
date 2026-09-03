@@ -14,12 +14,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CoveragePage } from './CoveragePage';
 
 const listSurveys = vi.fn();
+const listFloors = vi.fn();
 const getHeatmap = vi.fn();
 const getCoverage = vi.fn();
 
 vi.mock('@/lib/client', () => ({
   surveyClient: {
     listSurveys: (req: unknown) => listSurveys(req),
+    listFloors: (req: unknown) => listFloors(req),
     getHeatmap: (req: unknown) => getHeatmap(req),
     getCoverage: (req: unknown) => getCoverage(req),
   },
@@ -64,9 +66,11 @@ const heatmapReply = {
 
 beforeEach(() => {
   listSurveys.mockReset();
+  listFloors.mockReset();
   getHeatmap.mockReset();
   getCoverage.mockReset();
   listSurveys.mockResolvedValue({ surveys: [survey] });
+  listFloors.mockResolvedValue({ floors: [] });
   getHeatmap.mockResolvedValue(heatmapReply);
   getCoverage.mockResolvedValue({ coverageScore: 82.4, deadZoneCount: 2, recommendations: [] });
 });
@@ -131,7 +135,7 @@ describe('CoveragePage', () => {
     renderPage('/coverage?survey=svy-2');
 
     await waitFor(() =>
-      expect(getHeatmap).toHaveBeenCalledWith({ surveyId: 'svy-2', metric: 'rssi' }),
+      expect(getHeatmap).toHaveBeenCalledWith({ surveyId: 'svy-2', metric: 'rssi', floorId: '' }),
     );
   });
 
@@ -149,5 +153,84 @@ describe('CoveragePage', () => {
       expect(call[0].thresholdDbm).not.toBe(0);
     }
     expect(screen.getByLabelText(/dead zone below/i)).toHaveValue(-75);
+  });
+
+  /**
+   * Floors — the picker exists so a multi-floor survey can be read one storey
+   * at a time. The service answers about the active floor when a request names
+   * none, so an unnamed floor must stay unnamed rather than being filled in.
+   */
+  describe('floors', () => {
+    const twoFloors = { ...survey, floorCount: 2 };
+    const floors = [
+      {
+        id: 'flr-basement',
+        name: 'Basement',
+        level: -1,
+        sampleCount: 3,
+        hasFloorPlan: false,
+        isActive: false,
+      },
+      {
+        id: 'flr-ground',
+        name: 'Floor 1',
+        level: 0,
+        sampleCount: 2,
+        hasFloorPlan: true,
+        isActive: true,
+      },
+    ];
+
+    it('does not ask for floors a single-floor survey cannot have', async () => {
+      renderPage();
+
+      await waitFor(() => expect(getHeatmap).toHaveBeenCalled());
+      expect(listFloors).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('coverage-floor')).not.toBeInTheDocument();
+      // Empty, not the active floor's id: the page does not know it.
+      expect(getHeatmap).toHaveBeenCalledWith({ surveyId: 'svy-1', metric: 'rssi', floorId: '' });
+    });
+
+    it('analyses the floor the picker names, heatmap and coverage together', async () => {
+      listSurveys.mockResolvedValue({ surveys: [twoFloors] });
+      listFloors.mockResolvedValue({ floors });
+
+      renderPage('/coverage?survey=svy-1');
+
+      const picker = await screen.findByTestId('coverage-floor');
+      // The active floor is the selection until someone chooses otherwise.
+      expect(picker).toHaveValue('');
+
+      fireEvent.change(picker, { target: { value: 'flr-basement' } });
+
+      await waitFor(() =>
+        expect(getHeatmap).toHaveBeenCalledWith({
+          surveyId: 'svy-1',
+          metric: 'rssi',
+          floorId: 'flr-basement',
+        }),
+      );
+      // Coverage follows the same floor: a score for one storey beside a
+      // picture of another is the defect this guards.
+      await waitFor(() =>
+        expect(getCoverage).toHaveBeenCalledWith({
+          surveyId: 'svy-1',
+          thresholdDbm: -75,
+          floorId: 'flr-basement',
+        }),
+      );
+    });
+
+    it('falls back to the active floor when the URL names one this survey lacks', async () => {
+      listSurveys.mockResolvedValue({ surveys: [twoFloors] });
+      listFloors.mockResolvedValue({ floors });
+
+      renderPage('/coverage?survey=svy-1&floor=flr-of-another-survey');
+
+      await waitFor(() => expect(screen.getByTestId('heatmap-image')).toBeInTheDocument());
+      for (const call of getHeatmap.mock.calls) {
+        expect(call[0].floorId).not.toBe('flr-of-another-survey');
+      }
+    });
   });
 });

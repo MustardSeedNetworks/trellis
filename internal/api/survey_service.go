@@ -110,7 +110,8 @@ func (h *SurveyServiceHandler) DeleteSurvey(
 	return connect.NewResponse(&surveyv1.DeleteSurveyResponse{}), nil
 }
 
-// GetHeatmap renders a measured-signal heatmap for a survey's active floor.
+// GetHeatmap renders a measured-signal heatmap for the floor a request names,
+// or the survey's active floor when it names none.
 func (h *SurveyServiceHandler) GetHeatmap(
 	_ context.Context,
 	req *connect.Request[surveyv1.GetHeatmapRequest],
@@ -132,7 +133,12 @@ func (h *SurveyServiceHandler) GetHeatmap(
 		config.Type = survey.HeatmapRSSI
 	}
 
-	result, err := survey.GenerateHeatmap(svy, config)
+	floor, err := floorOf(svy, req.Msg.GetFloorId())
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := survey.GenerateFloorHeatmap(floor, config)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
@@ -162,7 +168,7 @@ func legendStops(scale survey.ColorScale) []*surveyv1.LegendStop {
 	return stops
 }
 
-// GetCoverage runs dead-zone detection over a survey's measured samples.
+// GetCoverage runs dead-zone detection over one floor's measured samples.
 func (h *SurveyServiceHandler) GetCoverage(
 	_ context.Context,
 	req *connect.Request[surveyv1.GetCoverageRequest],
@@ -182,7 +188,15 @@ func (h *SurveyServiceHandler) GetCoverage(
 		threshold = defaultDeadZoneThresholdDBm
 	}
 
-	analysis, err := survey.DetectDeadZones(svy, threshold, nil)
+	// Coverage is scored per floor, like the heatmap beside it: a whole-survey
+	// score would answer a question about the building while the picture on
+	// screen shows one storey.
+	floor, err := floorOf(svy, req.Msg.GetFloorId())
+	if err != nil {
+		return nil, err
+	}
+
+	analysis, err := survey.DetectFloorDeadZones(svy.ID, floor, threshold, nil)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}

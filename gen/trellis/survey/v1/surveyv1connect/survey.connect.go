@@ -58,6 +58,11 @@ const (
 	// SurveyServiceGetCoverageProcedure is the fully-qualified name of the SurveyService's GetCoverage
 	// RPC.
 	SurveyServiceGetCoverageProcedure = "/trellis.survey.v1.SurveyService/GetCoverage"
+	// SurveyServiceListFloorsProcedure is the fully-qualified name of the SurveyService's ListFloors
+	// RPC.
+	SurveyServiceListFloorsProcedure = "/trellis.survey.v1.SurveyService/ListFloors"
+	// SurveyServiceGetFloorProcedure is the fully-qualified name of the SurveyService's GetFloor RPC.
+	SurveyServiceGetFloorProcedure = "/trellis.survey.v1.SurveyService/GetFloor"
 	// SurveyServiceGenerateReportProcedure is the fully-qualified name of the SurveyService's
 	// GenerateReport RPC.
 	SurveyServiceGenerateReportProcedure = "/trellis.survey.v1.SurveyService/GenerateReport"
@@ -96,6 +101,10 @@ type SurveyServiceClient interface {
 	GetHeatmap(context.Context, *connect.Request[v1.GetHeatmapRequest]) (*connect.Response[v1.GetHeatmapResponse], error)
 	// GetCoverage runs dead-zone detection over a survey's measured samples.
 	GetCoverage(context.Context, *connect.Request[v1.GetCoverageRequest]) (*connect.Response[v1.GetCoverageResponse], error)
+	// ListFloors returns every floor of a survey, lowest level first.
+	ListFloors(context.Context, *connect.Request[v1.ListFloorsRequest]) (*connect.Response[v1.ListFloorsResponse], error)
+	// GetFloor returns one floor of a survey by ID.
+	GetFloor(context.Context, *connect.Request[v1.GetFloorRequest]) (*connect.Response[v1.GetFloorResponse], error)
 	// GenerateReport renders a PDF report for a survey.
 	GenerateReport(context.Context, *connect.Request[v1.GenerateReportRequest]) (*connect.Response[v1.GenerateReportResponse], error)
 	// CreateSurvey opens a new, empty survey to walk. The measured counterpart
@@ -169,6 +178,18 @@ func NewSurveyServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(surveyServiceMethods.ByName("GetCoverage")),
 			connect.WithClientOptions(opts...),
 		),
+		listFloors: connect.NewClient[v1.ListFloorsRequest, v1.ListFloorsResponse](
+			httpClient,
+			baseURL+SurveyServiceListFloorsProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("ListFloors")),
+			connect.WithClientOptions(opts...),
+		),
+		getFloor: connect.NewClient[v1.GetFloorRequest, v1.GetFloorResponse](
+			httpClient,
+			baseURL+SurveyServiceGetFloorProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("GetFloor")),
+			connect.WithClientOptions(opts...),
+		),
 		generateReport: connect.NewClient[v1.GenerateReportRequest, v1.GenerateReportResponse](
 			httpClient,
 			baseURL+SurveyServiceGenerateReportProcedure,
@@ -222,6 +243,8 @@ type surveyServiceClient struct {
 	deleteSurvey    *connect.Client[v1.DeleteSurveyRequest, v1.DeleteSurveyResponse]
 	getHeatmap      *connect.Client[v1.GetHeatmapRequest, v1.GetHeatmapResponse]
 	getCoverage     *connect.Client[v1.GetCoverageRequest, v1.GetCoverageResponse]
+	listFloors      *connect.Client[v1.ListFloorsRequest, v1.ListFloorsResponse]
+	getFloor        *connect.Client[v1.GetFloorRequest, v1.GetFloorResponse]
 	generateReport  *connect.Client[v1.GenerateReportRequest, v1.GenerateReportResponse]
 	createSurvey    *connect.Client[v1.CreateSurveyRequest, v1.CreateSurveyResponse]
 	startSurvey     *connect.Client[v1.StartSurveyRequest, v1.StartSurveyResponse]
@@ -259,6 +282,16 @@ func (c *surveyServiceClient) GetHeatmap(ctx context.Context, req *connect.Reque
 // GetCoverage calls trellis.survey.v1.SurveyService.GetCoverage.
 func (c *surveyServiceClient) GetCoverage(ctx context.Context, req *connect.Request[v1.GetCoverageRequest]) (*connect.Response[v1.GetCoverageResponse], error) {
 	return c.getCoverage.CallUnary(ctx, req)
+}
+
+// ListFloors calls trellis.survey.v1.SurveyService.ListFloors.
+func (c *surveyServiceClient) ListFloors(ctx context.Context, req *connect.Request[v1.ListFloorsRequest]) (*connect.Response[v1.ListFloorsResponse], error) {
+	return c.listFloors.CallUnary(ctx, req)
+}
+
+// GetFloor calls trellis.survey.v1.SurveyService.GetFloor.
+func (c *surveyServiceClient) GetFloor(ctx context.Context, req *connect.Request[v1.GetFloorRequest]) (*connect.Response[v1.GetFloorResponse], error) {
+	return c.getFloor.CallUnary(ctx, req)
 }
 
 // GenerateReport calls trellis.survey.v1.SurveyService.GenerateReport.
@@ -311,6 +344,10 @@ type SurveyServiceHandler interface {
 	GetHeatmap(context.Context, *connect.Request[v1.GetHeatmapRequest]) (*connect.Response[v1.GetHeatmapResponse], error)
 	// GetCoverage runs dead-zone detection over a survey's measured samples.
 	GetCoverage(context.Context, *connect.Request[v1.GetCoverageRequest]) (*connect.Response[v1.GetCoverageResponse], error)
+	// ListFloors returns every floor of a survey, lowest level first.
+	ListFloors(context.Context, *connect.Request[v1.ListFloorsRequest]) (*connect.Response[v1.ListFloorsResponse], error)
+	// GetFloor returns one floor of a survey by ID.
+	GetFloor(context.Context, *connect.Request[v1.GetFloorRequest]) (*connect.Response[v1.GetFloorResponse], error)
 	// GenerateReport renders a PDF report for a survey.
 	GenerateReport(context.Context, *connect.Request[v1.GenerateReportRequest]) (*connect.Response[v1.GenerateReportResponse], error)
 	// CreateSurvey opens a new, empty survey to walk. The measured counterpart
@@ -380,6 +417,18 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(surveyServiceMethods.ByName("GetCoverage")),
 		connect.WithHandlerOptions(opts...),
 	)
+	surveyServiceListFloorsHandler := connect.NewUnaryHandler(
+		SurveyServiceListFloorsProcedure,
+		svc.ListFloors,
+		connect.WithSchema(surveyServiceMethods.ByName("ListFloors")),
+		connect.WithHandlerOptions(opts...),
+	)
+	surveyServiceGetFloorHandler := connect.NewUnaryHandler(
+		SurveyServiceGetFloorProcedure,
+		svc.GetFloor,
+		connect.WithSchema(surveyServiceMethods.ByName("GetFloor")),
+		connect.WithHandlerOptions(opts...),
+	)
 	surveyServiceGenerateReportHandler := connect.NewUnaryHandler(
 		SurveyServiceGenerateReportProcedure,
 		svc.GenerateReport,
@@ -436,6 +485,10 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 			surveyServiceGetHeatmapHandler.ServeHTTP(w, r)
 		case SurveyServiceGetCoverageProcedure:
 			surveyServiceGetCoverageHandler.ServeHTTP(w, r)
+		case SurveyServiceListFloorsProcedure:
+			surveyServiceListFloorsHandler.ServeHTTP(w, r)
+		case SurveyServiceGetFloorProcedure:
+			surveyServiceGetFloorHandler.ServeHTTP(w, r)
 		case SurveyServiceGenerateReportProcedure:
 			surveyServiceGenerateReportHandler.ServeHTTP(w, r)
 		case SurveyServiceCreateSurveyProcedure:
@@ -481,6 +534,14 @@ func (UnimplementedSurveyServiceHandler) GetHeatmap(context.Context, *connect.Re
 
 func (UnimplementedSurveyServiceHandler) GetCoverage(context.Context, *connect.Request[v1.GetCoverageRequest]) (*connect.Response[v1.GetCoverageResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.GetCoverage is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) ListFloors(context.Context, *connect.Request[v1.ListFloorsRequest]) (*connect.Response[v1.ListFloorsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.ListFloors is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) GetFloor(context.Context, *connect.Request[v1.GetFloorRequest]) (*connect.Response[v1.GetFloorResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.GetFloor is not implemented"))
 }
 
 func (UnimplementedSurveyServiceHandler) GenerateReport(context.Context, *connect.Request[v1.GenerateReportRequest]) (*connect.Response[v1.GenerateReportResponse], error) {

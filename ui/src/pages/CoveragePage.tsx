@@ -64,15 +64,40 @@ export function CoveragePage() {
   const surveyId = requestedId ?? surveys[0]?.id;
   const listed = surveys.some((survey) => survey.id === surveyId);
 
+  /* Floors are only fetched for a survey that has more than one. A
+     single-floor survey is the common case and its one floor is the active
+     one, which is what the service reads when a request names none. */
+  const floorCount = surveys.find((survey) => survey.id === surveyId)?.floorCount ?? 0;
+  const floorsQuery = useQuery({
+    queryKey: ['floors', surveyId],
+    queryFn: () => surveyClient.listFloors({ surveyId: surveyId ?? '' }),
+    enabled: surveyId !== undefined && floorCount > 1,
+  });
+
+  const floors = floorsQuery.data?.floors ?? [];
+  /* The floor is in the URL for the same reason the survey is: a floor worth
+     showing someone is a link. Empty means the active floor, which is how a
+     link to a survey without a floor keeps working. */
+  const requestedFloorId = searchParams.get('floor') ?? '';
+  /* A floor named in the URL that this survey does not have would be answered
+     with NotFound. Falling back to the active floor is right here — the stale
+     part of the link is the floor, and the survey it names is still the one
+     being analysed. */
+  const floorId =
+    requestedFloorId !== '' && floors.some((floor) => floor.id === requestedFloorId)
+      ? requestedFloorId
+      : '';
+
   const heatmapQuery = useQuery({
-    queryKey: ['heatmap', surveyId, metric],
-    queryFn: () => surveyClient.getHeatmap({ surveyId: surveyId ?? '', metric }),
+    queryKey: ['heatmap', surveyId, metric, floorId],
+    queryFn: () => surveyClient.getHeatmap({ surveyId: surveyId ?? '', metric, floorId }),
     enabled: surveyId !== undefined,
   });
 
   const coverageQuery = useQuery({
-    queryKey: ['coverage', surveyId, threshold],
-    queryFn: () => surveyClient.getCoverage({ surveyId: surveyId ?? '', thresholdDbm: threshold }),
+    queryKey: ['coverage', surveyId, threshold, floorId],
+    queryFn: () =>
+      surveyClient.getCoverage({ surveyId: surveyId ?? '', thresholdDbm: threshold, floorId }),
     enabled: surveyId !== undefined,
   });
 
@@ -112,6 +137,33 @@ export function CoveragePage() {
             ))}
           </select>
         </label>
+
+        {floors.length > 1 ? (
+          <label className="flex items-center gap-2 text-sm" htmlFor="coverage-floor">
+            <span className="kicker">{t('common:labels.floor')}</span>
+            <select
+              id="coverage-floor"
+              value={floorId}
+              onChange={(event) =>
+                setSearchParams(
+                  event.target.value === ''
+                    ? { survey: surveyId ?? '' }
+                    : { survey: surveyId ?? '', floor: event.target.value },
+                )
+              }
+              className="rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
+              data-testid="coverage-floor"
+            >
+              {/* The active floor by name rather than a blank row: "which floor
+                  is this" must be answerable without opening the list. */}
+              {floors.map((floor) => (
+                <option key={floor.id} value={floor.isActive ? '' : floor.id}>
+                  {floor.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
 
         <div className="flex items-center gap-2">
           <span className="kicker">{t('common:labels.metric')}</span>

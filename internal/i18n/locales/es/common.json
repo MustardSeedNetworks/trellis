@@ -18,6 +18,7 @@
     "companyName": "Nombre de la empresa",
     "coverageScore": "Puntuación de cobertura",
     "deadZones": "Zonas muertas",
+    "floor": "Planta",
     "floorPlan": "Plano de planta",
     "floors": "Plantas",
     "metric": "Métrica",

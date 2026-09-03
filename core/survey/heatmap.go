@@ -135,14 +135,15 @@ func GenerateFloorHeatmap(floor *Floor, config HeatmapConfig) (*HeatmapResult, e
 	if floor == nil {
 		return nil, errors.New("floor is nil")
 	}
-	if floor.FloorPlan == nil || floor.FloorPlan.Width == 0 || floor.FloorPlan.Height == 0 {
-		return nil, errors.New("invalid dimensions: floor plan required")
+	width, height := floorDimensions(floor)
+	if width == 0 || height == 0 {
+		return nil, errors.New("invalid dimensions: floor plan or samples required")
 	}
 
 	valueType := mapHeatmapTypeToValueType(config.Type)
 	return renderHeatmap(
 		ExtractSamplesFromFloor(floor, valueType), floor.FloorPlan,
-		floor.FloorPlan.Width, floor.FloorPlan.Height, config,
+		width, height, config,
 	)
 }
 
@@ -245,13 +246,29 @@ func getHeatmapDimensions(survey *Survey) (int, int) {
 	}
 
 	// Fallback: calculate from sample points
-	allSamples := survey.GetAllSamples()
-	if len(allSamples) == 0 {
+	return dimensionsFromSamples(survey.GetAllSamples())
+}
+
+// floorDimensions sizes one floor's canvas: its own plan, or the extent of its
+// own measurements. A floor walked before a plan was imported has no plan and
+// is still worth drawing — that is every live survey until floorplan import
+// exists.
+func floorDimensions(floor *Floor) (int, int) {
+	if floor.FloorPlan != nil && floor.FloorPlan.Width > 0 && floor.FloorPlan.Height > 0 {
+		return floor.FloorPlan.Width, floor.FloorPlan.Height
+	}
+	return dimensionsFromSamples(floor.Samples)
+}
+
+// dimensionsFromSamples bounds the measured points, with padding so the
+// outermost sample is not on the canvas edge.
+func dimensionsFromSamples(points []*SamplePoint) (int, int) {
+	if len(points) == 0 {
 		return 0, 0
 	}
 
 	var maxX, maxY int
-	for _, s := range allSamples {
+	for _, s := range points {
 		if s.X > maxX {
 			maxX = s.X
 		}
@@ -260,7 +277,6 @@ func getHeatmapDimensions(survey *Survey) (int, int) {
 		}
 	}
 
-	// Add padding
 	return maxX + heatmapPaddingPixels, maxY + heatmapPaddingPixels
 }
 

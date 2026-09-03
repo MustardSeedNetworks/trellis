@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
 )
@@ -94,52 +95,68 @@ func DetectDeadZones(survey *Survey, threshold int, detector AnomalyDetector) (*
 		return nil, errors.New("survey is nil")
 	}
 
-	allSamples := survey.GetAllSamples()
-	if len(allSamples) == 0 {
+	points := survey.GetAllSamples()
+	if len(points) == 0 {
 		return nil, errors.New("survey has no samples")
 	}
 
+	return analyzeCoverage(survey.ID, points, floorPlanOf(survey), survey.UpdatedAt, threshold, detector)
+}
+
+// DetectFloorDeadZones analyses one floor from that floor's own measurements
+// and plan, the counterpart of [GenerateFloorHeatmap]. A survey-wide analysis
+// scores every floor's samples together and clusters them on whichever plan is
+// active, which is only right when there is one floor.
+func DetectFloorDeadZones(
+	surveyID string,
+	floor *Floor,
+	threshold int,
+	detector AnomalyDetector,
+) (*DeadZoneAnalysis, error) {
+	if floor == nil {
+		return nil, errors.New("floor is nil")
+	}
+	if len(floor.Samples) == 0 {
+		return nil, errors.New("floor has no samples")
+	}
+
+	return analyzeCoverage(surveyID, floor.Samples, floor.FloorPlan, floor.UpdatedAt, threshold, detector)
+}
+
+// analyzeCoverage is the analysis itself, once a caller has decided which
+// measurements and which plan it means.
+func analyzeCoverage(
+	surveyID string,
+	points []*SamplePoint,
+	floorPlan *FloorPlan,
+	observedAt time.Time,
+	threshold int,
+	detector AnomalyDetector,
+) (*DeadZoneAnalysis, error) {
 	// Apply default threshold if not specified
 	if threshold == 0 {
 		threshold = DefaultThreshold
 	}
 
-	// Extract RSSI samples
-	samples := ExtractSamplesFromSurvey(survey, "rssi")
+	samples := extractSamples(points, "rssi")
 	if len(samples) == 0 {
 		return nil, errors.New("no RSSI samples found in survey")
 	}
 
-	// Find weak signal samples (below threshold)
 	weakSamples := filterWeakSamples(samples, float64(threshold))
-
-	// Calculate coverage score
 	coverageScore := calculateCoverageScore(samples, weakSamples)
-
-	// Get floor plan from active floor for clustering (with legacy fallback)
-	var floorPlan *FloorPlan
-	if activeFloor := survey.GetActiveFloor(); activeFloor != nil && activeFloor.FloorPlan != nil {
-		floorPlan = activeFloor.FloorPlan
-	} else if survey.FloorPlan != nil {
-		// Legacy fallback for surveys that have FloorPlan set directly
-		floorPlan = survey.FloorPlan
-	}
-
-	// Cluster weak samples into dead zones
 	deadZones := clusterDeadZones(weakSamples, floorPlan)
-
-	// Generate recommendations
 	recommendations := generateRecommendations(deadZones, coverageScore, len(samples))
 
-	// Surface Wi-Fi anomalies (security/RF/standards) from the same survey's
-	// passive AP observations, alongside the coverage analysis.
-	anomalies, err := AnalyzeAnomalies(survey, detector)
+	// Surface Wi-Fi anomalies (security/RF/standards) from the same passive AP
+	// observations, alongside the coverage analysis.
+	anomalies, err := analyzeAnomalies(points, observedAt, detector)
 	if err != nil {
 		return nil, fmt.Errorf("analyze survey anomalies: %w", err)
 	}
 
 	return &DeadZoneAnalysis{
-		SurveyID:        survey.ID,
+		SurveyID:        surveyID,
 		ThresholdDBm:    threshold,
 		DeadZones:       deadZones,
 		CoverageScore:   coverageScore,

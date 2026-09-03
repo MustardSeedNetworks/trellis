@@ -39,24 +39,38 @@ type AnomalyDetector interface {
 // A survey with no passive AP observations, or a nil detector, yields no
 // anomalies (and no error).
 func AnalyzeAnomalies(survey *Survey, detector AnomalyDetector) ([]wifi.Anomaly, error) {
-	if survey == nil || detector == nil {
+	if survey == nil {
 		return nil, nil
 	}
-	bsses, at := surveyBSSViews(survey)
+	return analyzeAnomalies(survey.GetAllSamples(), survey.UpdatedAt, detector)
+}
+
+// analyzeAnomalies runs detector over whichever measured points the caller
+// scoped it to, stamping the observations with the most recent passive sample
+// and falling back to fallbackAt when none of them carried a timestamp.
+func analyzeAnomalies(
+	points []*SamplePoint,
+	fallbackAt time.Time,
+	detector AnomalyDetector,
+) ([]wifi.Anomaly, error) {
+	if detector == nil {
+		return nil, nil
+	}
+	bsses, at := bssViews(points)
 	if len(bsses) == 0 {
 		return nil, nil
 	}
 	if at.IsZero() {
-		at = survey.UpdatedAt
+		at = fallbackAt
 	}
 	return detector.AnalyzeBSSes(bsses, at)
 }
 
-// surveyBSSViews flattens a survey's passive-scan observations into the
+// bssViews flattens passive-scan observations into the
 // [wifi.BSSView] shape an anomaly detector consumes, de-duplicated by BSSID
 // keeping the strongest-signal sighting. It also returns the most recent
 // passive-sample timestamp so the caller can stamp the synthetic observations.
-func surveyBSSViews(survey *Survey) ([]wifi.BSSView, time.Time) {
+func bssViews(points []*SamplePoint) ([]wifi.BSSView, time.Time) {
 	type seen struct {
 		view   wifi.BSSView
 		signal int
@@ -64,7 +78,7 @@ func surveyBSSViews(survey *Survey) ([]wifi.BSSView, time.Time) {
 	byBSSID := make(map[string]seen)
 	var latest time.Time
 
-	for _, sp := range survey.GetAllSamples() {
+	for _, sp := range points {
 		passive := getPassiveSampleFromPoint(sp)
 		if passive == nil {
 			continue
