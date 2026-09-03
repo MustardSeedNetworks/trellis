@@ -16,11 +16,17 @@ import { SurveysPage } from './SurveysPage';
 
 const listSurveys = vi.fn();
 const generateReport = vi.fn();
+const createSurvey = vi.fn();
+const startSurvey = vi.fn();
+const capturePoint = vi.fn();
 
 vi.mock('@/lib/client', () => ({
   surveyClient: {
     listSurveys: (req: unknown) => listSurveys(req),
     generateReport: (req: unknown) => generateReport(req),
+    createSurvey: (req: unknown) => createSurvey(req),
+    startSurvey: (req: unknown) => startSurvey(req),
+    capturePoint: (req: unknown) => capturePoint(req),
   },
 }));
 
@@ -57,6 +63,9 @@ function renderPage() {
 beforeEach(() => {
   listSurveys.mockReset();
   generateReport.mockReset();
+  createSurvey.mockReset();
+  startSurvey.mockReset();
+  capturePoint.mockReset();
 });
 
 describe('SurveysPage', () => {
@@ -69,8 +78,9 @@ describe('SurveysPage', () => {
     expect(screen.getByText('2 surveys available')).toBeInTheDocument();
 
     // Pluralisation is per-value, so both branches are asserted: one floor and
-    // one sample must not read "1 floors".
-    expect(screen.getByText('completed · 2 floors · 87 samples')).toBeInTheDocument();
+    // one sample must not read "1 floors". A lifecycle state is named in the
+    // operator's language; a state the service invents is shown as sent.
+    expect(screen.getByText('Completed · 2 floors · 87 samples')).toBeInTheDocument();
     expect(screen.getByText('importing · 1 floor · 5 samples')).toBeInTheDocument();
   });
 
@@ -80,7 +90,9 @@ describe('SurveysPage', () => {
 
     expect(await screen.findByText('No surveys captured yet')).toBeInTheDocument();
     expect(
-      screen.getByText('Import a survey to build a heatmap and coverage analysis from it.'),
+      screen.getByText(
+        'Create a survey to walk a floor, or import an AirMapper archive to analyse one.',
+      ),
     ).toBeInTheDocument();
     expect(screen.queryByText('Survey data is not arriving')).not.toBeInTheDocument();
     unmount();
@@ -111,7 +123,7 @@ describe('SurveysPage', () => {
     // asserted by value -- a pane that rendered the wrong survey's numbers
     // would still be "a pane that rendered".
     expect(screen.getByText('87')).toBeInTheDocument();
-    expect(screen.getByText('completed')).toBeInTheDocument();
+    expect(screen.getByText('Completed')).toBeInTheDocument();
     expect(screen.getByText('Present')).toBeInTheDocument();
     expect(
       screen.queryByText('Select a survey to see what it stores and what it can produce'),
@@ -138,9 +150,11 @@ describe('SurveysPage', () => {
     await screen.findByText('Everett HQ');
     fireEvent.click(screen.getByRole('button', { name: /Everett HQ/ }));
 
+    // The link names the survey. A bare /coverage falls back to whichever
+    // survey the list happens to put first, which is not the one just chosen.
     expect(screen.getByRole('link', { name: 'Plot coverage' })).toHaveAttribute(
       'href',
-      '/coverage',
+      '/coverage?survey=svy-1',
     );
   });
 });
@@ -202,7 +216,52 @@ describe('SurveyList empty state', () => {
     renderPage();
 
     expect(
-      await screen.findByText('No surveys yet. Import an AirMapper file to get started.'),
+      await screen.findByText(
+        'No surveys yet. Create one to walk a floor, or import an AirMapper file.',
+      ),
     ).toBeInTheDocument();
+  });
+});
+
+describe('SurveysPage walk', () => {
+  const fresh = {
+    id: 'svy-3',
+    name: 'Lab walk',
+    status: 'created',
+    floorCount: 1,
+    sampleCount: 0,
+    hasFloorPlan: false,
+  };
+
+  it('creates a survey and selects it, so the walk can start from where it was made', async () => {
+    listSurveys.mockResolvedValueOnce({ surveys: [everett] });
+    listSurveys.mockResolvedValue({ surveys: [everett, fresh] });
+    createSurvey.mockResolvedValue({ survey: fresh });
+    renderPage();
+    await screen.findByText('Everett HQ');
+
+    fireEvent.change(screen.getByTestId('new-survey-name'), { target: { value: '  Lab walk ' } });
+    fireEvent.change(screen.getByTestId('new-survey-interface'), { target: { value: 'wlan0' } });
+    fireEvent.click(screen.getByTestId('create-survey'));
+
+    await waitFor(() =>
+      expect(createSurvey).toHaveBeenCalledWith({ name: 'Lab walk', interface: 'wlan0' }),
+    );
+    // Selected: the detail pane shows the new survey's state, and offers Start.
+    expect(await screen.findByTestId('survey-start')).toBeInTheDocument();
+    expect(screen.getByText('Created')).toBeInTheDocument();
+  });
+
+  it('shows the capture surface only while the survey is walking', async () => {
+    listSurveys.mockResolvedValue({ surveys: [everett, { ...fresh, status: 'in_progress' }] });
+    renderPage();
+
+    await screen.findByText('Everett HQ');
+    fireEvent.click(screen.getByRole('button', { name: /Everett HQ/ }));
+    expect(screen.queryByTestId('capture-surface')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Lab walk/ }));
+    expect(screen.getByTestId('capture-surface')).toBeInTheDocument();
+    expect(screen.getByText('Walking')).toBeInTheDocument();
   });
 });

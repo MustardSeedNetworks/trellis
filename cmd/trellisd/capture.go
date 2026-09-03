@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log/slog"
 
+	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/internal/capture"
 )
 
@@ -23,7 +24,7 @@ import (
 //
 // It runs in its own goroutine: an active scan takes three to four seconds and
 // nothing else should wait on it.
-func reportCaptureReadiness(ctx context.Context, scanner capture.Scanner) {
+func reportCaptureReadiness(ctx context.Context, scanner survey.Scanner) {
 	if err := capture.Authorize(); err != nil {
 		slog.Warn("capture permission incomplete", "error", err)
 	}

@@ -19,7 +19,6 @@ import (
 	"github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1/surveyv1connect"
 	"github.com/MustardSeedNetworks/trellis/internal/api"
 	"github.com/MustardSeedNetworks/trellis/internal/apppaths"
-	"github.com/MustardSeedNetworks/trellis/internal/capture"
 )
 
 const (
@@ -79,12 +78,11 @@ func run() error {
 	// capture.Scanner and survey.Scanner are deliberately the same shape. A
 	// host with no backend still serves imported surveys, so a missing backend
 	// is reported and not fatal.
-	var scanner survey.Scanner
-	if backend, err := capture.New(); err != nil {
+	scanner, err := newScanner()
+	if err != nil {
 		slog.Warn("no Wi-Fi capture backend on this host; imported surveys only", "error", err)
 	} else {
-		scanner = backend
-		go reportCaptureReadiness(ctx, backend)
+		go reportCaptureReadiness(ctx, scanner)
 	}
 
 	manager, err := survey.NewManager(dataDir, scanner, nil, nil, nil)

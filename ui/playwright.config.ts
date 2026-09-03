@@ -55,8 +55,12 @@ export default defineConfig({
     // /__version reports commit "unknown" and the build-contract assertion in
     // handshake.spec.ts fails for a reason that has nothing to do with the
     // product. Building first is also closer to what ships.
+    //
+    // `-tags e2e` swaps the radio for a scripted scanner (cmd/trellisd/
+    // scanner_e2e.go) and nothing else: the runners have no Wi-Fi adapter, so
+    // the walk in survey-walk.spec.ts could not otherwise store a point.
     command:
-      'cd .. && go build -o bin/trellisd-e2e ./cmd/trellisd && ' +
+      'cd .. && go build -tags e2e -o bin/trellisd-e2e ./cmd/trellisd && ' +
       'TRELLIS_ADDR=127.0.0.1:18446 TRELLIS_DATA_DIR="$(mktemp -d)" bin/trellisd-e2e',
     url: `${baseURL}/__version`,
     reuseExistingServer: false,

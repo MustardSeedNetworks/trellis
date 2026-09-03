@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { SurveyCreateForm } from '@/components/SurveyCreateForm';
 import { SurveyDetail } from '@/components/SurveyDetail';
 import { SurveyList } from '@/components/SurveyList';
 import { surveyClient } from '@/lib/client';
@@ -12,6 +13,11 @@ import { type RollupState, StatusRollup } from '@/ui/StatusRollup';
  * The rollup leads because this page can be wrong: the survey list is the only
  * thing the rest of the product is built on, and a failed load has to say so
  * rather than render an empty list that looks like "no surveys yet".
+ *
+ * The walk starts here. The service has offered create, start, capture, pause,
+ * complete and delete since the capture backend landed; until this page called
+ * them Trellis could only analyse other tools' captures. The new-survey form
+ * sits above the list so a created survey appears where it will be selected.
  */
 export function SurveysPage() {
   const { t } = useTranslation(['common', 'pages']);
@@ -58,6 +64,7 @@ export function SurveysPage() {
 
       <div className="flex flex-1 gap-6 overflow-hidden">
         <aside className="panel flex w-72 shrink-0 flex-col overflow-hidden">
+          <SurveyCreateForm onCreated={setSelectedId} />
           <div className="flex-1 overflow-y-auto">
             {surveysQuery.isSuccess ? (
               <SurveyList surveys={surveys} selectedId={selectedId} onSelect={setSelectedId} />
@@ -66,7 +73,7 @@ export function SurveysPage() {
         </aside>
 
         {selectedSurvey ? (
-          <SurveyDetail survey={selectedSurvey} />
+          <SurveyDetail survey={selectedSurvey} onDeleted={() => setSelectedId(undefined)} />
         ) : (
           <div className="panel flex flex-1 items-center justify-center text-sm text-text-muted">
             {t('pages:surveys.selectPrompt')}
