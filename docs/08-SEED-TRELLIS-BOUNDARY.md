@@ -1,9 +1,10 @@
-# Seed ↔ Trellis — Wi-Fi boundary (OPEN DECISION)
+# Seed ↔ Trellis — Wi-Fi boundary
 
-Status: **DECIDED — Option A (2026-06-20): all Wi-Fi moves out of Seed into Trellis.**
-Seed = wired diagnostics / security / compliance. Trellis = the sole Wi-Fi product
-(Live troubleshooting + Project survey/planning) on one shared Wi-Fi/RF/capture core.
-Rationale below kept for the record.
+Status: **DECIDED 2026-09-03 (supersedes the 2026-06-20 Option A decision below): both
+products carry Wi-Fi analysis; Trellis owns survey/planning.** Seed keeps its own
+troubleshooting/visibility analysis; Trellis carries analysis too (Live mode) plus
+survey/planning/design as its primary focus (Project mode). Neither product exits
+Wi-Fi. Rationale and the superseded option analysis below kept for the record.
 
 ## The distinction that matters
 Wi-Fi work splits into two *different jobs* with different UX, even though they share
@@ -53,19 +54,23 @@ consuming Trellis's capture package + a subset of the engine is a natural extens
 not a rewrite. "Move Wi-Fi to Trellis" then means **Trellis owns the Wi-Fi core; Seed
 becomes a consumer of it**, rather than ripping features around.
 
-## Decision: Option A
+## Superseded: Option A (2026-06-20 → superseded 2026-09-03)
 **All Wi-Fi moves to Trellis; Seed exits Wi-Fi.** Picked over B because two products
-both touching Wi-Fi is a positioning muddle ("which one do I buy for Wi-Fi?"), and
-pre-alpha is the cheapest time to make the cut. Trellis grows a **Live mode** (the
-ex-`canopy` troubleshooting/visibility) alongside Project mode; both sit on the shared
-core — so we still build the RF/capture stack once, just consume it from two modes
-inside one product instead of two products.
+both touching Wi-Fi looked like a positioning muddle ("which one do I buy for Wi-Fi?").
+This was never carried out: Seed's `internal/wifi` was never deprecated and Seed kept
+shipping its own Wi-Fi analysis. Kept for the record; superseded below.
+
+## Decision (2026-09-03): both products carry analysis; Trellis also owns survey/planning
+Essentially Option B, extended: Seed keeps its own thin live-troubleshooting UI (Live
+mode equivalent) on its own `internal/wifi`; Trellis carries the same class of analysis
+(Live mode) plus the heavy survey/planning/design work (Project mode) as its primary
+focus. Neither product exits Wi-Fi. The two analysis surfaces are not yet unified —
+that unification is the open follow-up below, not a precondition for this decision.
 
 ## Follow-ups now open (tracked)
-- **Seed repo:** plan removal/deprecation of `internal/wifi` (ex-`canopy`); decide
-  reuse-as-reference vs. rewrite of the troubleshooting logic into Trellis Live mode.
-- **`LICENSE_STRATEGY.md`:** name Trellis the Wi-Fi product; remove Wi-Fi from Seed's
-  scope and tier matrix; reflect that "no planning in Seed" now reads "no Wi-Fi in Seed."
+- **Shared Wi-Fi core (owner item, not yet scheduled):** collapse Seed's and Trellis's
+  separate analysis surfaces — scan model, dot11 decode, anomaly catalog — onto one
+  shared core, defaulting to Seed's `internal/wifi` as the source after Seed v1.
+- **`LICENSE_STRATEGY.md`:** still has no Trellis tier; a draft is prepared separately
+  (T-B7) — Trellis is pre-alpha with no license tier today.
 - **Trellis PRD:** Live-mode capability set added (see `01-PRD.md`).
-- Shared-core packaging (lib vs daemon vs both) — resolved *inside* Trellis now, not a
-  cross-product contract, which simplifies it.

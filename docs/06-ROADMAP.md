@@ -4,6 +4,19 @@ Each phase ends in something **demoable** and has explicit exit criteria. No pha
 starts before the prior phase's contract is frozen. Order is dependency-driven, not
 feature-driven.
 
+## Status (2026-09-03)
+| Phase | Status | Evidence |
+|---|---|---|
+| Phase 0 — Plan freeze | Done | `docs/` reviewed; contracts drafted (`proto/trellis/survey/v1` implemented; `docs/contracts/api.proto` and `engine.proto` still draft/unimplemented). |
+| Phase 1 — Migrate measured-survey | Done | `core/survey` in tree, ~92% covered, corpus tests assert values; survey API real; UI wired to the live measured-survey workflow (#268). |
+| Phase 2 — Predictive engine MVP | Not started | Zero lines of C++/Rust/GPU code in the tree; no `/engine`. |
+| Gate G1 — Engine credibility | Not run | Depends on Phase 2; no predictive output exists to diff against ground truth. |
+| Phase 3 — Planning UX + Wails | Not started | No Wails; UI is a browser page served over loopback HTTP. |
+| Phase 4 — GPU + full predictive layers | Not started | Depends on Phase 2. |
+| Phase 5 — Capture + survey loop | Partially done | Host-NIC capture backends real on macOS (CoreWLAN), Linux (nl80211), Windows (Native WiFi), linked into `trellisd` (ADR-0006). External HW, calibration not started. |
+| Phase 6 — Reporting, licensing, polish | Partially done | Pure-Go PDF reporter real (`core/survey/report.go`, fpdf); no Ed25519 licensing, no installers/signing. |
+| Phase 7 — Cloud/team | Not started | — |
+
 ## The bet (read before anything)
 The measured-survey half is **proven Seed code we migrate** (`09-SEED-MIGRATION.md`),
 and the plumbing (Go core, React UI, capture, cloud) is "just" engineering. The risk is
