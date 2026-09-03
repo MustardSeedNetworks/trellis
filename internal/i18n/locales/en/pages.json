@@ -2,9 +2,9 @@
   "coverage": {
     "analysing": "Analysing coverage",
     "deadZoneBody": "Each is a measured region where signal fell under the threshold.",
+    "deadZoneThreshold": "Dead zone below",
     "deadZones_one": "{{count}} dead zone below {{threshold}} dBm",
     "deadZones_other": "{{count}} dead zones below {{threshold}} dBm",
-    "deadZoneThreshold": "Dead zone below",
     "description": "Measured signal across the surveyed floor, and where it falls short.",
     "heatmapAlt": "{{metric}} heatmap of the surveyed floor",
     "heatmapFailed": "The heatmap did not render: {{error}}",
@@ -14,12 +14,20 @@
     "noSurveySelected": "No survey selected",
     "noSurveySelectedBody": "Coverage is measured per survey. Choose one to analyse it.",
     "noSurveys": "No surveys captured yet. Import an AirMapper archive to plot coverage from it.",
-    "notInList": "{{id}} · not in the survey list",
     "notArriving": "Coverage analysis is not arriving",
+    "notInList": "{{id}} · not in the survey list",
+    "readingAt": "{{value}} at {{x}}, {{y}}",
+    "readingPrompt": "Point at the surface to read its measured value",
     "renderingHeatmap": "Rendering the heatmap…",
     "surfaceMeta": "{{metric}} · {{count}} samples · {{min}} to {{max}}",
+    "surfaceRegion": "Measured surface",
     "surveyServiceSilent": "The survey service did not answer: {{error}}",
-    "title": "Coverage"
+    "title": "Coverage",
+    "zoom": "Zoom",
+    "zoomFit": "Fit",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "zoomReset": "Reset zoom to fit"
   },
   "import": {
     "archive": "AirMapper archive",

@@ -815,7 +815,21 @@ type GetHeatmapResponse struct {
 	Metric string `protobuf:"bytes,7,opt,name=metric,proto3" json:"metric,omitempty"`
 	// The colour scale the image was painted with, sent so a legend describes
 	// the gradient on screen rather than a second copy of it.
-	Legend        []*LegendStop `protobuf:"bytes,8,rep,name=legend,proto3" json:"legend,omitempty"`
+	Legend []*LegendStop `protobuf:"bytes,8,rep,name=legend,proto3" json:"legend,omitempty"`
+	// The interpolated field the image was painted from, row-major:
+	// grid[row * grid_cols + col], in the heatmap metric's own unit.
+	//
+	// Sent so a caller can report the measured value under a cursor. The
+	// alternative — reading it back from a pixel — cannot work: heat is
+	// composited at partial alpha over the floor plan, so the colour on screen
+	// is not the colour the scale chose. One value per cell rather than per
+	// pixel keeps this the same size as the PNG beside it.
+	Grid     []float32 `protobuf:"fixed32,9,rep,packed,name=grid,proto3" json:"grid,omitempty"`
+	GridCols int32     `protobuf:"varint,10,opt,name=grid_cols,json=gridCols,proto3" json:"grid_cols,omitempty"`
+	GridRows int32     `protobuf:"varint,11,opt,name=grid_rows,json=gridRows,proto3" json:"grid_rows,omitempty"`
+	// Cell edge in image pixels. A position (x, y) on the image is the cell at
+	// (y / cell_size) * grid_cols + (x / cell_size).
+	CellSize      int32 `protobuf:"varint,12,opt,name=cell_size,json=cellSize,proto3" json:"cell_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -904,6 +918,34 @@ func (x *GetHeatmapResponse) GetLegend() []*LegendStop {
 		return x.Legend
 	}
 	return nil
+}
+
+func (x *GetHeatmapResponse) GetGrid() []float32 {
+	if x != nil {
+		return x.Grid
+	}
+	return nil
+}
+
+func (x *GetHeatmapResponse) GetGridCols() int32 {
+	if x != nil {
+		return x.GridCols
+	}
+	return 0
+}
+
+func (x *GetHeatmapResponse) GetGridRows() int32 {
+	if x != nil {
+		return x.GridRows
+	}
+	return 0
+}
+
+func (x *GetHeatmapResponse) GetCellSize() int32 {
+	if x != nil {
+		return x.CellSize
+	}
+	return 0
 }
 
 // LegendStop is one stop of a heatmap's colour scale: the metric value and
@@ -2150,7 +2192,7 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\x11GetHeatmapRequest\x12\x1b\n" +
 	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\x12\x16\n" +
 	"\x06metric\x18\x02 \x01(\tR\x06metric\x12\x19\n" +
-	"\bfloor_id\x18\x03 \x01(\tR\afloorId\"\xea\x01\n" +
+	"\bfloor_id\x18\x03 \x01(\tR\afloorId\"\xd5\x02\n" +
 	"\x12GetHeatmapResponse\x12\x10\n" +
 	"\x03png\x18\x01 \x01(\fR\x03png\x12\x14\n" +
 	"\x05width\x18\x02 \x01(\x05R\x05width\x12\x16\n" +
@@ -2159,7 +2201,12 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\x03max\x18\x05 \x01(\x01R\x03max\x12!\n" +
 	"\fsample_count\x18\x06 \x01(\x05R\vsampleCount\x12\x16\n" +
 	"\x06metric\x18\a \x01(\tR\x06metric\x125\n" +
-	"\x06legend\x18\b \x03(\v2\x1d.trellis.survey.v1.LegendStopR\x06legend\"8\n" +
+	"\x06legend\x18\b \x03(\v2\x1d.trellis.survey.v1.LegendStopR\x06legend\x12\x12\n" +
+	"\x04grid\x18\t \x03(\x02R\x04grid\x12\x1b\n" +
+	"\tgrid_cols\x18\n" +
+	" \x01(\x05R\bgridCols\x12\x1b\n" +
+	"\tgrid_rows\x18\v \x01(\x05R\bgridRows\x12\x1b\n" +
+	"\tcell_size\x18\f \x01(\x05R\bcellSize\"8\n" +
 	"\n" +
 	"LegendStop\x12\x14\n" +
 	"\x05value\x18\x01 \x01(\x01R\x05value\x12\x14\n" +

@@ -152,7 +152,37 @@ func (h *SurveyServiceHandler) GetHeatmap(
 		SampleCount: int32(result.SampleCount),
 		Metric:      result.Type,
 		Legend:      legendStops(result.Scale),
+		Grid:        flattenGrid(result.Grid),
+		GridCols:    int32Of(gridCols(result.Grid)),
+		GridRows:    int32Of(len(result.Grid)),
+		CellSize:    int32Of(result.CellSize),
 	}), nil
+}
+
+// flattenGrid lays the interpolated field out row-major for the wire.
+// float32 rather than float64: these are dBm and dB to a fraction of a
+// decibel, and halving the payload matters more than digits no radio measures.
+func flattenGrid(grid [][]float64) []float32 {
+	if len(grid) == 0 {
+		return nil
+	}
+
+	flat := make([]float32, 0, len(grid)*len(grid[0]))
+	for _, row := range grid {
+		for _, value := range row {
+			flat = append(flat, float32(value))
+		}
+	}
+	return flat
+}
+
+// gridCols reports the row width of a grid whose rows are all the same length
+// by construction (InterpolateGrid builds them from one cols count).
+func gridCols(grid [][]float64) int {
+	if len(grid) == 0 {
+		return 0
+	}
+	return len(grid[0])
 }
 
 // legendStops maps the colour scale that painted the image onto the reply, so

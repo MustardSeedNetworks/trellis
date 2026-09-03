@@ -57,6 +57,12 @@ const heatmapReply = {
   max: -41.5,
   sampleCount: 42,
   metric: 'rssi',
+  /* 2x2 grid of 200 px cells over the 400x300 image, so a page test that
+     renders the surface has something coherent to read from. */
+  grid: [-52, -61, -70, -84],
+  gridCols: 2,
+  gridRows: 2,
+  cellSize: 200,
   legend: [
     { value: -100, color: '#808080' },
     { value: -75, color: '#ffcc00' },

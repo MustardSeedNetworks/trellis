@@ -92,6 +92,15 @@ type HeatmapResult struct {
 	Stats       GridStats  `json:"stats"`
 	Generated   time.Time  `json:"generated"`
 	SampleCount int        `json:"sample_count"`
+	// Grid is the interpolated field the image was painted from, row-major,
+	// one value per CellSize-by-CellSize block. It travels with the result so
+	// a caller can report the value under a cursor from the same numbers that
+	// chose the colour there, rather than inferring one from a pixel that has
+	// been blended with the floor plan underneath.
+	Grid [][]float64 `json:"grid"`
+	// CellSize is the block size in image pixels, which is what maps a
+	// position on the image onto a cell of Grid.
+	CellSize int `json:"cell_size"`
 }
 
 // DefaultHeatmapConfig returns default configuration.
@@ -226,6 +235,8 @@ func renderHeatmap(
 		Stats:       stats,
 		Generated:   time.Now(),
 		SampleCount: len(samples),
+		Grid:        grid,
+		CellSize:    config.CellSize,
 	}, nil
 }
 

@@ -5,8 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import { CoverageFindings } from '@/components/CoverageFindings';
 import { HeatmapLegend } from '@/components/HeatmapLegend';
+import { HeatmapSurface } from '@/components/HeatmapSurface';
 import { surveyClient } from '@/lib/client';
-import { bytesToDataUrl, formatCoverageScore, formatSignal } from '@/lib/format';
+import { formatCoverageScore, formatSignal } from '@/lib/format';
 import type { RollupState } from '@/ui/StatusRollup';
 
 /**
@@ -233,6 +234,7 @@ export function CoveragePage() {
               heatmapError: heatmapQuery.error,
               heatmap,
               metric,
+              unit,
             },
             t,
           )}
@@ -257,8 +259,19 @@ interface SurfaceState {
   surveysError: unknown;
   heatmapLoading: boolean;
   heatmapError: unknown;
-  heatmap: { png: Uint8Array; width: number; height: number } | undefined;
+  heatmap:
+    | {
+        png: Uint8Array;
+        width: number;
+        height: number;
+        grid: number[];
+        gridCols: number;
+        gridRows: number;
+        cellSize: number;
+      }
+    | undefined;
   metric: Metric;
+  unit: string;
 }
 
 /**
@@ -274,6 +287,7 @@ function renderSurface(
     heatmapError,
     heatmap,
     metric,
+    unit,
   }: SurfaceState,
   t: TFunction<['common', 'pages']>,
 ) {
@@ -315,13 +329,16 @@ function renderSurface(
     );
   }
   return (
-    <img
-      src={bytesToDataUrl(heatmap.png, 'image/png')}
-      alt={t('pages:coverage.heatmapAlt', { metric: metric.toUpperCase() })}
+    <HeatmapSurface
+      png={heatmap.png}
       width={heatmap.width}
       height={heatmap.height}
-      className="max-w-full rounded-[12px] border border-hairline"
-      data-testid="heatmap-image"
+      grid={heatmap.grid}
+      gridCols={heatmap.gridCols}
+      gridRows={heatmap.gridRows}
+      cellSize={heatmap.cellSize}
+      unit={unit}
+      metric={metric}
     />
   );
 }
