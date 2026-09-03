@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	"connectrpc.com/connect"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
@@ -190,4 +192,65 @@ func scannedNetworkOf(n *wifi.ScannedNetwork) *surveyv1.ScannedNetwork {
 		HtMode:          n.HTMode,
 		IsDfs:           n.IsDFS,
 	}
+}
+
+// ListSamples returns the points stored on a survey's active floor, in
+// capture order.
+func (h *SurveyServiceHandler) ListSamples(
+	_ context.Context,
+	req *connect.Request[surveyv1.ListSamplesRequest],
+) (*connect.Response[surveyv1.ListSamplesResponse], error) {
+	id := req.Msg.GetSurveyId()
+	if id == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+	}
+
+	svy, err := h.manager.GetSurvey(id)
+	if err != nil {
+		return nil, notFoundOrInternal(err)
+	}
+
+	reply := &surveyv1.ListSamplesResponse{}
+	floor := svy.GetActiveFloor()
+	if floor == nil {
+		return connect.NewResponse(reply), nil
+	}
+
+	reply.Samples = make([]*surveyv1.SurveySample, 0, len(floor.Samples))
+	for _, sp := range floor.Samples {
+		reply.Samples = append(reply.Samples, surveySampleOf(sp))
+	}
+	return connect.NewResponse(reply), nil
+}
+
+// surveySampleOf reduces a stored point to its drawable facts.
+//
+// The strongest signal is found by scanning rather than read from Networks[0]:
+// a passive sample is sorted strongest-first when it is captured, but a point
+// loaded from the store has been through JSON, and the wire type should not
+// depend on that ordering having survived.
+func surveySampleOf(sp *survey.SamplePoint) *surveyv1.SurveySample {
+	out := &surveyv1.SurveySample{
+		X:          int32Of(sp.X),
+		Y:          int32Of(sp.Y),
+		CapturedAt: timestamppb.New(sp.Timestamp),
+	}
+
+	var passive *survey.PassiveSample
+	switch data := sp.SampleData.(type) {
+	case *survey.PassiveSample:
+		passive = data
+	case survey.PassiveSample:
+		passive = &data
+	default:
+		return out
+	}
+
+	out.NetworkCount = int32Of(len(passive.Networks))
+	for i, n := range passive.Networks {
+		if i == 0 || n.Signal > int(out.GetStrongestDbm()) {
+			out.StrongestDbm = proto.Int32(int32Of(n.Signal))
+		}
+	}
+	return out
 }

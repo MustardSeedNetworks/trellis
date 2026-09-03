@@ -1,25 +1,30 @@
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
+import { CaptureSurface } from '@/components/CaptureSurface';
+import { SurveyLifecycle } from '@/components/SurveyLifecycle';
 import type { SurveySummary } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
 import { bytesToDataUrl, reportFilename } from '@/lib/format';
+import { surveyStatusLabel } from '@/lib/surveyStatus';
 
 /**
- * SurveyDetail — what is stored about one survey, and what can be produced
- * from it.
+ * SurveyDetail — what is stored about one survey, how to walk it, and what
+ * can be produced from it.
  *
  * The heatmap and the dead-zone analysis used to render here. They moved to
  * the Coverage page, which is the Canvas archetype and gives the image the
  * toolbar, scale and findings panel it needs; a copy left behind would be the
  * same reading in two places with only one of them adjustable. The report
- * stays: it is produced *about this survey*, so it belongs to the survey.
+ * stays: it is produced *about this survey*, so it belongs to the survey. The
+ * walk lives here too, because a point is captured *into this survey*.
  */
 interface SurveyDetailProps {
   survey: SurveySummary;
+  onDeleted: () => void;
 }
 
-export function SurveyDetail({ survey }: SurveyDetailProps) {
+export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
   const { t } = useTranslation(['common', 'pages']);
   const reportMutation = useMutation({
     mutationFn: async () => {
@@ -34,7 +39,7 @@ export function SurveyDetail({ survey }: SurveyDetailProps) {
   });
 
   const facts = [
-    { label: t('common:labels.status'), value: survey.status },
+    { label: t('common:labels.status'), value: surveyStatusLabel(t, survey.status) },
     { label: t('common:labels.floors'), value: String(survey.floorCount) },
     { label: t('common:labels.samples'), value: String(survey.sampleCount) },
     {
@@ -44,7 +49,7 @@ export function SurveyDetail({ survey }: SurveyDetailProps) {
   ];
 
   return (
-    <div className="panel flex-1 overflow-y-auto p-6">
+    <div className="panel flex-1 overflow-y-auto p-6" data-testid="survey-detail">
       <dl className="flex flex-wrap gap-x-10 gap-y-4">
         {facts.map((fact) => (
           <div key={fact.label}>
@@ -56,10 +61,23 @@ export function SurveyDetail({ survey }: SurveyDetailProps) {
         ))}
       </dl>
 
+      <div className="mt-6 border-t border-hairline pt-6">
+        <SurveyLifecycle survey={survey} onDeleted={onDeleted} />
+      </div>
+
+      <div className="mt-6 border-t border-hairline pt-6">
+        <CaptureSurface
+          surveyId={survey.id}
+          surveyName={survey.name}
+          walking={survey.status === 'in_progress'}
+        />
+      </div>
+
       <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-hairline pt-6">
         <Link
-          to="/coverage"
+          to={{ pathname: '/coverage', search: `?survey=${encodeURIComponent(survey.id)}` }}
           className="rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
+          data-testid="plot-coverage"
         >
           {t('pages:surveys.plotCoverage')}
         </Link>
