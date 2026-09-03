@@ -391,6 +391,25 @@ jobs:
         working-directory: ui
         run: npm run build
 
+      # Universal Build Contract. This is the one job with the UI embedded, so
+      # it is where a `make build` binary can be proven to carry the hash: the
+      # md5 the script computes must appear in the binary, or /__version would
+      # report "unknown" in production and deployment validation could not
+      # tell a pipeline build from a bare `go build`.
+      - name: Verify UIBuildHash embedded (Universal Build Contract)
+        run: |
+          make build
+          EXPECTED=$(./scripts/ui-build-hash.sh)
+          if [ "${#EXPECTED}" -ne 32 ]; then
+            echo "::error::UI build hash is not 32 hex chars: '$EXPECTED' — is internal/api/ui empty?"
+            exit 1
+          fi
+          if ! grep -a -q "$EXPECTED" bin/trellisd; then
+            echo "::error::bin/trellisd does not contain UIBuildHash $EXPECTED"
+            exit 1
+          fi
+          echo "bin/trellisd carries UIBuildHash $EXPECTED"
+
       - name: Run E2E
         working-directory: ui
         # No --reporter: passing one REPLACES the config's reporter array, and

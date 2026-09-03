@@ -28,13 +28,12 @@ test('__version reports real build metadata, not placeholders', async ({ request
     expect(body[key], `${key} is the unbuilt placeholder`).not.toBe('unknown');
   }
 
-  // uiBuildHash is deliberately NOT asserted yet. The Universal Build Contract
-  // requires it, and trellis does not inject it -- its Makefile is a bare
-  // `go build ./...` with no ldflags, so the hash proving the UI was embedded
-  // is always "unknown". Asserting it here would fail for a real reason that
-  // this suite cannot fix; it is filed instead, and this comment is the
-  // reminder to tighten the loop once the ldflags land.
-  expect(body).toHaveProperty('uiBuildHash');
+  // uiBuildHash has no VCS fallback: it is "unknown" unless the Makefile
+  // recipe injected the md5 of internal/api/ui. This is the one field that
+  // proves the daemon was built through the pipeline with the UI embedded.
+  expect(body.uiBuildHash, 'uiBuildHash is not the md5 the Makefile injects').toMatch(
+    /^[0-9a-f]{32}$/,
+  );
 });
 
 test('navigates to the built pages without falling through to NotBuiltYet', async ({ page }) => {
