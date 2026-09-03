@@ -1,4 +1,5 @@
-import { expect, type Page, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { createSurvey, uniqueName, walkThreePoints } from './helpers';
 
 /**
  * The measured walk, end to end through the daemon.
@@ -10,48 +11,12 @@ import { expect, type Page, test } from '@playwright/test';
  *
  * The radio is scripted (cmd/trellisd/scanner_e2e.go, built with -tags e2e):
  * the runners have no adapter. Everything after the scan is the real thing.
- *
- * Names carry a nonce because chromium and webkit share one daemon and one
- * survey store, and the list has no order.
  */
 
-async function createSurvey(page: Page, name: string) {
-  await page.goto('/');
-  await page.getByTestId('new-survey-name').fill(name);
-  await page.getByTestId('create-survey').click();
-  const detail = page.getByTestId('survey-detail');
-  await expect(detail).toBeVisible();
-  await expect(detail).toContainText('Created');
-  return detail;
-}
-
 test('walks a survey and plots coverage from its stored points', async ({ page }) => {
-  const name = `Walk ${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const name = uniqueName('Walk');
   await createSurvey(page, name);
-
-  await page.getByTestId('survey-start').click();
-  const surface = page.getByTestId('capture-surface');
-  await expect(surface).toBeVisible();
-
-  // Three distinct positions: a heatmap needs spread to interpolate over, and
-  // three coincident points would be a degenerate field.
-  const positions = [
-    { x: 0.2, y: 0.3 },
-    { x: 0.5, y: 0.55 },
-    { x: 0.8, y: 0.75 },
-  ];
-  for (const [index, position] of positions.entries()) {
-    const box = await surface.boundingBox();
-    if (!box) {
-      throw new Error('capture surface has no layout box');
-    }
-    await surface.click({
-      position: { x: box.width * position.x, y: box.height * position.y },
-    });
-    // Wait for the point to land, not for the click: the next click is
-    // ignored while a scan is in flight, by design.
-    await expect(page.getByTestId('capture-pin')).toHaveCount(index + 1);
-  }
+  await walkThreePoints(page);
   await expect(page.getByTestId('capture-status')).toContainText('3 networks at');
 
   // The pins are the stored points, so they survive leaving and coming back.
@@ -78,7 +43,7 @@ test('walks a survey and plots coverage from its stored points', async ({ page }
 });
 
 test('deletes a survey only after confirmation', async ({ page }) => {
-  const name = `Discard ${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const name = uniqueName('Discard');
   await createSurvey(page, name);
   const row = page.getByTestId('survey-row').filter({ hasText: name });
   await expect(row).toHaveCount(1);
