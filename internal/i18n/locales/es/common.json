@@ -31,6 +31,9 @@
     "surveys": "Estudios",
     "version": "Versión"
   },
+  "loading": {
+    "page": "Cargando…"
+  },
   "nav": {
     "capacity": "Capacidad",
     "capture": "Captura",

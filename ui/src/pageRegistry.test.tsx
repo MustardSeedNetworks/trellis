@@ -9,10 +9,31 @@
  * one: a page whose title key is missing from the locale files renders as the
  * raw key and no longer matches its rail entry.
  */
-import { renderHook } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, renderHook, screen, waitFor } from '@testing-library/react';
+import { Suspense } from 'react';
+import { MemoryRouter } from 'react-router';
+import { describe, expect, it, vi } from 'vitest';
 import { useNavGroups } from '@/navGroups';
 import { usePages } from '@/pageRegistry';
+
+vi.mock('@/lib/client', () => ({
+  surveyClient: {
+    listSurveys: vi.fn().mockResolvedValue({ surveys: [] }),
+    generateReport: vi.fn(),
+    createSurvey: vi.fn(),
+    startSurvey: vi.fn(),
+    capturePoint: vi.fn(),
+    listSamples: vi.fn(),
+    importAirMapper: vi.fn(),
+    getHeatmap: vi.fn(),
+    getCoverage: vi.fn().mockResolvedValue({
+      coverageScore: 0,
+      deadZoneCount: 0,
+      recommendations: [],
+    }),
+  },
+}));
 
 describe('pageRegistry <-> navGroups', () => {
   it('exposes every routable page in the rail', () => {
@@ -44,4 +65,46 @@ describe('pageRegistry <-> navGroups', () => {
       expect(page.title, `${page.path} title`).not.toBe('');
     }
   });
+});
+
+/**
+ * Each page.component is now React.lazy(), which resolves through a dynamic
+ * import().then() mapping to the page's named export (see pageRegistry.tsx).
+ * A typo in that mapping — the wrong export name, or an import path that
+ * does not exist — throws only once React actually tries to render the lazy
+ * component, which none of the per-page tests do (they import the named
+ * export directly). This mounts each entry behind its own Suspense boundary
+ * so a broken lazy mapping fails here instead of shipping silently.
+ */
+describe('pageRegistry lazy component mapping', () => {
+  it("resolves every page's lazy component to real content", async () => {
+    const { result: pages } = renderHook(() => usePages());
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    for (const page of pages.current) {
+      const { unmount, container } = render(
+        <QueryClientProvider client={client}>
+          <MemoryRouter initialEntries={[page.path]}>
+            <Suspense fallback="pending">
+              <page.component />
+            </Suspense>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      await waitFor(
+        () => {
+          expect(screen.queryByText('pending')).not.toBeInTheDocument();
+        },
+        { timeout: 5000 },
+      );
+      expect(container, `${page.path} rendered nothing`).not.toBeEmptyDOMElement();
+
+      unmount();
+    }
+    // Four sequential mounts, each waiting out its own lazy import and
+    // data fetch; the default 5s test timeout is tight for that under load.
+  }, 15000);
 });

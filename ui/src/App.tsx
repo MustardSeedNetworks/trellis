@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Route, Routes } from 'react-router';
 import { type PageConfig, usePages } from '@/pageRegistry';
@@ -58,8 +59,21 @@ function PageWithHeader({ page, children }: { page: PageConfig; children: ReactN
           description={page.description}
         />
       </div>
-      {children}
+      <Suspense fallback={<PageLoading />}>{children}</Suspense>
     </>
+  );
+}
+
+/**
+ * Fallback shown while a lazily-loaded page's chunk is still in flight.
+ */
+function PageLoading() {
+  const { t } = useTranslation('common');
+
+  return (
+    <div className="flex flex-1 items-center justify-center p-8 text-sm text-text-secondary">
+      {t('loading.page')}
+    </div>
   );
 }
 

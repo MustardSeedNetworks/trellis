@@ -31,6 +31,9 @@
     "surveys": "Surveys",
     "version": "Version"
   },
+  "loading": {
+    "page": "Loading…"
+  },
   "nav": {
     "capacity": "Capacity",
     "capture": "Capture",
