@@ -1,11 +1,23 @@
 import type { LucideIcon } from 'lucide-react';
 import { FileText, Signal, Upload, Waypoints } from 'lucide-react';
-import type { FC } from 'react';
+import { type ComponentType, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CoveragePage } from '@/pages/CoveragePage';
-import { ImportPage } from '@/pages/ImportPage';
-import { ReportsPage } from '@/pages/ReportsPage';
-import { SurveysPage } from '@/pages/SurveysPage';
+
+// Lazy-loaded so each page's code ships in its own chunk instead of one
+// entry bundle carrying all four — see App.tsx for the Suspense boundary
+// that shows while a chunk is fetched.
+const SurveysPage = lazy(() =>
+  import('@/pages/SurveysPage').then((m) => ({ default: m.SurveysPage })),
+);
+const ImportPage = lazy(() =>
+  import('@/pages/ImportPage').then((m) => ({ default: m.ImportPage })),
+);
+const CoveragePage = lazy(() =>
+  import('@/pages/CoveragePage').then((m) => ({ default: m.CoveragePage })),
+);
+const ReportsPage = lazy(() =>
+  import('@/pages/ReportsPage').then((m) => ({ default: m.ReportsPage })),
+);
 
 /**
  * Page registry — declarative route table for Trellis.
@@ -29,7 +41,7 @@ export interface PageConfig {
   title: string;
   description?: string;
   icon: LucideIcon;
-  component: FC;
+  component: ComponentType;
 }
 
 export function usePages(): PageConfig[] {
