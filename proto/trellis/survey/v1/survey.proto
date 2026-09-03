@@ -172,6 +172,21 @@ message GetHeatmapResponse {
   // The colour scale the image was painted with, sent so a legend describes
   // the gradient on screen rather than a second copy of it.
   repeated LegendStop legend = 8;
+
+  // The interpolated field the image was painted from, row-major:
+  // grid[row * grid_cols + col], in the heatmap metric's own unit.
+  //
+  // Sent so a caller can report the measured value under a cursor. The
+  // alternative — reading it back from a pixel — cannot work: heat is
+  // composited at partial alpha over the floor plan, so the colour on screen
+  // is not the colour the scale chose. One value per cell rather than per
+  // pixel keeps this the same size as the PNG beside it.
+  repeated float grid = 9;
+  int32 grid_cols = 10;
+  int32 grid_rows = 11;
+  // Cell edge in image pixels. A position (x, y) on the image is the cell at
+  // (y / cell_size) * grid_cols + (x / cell_size).
+  int32 cell_size = 12;
 }
 
 // LegendStop is one stop of a heatmap's colour scale: the metric value and

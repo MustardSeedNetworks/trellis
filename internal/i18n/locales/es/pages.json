@@ -2,9 +2,9 @@
   "coverage": {
     "analysing": "Analizando la cobertura",
     "deadZoneBody": "Cada una es una región medida donde la señal quedó por debajo del umbral.",
+    "deadZoneThreshold": "Zona muerta por debajo de",
     "deadZones_one": "{{count}} zona muerta por debajo de {{threshold}} dBm",
     "deadZones_other": "{{count}} zonas muertas por debajo de {{threshold}} dBm",
-    "deadZoneThreshold": "Zona muerta por debajo de",
     "description": "Señal medida en la planta estudiada, y dónde resulta insuficiente.",
     "heatmapAlt": "Mapa de calor de {{metric}} de la planta estudiada",
     "heatmapFailed": "El mapa de calor no se generó: {{error}}",
@@ -14,12 +14,20 @@
     "noSurveySelected": "Ningún estudio seleccionado",
     "noSurveySelectedBody": "La cobertura se mide por estudio. Elija uno para analizarlo.",
     "noSurveys": "Aún no se ha capturado ningún estudio. Importe un archivo de AirMapper para trazar la cobertura a partir de él.",
-    "notInList": "{{id}} · no está en la lista de estudios",
     "notArriving": "El análisis de cobertura no está llegando",
+    "notInList": "{{id}} · no está en la lista de estudios",
+    "readingAt": "{{value}} en {{x}}, {{y}}",
+    "readingPrompt": "Apunte a la superficie para leer su valor medido",
     "renderingHeatmap": "Generando el mapa de calor…",
     "surfaceMeta": "{{metric}} · {{count}} muestras · de {{min}} a {{max}}",
+    "surfaceRegion": "Superficie medida",
     "surveyServiceSilent": "El servicio de estudios no respondió: {{error}}",
-    "title": "Cobertura"
+    "title": "Cobertura",
+    "zoom": "Zoom",
+    "zoomFit": "Ajustar",
+    "zoomIn": "Acercar",
+    "zoomOut": "Alejar",
+    "zoomReset": "Restablecer el zoom para ajustar"
   },
   "import": {
     "archive": "Archivo de AirMapper",

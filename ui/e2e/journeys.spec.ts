@@ -78,3 +78,41 @@ test('generates a PDF report for a walked survey', async ({ page }) => {
   expect(head.subarray(0, 5).toString()).toBe('%PDF-');
   expect(head.length).toBeGreaterThan(1024);
 });
+
+test('reads a measured value off the heatmap and zooms it', async ({ page }) => {
+  await createSurvey(page, uniqueName('Readout'));
+  await walkThreePoints(page);
+  await page.getByTestId('plot-coverage').click();
+
+  const image = page.getByTestId('heatmap-image');
+  await expect(image).toBeVisible();
+
+  const readout = page.getByTestId('heatmap-readout');
+  await expect(readout).toContainText('Point at the surface');
+
+  // Hover the middle of the surface. The value comes from the grid the daemon
+  // painted with, so this asserts a real dBm reading rather than that a
+  // tooltip appeared: the scripted radio's APs run -48 to -66 dBm.
+  const box = await image.boundingBox();
+  if (!box) {
+    throw new Error('heatmap image has no layout box');
+  }
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(readout).toHaveText(/-\d+\.\d dBm at \d+, \d+/);
+
+  const viewport = page.getByTestId('heatmap-viewport');
+  await expect(viewport).toHaveAttribute('data-zoom', '1');
+  await expect(page.getByTestId('zoom-reset')).toBeDisabled();
+
+  // Keyboard, not a click: the controls exist so zoom is reachable without a
+  // mouse, and a button that only responds to a pointer would still pass a
+  // click-driven check.
+  await page.getByTestId('zoom-in').focus();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await expect(viewport).toHaveAttribute('data-zoom', '1.5');
+  await expect(page.getByTestId('zoom-level')).toHaveText('150%');
+
+  await page.getByTestId('zoom-reset').click();
+  await expect(viewport).toHaveAttribute('data-zoom', '1');
+});
