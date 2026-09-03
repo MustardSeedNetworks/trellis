@@ -19,6 +19,7 @@ const generateReport = vi.fn();
 const createSurvey = vi.fn();
 const startSurvey = vi.fn();
 const capturePoint = vi.fn();
+const listSamples = vi.fn();
 
 vi.mock('@/lib/client', () => ({
   surveyClient: {
@@ -27,6 +28,7 @@ vi.mock('@/lib/client', () => ({
     createSurvey: (req: unknown) => createSurvey(req),
     startSurvey: (req: unknown) => startSurvey(req),
     capturePoint: (req: unknown) => capturePoint(req),
+    listSamples: (req: unknown) => listSamples(req),
   },
 }));
 
@@ -66,6 +68,8 @@ beforeEach(() => {
   createSurvey.mockReset();
   startSurvey.mockReset();
   capturePoint.mockReset();
+  listSamples.mockReset();
+  listSamples.mockResolvedValue({ samples: [] });
 });
 
 describe('SurveysPage', () => {
@@ -252,16 +256,17 @@ describe('SurveysPage walk', () => {
     expect(screen.getByText('Created')).toBeInTheDocument();
   });
 
-  it('shows the capture surface only while the survey is walking', async () => {
+  it('accepts points only while the survey is walking', async () => {
     listSurveys.mockResolvedValue({ surveys: [everett, { ...fresh, status: 'in_progress' }] });
     renderPage();
 
     await screen.findByText('Everett HQ');
     fireEvent.click(screen.getByRole('button', { name: /Everett HQ/ }));
-    expect(screen.queryByTestId('capture-surface')).not.toBeInTheDocument();
+    // A completed survey still shows its stored points, as a picture.
+    expect(screen.getByTestId('capture-surface')).toBeDisabled();
 
     fireEvent.click(screen.getByRole('button', { name: /Lab walk/ }));
-    expect(screen.getByTestId('capture-surface')).toBeInTheDocument();
+    expect(screen.getByTestId('capture-surface')).toBeEnabled();
     expect(screen.getByText('Walking')).toBeInTheDocument();
   });
 });

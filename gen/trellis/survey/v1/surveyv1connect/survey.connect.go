@@ -76,6 +76,9 @@ const (
 	// SurveyServiceCapturePointProcedure is the fully-qualified name of the SurveyService's
 	// CapturePoint RPC.
 	SurveyServiceCapturePointProcedure = "/trellis.survey.v1.SurveyService/CapturePoint"
+	// SurveyServiceListSamplesProcedure is the fully-qualified name of the SurveyService's ListSamples
+	// RPC.
+	SurveyServiceListSamplesProcedure = "/trellis.survey.v1.SurveyService/ListSamples"
 )
 
 // SurveyServiceClient is a client for the trellis.survey.v1.SurveyService service.
@@ -113,6 +116,10 @@ type SurveyServiceClient interface {
 	// would deliver duplicates at whatever rate the client asked for. The
 	// surveyor stands at a point, captures it, and moves — one call per point.
 	CapturePoint(context.Context, *connect.Request[v1.CapturePointRequest]) (*connect.Response[v1.CapturePointResponse], error)
+	// ListSamples returns the points stored on a survey's active floor, in
+	// capture order. SurveySummary carries only a count; this is what lets a
+	// client draw where a walk has already been, across a reload or a restart.
+	ListSamples(context.Context, *connect.Request[v1.ListSamplesRequest]) (*connect.Response[v1.ListSamplesResponse], error)
 }
 
 // NewSurveyServiceClient constructs a client for the trellis.survey.v1.SurveyService service. By
@@ -198,6 +205,12 @@ func NewSurveyServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(surveyServiceMethods.ByName("CapturePoint")),
 			connect.WithClientOptions(opts...),
 		),
+		listSamples: connect.NewClient[v1.ListSamplesRequest, v1.ListSamplesResponse](
+			httpClient,
+			baseURL+SurveyServiceListSamplesProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("ListSamples")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -215,6 +228,7 @@ type surveyServiceClient struct {
 	pauseSurvey     *connect.Client[v1.PauseSurveyRequest, v1.PauseSurveyResponse]
 	completeSurvey  *connect.Client[v1.CompleteSurveyRequest, v1.CompleteSurveyResponse]
 	capturePoint    *connect.Client[v1.CapturePointRequest, v1.CapturePointResponse]
+	listSamples     *connect.Client[v1.ListSamplesRequest, v1.ListSamplesResponse]
 }
 
 // ImportAirMapper calls trellis.survey.v1.SurveyService.ImportAirMapper.
@@ -277,6 +291,11 @@ func (c *surveyServiceClient) CapturePoint(ctx context.Context, req *connect.Req
 	return c.capturePoint.CallUnary(ctx, req)
 }
 
+// ListSamples calls trellis.survey.v1.SurveyService.ListSamples.
+func (c *surveyServiceClient) ListSamples(ctx context.Context, req *connect.Request[v1.ListSamplesRequest]) (*connect.Response[v1.ListSamplesResponse], error) {
+	return c.listSamples.CallUnary(ctx, req)
+}
+
 // SurveyServiceHandler is an implementation of the trellis.survey.v1.SurveyService service.
 type SurveyServiceHandler interface {
 	// ImportAirMapper imports an AirMapper (.amp) archive into a new stored
@@ -312,6 +331,10 @@ type SurveyServiceHandler interface {
 	// would deliver duplicates at whatever rate the client asked for. The
 	// surveyor stands at a point, captures it, and moves — one call per point.
 	CapturePoint(context.Context, *connect.Request[v1.CapturePointRequest]) (*connect.Response[v1.CapturePointResponse], error)
+	// ListSamples returns the points stored on a survey's active floor, in
+	// capture order. SurveySummary carries only a count; this is what lets a
+	// client draw where a walk has already been, across a reload or a restart.
+	ListSamples(context.Context, *connect.Request[v1.ListSamplesRequest]) (*connect.Response[v1.ListSamplesResponse], error)
 }
 
 // NewSurveyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -393,6 +416,12 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(surveyServiceMethods.ByName("CapturePoint")),
 		connect.WithHandlerOptions(opts...),
 	)
+	surveyServiceListSamplesHandler := connect.NewUnaryHandler(
+		SurveyServiceListSamplesProcedure,
+		svc.ListSamples,
+		connect.WithSchema(surveyServiceMethods.ByName("ListSamples")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/trellis.survey.v1.SurveyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case SurveyServiceImportAirMapperProcedure:
@@ -419,6 +448,8 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 			surveyServiceCompleteSurveyHandler.ServeHTTP(w, r)
 		case SurveyServiceCapturePointProcedure:
 			surveyServiceCapturePointHandler.ServeHTTP(w, r)
+		case SurveyServiceListSamplesProcedure:
+			surveyServiceListSamplesHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -474,4 +505,8 @@ func (UnimplementedSurveyServiceHandler) CompleteSurvey(context.Context, *connec
 
 func (UnimplementedSurveyServiceHandler) CapturePoint(context.Context, *connect.Request[v1.CapturePointRequest]) (*connect.Response[v1.CapturePointResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.CapturePoint is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) ListSamples(context.Context, *connect.Request[v1.ListSamplesRequest]) (*connect.Response[v1.ListSamplesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.ListSamples is not implemented"))
 }

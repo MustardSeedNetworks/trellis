@@ -65,11 +65,13 @@ export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
         <SurveyLifecycle survey={survey} onDeleted={onDeleted} />
       </div>
 
-      {survey.status === 'in_progress' ? (
-        <div className="mt-6 border-t border-hairline pt-6">
-          <CaptureSurface surveyId={survey.id} surveyName={survey.name} />
-        </div>
-      ) : null}
+      <div className="mt-6 border-t border-hairline pt-6">
+        <CaptureSurface
+          surveyId={survey.id}
+          surveyName={survey.name}
+          walking={survey.status === 'in_progress'}
+        />
+      </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-hairline pt-6">
         <Link

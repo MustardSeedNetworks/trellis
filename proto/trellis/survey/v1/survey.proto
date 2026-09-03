@@ -9,6 +9,8 @@ syntax = "proto3";
 
 package trellis.survey.v1;
 
+import "google/protobuf/timestamp.proto";
+
 option go_package = "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1;surveyv1";
 
 // SurveyService serves measured Wi-Fi site surveys backed by core/survey.
@@ -57,6 +59,11 @@ service SurveyService {
   // would deliver duplicates at whatever rate the client asked for. The
   // surveyor stands at a point, captures it, and moves — one call per point.
   rpc CapturePoint(CapturePointRequest) returns (CapturePointResponse);
+
+  // ListSamples returns the points stored on a survey's active floor, in
+  // capture order. SurveySummary carries only a count; this is what lets a
+  // client draw where a walk has already been, across a reload or a restart.
+  rpc ListSamples(ListSamplesRequest) returns (ListSamplesResponse);
 }
 
 
@@ -250,4 +257,28 @@ message ScannedNetwork {
   string ht_mode = 10;
   // Channel requires radar detection (DFS).
   bool is_dfs = 11;
+}
+
+message ListSamplesRequest {
+  string survey_id = 1;
+}
+
+message ListSamplesResponse {
+  repeated SurveySample samples = 1;
+}
+
+// SurveySample is one stored measurement point, reduced to what a client
+// needs to draw it. The full scan behind a point stays server-side; the
+// heatmap and the report read it there.
+message SurveySample {
+  // Position on the active floor plan, in floor-plan pixel coordinates.
+  int32 x = 1;
+  int32 y = 2;
+  google.protobuf.Timestamp captured_at = 3;
+  // BSSs observed at this point. Zero for a point whose sample is not a
+  // passive scan.
+  int32 network_count = 4;
+  // Signal of the strongest BSS observed, in dBm. Absent when nothing was
+  // observed, since 0 dBm would read as a very strong signal.
+  optional int32 strongest_dbm = 5;
 }

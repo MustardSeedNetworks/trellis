@@ -1,12 +1,16 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { timestampMs } from '@bufbuild/protobuf/wkt';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type KeyboardEvent, type MouseEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { SurveySample } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
 import { formatSignal } from '@/lib/format';
 
 interface CaptureSurfaceProps {
   surveyId: string;
   surveyName: string;
+  /** Only a survey in progress accepts a point; otherwise the surface is a picture. */
+  walking: boolean;
 }
 
 /**
@@ -26,15 +30,6 @@ const WEAK_DBM = -75;
 const KEY_STEP = 10;
 const KEY_STEP_FAST = 50;
 
-interface Pin {
-  /** Sequence within this session; the same spot can be sampled twice. */
-  seq: number;
-  x: number;
-  y: number;
-  networkCount: number;
-  strongestDbm: number | undefined;
-}
-
 interface Point {
   x: number;
   y: number;
@@ -50,40 +45,35 @@ interface Point {
  * a cursor across it and Enter or Space captures there. A surface that only a
  * mouse can drive would leave the product's central action unreachable.
  *
- * Pins live in component state for this session only. The list RPC carries
- * a survey's sample *count* and not its samples, so the count in the survey's
- * facts is the stored truth and these pins are the walk as it was seen from
- * here. The service stores the point; a reload keeps the count and loses the
- * dots, which is a read-path gap for a later change, not a lost measurement.
+ * The pins are the stored points, read back from the service, not a local
+ * record of this session's clicks. A walk is interrupted by glancing at the
+ * heatmap, by a reload, by the daemon restarting; the dots have to survive all
+ * of those or the operator cannot see where they have already been.
  */
-export function CaptureSurface({ surveyId, surveyName }: CaptureSurfaceProps) {
+export function CaptureSurface({ surveyId, surveyName, walking }: CaptureSurfaceProps) {
   const { t } = useTranslation(['common', 'pages']);
   const queryClient = useQueryClient();
-  const [pins, setPins] = useState<Pin[]>([]);
   const [cursor, setCursor] = useState<Point>({ x: SURFACE_WIDTH / 2, y: SURFACE_HEIGHT / 2 });
   const [focused, setFocused] = useState(false);
 
+  const samplesQuery = useQuery({
+    queryKey: ['samples', surveyId],
+    queryFn: () => surveyClient.listSamples({ surveyId }),
+  });
+  const pins = samplesQuery.data?.samples ?? [];
+
   const captureMutation = useMutation({
     mutationFn: (point: Point) => surveyClient.capturePoint({ surveyId, x: point.x, y: point.y }),
-    onSuccess: async (reply, point) => {
-      // Strongest first is the service's contract for networks[0].
-      const strongest = reply.networks[0];
-      setPins((current) => [
-        ...current,
-        {
-          seq: current.length + 1,
-          x: point.x,
-          y: point.y,
-          networkCount: reply.networks.length,
-          strongestDbm: strongest?.signalDbm,
-        },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['samples', surveyId] }),
+        queryClient.invalidateQueries({ queryKey: ['surveys'] }),
       ]);
-      await queryClient.invalidateQueries({ queryKey: ['surveys'] });
     },
   });
 
   function capture(point: Point) {
-    if (captureMutation.isPending) {
+    if (!walking || captureMutation.isPending) {
       return;
     }
     captureMutation.mutate(clamp(point));
@@ -129,19 +119,25 @@ export function CaptureSurface({ surveyId, surveyName }: CaptureSurfaceProps) {
     }
   }
 
-  const last = pins.at(-1);
+  const captured = captureMutation.data;
+  const capturedAt = captureMutation.variables;
   const status = captureMutation.isPending
     ? t('pages:surveys.capturing')
     : captureMutation.isError
       ? t('pages:surveys.captureFailed', { error: String(captureMutation.error) })
-      : last
-        ? t('pages:surveys.captured', {
-            count: last.networkCount,
-            x: last.x,
-            y: last.y,
-            signal: signalText(last.strongestDbm),
-          })
-        : t('pages:surveys.noPoints');
+      : samplesQuery.isError
+        ? t('pages:surveys.samplesFailed', { error: String(samplesQuery.error) })
+        : captured && capturedAt
+          ? t('pages:surveys.captured', {
+              count: captured.networks.length,
+              x: capturedAt.x,
+              y: capturedAt.y,
+              signal: signalText(captured.networks[0]?.signalDbm),
+            })
+          : pins.length === 0
+            ? t('pages:surveys.noPoints')
+            : '';
+  const failed = captureMutation.isError || samplesQuery.isError;
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="capture-title">
@@ -149,19 +145,23 @@ export function CaptureSurface({ surveyId, surveyName }: CaptureSurfaceProps) {
         <h3 id="capture-title" className="kicker">
           {t('pages:surveys.captureTitle')}
         </h3>
-        <span className="text-xs text-text-muted">
-          {t('pages:surveys.pointsThisSession', { count: pins.length })}
+        <span className="text-xs text-text-muted" data-testid="capture-count">
+          {t('pages:surveys.pointsOnFloor', { count: pins.length })}
         </span>
       </div>
-      <p className="text-sm text-text-secondary">{t('pages:surveys.captureHint')}</p>
+      <p className="text-sm text-text-secondary">
+        {walking ? t('pages:surveys.captureHint') : t('pages:surveys.captureHintIdle')}
+      </p>
 
       {/* One button, not a clickable picture: the whole surface is a single
           control whose activation samples at a position — where the pointer
           landed, or at the cursor for a keyboard activation. It is not
           disabled while a scan runs: a disabled button drops focus, and the
-          click is ignored in capture() instead. */}
+          click is ignored in capture() instead. It is disabled when the survey
+          is not walking, because then it is a picture of stored points. */}
       <button
         type="button"
+        disabled={!walking}
         aria-label={t('pages:surveys.surfaceLabel', { name: surveyName })}
         aria-busy={captureMutation.isPending}
         onClick={handleClick}
@@ -169,23 +169,24 @@ export function CaptureSurface({ surveyId, surveyName }: CaptureSurfaceProps) {
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         className={`block w-full rounded-[12px] border border-hairline bg-surface-sunken p-0 focus:outline-2 focus:outline-brand-primary ${
-          captureMutation.isPending ? 'cursor-progress' : 'cursor-crosshair'
+          captureMutation.isPending ? 'cursor-progress' : walking ? 'cursor-crosshair' : ''
         }`}
         data-testid="capture-surface"
+        data-walking={walking}
       >
         <svg
           viewBox={`0 0 ${SURFACE_WIDTH} ${SURFACE_HEIGHT}`}
           aria-hidden="true"
           className="block w-full"
         >
-          {focused ? (
+          {focused && walking ? (
             <g className="stroke-brand-primary" strokeWidth={1.5} data-testid="capture-cursor">
               <line x1={cursor.x - 14} y1={cursor.y} x2={cursor.x + 14} y2={cursor.y} />
               <line x1={cursor.x} y1={cursor.y - 14} x2={cursor.x} y2={cursor.y + 14} />
             </g>
           ) : null}
           {pins.map((pin) => (
-            <g key={pin.seq} data-testid="capture-pin">
+            <g key={pinKey(pin)} data-testid="capture-pin">
               <circle
                 cx={pin.x}
                 cy={pin.y}
@@ -201,14 +202,25 @@ export function CaptureSurface({ surveyId, surveyName }: CaptureSurfaceProps) {
         </svg>
       </button>
 
-      <p
-        className={`text-sm ${captureMutation.isError ? 'text-status-error' : 'text-text-secondary'}`}
-        data-testid="capture-status"
-      >
-        {status}
-      </p>
+      {status ? (
+        <p
+          className={`text-sm ${failed ? 'text-status-error' : 'text-text-secondary'}`}
+          data-testid="capture-status"
+        >
+          {status}
+        </p>
+      ) : null}
     </section>
   );
+}
+
+/**
+ * Capture time plus position identifies a point. Two captures at one spot are
+ * two points, and they cannot share a millisecond: a scan takes seconds.
+ */
+function pinKey(pin: SurveySample): string {
+  const at = pin.capturedAt ? timestampMs(pin.capturedAt) : 0;
+  return `${at}:${pin.x}:${pin.y}`;
 }
 
 function clamp(point: Point): Point {

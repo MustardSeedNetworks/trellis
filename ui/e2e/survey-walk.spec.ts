@@ -54,10 +54,19 @@ test('walks a survey and plots coverage from its stored points', async ({ page }
   }
   await expect(page.getByTestId('capture-status')).toContainText('3 networks at');
 
-  await page.getByTestId('survey-complete').click();
+  // The pins are the stored points, so they survive leaving and coming back.
+  // A reload is the harshest version of that: nothing client-side survives it.
+  await page.reload();
   const row = page.getByTestId('survey-row').filter({ hasText: name });
+  await row.click();
+  await expect(page.getByTestId('capture-pin')).toHaveCount(3);
+  await expect(page.getByTestId('capture-count')).toHaveText('3 points on this floor');
+
+  await page.getByTestId('survey-complete').click();
   await expect(row).toContainText('Completed · 1 floor · 3 samples');
-  await expect(page.getByTestId('capture-surface')).toHaveCount(0);
+  // Completed: the walk is still drawn, but no longer accepts a point.
+  await expect(page.getByTestId('capture-pin')).toHaveCount(3);
+  await expect(page.getByTestId('capture-surface')).toBeDisabled();
 
   // Follow the link rather than typing /coverage: a bare /coverage analyses
   // whichever survey the list puts first, and the other project's surveys are

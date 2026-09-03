@@ -235,3 +235,79 @@ func TestCreateSurveyRequiresAName(t *testing.T) {
 		t.Errorf("code = %v, want %v", got, connect.CodeInvalidArgument)
 	}
 }
+
+// A walk has to be able to see where it has been. SurveySummary carries a
+// count; ListSamples is the read path for the points themselves, and the
+// assertions are on position and signal, not on how many came back.
+func TestListSamplesReturnsStoredPointsInCaptureOrder(t *testing.T) {
+	t.Parallel()
+
+	handler, id := walkedSurvey(t, scriptedScanner{networks: []wifi.ScannedNetwork{
+		{SSID: "Faint", BSSID: "aa:bb:cc:00:00:01", Signal: -85, Channel: 6, Frequency: 2437},
+		{SSID: "Near", BSSID: "aa:bb:cc:00:00:02", Signal: -41, Channel: 52, Frequency: 5260},
+	}})
+
+	for _, p := range [][2]int32{{100, 200}, {300, 50}} {
+		if _, err := handler.CapturePoint(context.Background(),
+			connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: p[0], Y: p[1]})); err != nil {
+			t.Fatalf("CapturePoint(%v): %v", p, err)
+		}
+	}
+
+	resp, err := handler.ListSamples(context.Background(),
+		connect.NewRequest(&surveyv1.ListSamplesRequest{SurveyId: id}))
+	if err != nil {
+		t.Fatalf("ListSamples: %v", err)
+	}
+
+	got := resp.Msg.GetSamples()
+	if len(got) != 2 {
+		t.Fatalf("samples = %d, want 2", len(got))
+	}
+	if got[0].GetX() != 100 || got[0].GetY() != 200 || got[1].GetX() != 300 || got[1].GetY() != 50 {
+		t.Errorf("positions = (%d,%d),(%d,%d), want (100,200),(300,50) in capture order",
+			got[0].GetX(), got[0].GetY(), got[1].GetX(), got[1].GetY())
+	}
+	for i, s := range got {
+		if s.GetNetworkCount() != 2 {
+			t.Errorf("samples[%d].network_count = %d, want 2", i, s.GetNetworkCount())
+		}
+		if s.StrongestDbm == nil || s.GetStrongestDbm() != -41 {
+			t.Errorf("samples[%d].strongest_dbm = %d (set=%v), want -41", i, s.GetStrongestDbm(), s.StrongestDbm != nil)
+		}
+		if s.GetCapturedAt() == nil || s.GetCapturedAt().AsTime().IsZero() {
+			t.Errorf("samples[%d].captured_at is unset", i)
+		}
+	}
+}
+
+func TestListSamplesEmptyAirspaceHasNoStrongest(t *testing.T) {
+	t.Parallel()
+
+	handler, id := walkedSurvey(t, scriptedScanner{networks: []wifi.ScannedNetwork{}})
+	if _, err := handler.CapturePoint(context.Background(),
+		connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: 1, Y: 1})); err != nil {
+		t.Fatalf("CapturePoint: %v", err)
+	}
+
+	resp, err := handler.ListSamples(context.Background(),
+		connect.NewRequest(&surveyv1.ListSamplesRequest{SurveyId: id}))
+	if err != nil {
+		t.Fatalf("ListSamples: %v", err)
+	}
+	got := resp.Msg.GetSamples()
+	if len(got) != 1 || got[0].GetNetworkCount() != 0 || got[0].StrongestDbm != nil {
+		t.Fatalf("empty scan should store one point with no networks and no strongest signal; got %v", got)
+	}
+}
+
+func TestListSamplesUnknownSurveyIsNotFound(t *testing.T) {
+	t.Parallel()
+
+	handler := api.NewSurveyServiceHandler(mustManager(t, t.TempDir(), nil, nil, nil, nil))
+	_, err := handler.ListSamples(context.Background(),
+		connect.NewRequest(&surveyv1.ListSamplesRequest{SurveyId: "nope"}))
+	if connect.CodeOf(err) != connect.CodeNotFound {
+		t.Fatalf("code = %v, want NotFound", connect.CodeOf(err))
+	}
+}
