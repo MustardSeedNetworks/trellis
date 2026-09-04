@@ -128,23 +128,37 @@ test('reads the live airspace and stops taking the radio when paused', async ({ 
 
   const rows = page.getByTestId('neighbour-row');
   await expect(rows).toHaveCount(3);
-  // Strongest first, and the row the host is joined to is marked as such —
-  // asserted by value, since a table that rendered three rows in radio order
-  // would look the same.
-  await expect(rows.first()).toHaveAttribute('data-associated', 'true');
-  await expect(rows.first()).toContainText('18%');
-  // The third BSS broadcasts no SSID and sits on a DFS channel.
-  await expect(rows.nth(2)).toContainText('Hidden network');
-  await expect(rows.nth(2)).toContainText('(DFS)');
+
+  // Identified by the association, not by position: the scripted radio fades
+  // its strongest AP from -48 to -66 dBm, so the joined BSS is the top row for
+  // three of every four scans and the second row on the fourth. An assertion on
+  // rows.first() passes or fails on which scan the page happened to be showing.
+  const associated = page.locator('[data-testid="neighbour-row"][data-associated="true"]');
+  await expect(associated).toHaveCount(1);
+  await expect(associated).toContainText('Trellis Lab');
+  await expect(associated).toContainText('18%');
+
+  // Strongest first, read off the rendered values rather than assumed from the
+  // fixture — the ordering is the server's and this is what checks it.
+  const dbm = await rows.evaluateAll((tr) =>
+    tr.map((row) => Number.parseFloat(row.querySelectorAll('td')[3]?.textContent ?? '')),
+  );
+  expect(dbm).toEqual([...dbm].sort((a, b) => b - a));
+
+  // The weakest BSS broadcasts no SSID and sits on a DFS channel. It is last
+  // under every fade step, since it never moves.
+  await expect(rows.last()).toContainText('Hidden network');
+  await expect(rows.last()).toContainText('(DFS)');
   // An AP that sent no BSS Load element must not read as an idle channel.
-  await expect(rows.nth(2)).toContainText('Not reported');
+  await expect(rows.last()).toContainText('Not reported');
 
   // Pausing has to stop the polling, not just relabel the button: the same
-  // adapter is what a walk captures with.
-  const signal = rows.first().locator('td').nth(3);
-  const paused = await signal.textContent();
+  // adapter is what a walk captures with. The joined AP is the one that fades,
+  // so its reading is what would move if a poll got through.
+  const signal = associated.locator('td').nth(3);
+  const held = await signal.textContent();
   await page.getByTestId('toggle-polling').click();
   await expect(page.getByTestId('toggle-polling')).toHaveText('Resume scanning');
   await page.waitForTimeout(6000);
-  await expect(signal).toHaveText(paused ?? '');
+  await expect(signal).toHaveText(held ?? '');
 });
