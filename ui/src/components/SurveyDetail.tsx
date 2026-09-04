@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { CaptureSurface } from '@/components/CaptureSurface';
 import { SurveyLifecycle } from '@/components/SurveyLifecycle';
+import { ThroughputTarget } from '@/components/ThroughputTarget';
 import type { SurveySummary } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
 import { bytesToDataUrl, reportFilename } from '@/lib/format';
@@ -66,11 +67,16 @@ export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
       </div>
 
       <div className="mt-6 border-t border-hairline pt-6">
+        <ThroughputTarget surveyId={survey.id} server={survey.iperfServer} />
+      </div>
+
+      <div className="mt-6 border-t border-hairline pt-6">
         <CaptureSurface
           surveyId={survey.id}
           surveyName={survey.name}
           walking={survey.status === 'in_progress'}
           capture={survey.capture}
+          throughputTarget={survey.iperfServer}
         />
       </div>
 

@@ -19,6 +19,7 @@ const capturePoint = vi.fn();
 const listSamples = vi.fn();
 const startContinuousCapture = vi.fn();
 const stopContinuousCapture = vi.fn();
+const measureThroughput = vi.fn();
 
 vi.mock('@/lib/client', () => ({
   surveyClient: {
@@ -26,6 +27,7 @@ vi.mock('@/lib/client', () => ({
     listSamples: (req: unknown) => listSamples(req),
     startContinuousCapture: (req: unknown) => startContinuousCapture(req),
     stopContinuousCapture: (req: unknown) => stopContinuousCapture(req),
+    measureThroughput: (req: unknown) => measureThroughput(req),
   },
 }));
 
@@ -58,13 +60,19 @@ function captureStatus(over: Partial<CaptureStatus> = {}): CaptureStatus {
   return create(CaptureStatusSchema, { running: true, x: 100, y: 200, lastError: '', ...over });
 }
 
-function renderSurface(walking = true, capture?: CaptureStatus) {
+function renderSurface(walking = true, capture?: CaptureStatus, throughputTarget = '') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   function wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   }
   return render(
-    <CaptureSurface surveyId="svy-9" surveyName="Everett HQ" walking={walking} capture={capture} />,
+    <CaptureSurface
+      surveyId="svy-9"
+      surveyName="Everett HQ"
+      walking={walking}
+      capture={capture}
+      throughputTarget={throughputTarget}
+    />,
     { wrapper },
   );
 }
@@ -87,6 +95,7 @@ beforeEach(() => {
   listSamples.mockReset();
   startContinuousCapture.mockReset();
   stopContinuousCapture.mockReset();
+  measureThroughput.mockReset();
   startContinuousCapture.mockResolvedValue({ capture: captureStatus() });
   stopContinuousCapture.mockResolvedValue({});
   listSamples.mockResolvedValue({ samples: [] });
@@ -310,5 +319,59 @@ describe('placed readings', () => {
     // and a value beside each one is an unreadable page.
     expect(marked.querySelector('text')).toHaveTextContent('-50.0 dBm');
     expect(placed.querySelector('text')).toBeNull();
+  });
+});
+
+describe('active measurement', () => {
+  it('offers no throughput test on a survey that names no server', () => {
+    renderSurface(true);
+
+    // A button that always fails is worse than an absent one, and the remedy —
+    // name a target — is not something a click can discover.
+    expect(screen.queryByTestId('measure-throughput')).not.toBeInTheDocument();
+  });
+
+  it('measures at the cursor and reports both directions', async () => {
+    measureThroughput.mockResolvedValue({
+      reading: {
+        downloadMbps: 221.4,
+        uploadMbps: 88.2,
+        ssid: 'lab',
+        bssid: 'aa:bb',
+        signalDbm: -52,
+      },
+    });
+    renderSurface(true, undefined, '10.44.10.9');
+
+    fireEvent.click(screen.getByTestId('measure-throughput'));
+
+    await waitFor(() => expect(measureThroughput).toHaveBeenCalled());
+    expect(measureThroughput.mock.calls[0]?.[0]).toMatchObject({
+      surveyId: 'svy-9',
+      x: SURFACE_WIDTH / 2,
+      y: SURFACE_HEIGHT / 2,
+    });
+    expect(await screen.findByTestId('capture-status')).toHaveTextContent(
+      '221.4 Mbps down, 88.2 Mbps up',
+    );
+  });
+
+  it('names the reason a test failed rather than leaving the surface calm', async () => {
+    measureThroughput.mockRejectedValue(new Error('iperf3 is not installed'));
+    renderSurface(true, undefined, '10.44.10.9');
+
+    fireEvent.click(screen.getByTestId('measure-throughput'));
+
+    const status = await screen.findByTestId('capture-status');
+    expect(status).toHaveTextContent('iperf3 is not installed');
+    expect(status).toHaveClass('text-status-error');
+  });
+
+  it('does not offer a throughput test during a walk', () => {
+    // One radio, and the test takes seconds in each direction. Running it while
+    // a walk is sampling would interleave two measurements on one adapter.
+    renderSurface(true, captureStatus(), '10.44.10.9');
+
+    expect(screen.getByTestId('measure-throughput')).toBeDisabled();
   });
 });

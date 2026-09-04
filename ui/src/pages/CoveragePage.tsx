@@ -30,7 +30,18 @@ import type { RollupState } from '@/ui/StatusRollup';
 const METRICS = [
   { id: 'rssi', label: 'RSSI', unit: 'dBm' },
   { id: 'snr', label: 'SNR', unit: 'dB' },
+  { id: 'download', label: 'Download', unit: 'Mbps' },
 ] as const;
+
+/**
+ * Metrics the dead-zone analysis can speak about.
+ *
+ * It compares a signal against a dBm threshold, so it has nothing to say about
+ * a throughput layer — a "dead zone below -75 dBm" printed under a map of Mbps
+ * would be an answer to a question nobody asked, and the threshold control
+ * beside it would appear to do something it does not.
+ */
+const COVERAGE_METRICS: readonly Metric[] = ['rssi', 'snr'];
 
 type Metric = (typeof METRICS)[number]['id'];
 
@@ -104,6 +115,7 @@ export function CoveragePage() {
 
   const heatmap = heatmapQuery.data;
   const unit = METRICS.find((m) => m.id === metric)?.unit ?? '';
+  const analysable = COVERAGE_METRICS.includes(metric);
   const findings = describeCoverage(
     {
       threshold,
@@ -187,29 +199,35 @@ export function CoveragePage() {
           </div>
         </div>
 
-        <label className="flex items-center gap-2 text-sm" htmlFor="coverage-threshold">
-          <span className="kicker">{t('pages:coverage.deadZoneThreshold')}</span>
-          <input
-            id="coverage-threshold"
-            type="number"
-            value={threshold}
-            min={MIN_THRESHOLD_DBM}
-            max={MAX_THRESHOLD_DBM}
-            step={1}
-            onChange={(event) => {
-              const parsed = Number(event.target.value);
-              if (
-                Number.isInteger(parsed) &&
-                parsed >= MIN_THRESHOLD_DBM &&
-                parsed <= MAX_THRESHOLD_DBM
-              ) {
-                setThreshold(parsed);
-              }
-            }}
-            className="figure w-24 rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
-          />
-          <span className="text-text-secondary">dBm</span>
-        </label>
+        {/* Only where it means something. The threshold and the findings below
+            speak about signal against a dBm floor; over a throughput layer they
+            would answer a question nobody asked, and a control that appears to
+            do nothing is worse than one that is not there. */}
+        {analysable ? (
+          <label className="flex items-center gap-2 text-sm" htmlFor="coverage-threshold">
+            <span className="kicker">{t('pages:coverage.deadZoneThreshold')}</span>
+            <input
+              id="coverage-threshold"
+              type="number"
+              value={threshold}
+              min={MIN_THRESHOLD_DBM}
+              max={MAX_THRESHOLD_DBM}
+              step={1}
+              onChange={(event) => {
+                const parsed = Number(event.target.value);
+                if (
+                  Number.isInteger(parsed) &&
+                  parsed >= MIN_THRESHOLD_DBM &&
+                  parsed <= MAX_THRESHOLD_DBM
+                ) {
+                  setThreshold(parsed);
+                }
+              }}
+              className="figure w-24 rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
+            />
+            <span className="text-text-secondary">dBm</span>
+          </label>
+        ) : null}
 
         {heatmap ? (
           <span className="figure ml-auto text-xs text-text-muted" data-testid="surface-meta">
@@ -241,13 +259,15 @@ export function CoveragePage() {
           {heatmap ? <HeatmapLegend stops={heatmap.legend} unit={unit} /> : null}
         </section>
 
-        <CoverageFindings
-          state={findings.state}
-          headline={findings.headline}
-          body={findings.body}
-          figures={findings.figures}
-          recommendations={findings.recommendations}
-        />
+        {analysable ? (
+          <CoverageFindings
+            state={findings.state}
+            headline={findings.headline}
+            body={findings.body}
+            figures={findings.figures}
+            recommendations={findings.recommendations}
+          />
+        ) : null}
       </div>
     </div>
   );

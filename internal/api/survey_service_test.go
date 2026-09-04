@@ -301,3 +301,117 @@ func TestImportAirMapperInvalidArgument(t *testing.T) {
 		t.Errorf("code = %v, want CodeInvalidArgument", connect.CodeOf(err))
 	}
 }
+
+func TestGetHeatmapRendersTheMetricThatWasAskedFor(t *testing.T) {
+	t.Parallel()
+
+	handler, id := measuredSurvey(t)
+
+	for _, tc := range []struct {
+		asked string
+		want  string
+	}{
+		{"rssi", "rssi"},
+		{"signal", "rssi"},
+		{"snr", "snr"},
+		{"download", "download"},
+		{"", "rssi"},
+		// An unrecognised metric falls back rather than failing: the domain's
+		// own rule, and the handler must not invent a different one.
+		{"not-a-metric", "rssi"},
+	} {
+		got, err := handler.GetHeatmap(context.Background(),
+			connect.NewRequest(&surveyv1.GetHeatmapRequest{SurveyId: id, Metric: tc.asked}))
+		if err != nil {
+			t.Fatalf("GetHeatmap(%q): %v", tc.asked, err)
+		}
+		// The handler used to test for "snr" and send everything else to RSSI,
+		// so a download layer came back as a signal layer labelled Mbps.
+		if got.Msg.GetMetric() != tc.want {
+			t.Errorf("asked for %q, rendered %q, want %q", tc.asked, got.Msg.GetMetric(), tc.want)
+		}
+	}
+}
+
+func TestAThroughputLayerLeavesOutThePointsThatMeasuredNoThroughput(t *testing.T) {
+	t.Parallel()
+
+	handler, id := measuredSurvey(t)
+
+	download, err := handler.GetHeatmap(context.Background(),
+		connect.NewRequest(&surveyv1.GetHeatmapRequest{SurveyId: id, Metric: "download"}))
+	if err != nil {
+		t.Fatalf("GetHeatmap(download): %v", err)
+	}
+	// Three passive points and one active one. A passive scan measured no
+	// throughput; rendering its dBm here would put a plausible number in the
+	// wrong unit onto the map.
+	if got := download.Msg.GetSampleCount(); got != 1 {
+		t.Errorf("download layer holds %d points, want the 1 that measured a rate", got)
+	}
+	// Within a Mbps: the value travels through the interpolator, which is
+	// float arithmetic, so pinning it exactly would be pinning the rounding.
+	if got := download.Msg.GetMax(); got < 220.5 || got > 221.5 {
+		t.Errorf("download layer maxes at %v Mbps, want the measured 221", got)
+	}
+
+	signal, err := handler.GetHeatmap(context.Background(),
+		connect.NewRequest(&surveyv1.GetHeatmapRequest{SurveyId: id, Metric: "rssi"}))
+	if err != nil {
+		t.Fatalf("GetHeatmap(rssi): %v", err)
+	}
+	// The signal layer is the other way round: the active point carries the
+	// association it ran over, so it belongs there too.
+	if got := signal.Msg.GetSampleCount(); got != 4 {
+		t.Errorf("signal layer holds %d points, want all 4", got)
+	}
+}
+
+// measuredSurvey returns a completed survey holding three passive points and
+// one throughput measurement, so a layer can be wrong in either direction.
+func measuredSurvey(t *testing.T) (*api.SurveyServiceHandler, string) {
+	t.Helper()
+
+	manager := mustManager(t, t.TempDir(), scriptedScanner{networks: []wifi.ScannedNetwork{
+		{SSID: "lab", BSSID: "aa:bb:cc:00:00:01", Signal: -50, SNR: 45, Channel: 36, Frequency: 5180},
+	}}, nil, fixedMeter{}, nil)
+	handler := api.NewSurveyServiceHandler(manager)
+
+	created, err := handler.CreateSurvey(context.Background(),
+		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "measured", Interface: "en0"}))
+	if err != nil {
+		t.Fatalf("CreateSurvey: %v", err)
+	}
+	id := created.Msg.GetSurvey().GetId()
+
+	if _, err := handler.SetThroughputTarget(context.Background(),
+		connect.NewRequest(&surveyv1.SetThroughputTargetRequest{
+			SurveyId: id, Server: "10.44.10.9",
+		})); err != nil {
+		t.Fatalf("SetThroughputTarget: %v", err)
+	}
+	if _, err := handler.StartSurvey(context.Background(),
+		connect.NewRequest(&surveyv1.StartSurveyRequest{Id: id})); err != nil {
+		t.Fatalf("StartSurvey: %v", err)
+	}
+	for _, at := range []struct{ x, y int32 }{{10, 10}, {200, 100}, {400, 300}} {
+		if _, err := handler.CapturePoint(context.Background(),
+			connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: at.x, Y: at.y})); err != nil {
+			t.Fatalf("CapturePoint: %v", err)
+		}
+	}
+	if _, err := handler.MeasureThroughput(context.Background(),
+		connect.NewRequest(&surveyv1.MeasureThroughputRequest{SurveyId: id, X: 300, Y: 200})); err != nil {
+		t.Fatalf("MeasureThroughput: %v", err)
+	}
+	return handler, id
+}
+
+// fixedMeter stands in for iperf3 with a rate a layer can be asserted on.
+type fixedMeter struct{}
+
+func (fixedMeter) Measure(
+	context.Context, string, string, int,
+) (survey.ThroughputSample, error) {
+	return survey.ThroughputSample{DownloadMbps: 221, UploadMbps: 88}, nil
+}

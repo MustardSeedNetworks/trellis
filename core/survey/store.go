@@ -127,7 +127,7 @@ func insertFloor(ctx context.Context, tx *sql.Tx, surveyID string, f *Floor) err
 }
 
 func insertPoint(ctx context.Context, tx *sql.Tx, surveyID, floorID string, p *SamplePoint) error {
-	kind, passive, active := classifySample(p.SampleData)
+	kind, passive, active, tput := classifySample(p.SampleData)
 	res, err := tx.ExecContext(ctx, `
 		INSERT INTO survey_points (floor_id, survey_id, x, y, recorded_at, sample_kind,
 			interpolated)
@@ -141,6 +141,18 @@ func insertPoint(ctx context.Context, tx *sql.Tx, surveyID, floorID string, p *S
 	pointID, err := res.LastInsertId()
 	if err != nil {
 		return fmt.Errorf("point id: %w", err)
+	}
+
+	if tput != nil {
+		if _, err := tx.ExecContext(ctx, `
+			INSERT INTO throughput_samples (point_id, survey_id, ssid, bssid, rssi_dbm,
+				download_mbps, upload_mbps, latency_ms, jitter_ms, packet_loss_pct)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			pointID, surveyID, tput.SSID, tput.BSSID, tput.RSSI,
+			tput.DownloadMbps, tput.UploadMbps, tput.Latency, tput.Jitter, tput.PacketLoss,
+		); err != nil {
+			return fmt.Errorf("insert throughput sample: %w", err)
+		}
 	}
 
 	if active != nil {
@@ -180,18 +192,20 @@ func insertPoint(ctx context.Context, tx *sql.Tx, surveyID, floorID string, p *S
 // classifySample names the sample union arm and returns the passive payload
 // when that is what it is. SampleData is `any` on the wire because a point
 // carries one of three shapes; the schema records which.
-func classifySample(data any) (string, *PassiveSample, *ActiveSample) {
+func classifySample(data any) (string, *PassiveSample, *ActiveSample, *ThroughputSample) {
 	switch v := data.(type) {
 	case *PassiveSample:
-		return "passive", v, nil
+		return "passive", v, nil, nil
 	case PassiveSample:
-		return "passive", &v, nil
+		return "passive", &v, nil, nil
 	case *ActiveSample:
-		return "active", nil, v
+		return "active", nil, v, nil
 	case ActiveSample:
-		return "active", nil, &v
-	case *ThroughputSample, ThroughputSample:
-		return "throughput", nil, nil
+		return "active", nil, &v, nil
+	case *ThroughputSample:
+		return "throughput", nil, nil, v
+	case ThroughputSample:
+		return "throughput", nil, nil, &v
 	}
 	// JSON-decoded samples arrive as map[string]any. Re-decode rather than
 	// guess: a point whose kind we cannot name would violate the CHECK, and a
@@ -201,22 +215,27 @@ func classifySample(data any) (string, *PassiveSample, *ActiveSample) {
 			var ps PassiveSample
 			if raw, err := json.Marshal(m); err == nil {
 				if json.Unmarshal(raw, &ps) == nil {
-					return "passive", &ps, nil
+					return "passive", &ps, nil, nil
 				}
 			}
 		}
-		if _, hasThroughput := m["throughputMbps"]; hasThroughput {
-			return "throughput", nil, nil
+		if _, hasDownload := m["downloadMbps"]; hasDownload {
+			var ts ThroughputSample
+			if raw, err := json.Marshal(m); err == nil {
+				if json.Unmarshal(raw, &ts) == nil {
+					return "throughput", nil, nil, &ts
+				}
+			}
 		}
 		var as ActiveSample
 		if raw, err := json.Marshal(m); err == nil {
 			if json.Unmarshal(raw, &as) == nil {
-				return "active", nil, &as
+				return "active", nil, &as, nil
 			}
 		}
-		return "active", nil, nil
+		return "active", nil, nil, nil
 	}
-	return "passive", nil, nil
+	return "passive", nil, nil, nil
 }
 
 // LoadSurveys reads every survey into the in-memory map.
@@ -339,6 +358,15 @@ func (m *Manager) loadPoints(ctx context.Context, f *Floor) error {
 				p.SampleData = act
 			}
 		}
+		if kind == "throughput" {
+			tput, tputErr := m.loadThroughputSample(ctx, id)
+			if tputErr != nil {
+				return tputErr
+			}
+			if tput != nil {
+				p.SampleData = tput
+			}
+		}
 		if kind == "passive" {
 			ps = &PassiveSample{}
 			p.SampleData = ps
@@ -408,6 +436,24 @@ func (m *Manager) loadActiveSample(ctx context.Context, pointID int64) (*ActiveS
 	}
 	a.RoamingEvent = roaming == 1
 	return &a, nil
+}
+
+// loadThroughputSample reads one point's active measurement.
+func (m *Manager) loadThroughputSample(ctx context.Context, pointID int64) (*ThroughputSample, error) {
+	var t ThroughputSample
+	err := m.db.QueryRowContext(ctx, `
+		SELECT ssid, bssid, rssi_dbm, download_mbps, upload_mbps,
+			latency_ms, jitter_ms, packet_loss_pct
+		FROM throughput_samples WHERE point_id = ?`, pointID).
+		Scan(&t.SSID, &t.BSSID, &t.RSSI, &t.DownloadMbps, &t.UploadMbps,
+			&t.Latency, &t.Jitter, &t.PacketLoss)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("load throughput sample: %w", err)
+	}
+	return &t, nil
 }
 
 func (m *Manager) loadCriteria(ctx context.Context, s *Survey) error {

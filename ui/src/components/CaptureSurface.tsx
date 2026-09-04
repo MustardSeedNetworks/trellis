@@ -9,6 +9,8 @@ import { formatSignal } from '@/lib/format';
 interface CaptureSurfaceProps {
   surveyId: string;
   surveyName: string;
+  /** The iperf3 server active measurements run against; empty when none is set. */
+  throughputTarget: string;
   /** Only a survey in progress accepts a point; otherwise the surface is a picture. */
   walking: boolean;
   /** The survey's continuous capture, from the summary. Absent when it has never had one. */
@@ -67,7 +69,13 @@ interface Point {
  * heatmap, by a reload, by the daemon restarting; the dots have to survive all
  * of those or the operator cannot see where they have already been.
  */
-export function CaptureSurface({ surveyId, surveyName, walking, capture }: CaptureSurfaceProps) {
+export function CaptureSurface({
+  surveyId,
+  surveyName,
+  walking,
+  capture,
+  throughputTarget,
+}: CaptureSurfaceProps) {
   const { t } = useTranslation(['common', 'pages']);
   const queryClient = useQueryClient();
   const [cursor, setCursor] = useState<Point>({ x: SURFACE_WIDTH / 2, y: SURFACE_HEIGHT / 2 });
@@ -99,6 +107,22 @@ export function CaptureSurface({ surveyId, surveyName, walking, capture }: Captu
       surveyClient.startContinuousCapture({ surveyId, x: point.x, y: point.y }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['surveys'] });
+    },
+  });
+
+  // Active measurement: a throughput test at the cursor. Its own control rather
+  // than a mode of the surface, because it is a different measurement — the
+  // surface's click says where, and this says what to measure there. It runs
+  // for seconds in each direction, so it is stop-and-go by nature and has no
+  // continuous form.
+  const throughputMutation = useMutation({
+    mutationFn: (point: Point) =>
+      surveyClient.measureThroughput({ surveyId, x: point.x, y: point.y }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['samples', surveyId] }),
+        queryClient.invalidateQueries({ queryKey: ['surveys'] }),
+      ]);
     },
   });
 
@@ -174,28 +198,35 @@ export function CaptureSurface({ surveyId, surveyName, walking, capture }: Captu
   const capturedAt = captureMutation.variables;
   // A walk that stopped by itself says why. Points that simply cease appearing,
   // with a calm surface above them, is the failure this reading exists for.
-  const status =
-    capture && !capture.running && capture.lastError !== ''
-      ? t('pages:surveys.walkStopped', { error: capture.lastError })
-      : capturing
-        ? t('pages:surveys.walkingAt', { x: capture.x, y: capture.y, count: pins.length })
-        : captureMutation.isPending
-          ? t('pages:surveys.capturing')
-          : captureMutation.isError
-            ? t('pages:surveys.captureFailed', { error: String(captureMutation.error) })
-            : samplesQuery.isError
-              ? t('pages:surveys.samplesFailed', { error: String(samplesQuery.error) })
-              : captured && capturedAt
-                ? t('pages:surveys.captured', {
-                    count: captured.networks.length,
-                    x: capturedAt.x,
-                    y: capturedAt.y,
-                    signal: signalText(captured.networks[0]?.signalDbm),
-                  })
-                : pins.length === 0
-                  ? t('pages:surveys.noPoints')
-                  : '';
+  const status = throughputMutation.isError
+    ? t('pages:surveys.throughputFailed', { error: String(throughputMutation.error) })
+    : throughputMutation.data
+      ? t('pages:surveys.measured', {
+          download: throughputMutation.data.reading?.downloadMbps.toFixed(1) ?? '0',
+          upload: throughputMutation.data.reading?.uploadMbps.toFixed(1) ?? '0',
+        })
+      : capture && !capture.running && capture.lastError !== ''
+        ? t('pages:surveys.walkStopped', { error: capture.lastError })
+        : capturing
+          ? t('pages:surveys.walkingAt', { x: capture.x, y: capture.y, count: pins.length })
+          : captureMutation.isPending
+            ? t('pages:surveys.capturing')
+            : captureMutation.isError
+              ? t('pages:surveys.captureFailed', { error: String(captureMutation.error) })
+              : samplesQuery.isError
+                ? t('pages:surveys.samplesFailed', { error: String(samplesQuery.error) })
+                : captured && capturedAt
+                  ? t('pages:surveys.captured', {
+                      count: captured.networks.length,
+                      x: capturedAt.x,
+                      y: capturedAt.y,
+                      signal: signalText(captured.networks[0]?.signalDbm),
+                    })
+                  : pins.length === 0
+                    ? t('pages:surveys.noPoints')
+                    : '';
   const failed =
+    throughputMutation.isError ||
     captureMutation.isError ||
     samplesQuery.isError ||
     walkMutation.isError ||
@@ -214,6 +245,22 @@ export function CaptureSurface({ surveyId, surveyName, walking, capture }: Captu
           </span>
           {/* Only offered while the survey is walking: continuous capture on a
               paused or completed survey has nothing to write into. */}
+          {/* Offered only when the survey names a server. A button that always
+              fails is worse than an absent one, and the remedy — name a target
+              — is not something a click can discover. */}
+          {throughputTarget === '' ? null : (
+            <button
+              type="button"
+              disabled={!walking || capturing || throughputMutation.isPending}
+              onClick={() => throughputMutation.mutate(clamp(cursor))}
+              data-testid="measure-throughput"
+              className="rounded border border-hairline px-3 py-1 text-sm text-text-primary hover:bg-surface-raised disabled:opacity-50"
+            >
+              {throughputMutation.isPending
+                ? t('pages:surveys.testing')
+                : t('pages:surveys.throughputTest')}
+            </button>
+          )}
           <button
             type="button"
             disabled={!walking || walkMutation.isPending || stopMutation.isPending}

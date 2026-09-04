@@ -18,6 +18,7 @@ import (
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
 	"github.com/MustardSeedNetworks/trellis/internal/capture"
+	"github.com/MustardSeedNetworks/trellis/internal/throughput"
 )
 
 // int32Of narrows a measurement for the wire.
@@ -193,6 +194,56 @@ func (h *SurveyServiceHandler) StopContinuousCapture(
 	return connect.NewResponse(&surveyv1.StopContinuousCaptureResponse{}), nil
 }
 
+// MeasureThroughput runs an active measurement at a position and stores it.
+func (h *SurveyServiceHandler) MeasureThroughput(
+	ctx context.Context,
+	req *connect.Request[surveyv1.MeasureThroughputRequest],
+) (*connect.Response[surveyv1.MeasureThroughputResponse], error) {
+	id := req.Msg.GetSurveyId()
+	if id == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+	}
+
+	sample, err := h.manager.MeasureThroughput(ctx, id, int(req.Msg.GetX()), int(req.Msg.GetY()))
+	if err != nil {
+		return nil, captureError(err)
+	}
+	return connect.NewResponse(&surveyv1.MeasureThroughputResponse{
+		Reading: &surveyv1.ThroughputReading{
+			DownloadMbps: sample.DownloadMbps,
+			UploadMbps:   sample.UploadMbps,
+			Ssid:         sample.SSID,
+			Bssid:        sample.BSSID,
+			SignalDbm:    int32Of(sample.RSSI),
+		},
+	}), nil
+}
+
+// SetThroughputTarget names the server a survey's active measurements run
+// against.
+func (h *SurveyServiceHandler) SetThroughputTarget(
+	_ context.Context,
+	req *connect.Request[surveyv1.SetThroughputTargetRequest],
+) (*connect.Response[surveyv1.SetThroughputTargetResponse], error) {
+	id := req.Msg.GetSurveyId()
+	if id == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+	}
+
+	if err := h.manager.SetThroughputTarget(
+		id, strings.TrimSpace(req.Msg.GetServer()), int(req.Msg.GetDurationSec()),
+	); err != nil {
+		return nil, captureError(err)
+	}
+	s, err := h.manager.GetSurvey(id)
+	if err != nil {
+		return nil, captureError(err)
+	}
+	return connect.NewResponse(&surveyv1.SetThroughputTargetResponse{
+		Survey: h.surveySummary(s),
+	}), nil
+}
+
 // transition applies a state change by ID and returns the survey as it stands
 // afterwards, so a caller sees the new status without a second round trip.
 func (h *SurveyServiceHandler) transition(
@@ -226,8 +277,15 @@ func captureError(err error) error {
 		return connect.NewError(connect.CodeFailedPrecondition,
 			fmt.Errorf("%w%s", err, permissionFix()))
 
-	case errors.Is(err, capture.ErrUnsupported), errors.Is(err, survey.ErrNoScanner):
+	case errors.Is(err, capture.ErrUnsupported), errors.Is(err, survey.ErrNoScanner),
+		errors.Is(err, survey.ErrNoThroughputMeter):
 		return connect.NewError(connect.CodeUnimplemented, err)
+
+	case errors.Is(err, throughput.ErrNotInstalled), errors.Is(err, throughput.ErrNoAddress):
+		// Both are things an operator does something about — install iperf3,
+		// join a network — so they carry their own remedy and must not be
+		// buried in an internal error.
+		return connect.NewError(connect.CodeFailedPrecondition, err)
 
 	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
 		return connect.NewError(connect.CodeCanceled, err)
@@ -269,6 +327,25 @@ func utilizationOf(percent *int) *int32 {
 	}
 	narrowed := int32Of(*percent)
 	return &narrowed
+}
+
+// withThroughput fills in what an active measurement found.
+//
+// The rate is set and the signal is set separately: a reading taken on a host
+// that reports no association (Windows, #294) has a real rate and no AP behind
+// it, and blanking the rate over a missing label would lose the measurement.
+func withThroughput(
+	out *surveyv1.SurveySample,
+	sample *survey.ThroughputSample,
+) *surveyv1.SurveySample {
+	download := sample.DownloadMbps
+	out.DownloadMbps = &download
+	out.NetworkCount = 0
+	if sample.BSSID != "" {
+		strongest := int32Of(sample.RSSI)
+		out.StrongestDbm = &strongest
+	}
+	return out
 }
 
 // ListSamples returns the points stored on a survey's active floor, in
@@ -320,6 +397,10 @@ func surveySampleOf(sp *survey.SamplePoint) *surveyv1.SurveySample {
 		passive = data
 	case survey.PassiveSample:
 		passive = &data
+	case *survey.ThroughputSample:
+		return withThroughput(out, data)
+	case survey.ThroughputSample:
+		return withThroughput(out, &data)
 	default:
 		return out
 	}

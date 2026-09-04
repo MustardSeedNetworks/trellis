@@ -94,6 +94,22 @@ service SurveyService {
   // running is not an error.
   rpc StopContinuousCapture(StopContinuousCaptureRequest)
       returns (StopContinuousCaptureResponse);
+
+  // MeasureThroughput runs a throughput test at a position and stores what it
+  // measured — the active half of a survey, where the scan-based points are the
+  // passive half. A strong signal on a congested channel carries very little,
+  // and only this says which of those a room is.
+  //
+  // Stop-and-go by nature: the test takes seconds in each direction and means
+  // nothing if the operator moves during it, so there is no continuous
+  // equivalent.
+  rpc MeasureThroughput(MeasureThroughputRequest) returns (MeasureThroughputResponse);
+
+  // SetThroughputTarget names the server a survey's active measurements run
+  // against. Survey state rather than a per-measurement argument: comparing two
+  // positions only means something if both were measured against the same
+  // thing.
+  rpc SetThroughputTarget(SetThroughputTargetRequest) returns (SetThroughputTargetResponse);
 }
 
 
@@ -112,6 +128,12 @@ message SurveySummary {
   // polls this while walking, and a walk that a reload cannot see is a walk the
   // operator will start a second time.
   optional CaptureStatus capture = 7;
+
+  // The server active measurements run against, and how long each direction
+  // runs. Empty until an operator names one; a survey without it can still be
+  // walked passively.
+  string iperf_server = 8;
+  int32 test_duration_sec = 9;
 }
 
 message ImportAirMapperRequest {
@@ -363,6 +385,42 @@ message ScannedNetwork {
   optional int32 channel_utilization_percent = 13;
 }
 
+message MeasureThroughputRequest {
+  string survey_id = 1;
+  // Position on the active floor plan, in floor-plan pixel coordinates.
+  int32 x = 2;
+  int32 y = 3;
+}
+
+message MeasureThroughputResponse {
+  ThroughputReading reading = 1;
+}
+
+// ThroughputReading is what one active measurement found.
+message ThroughputReading {
+  double download_mbps = 1;
+  double upload_mbps = 2;
+
+  // The AP the link ran over, so the reading can be compared with the passive
+  // points around it. Empty when the host reports no association — always on
+  // Windows, until its current-connection query is wired up.
+  string ssid = 3;
+  string bssid = 4;
+  int32 signal_dbm = 5;
+}
+
+message SetThroughputTargetRequest {
+  string survey_id = 1;
+  // Host or address of the iperf3 server. Empty clears the target.
+  string server = 2;
+  // Seconds each direction runs. Zero takes the service default.
+  int32 duration_sec = 3;
+}
+
+message SetThroughputTargetResponse {
+  SurveySummary survey = 1;
+}
+
 message StartContinuousCaptureRequest {
   string survey_id = 1;
   // Where the operator is standing, in floor-plan pixel coordinates — the same
@@ -427,6 +485,11 @@ message SurveySample {
   // Signal of the strongest BSS observed, in dBm. Absent when nothing was
   // observed, since 0 dBm would read as a very strong signal.
   optional int32 strongest_dbm = 5;
+
+  // Download speed, for a point taken by an active measurement. Absent on a
+  // passive scan, which measured no such thing — a client that read a missing
+  // rate as zero would draw a dead spot where a signal was surveyed.
+  optional double download_mbps = 7;
 
   // The position was worked out from the marks on either side of this reading
   // rather than recorded by the operator. Only a continuous walk produces

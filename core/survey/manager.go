@@ -35,7 +35,11 @@ type ConnectionMonitor interface {
 // needs. Trellis's diagnostics subsystem implements this; it corresponds to
 // Seed's *iperf.Manager.
 type ThroughputMeter interface {
-	Measure(ctx context.Context, server string, durationSec int) (ThroughputSample, error)
+	// iface is the survey's own adapter. It is passed rather than fixed at
+	// construction because it belongs to the survey: on a host with ethernet as
+	// well as Wi-Fi, a test that let the kernel route would go out the wire and
+	// report a number with nothing to do with the radio.
+	Measure(ctx context.Context, iface, server string, durationSec int) (ThroughputSample, error)
 }
 
 // Manager manages WiFi site surveys.

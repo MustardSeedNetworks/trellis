@@ -27,6 +27,32 @@ func newScanner() (survey.Scanner, error) {
 	return &scriptedScanner{}, nil
 }
 
+// newThroughputMeter returns a scripted iperf3 for the Playwright suite.
+//
+// Same reasoning as the scripted radio: the runners have no iperf3 server to
+// measure against, and a real test would take ten seconds per point in each of
+// two browsers. This substitutes the one component the machine cannot supply
+// and leaves the survey store, the handlers and the heatmap as the real thing.
+func newThroughputMeter() survey.ThroughputMeter {
+	return scriptedMeter{}
+}
+
+// scriptedMeter answers with a fixed pair of rates. They are deliberately
+// different from each other: a spec asserting on one would pass against a
+// component that reported the same number for both.
+type scriptedMeter struct{}
+
+func (scriptedMeter) Measure(
+	ctx context.Context,
+	_, _ string,
+	_ int,
+) (survey.ThroughputSample, error) {
+	if err := ctx.Err(); err != nil {
+		return survey.ThroughputSample{}, err
+	}
+	return survey.ThroughputSample{DownloadMbps: 221.4, UploadMbps: 88.2}, nil
+}
+
 // scriptedScanner answers every scan with the same three BSSs, one of which
 // weakens on each call and then recovers, cycling through four levels. A
 // perfectly flat field is a degenerate heatmap with an empty colour range; a

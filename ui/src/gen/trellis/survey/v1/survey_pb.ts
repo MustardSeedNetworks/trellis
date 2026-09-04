@@ -20,7 +20,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file trellis/survey/v1/survey.proto.
  */
 export const file_trellis_survey_v1_survey: GenFile = /*@__PURE__*/
-  fileDesc("Ch50cmVsbGlzL3N1cnZleS92MS9zdXJ2ZXkucHJvdG8SEXRyZWxsaXMuc3VydmV5LnYxIsABCg1TdXJ2ZXlTdW1tYXJ5EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDgoGc3RhdHVzGAMgASgJEhMKC2Zsb29yX2NvdW50GAQgASgFEhQKDHNhbXBsZV9jb3VudBgFIAEoBRIWCg5oYXNfZmxvb3JfcGxhbhgGIAEoCBI2CgdjYXB0dXJlGAcgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuQ2FwdHVyZVN0YXR1c0gAiAEBQgoKCF9jYXB0dXJlIjgKFkltcG9ydEFpck1hcHBlclJlcXVlc3QSDAoEbmFtZRgBIAEoCRIQCghhbXBfZGF0YRgCIAEoDCJLChdJbXBvcnRBaXJNYXBwZXJSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5IhQKEkxpc3RTdXJ2ZXlzUmVxdWVzdCJIChNMaXN0U3VydmV5c1Jlc3BvbnNlEjEKB3N1cnZleXMYASADKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5Ih4KEEdldFN1cnZleVJlcXVlc3QSCgoCaWQYASABKAkiRQoRR2V0U3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIhChNEZWxldGVTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIhYKFERlbGV0ZVN1cnZleVJlc3BvbnNlInEKBUZsb29yEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDQoFbGV2ZWwYAyABKAUSFAoMc2FtcGxlX2NvdW50GAQgASgFEhYKDmhhc19mbG9vcl9wbGFuGAUgASgIEhEKCWlzX2FjdGl2ZRgGIAEoCCImChFMaXN0Rmxvb3JzUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkiPgoSTGlzdEZsb29yc1Jlc3BvbnNlEigKBmZsb29ycxgBIAMoCzIYLnRyZWxsaXMuc3VydmV5LnYxLkZsb29yIjYKD0dldEZsb29yUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSEAoIZmxvb3JfaWQYAiABKAkiOwoQR2V0Rmxvb3JSZXNwb25zZRInCgVmbG9vchgBIAEoCzIYLnRyZWxsaXMuc3VydmV5LnYxLkZsb29yIkgKEUdldEhlYXRtYXBSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIOCgZtZXRyaWMYAiABKAkSEAoIZmxvb3JfaWQYAyABKAki9gEKEkdldEhlYXRtYXBSZXNwb25zZRILCgNwbmcYASABKAwSDQoFd2lkdGgYAiABKAUSDgoGaGVpZ2h0GAMgASgFEgsKA21pbhgEIAEoARILCgNtYXgYBSABKAESFAoMc2FtcGxlX2NvdW50GAYgASgFEg4KBm1ldHJpYxgHIAEoCRItCgZsZWdlbmQYCCADKAsyHS50cmVsbGlzLnN1cnZleS52MS5MZWdlbmRTdG9wEgwKBGdyaWQYCSADKAISEQoJZ3JpZF9jb2xzGAogASgFEhEKCWdyaWRfcm93cxgLIAEoBRIRCgljZWxsX3NpemUYDCABKAUiKgoKTGVnZW5kU3RvcBINCgV2YWx1ZRgBIAEoARINCgVjb2xvchgCIAEoCSJQChJHZXRDb3ZlcmFnZVJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEhUKDXRocmVzaG9sZF9kYm0YAiABKAUSEAoIZmxvb3JfaWQYAyABKAkiXwoTR2V0Q292ZXJhZ2VSZXNwb25zZRIWCg5jb3ZlcmFnZV9zY29yZRgBIAEoARIXCg9kZWFkX3pvbmVfY291bnQYAiABKAUSFwoPcmVjb21tZW5kYXRpb25zGAMgAygJIl0KFUdlbmVyYXRlUmVwb3J0UmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSMQoHb3B0aW9ucxgCIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLlJlcG9ydE9wdGlvbnMinQEKDVJlcG9ydE9wdGlvbnMSGAoQaW5jbHVkZV9oZWF0bWFwcxgBIAEoCBIYChBpbmNsdWRlX3Jhd19kYXRhGAIgASgIEh8KF2luY2x1ZGVfcmVjb21tZW5kYXRpb25zGAMgASgIEiEKGWluY2x1ZGVfZXhlY3V0aXZlX3N1bW1hcnkYBCABKAgSFAoMY29tcGFueV9uYW1lGAUgASgJIiUKFkdlbmVyYXRlUmVwb3J0UmVzcG9uc2USCwoDcGRmGAEgASgMIksKE0NyZWF0ZVN1cnZleVJlcXVlc3QSDAoEbmFtZRgBIAEoCRITCgtkZXNjcmlwdGlvbhgCIAEoCRIRCglpbnRlcmZhY2UYAyABKAkiSAoUQ3JlYXRlU3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIgChJTdGFydFN1cnZleVJlcXVlc3QSCgoCaWQYASABKAkiRwoTU3RhcnRTdXJ2ZXlSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5IiAKElBhdXNlU3VydmV5UmVxdWVzdBIKCgJpZBgBIAEoCSJHChNQYXVzZVN1cnZleVJlc3BvbnNlEjAKBnN1cnZleRgBIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLlN1cnZleVN1bW1hcnkiIwoVQ29tcGxldGVTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIkoKFkNvbXBsZXRlU3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSI+ChNDYXB0dXJlUG9pbnRSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIJCgF4GAIgASgFEgkKAXkYAyABKAUi8AEKFENhcHR1cmVQb2ludFJlc3BvbnNlEjMKCG5ldHdvcmtzGAEgAygLMiEudHJlbGxpcy5zdXJ2ZXkudjEuU2Nhbm5lZE5ldHdvcmsSFAoMdW5pcXVlX3NzaWRzGAIgASgFEhUKDXVuaXF1ZV9ic3NpZHMYAyABKAUSFwoPYXBfY291bnRfMl80Z2h6GAQgASgFEhUKDWFwX2NvdW50XzVnaHoYBSABKAUSFQoNYXBfY291bnRfNmdoehgGIAEoBRIWCg5jb19jaGFubmVsX2FwcxgHIAEoBRIXCg9hZGpfY2hhbm5lbF9hcHMYCCABKAUivgIKDlNjYW5uZWROZXR3b3JrEgwKBHNzaWQYASABKAkSDQoFYnNzaWQYAiABKAkSEgoKc2lnbmFsX2RibRgDIAEoBRIPCgdjaGFubmVsGAQgASgFEhUKDWZyZXF1ZW5jeV9taHoYBSABKAUSEAoIc2VjdXJpdHkYBiABKAkSGQoRY2hhbm5lbF93aWR0aF9taHoYByABKAUSFwoPbm9pc2VfZmxvb3JfZGJtGAggASgFEg4KBnNucl9kYhgJIAEoBRIPCgdodF9tb2RlGAogASgJEg4KBmlzX2RmcxgLIAEoCBISCgphc3NvY2lhdGVkGAwgASgIEigKG2NoYW5uZWxfdXRpbGl6YXRpb25fcGVyY2VudBgNIAEoBUgAiAEBQh4KHF9jaGFubmVsX3V0aWxpemF0aW9uX3BlcmNlbnQiSAodU3RhcnRDb250aW51b3VzQ2FwdHVyZVJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEgkKAXgYAiABKAUSCQoBeRgDIAEoBSJTCh5TdGFydENvbnRpbnVvdXNDYXB0dXJlUmVzcG9uc2USMQoHY2FwdHVyZRgBIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLkNhcHR1cmVTdGF0dXMiMQocU3RvcENvbnRpbnVvdXNDYXB0dXJlUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkiHwodU3RvcENvbnRpbnVvdXNDYXB0dXJlUmVzcG9uc2UiSgoNQ2FwdHVyZVN0YXR1cxIPCgdydW5uaW5nGAEgASgIEgkKAXgYAiABKAUSCQoBeRgDIAEoBRISCgpsYXN0X2Vycm9yGAQgASgJIg0KC1NjYW5SZXF1ZXN0InMKDFNjYW5SZXNwb25zZRIzCghuZXR3b3JrcxgBIAMoCzIhLnRyZWxsaXMuc3VydmV5LnYxLlNjYW5uZWROZXR3b3JrEi4KCnNjYW5uZWRfYXQYAiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIicKEkxpc3RTYW1wbGVzUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkiRwoTTGlzdFNhbXBsZXNSZXNwb25zZRIwCgdzYW1wbGVzGAEgAygLMh8udHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U2FtcGxlIrABCgxTdXJ2ZXlTYW1wbGUSCQoBeBgBIAEoBRIJCgF5GAIgASgFEi8KC2NhcHR1cmVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIVCg1uZXR3b3JrX2NvdW50GAQgASgFEhoKDXN0cm9uZ2VzdF9kYm0YBSABKAVIAIgBARIUCgxpbnRlcnBvbGF0ZWQYBiABKAhCEAoOX3N0cm9uZ2VzdF9kYm0y5w0KDVN1cnZleVNlcnZpY2USaAoPSW1wb3J0QWlyTWFwcGVyEikudHJlbGxpcy5zdXJ2ZXkudjEuSW1wb3J0QWlyTWFwcGVyUmVxdWVzdBoqLnRyZWxsaXMuc3VydmV5LnYxLkltcG9ydEFpck1hcHBlclJlc3BvbnNlElwKC0xpc3RTdXJ2ZXlzEiUudHJlbGxpcy5zdXJ2ZXkudjEuTGlzdFN1cnZleXNSZXF1ZXN0GiYudHJlbGxpcy5zdXJ2ZXkudjEuTGlzdFN1cnZleXNSZXNwb25zZRJWCglHZXRTdXJ2ZXkSIy50cmVsbGlzLnN1cnZleS52MS5HZXRTdXJ2ZXlSZXF1ZXN0GiQudHJlbGxpcy5zdXJ2ZXkudjEuR2V0U3VydmV5UmVzcG9uc2USXwoMRGVsZXRlU3VydmV5EiYudHJlbGxpcy5zdXJ2ZXkudjEuRGVsZXRlU3VydmV5UmVxdWVzdBonLnRyZWxsaXMuc3VydmV5LnYxLkRlbGV0ZVN1cnZleVJlc3BvbnNlElkKCkdldEhlYXRtYXASJC50cmVsbGlzLnN1cnZleS52MS5HZXRIZWF0bWFwUmVxdWVzdBolLnRyZWxsaXMuc3VydmV5LnYxLkdldEhlYXRtYXBSZXNwb25zZRJcCgtHZXRDb3ZlcmFnZRIlLnRyZWxsaXMuc3VydmV5LnYxLkdldENvdmVyYWdlUmVxdWVzdBomLnRyZWxsaXMuc3VydmV5LnYxLkdldENvdmVyYWdlUmVzcG9uc2USWQoKTGlzdEZsb29ycxIkLnRyZWxsaXMuc3VydmV5LnYxLkxpc3RGbG9vcnNSZXF1ZXN0GiUudHJlbGxpcy5zdXJ2ZXkudjEuTGlzdEZsb29yc1Jlc3BvbnNlElMKCEdldEZsb29yEiIudHJlbGxpcy5zdXJ2ZXkudjEuR2V0Rmxvb3JSZXF1ZXN0GiMudHJlbGxpcy5zdXJ2ZXkudjEuR2V0Rmxvb3JSZXNwb25zZRJlCg5HZW5lcmF0ZVJlcG9ydBIoLnRyZWxsaXMuc3VydmV5LnYxLkdlbmVyYXRlUmVwb3J0UmVxdWVzdBopLnRyZWxsaXMuc3VydmV5LnYxLkdlbmVyYXRlUmVwb3J0UmVzcG9uc2USXwoMQ3JlYXRlU3VydmV5EiYudHJlbGxpcy5zdXJ2ZXkudjEuQ3JlYXRlU3VydmV5UmVxdWVzdBonLnRyZWxsaXMuc3VydmV5LnYxLkNyZWF0ZVN1cnZleVJlc3BvbnNlElwKC1N0YXJ0U3VydmV5EiUudHJlbGxpcy5zdXJ2ZXkudjEuU3RhcnRTdXJ2ZXlSZXF1ZXN0GiYudHJlbGxpcy5zdXJ2ZXkudjEuU3RhcnRTdXJ2ZXlSZXNwb25zZRJcCgtQYXVzZVN1cnZleRIlLnRyZWxsaXMuc3VydmV5LnYxLlBhdXNlU3VydmV5UmVxdWVzdBomLnRyZWxsaXMuc3VydmV5LnYxLlBhdXNlU3VydmV5UmVzcG9uc2USZQoOQ29tcGxldGVTdXJ2ZXkSKC50cmVsbGlzLnN1cnZleS52MS5Db21wbGV0ZVN1cnZleVJlcXVlc3QaKS50cmVsbGlzLnN1cnZleS52MS5Db21wbGV0ZVN1cnZleVJlc3BvbnNlEl8KDENhcHR1cmVQb2ludBImLnRyZWxsaXMuc3VydmV5LnYxLkNhcHR1cmVQb2ludFJlcXVlc3QaJy50cmVsbGlzLnN1cnZleS52MS5DYXB0dXJlUG9pbnRSZXNwb25zZRJcCgtMaXN0U2FtcGxlcxIlLnRyZWxsaXMuc3VydmV5LnYxLkxpc3RTYW1wbGVzUmVxdWVzdBomLnRyZWxsaXMuc3VydmV5LnYxLkxpc3RTYW1wbGVzUmVzcG9uc2USRwoEU2NhbhIeLnRyZWxsaXMuc3VydmV5LnYxLlNjYW5SZXF1ZXN0Gh8udHJlbGxpcy5zdXJ2ZXkudjEuU2NhblJlc3BvbnNlEn0KFlN0YXJ0Q29udGludW91c0NhcHR1cmUSMC50cmVsbGlzLnN1cnZleS52MS5TdGFydENvbnRpbnVvdXNDYXB0dXJlUmVxdWVzdBoxLnRyZWxsaXMuc3VydmV5LnYxLlN0YXJ0Q29udGludW91c0NhcHR1cmVSZXNwb25zZRJ6ChVTdG9wQ29udGludW91c0NhcHR1cmUSLy50cmVsbGlzLnN1cnZleS52MS5TdG9wQ29udGludW91c0NhcHR1cmVSZXF1ZXN0GjAudHJlbGxpcy5zdXJ2ZXkudjEuU3RvcENvbnRpbnVvdXNDYXB0dXJlUmVzcG9uc2VCR1pFZ2l0aHViLmNvbS9NdXN0YXJkU2VlZE5ldHdvcmtzL3RyZWxsaXMvZ2VuL3RyZWxsaXMvc3VydmV5L3YxO3N1cnZleXYxYgZwcm90bzM", [file_google_protobuf_timestamp]);
+  fileDesc("Ch50cmVsbGlzL3N1cnZleS92MS9zdXJ2ZXkucHJvdG8SEXRyZWxsaXMuc3VydmV5LnYxIvEBCg1TdXJ2ZXlTdW1tYXJ5EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDgoGc3RhdHVzGAMgASgJEhMKC2Zsb29yX2NvdW50GAQgASgFEhQKDHNhbXBsZV9jb3VudBgFIAEoBRIWCg5oYXNfZmxvb3JfcGxhbhgGIAEoCBI2CgdjYXB0dXJlGAcgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuQ2FwdHVyZVN0YXR1c0gAiAEBEhQKDGlwZXJmX3NlcnZlchgIIAEoCRIZChF0ZXN0X2R1cmF0aW9uX3NlYxgJIAEoBUIKCghfY2FwdHVyZSI4ChZJbXBvcnRBaXJNYXBwZXJSZXF1ZXN0EgwKBG5hbWUYASABKAkSEAoIYW1wX2RhdGEYAiABKAwiSwoXSW1wb3J0QWlyTWFwcGVyUmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIUChJMaXN0U3VydmV5c1JlcXVlc3QiSAoTTGlzdFN1cnZleXNSZXNwb25zZRIxCgdzdXJ2ZXlzGAEgAygLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIeChBHZXRTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIkUKEUdldFN1cnZleVJlc3BvbnNlEjAKBnN1cnZleRgBIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLlN1cnZleVN1bW1hcnkiIQoTRGVsZXRlU3VydmV5UmVxdWVzdBIKCgJpZBgBIAEoCSIWChREZWxldGVTdXJ2ZXlSZXNwb25zZSJxCgVGbG9vchIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJEg0KBWxldmVsGAMgASgFEhQKDHNhbXBsZV9jb3VudBgEIAEoBRIWCg5oYXNfZmxvb3JfcGxhbhgFIAEoCBIRCglpc19hY3RpdmUYBiABKAgiJgoRTGlzdEZsb29yc1JlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJIj4KEkxpc3RGbG9vcnNSZXNwb25zZRIoCgZmbG9vcnMYASADKAsyGC50cmVsbGlzLnN1cnZleS52MS5GbG9vciI2Cg9HZXRGbG9vclJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEhAKCGZsb29yX2lkGAIgASgJIjsKEEdldEZsb29yUmVzcG9uc2USJwoFZmxvb3IYASABKAsyGC50cmVsbGlzLnN1cnZleS52MS5GbG9vciJIChFHZXRIZWF0bWFwUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSDgoGbWV0cmljGAIgASgJEhAKCGZsb29yX2lkGAMgASgJIvYBChJHZXRIZWF0bWFwUmVzcG9uc2USCwoDcG5nGAEgASgMEg0KBXdpZHRoGAIgASgFEg4KBmhlaWdodBgDIAEoBRILCgNtaW4YBCABKAESCwoDbWF4GAUgASgBEhQKDHNhbXBsZV9jb3VudBgGIAEoBRIOCgZtZXRyaWMYByABKAkSLQoGbGVnZW5kGAggAygLMh0udHJlbGxpcy5zdXJ2ZXkudjEuTGVnZW5kU3RvcBIMCgRncmlkGAkgAygCEhEKCWdyaWRfY29scxgKIAEoBRIRCglncmlkX3Jvd3MYCyABKAUSEQoJY2VsbF9zaXplGAwgASgFIioKCkxlZ2VuZFN0b3ASDQoFdmFsdWUYASABKAESDQoFY29sb3IYAiABKAkiUAoSR2V0Q292ZXJhZ2VSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIVCg10aHJlc2hvbGRfZGJtGAIgASgFEhAKCGZsb29yX2lkGAMgASgJIl8KE0dldENvdmVyYWdlUmVzcG9uc2USFgoOY292ZXJhZ2Vfc2NvcmUYASABKAESFwoPZGVhZF96b25lX2NvdW50GAIgASgFEhcKD3JlY29tbWVuZGF0aW9ucxgDIAMoCSJdChVHZW5lcmF0ZVJlcG9ydFJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEjEKB29wdGlvbnMYAiABKAsyIC50cmVsbGlzLnN1cnZleS52MS5SZXBvcnRPcHRpb25zIp0BCg1SZXBvcnRPcHRpb25zEhgKEGluY2x1ZGVfaGVhdG1hcHMYASABKAgSGAoQaW5jbHVkZV9yYXdfZGF0YRgCIAEoCBIfChdpbmNsdWRlX3JlY29tbWVuZGF0aW9ucxgDIAEoCBIhChlpbmNsdWRlX2V4ZWN1dGl2ZV9zdW1tYXJ5GAQgASgIEhQKDGNvbXBhbnlfbmFtZRgFIAEoCSIlChZHZW5lcmF0ZVJlcG9ydFJlc3BvbnNlEgsKA3BkZhgBIAEoDCJLChNDcmVhdGVTdXJ2ZXlSZXF1ZXN0EgwKBG5hbWUYASABKAkSEwoLZGVzY3JpcHRpb24YAiABKAkSEQoJaW50ZXJmYWNlGAMgASgJIkgKFENyZWF0ZVN1cnZleVJlc3BvbnNlEjAKBnN1cnZleRgBIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLlN1cnZleVN1bW1hcnkiIAoSU3RhcnRTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIkcKE1N0YXJ0U3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIgChJQYXVzZVN1cnZleVJlcXVlc3QSCgoCaWQYASABKAkiRwoTUGF1c2VTdXJ2ZXlSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5IiMKFUNvbXBsZXRlU3VydmV5UmVxdWVzdBIKCgJpZBgBIAEoCSJKChZDb21wbGV0ZVN1cnZleVJlc3BvbnNlEjAKBnN1cnZleRgBIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLlN1cnZleVN1bW1hcnkiPgoTQ2FwdHVyZVBvaW50UmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSCQoBeBgCIAEoBRIJCgF5GAMgASgFIvABChRDYXB0dXJlUG9pbnRSZXNwb25zZRIzCghuZXR3b3JrcxgBIAMoCzIhLnRyZWxsaXMuc3VydmV5LnYxLlNjYW5uZWROZXR3b3JrEhQKDHVuaXF1ZV9zc2lkcxgCIAEoBRIVCg11bmlxdWVfYnNzaWRzGAMgASgFEhcKD2FwX2NvdW50XzJfNGdoehgEIAEoBRIVCg1hcF9jb3VudF81Z2h6GAUgASgFEhUKDWFwX2NvdW50XzZnaHoYBiABKAUSFgoOY29fY2hhbm5lbF9hcHMYByABKAUSFwoPYWRqX2NoYW5uZWxfYXBzGAggASgFIr4CCg5TY2FubmVkTmV0d29yaxIMCgRzc2lkGAEgASgJEg0KBWJzc2lkGAIgASgJEhIKCnNpZ25hbF9kYm0YAyABKAUSDwoHY2hhbm5lbBgEIAEoBRIVCg1mcmVxdWVuY3lfbWh6GAUgASgFEhAKCHNlY3VyaXR5GAYgASgJEhkKEWNoYW5uZWxfd2lkdGhfbWh6GAcgASgFEhcKD25vaXNlX2Zsb29yX2RibRgIIAEoBRIOCgZzbnJfZGIYCSABKAUSDwoHaHRfbW9kZRgKIAEoCRIOCgZpc19kZnMYCyABKAgSEgoKYXNzb2NpYXRlZBgMIAEoCBIoChtjaGFubmVsX3V0aWxpemF0aW9uX3BlcmNlbnQYDSABKAVIAIgBAUIeChxfY2hhbm5lbF91dGlsaXphdGlvbl9wZXJjZW50IkMKGE1lYXN1cmVUaHJvdWdocHV0UmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSCQoBeBgCIAEoBRIJCgF5GAMgASgFIlIKGU1lYXN1cmVUaHJvdWdocHV0UmVzcG9uc2USNQoHcmVhZGluZxgBIAEoCzIkLnRyZWxsaXMuc3VydmV5LnYxLlRocm91Z2hwdXRSZWFkaW5nInAKEVRocm91Z2hwdXRSZWFkaW5nEhUKDWRvd25sb2FkX21icHMYASABKAESEwoLdXBsb2FkX21icHMYAiABKAESDAoEc3NpZBgDIAEoCRINCgVic3NpZBgEIAEoCRISCgpzaWduYWxfZGJtGAUgASgFIlUKGlNldFRocm91Z2hwdXRUYXJnZXRSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIOCgZzZXJ2ZXIYAiABKAkSFAoMZHVyYXRpb25fc2VjGAMgASgFIk8KG1NldFRocm91Z2hwdXRUYXJnZXRSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5IkgKHVN0YXJ0Q29udGludW91c0NhcHR1cmVSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIJCgF4GAIgASgFEgkKAXkYAyABKAUiUwoeU3RhcnRDb250aW51b3VzQ2FwdHVyZVJlc3BvbnNlEjEKB2NhcHR1cmUYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5DYXB0dXJlU3RhdHVzIjEKHFN0b3BDb250aW51b3VzQ2FwdHVyZVJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJIh8KHVN0b3BDb250aW51b3VzQ2FwdHVyZVJlc3BvbnNlIkoKDUNhcHR1cmVTdGF0dXMSDwoHcnVubmluZxgBIAEoCBIJCgF4GAIgASgFEgkKAXkYAyABKAUSEgoKbGFzdF9lcnJvchgEIAEoCSINCgtTY2FuUmVxdWVzdCJzCgxTY2FuUmVzcG9uc2USMwoIbmV0d29ya3MYASADKAsyIS50cmVsbGlzLnN1cnZleS52MS5TY2FubmVkTmV0d29yaxIuCgpzY2FubmVkX2F0GAIgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCInChJMaXN0U2FtcGxlc1JlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJIkcKE0xpc3RTYW1wbGVzUmVzcG9uc2USMAoHc2FtcGxlcxgBIAMoCzIfLnRyZWxsaXMuc3VydmV5LnYxLlN1cnZleVNhbXBsZSLeAQoMU3VydmV5U2FtcGxlEgkKAXgYASABKAUSCQoBeRgCIAEoBRIvCgtjYXB0dXJlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASFQoNbmV0d29ya19jb3VudBgEIAEoBRIaCg1zdHJvbmdlc3RfZGJtGAUgASgFSACIAQESGgoNZG93bmxvYWRfbWJwcxgHIAEoAUgBiAEBEhQKDGludGVycG9sYXRlZBgGIAEoCEIQCg5fc3Ryb25nZXN0X2RibUIQCg5fZG93bmxvYWRfbWJwczLNDwoNU3VydmV5U2VydmljZRJoCg9JbXBvcnRBaXJNYXBwZXISKS50cmVsbGlzLnN1cnZleS52MS5JbXBvcnRBaXJNYXBwZXJSZXF1ZXN0GioudHJlbGxpcy5zdXJ2ZXkudjEuSW1wb3J0QWlyTWFwcGVyUmVzcG9uc2USXAoLTGlzdFN1cnZleXMSJS50cmVsbGlzLnN1cnZleS52MS5MaXN0U3VydmV5c1JlcXVlc3QaJi50cmVsbGlzLnN1cnZleS52MS5MaXN0U3VydmV5c1Jlc3BvbnNlElYKCUdldFN1cnZleRIjLnRyZWxsaXMuc3VydmV5LnYxLkdldFN1cnZleVJlcXVlc3QaJC50cmVsbGlzLnN1cnZleS52MS5HZXRTdXJ2ZXlSZXNwb25zZRJfCgxEZWxldGVTdXJ2ZXkSJi50cmVsbGlzLnN1cnZleS52MS5EZWxldGVTdXJ2ZXlSZXF1ZXN0GicudHJlbGxpcy5zdXJ2ZXkudjEuRGVsZXRlU3VydmV5UmVzcG9uc2USWQoKR2V0SGVhdG1hcBIkLnRyZWxsaXMuc3VydmV5LnYxLkdldEhlYXRtYXBSZXF1ZXN0GiUudHJlbGxpcy5zdXJ2ZXkudjEuR2V0SGVhdG1hcFJlc3BvbnNlElwKC0dldENvdmVyYWdlEiUudHJlbGxpcy5zdXJ2ZXkudjEuR2V0Q292ZXJhZ2VSZXF1ZXN0GiYudHJlbGxpcy5zdXJ2ZXkudjEuR2V0Q292ZXJhZ2VSZXNwb25zZRJZCgpMaXN0Rmxvb3JzEiQudHJlbGxpcy5zdXJ2ZXkudjEuTGlzdEZsb29yc1JlcXVlc3QaJS50cmVsbGlzLnN1cnZleS52MS5MaXN0Rmxvb3JzUmVzcG9uc2USUwoIR2V0Rmxvb3ISIi50cmVsbGlzLnN1cnZleS52MS5HZXRGbG9vclJlcXVlc3QaIy50cmVsbGlzLnN1cnZleS52MS5HZXRGbG9vclJlc3BvbnNlEmUKDkdlbmVyYXRlUmVwb3J0EigudHJlbGxpcy5zdXJ2ZXkudjEuR2VuZXJhdGVSZXBvcnRSZXF1ZXN0GikudHJlbGxpcy5zdXJ2ZXkudjEuR2VuZXJhdGVSZXBvcnRSZXNwb25zZRJfCgxDcmVhdGVTdXJ2ZXkSJi50cmVsbGlzLnN1cnZleS52MS5DcmVhdGVTdXJ2ZXlSZXF1ZXN0GicudHJlbGxpcy5zdXJ2ZXkudjEuQ3JlYXRlU3VydmV5UmVzcG9uc2USXAoLU3RhcnRTdXJ2ZXkSJS50cmVsbGlzLnN1cnZleS52MS5TdGFydFN1cnZleVJlcXVlc3QaJi50cmVsbGlzLnN1cnZleS52MS5TdGFydFN1cnZleVJlc3BvbnNlElwKC1BhdXNlU3VydmV5EiUudHJlbGxpcy5zdXJ2ZXkudjEuUGF1c2VTdXJ2ZXlSZXF1ZXN0GiYudHJlbGxpcy5zdXJ2ZXkudjEuUGF1c2VTdXJ2ZXlSZXNwb25zZRJlCg5Db21wbGV0ZVN1cnZleRIoLnRyZWxsaXMuc3VydmV5LnYxLkNvbXBsZXRlU3VydmV5UmVxdWVzdBopLnRyZWxsaXMuc3VydmV5LnYxLkNvbXBsZXRlU3VydmV5UmVzcG9uc2USXwoMQ2FwdHVyZVBvaW50EiYudHJlbGxpcy5zdXJ2ZXkudjEuQ2FwdHVyZVBvaW50UmVxdWVzdBonLnRyZWxsaXMuc3VydmV5LnYxLkNhcHR1cmVQb2ludFJlc3BvbnNlElwKC0xpc3RTYW1wbGVzEiUudHJlbGxpcy5zdXJ2ZXkudjEuTGlzdFNhbXBsZXNSZXF1ZXN0GiYudHJlbGxpcy5zdXJ2ZXkudjEuTGlzdFNhbXBsZXNSZXNwb25zZRJHCgRTY2FuEh4udHJlbGxpcy5zdXJ2ZXkudjEuU2NhblJlcXVlc3QaHy50cmVsbGlzLnN1cnZleS52MS5TY2FuUmVzcG9uc2USfQoWU3RhcnRDb250aW51b3VzQ2FwdHVyZRIwLnRyZWxsaXMuc3VydmV5LnYxLlN0YXJ0Q29udGludW91c0NhcHR1cmVSZXF1ZXN0GjEudHJlbGxpcy5zdXJ2ZXkudjEuU3RhcnRDb250aW51b3VzQ2FwdHVyZVJlc3BvbnNlEnoKFVN0b3BDb250aW51b3VzQ2FwdHVyZRIvLnRyZWxsaXMuc3VydmV5LnYxLlN0b3BDb250aW51b3VzQ2FwdHVyZVJlcXVlc3QaMC50cmVsbGlzLnN1cnZleS52MS5TdG9wQ29udGludW91c0NhcHR1cmVSZXNwb25zZRJuChFNZWFzdXJlVGhyb3VnaHB1dBIrLnRyZWxsaXMuc3VydmV5LnYxLk1lYXN1cmVUaHJvdWdocHV0UmVxdWVzdBosLnRyZWxsaXMuc3VydmV5LnYxLk1lYXN1cmVUaHJvdWdocHV0UmVzcG9uc2USdAoTU2V0VGhyb3VnaHB1dFRhcmdldBItLnRyZWxsaXMuc3VydmV5LnYxLlNldFRocm91Z2hwdXRUYXJnZXRSZXF1ZXN0Gi4udHJlbGxpcy5zdXJ2ZXkudjEuU2V0VGhyb3VnaHB1dFRhcmdldFJlc3BvbnNlQkdaRWdpdGh1Yi5jb20vTXVzdGFyZFNlZWROZXR3b3Jrcy90cmVsbGlzL2dlbi90cmVsbGlzL3N1cnZleS92MTtzdXJ2ZXl2MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
 
 /**
  * SurveySummary is the lightweight survey representation used in list and
@@ -68,6 +68,20 @@ export type SurveySummary = Message<"trellis.survey.v1.SurveySummary"> & {
    * @generated from field: optional trellis.survey.v1.CaptureStatus capture = 7;
    */
   capture?: CaptureStatus | undefined;
+
+  /**
+   * The server active measurements run against, and how long each direction
+   * runs. Empty until an operator names one; a survey without it can still be
+   * walked passively.
+   *
+   * @generated from field: string iperf_server = 8;
+   */
+  iperfServer: string;
+
+  /**
+   * @generated from field: int32 test_duration_sec = 9;
+   */
+  testDurationSec: number;
 };
 
 /**
@@ -977,6 +991,143 @@ export const ScannedNetworkSchema: GenMessage<ScannedNetwork> = /*@__PURE__*/
   messageDesc(file_trellis_survey_v1_survey, 32);
 
 /**
+ * @generated from message trellis.survey.v1.MeasureThroughputRequest
+ */
+export type MeasureThroughputRequest = Message<"trellis.survey.v1.MeasureThroughputRequest"> & {
+  /**
+   * @generated from field: string survey_id = 1;
+   */
+  surveyId: string;
+
+  /**
+   * Position on the active floor plan, in floor-plan pixel coordinates.
+   *
+   * @generated from field: int32 x = 2;
+   */
+  x: number;
+
+  /**
+   * @generated from field: int32 y = 3;
+   */
+  y: number;
+};
+
+/**
+ * Describes the message trellis.survey.v1.MeasureThroughputRequest.
+ * Use `create(MeasureThroughputRequestSchema)` to create a new message.
+ */
+export const MeasureThroughputRequestSchema: GenMessage<MeasureThroughputRequest> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 33);
+
+/**
+ * @generated from message trellis.survey.v1.MeasureThroughputResponse
+ */
+export type MeasureThroughputResponse = Message<"trellis.survey.v1.MeasureThroughputResponse"> & {
+  /**
+   * @generated from field: trellis.survey.v1.ThroughputReading reading = 1;
+   */
+  reading?: ThroughputReading | undefined;
+};
+
+/**
+ * Describes the message trellis.survey.v1.MeasureThroughputResponse.
+ * Use `create(MeasureThroughputResponseSchema)` to create a new message.
+ */
+export const MeasureThroughputResponseSchema: GenMessage<MeasureThroughputResponse> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 34);
+
+/**
+ * ThroughputReading is what one active measurement found.
+ *
+ * @generated from message trellis.survey.v1.ThroughputReading
+ */
+export type ThroughputReading = Message<"trellis.survey.v1.ThroughputReading"> & {
+  /**
+   * @generated from field: double download_mbps = 1;
+   */
+  downloadMbps: number;
+
+  /**
+   * @generated from field: double upload_mbps = 2;
+   */
+  uploadMbps: number;
+
+  /**
+   * The AP the link ran over, so the reading can be compared with the passive
+   * points around it. Empty when the host reports no association — always on
+   * Windows, until its current-connection query is wired up.
+   *
+   * @generated from field: string ssid = 3;
+   */
+  ssid: string;
+
+  /**
+   * @generated from field: string bssid = 4;
+   */
+  bssid: string;
+
+  /**
+   * @generated from field: int32 signal_dbm = 5;
+   */
+  signalDbm: number;
+};
+
+/**
+ * Describes the message trellis.survey.v1.ThroughputReading.
+ * Use `create(ThroughputReadingSchema)` to create a new message.
+ */
+export const ThroughputReadingSchema: GenMessage<ThroughputReading> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 35);
+
+/**
+ * @generated from message trellis.survey.v1.SetThroughputTargetRequest
+ */
+export type SetThroughputTargetRequest = Message<"trellis.survey.v1.SetThroughputTargetRequest"> & {
+  /**
+   * @generated from field: string survey_id = 1;
+   */
+  surveyId: string;
+
+  /**
+   * Host or address of the iperf3 server. Empty clears the target.
+   *
+   * @generated from field: string server = 2;
+   */
+  server: string;
+
+  /**
+   * Seconds each direction runs. Zero takes the service default.
+   *
+   * @generated from field: int32 duration_sec = 3;
+   */
+  durationSec: number;
+};
+
+/**
+ * Describes the message trellis.survey.v1.SetThroughputTargetRequest.
+ * Use `create(SetThroughputTargetRequestSchema)` to create a new message.
+ */
+export const SetThroughputTargetRequestSchema: GenMessage<SetThroughputTargetRequest> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 36);
+
+/**
+ * @generated from message trellis.survey.v1.SetThroughputTargetResponse
+ */
+export type SetThroughputTargetResponse = Message<"trellis.survey.v1.SetThroughputTargetResponse"> & {
+  /**
+   * @generated from field: trellis.survey.v1.SurveySummary survey = 1;
+   */
+  survey?: SurveySummary | undefined;
+};
+
+/**
+ * Describes the message trellis.survey.v1.SetThroughputTargetResponse.
+ * Use `create(SetThroughputTargetResponseSchema)` to create a new message.
+ */
+export const SetThroughputTargetResponseSchema: GenMessage<SetThroughputTargetResponse> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 37);
+
+/**
  * @generated from message trellis.survey.v1.StartContinuousCaptureRequest
  */
 export type StartContinuousCaptureRequest = Message<"trellis.survey.v1.StartContinuousCaptureRequest"> & {
@@ -1004,7 +1155,7 @@ export type StartContinuousCaptureRequest = Message<"trellis.survey.v1.StartCont
  * Use `create(StartContinuousCaptureRequestSchema)` to create a new message.
  */
 export const StartContinuousCaptureRequestSchema: GenMessage<StartContinuousCaptureRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 33);
+  messageDesc(file_trellis_survey_v1_survey, 38);
 
 /**
  * @generated from message trellis.survey.v1.StartContinuousCaptureResponse
@@ -1021,7 +1172,7 @@ export type StartContinuousCaptureResponse = Message<"trellis.survey.v1.StartCon
  * Use `create(StartContinuousCaptureResponseSchema)` to create a new message.
  */
 export const StartContinuousCaptureResponseSchema: GenMessage<StartContinuousCaptureResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 34);
+  messageDesc(file_trellis_survey_v1_survey, 39);
 
 /**
  * @generated from message trellis.survey.v1.StopContinuousCaptureRequest
@@ -1038,7 +1189,7 @@ export type StopContinuousCaptureRequest = Message<"trellis.survey.v1.StopContin
  * Use `create(StopContinuousCaptureRequestSchema)` to create a new message.
  */
 export const StopContinuousCaptureRequestSchema: GenMessage<StopContinuousCaptureRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 35);
+  messageDesc(file_trellis_survey_v1_survey, 40);
 
 /**
  * @generated from message trellis.survey.v1.StopContinuousCaptureResponse
@@ -1051,7 +1202,7 @@ export type StopContinuousCaptureResponse = Message<"trellis.survey.v1.StopConti
  * Use `create(StopContinuousCaptureResponseSchema)` to create a new message.
  */
 export const StopContinuousCaptureResponseSchema: GenMessage<StopContinuousCaptureResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 36);
+  messageDesc(file_trellis_survey_v1_survey, 41);
 
 /**
  * CaptureStatus is a survey's continuous capture as it stands, so a client that
@@ -1090,7 +1241,7 @@ export type CaptureStatus = Message<"trellis.survey.v1.CaptureStatus"> & {
  * Use `create(CaptureStatusSchema)` to create a new message.
  */
 export const CaptureStatusSchema: GenMessage<CaptureStatus> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 37);
+  messageDesc(file_trellis_survey_v1_survey, 42);
 
 /**
  * @generated from message trellis.survey.v1.ScanRequest
@@ -1103,7 +1254,7 @@ export type ScanRequest = Message<"trellis.survey.v1.ScanRequest"> & {
  * Use `create(ScanRequestSchema)` to create a new message.
  */
 export const ScanRequestSchema: GenMessage<ScanRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 38);
+  messageDesc(file_trellis_survey_v1_survey, 43);
 
 /**
  * @generated from message trellis.survey.v1.ScanResponse
@@ -1130,7 +1281,7 @@ export type ScanResponse = Message<"trellis.survey.v1.ScanResponse"> & {
  * Use `create(ScanResponseSchema)` to create a new message.
  */
 export const ScanResponseSchema: GenMessage<ScanResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 39);
+  messageDesc(file_trellis_survey_v1_survey, 44);
 
 /**
  * @generated from message trellis.survey.v1.ListSamplesRequest
@@ -1147,7 +1298,7 @@ export type ListSamplesRequest = Message<"trellis.survey.v1.ListSamplesRequest">
  * Use `create(ListSamplesRequestSchema)` to create a new message.
  */
 export const ListSamplesRequestSchema: GenMessage<ListSamplesRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 40);
+  messageDesc(file_trellis_survey_v1_survey, 45);
 
 /**
  * @generated from message trellis.survey.v1.ListSamplesResponse
@@ -1164,7 +1315,7 @@ export type ListSamplesResponse = Message<"trellis.survey.v1.ListSamplesResponse
  * Use `create(ListSamplesResponseSchema)` to create a new message.
  */
 export const ListSamplesResponseSchema: GenMessage<ListSamplesResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 41);
+  messageDesc(file_trellis_survey_v1_survey, 46);
 
 /**
  * SurveySample is one stored measurement point, reduced to what a client
@@ -1208,6 +1359,15 @@ export type SurveySample = Message<"trellis.survey.v1.SurveySample"> & {
   strongestDbm?: number | undefined;
 
   /**
+   * Download speed, for a point taken by an active measurement. Absent on a
+   * passive scan, which measured no such thing — a client that read a missing
+   * rate as zero would draw a dead spot where a signal was surveyed.
+   *
+   * @generated from field: optional double download_mbps = 7;
+   */
+  downloadMbps?: number | undefined;
+
+  /**
    * The position was worked out from the marks on either side of this reading
    * rather than recorded by the operator. Only a continuous walk produces
    * these; a pin-drop and an import never do. A client that drew the two alike
@@ -1223,7 +1383,7 @@ export type SurveySample = Message<"trellis.survey.v1.SurveySample"> & {
  * Use `create(SurveySampleSchema)` to create a new message.
  */
 export const SurveySampleSchema: GenMessage<SurveySample> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 42);
+  messageDesc(file_trellis_survey_v1_survey, 47);
 
 /**
  * SurveyService serves measured Wi-Fi site surveys backed by core/survey.
@@ -1434,6 +1594,36 @@ export const SurveyService: GenService<{
     methodKind: "unary";
     input: typeof StopContinuousCaptureRequestSchema;
     output: typeof StopContinuousCaptureResponseSchema;
+  },
+  /**
+   * MeasureThroughput runs a throughput test at a position and stores what it
+   * measured — the active half of a survey, where the scan-based points are the
+   * passive half. A strong signal on a congested channel carries very little,
+   * and only this says which of those a room is.
+   *
+   * Stop-and-go by nature: the test takes seconds in each direction and means
+   * nothing if the operator moves during it, so there is no continuous
+   * equivalent.
+   *
+   * @generated from rpc trellis.survey.v1.SurveyService.MeasureThroughput
+   */
+  measureThroughput: {
+    methodKind: "unary";
+    input: typeof MeasureThroughputRequestSchema;
+    output: typeof MeasureThroughputResponseSchema;
+  },
+  /**
+   * SetThroughputTarget names the server a survey's active measurements run
+   * against. Survey state rather than a per-measurement argument: comparing two
+   * positions only means something if both were measured against the same
+   * thing.
+   *
+   * @generated from rpc trellis.survey.v1.SurveyService.SetThroughputTarget
+   */
+  setThroughputTarget: {
+    methodKind: "unary";
+    input: typeof SetThroughputTargetRequestSchema;
+    output: typeof SetThroughputTargetResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_trellis_survey_v1_survey, 0);

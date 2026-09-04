@@ -26,8 +26,13 @@ func (s *countingScanner) Scan(ctx context.Context) ([]wifi.ScannedNetwork, erro
 		return nil, err
 	}
 	n := s.scans.Add(1)
+	// Associated, like a survey laptop joined to the network it is walking:
+	// that is what lets an active measurement name the AP its link ran over.
 	return []wifi.ScannedNetwork{
-		{SSID: "lab", BSSID: "aa:bb:cc:00:00:01", Signal: -40 - int(n), Channel: 36, Frequency: 5180},
+		{
+			SSID: "lab", BSSID: "aa:bb:cc:00:00:01", Signal: -40 - int(n),
+			Channel: 36, Frequency: 5180, Associated: true,
+		},
 	}, nil
 }
 
