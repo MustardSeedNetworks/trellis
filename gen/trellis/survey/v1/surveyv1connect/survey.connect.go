@@ -98,6 +98,15 @@ const (
 	// SurveyServiceSetThroughputTargetProcedure is the fully-qualified name of the SurveyService's
 	// SetThroughputTarget RPC.
 	SurveyServiceSetThroughputTargetProcedure = "/trellis.survey.v1.SurveyService/SetThroughputTarget"
+	// SurveyServiceSetFloorPlanProcedure is the fully-qualified name of the SurveyService's
+	// SetFloorPlan RPC.
+	SurveyServiceSetFloorPlanProcedure = "/trellis.survey.v1.SurveyService/SetFloorPlan"
+	// SurveyServiceCalibrateFloorPlanProcedure is the fully-qualified name of the SurveyService's
+	// CalibrateFloorPlan RPC.
+	SurveyServiceCalibrateFloorPlanProcedure = "/trellis.survey.v1.SurveyService/CalibrateFloorPlan"
+	// SurveyServiceGetFloorPlanImageProcedure is the fully-qualified name of the SurveyService's
+	// GetFloorPlanImage RPC.
+	SurveyServiceGetFloorPlanImageProcedure = "/trellis.survey.v1.SurveyService/GetFloorPlanImage"
 )
 
 // SurveyServiceClient is a client for the trellis.survey.v1.SurveyService service.
@@ -176,6 +185,21 @@ type SurveyServiceClient interface {
 	// positions only means something if both were measured against the same
 	// thing.
 	SetThroughputTarget(context.Context, *connect.Request[v1.SetThroughputTargetRequest]) (*connect.Response[v1.SetThroughputTargetResponse], error)
+	// SetFloorPlan stores an image as a floor's plan. Until now a plan could only
+	// arrive inside an AirMapper archive, so a survey walked with this product
+	// had nothing to draw its points on.
+	SetFloorPlan(context.Context, *connect.Request[v1.SetFloorPlanRequest]) (*connect.Response[v1.SetFloorPlanResponse], error)
+	// CalibrateFloorPlan sets how many metres a pixel of the plan is, from two
+	// points the operator marked and the real distance between them. A plan
+	// carries no scale of its own, and every distance the analysis reports —
+	// a dead zone's radius, most of all — is in pixels until this is set.
+	CalibrateFloorPlan(context.Context, *connect.Request[v1.CalibrateFloorPlanRequest]) (*connect.Response[v1.CalibrateFloorPlanResponse], error)
+	// GetFloorPlanImage returns a floor's plan image.
+	//
+	// Its own call rather than a field on Floor: a plan runs to megabytes, and
+	// ListFloors is polled while a survey is walked. A client fetches the image
+	// once and the list stays light.
+	GetFloorPlanImage(context.Context, *connect.Request[v1.GetFloorPlanImageRequest]) (*connect.Response[v1.GetFloorPlanImageResponse], error)
 }
 
 // NewSurveyServiceClient constructs a client for the trellis.survey.v1.SurveyService service. By
@@ -309,6 +333,24 @@ func NewSurveyServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(surveyServiceMethods.ByName("SetThroughputTarget")),
 			connect.WithClientOptions(opts...),
 		),
+		setFloorPlan: connect.NewClient[v1.SetFloorPlanRequest, v1.SetFloorPlanResponse](
+			httpClient,
+			baseURL+SurveyServiceSetFloorPlanProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("SetFloorPlan")),
+			connect.WithClientOptions(opts...),
+		),
+		calibrateFloorPlan: connect.NewClient[v1.CalibrateFloorPlanRequest, v1.CalibrateFloorPlanResponse](
+			httpClient,
+			baseURL+SurveyServiceCalibrateFloorPlanProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("CalibrateFloorPlan")),
+			connect.WithClientOptions(opts...),
+		),
+		getFloorPlanImage: connect.NewClient[v1.GetFloorPlanImageRequest, v1.GetFloorPlanImageResponse](
+			httpClient,
+			baseURL+SurveyServiceGetFloorPlanImageProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("GetFloorPlanImage")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -334,6 +376,9 @@ type surveyServiceClient struct {
 	stopContinuousCapture  *connect.Client[v1.StopContinuousCaptureRequest, v1.StopContinuousCaptureResponse]
 	measureThroughput      *connect.Client[v1.MeasureThroughputRequest, v1.MeasureThroughputResponse]
 	setThroughputTarget    *connect.Client[v1.SetThroughputTargetRequest, v1.SetThroughputTargetResponse]
+	setFloorPlan           *connect.Client[v1.SetFloorPlanRequest, v1.SetFloorPlanResponse]
+	calibrateFloorPlan     *connect.Client[v1.CalibrateFloorPlanRequest, v1.CalibrateFloorPlanResponse]
+	getFloorPlanImage      *connect.Client[v1.GetFloorPlanImageRequest, v1.GetFloorPlanImageResponse]
 }
 
 // ImportAirMapper calls trellis.survey.v1.SurveyService.ImportAirMapper.
@@ -436,6 +481,21 @@ func (c *surveyServiceClient) SetThroughputTarget(ctx context.Context, req *conn
 	return c.setThroughputTarget.CallUnary(ctx, req)
 }
 
+// SetFloorPlan calls trellis.survey.v1.SurveyService.SetFloorPlan.
+func (c *surveyServiceClient) SetFloorPlan(ctx context.Context, req *connect.Request[v1.SetFloorPlanRequest]) (*connect.Response[v1.SetFloorPlanResponse], error) {
+	return c.setFloorPlan.CallUnary(ctx, req)
+}
+
+// CalibrateFloorPlan calls trellis.survey.v1.SurveyService.CalibrateFloorPlan.
+func (c *surveyServiceClient) CalibrateFloorPlan(ctx context.Context, req *connect.Request[v1.CalibrateFloorPlanRequest]) (*connect.Response[v1.CalibrateFloorPlanResponse], error) {
+	return c.calibrateFloorPlan.CallUnary(ctx, req)
+}
+
+// GetFloorPlanImage calls trellis.survey.v1.SurveyService.GetFloorPlanImage.
+func (c *surveyServiceClient) GetFloorPlanImage(ctx context.Context, req *connect.Request[v1.GetFloorPlanImageRequest]) (*connect.Response[v1.GetFloorPlanImageResponse], error) {
+	return c.getFloorPlanImage.CallUnary(ctx, req)
+}
+
 // SurveyServiceHandler is an implementation of the trellis.survey.v1.SurveyService service.
 type SurveyServiceHandler interface {
 	// ImportAirMapper imports an AirMapper (.amp) archive into a new stored
@@ -512,6 +572,21 @@ type SurveyServiceHandler interface {
 	// positions only means something if both were measured against the same
 	// thing.
 	SetThroughputTarget(context.Context, *connect.Request[v1.SetThroughputTargetRequest]) (*connect.Response[v1.SetThroughputTargetResponse], error)
+	// SetFloorPlan stores an image as a floor's plan. Until now a plan could only
+	// arrive inside an AirMapper archive, so a survey walked with this product
+	// had nothing to draw its points on.
+	SetFloorPlan(context.Context, *connect.Request[v1.SetFloorPlanRequest]) (*connect.Response[v1.SetFloorPlanResponse], error)
+	// CalibrateFloorPlan sets how many metres a pixel of the plan is, from two
+	// points the operator marked and the real distance between them. A plan
+	// carries no scale of its own, and every distance the analysis reports —
+	// a dead zone's radius, most of all — is in pixels until this is set.
+	CalibrateFloorPlan(context.Context, *connect.Request[v1.CalibrateFloorPlanRequest]) (*connect.Response[v1.CalibrateFloorPlanResponse], error)
+	// GetFloorPlanImage returns a floor's plan image.
+	//
+	// Its own call rather than a field on Floor: a plan runs to megabytes, and
+	// ListFloors is polled while a survey is walked. A client fetches the image
+	// once and the list stays light.
+	GetFloorPlanImage(context.Context, *connect.Request[v1.GetFloorPlanImageRequest]) (*connect.Response[v1.GetFloorPlanImageResponse], error)
 }
 
 // NewSurveyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -641,6 +716,24 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(surveyServiceMethods.ByName("SetThroughputTarget")),
 		connect.WithHandlerOptions(opts...),
 	)
+	surveyServiceSetFloorPlanHandler := connect.NewUnaryHandler(
+		SurveyServiceSetFloorPlanProcedure,
+		svc.SetFloorPlan,
+		connect.WithSchema(surveyServiceMethods.ByName("SetFloorPlan")),
+		connect.WithHandlerOptions(opts...),
+	)
+	surveyServiceCalibrateFloorPlanHandler := connect.NewUnaryHandler(
+		SurveyServiceCalibrateFloorPlanProcedure,
+		svc.CalibrateFloorPlan,
+		connect.WithSchema(surveyServiceMethods.ByName("CalibrateFloorPlan")),
+		connect.WithHandlerOptions(opts...),
+	)
+	surveyServiceGetFloorPlanImageHandler := connect.NewUnaryHandler(
+		SurveyServiceGetFloorPlanImageProcedure,
+		svc.GetFloorPlanImage,
+		connect.WithSchema(surveyServiceMethods.ByName("GetFloorPlanImage")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/trellis.survey.v1.SurveyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case SurveyServiceImportAirMapperProcedure:
@@ -683,6 +776,12 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 			surveyServiceMeasureThroughputHandler.ServeHTTP(w, r)
 		case SurveyServiceSetThroughputTargetProcedure:
 			surveyServiceSetThroughputTargetHandler.ServeHTTP(w, r)
+		case SurveyServiceSetFloorPlanProcedure:
+			surveyServiceSetFloorPlanHandler.ServeHTTP(w, r)
+		case SurveyServiceCalibrateFloorPlanProcedure:
+			surveyServiceCalibrateFloorPlanHandler.ServeHTTP(w, r)
+		case SurveyServiceGetFloorPlanImageProcedure:
+			surveyServiceGetFloorPlanImageHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -770,4 +869,16 @@ func (UnimplementedSurveyServiceHandler) MeasureThroughput(context.Context, *con
 
 func (UnimplementedSurveyServiceHandler) SetThroughputTarget(context.Context, *connect.Request[v1.SetThroughputTargetRequest]) (*connect.Response[v1.SetThroughputTargetResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.SetThroughputTarget is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) SetFloorPlan(context.Context, *connect.Request[v1.SetFloorPlanRequest]) (*connect.Response[v1.SetFloorPlanResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.SetFloorPlan is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) CalibrateFloorPlan(context.Context, *connect.Request[v1.CalibrateFloorPlanRequest]) (*connect.Response[v1.CalibrateFloorPlanResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.CalibrateFloorPlan is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) GetFloorPlanImage(context.Context, *connect.Request[v1.GetFloorPlanImageRequest]) (*connect.Response[v1.GetFloorPlanImageResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.GetFloorPlanImage is not implemented"))
 }

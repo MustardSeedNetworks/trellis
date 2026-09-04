@@ -110,6 +110,24 @@ service SurveyService {
   // positions only means something if both were measured against the same
   // thing.
   rpc SetThroughputTarget(SetThroughputTargetRequest) returns (SetThroughputTargetResponse);
+
+  // SetFloorPlan stores an image as a floor's plan. Until now a plan could only
+  // arrive inside an AirMapper archive, so a survey walked with this product
+  // had nothing to draw its points on.
+  rpc SetFloorPlan(SetFloorPlanRequest) returns (SetFloorPlanResponse);
+
+  // CalibrateFloorPlan sets how many metres a pixel of the plan is, from two
+  // points the operator marked and the real distance between them. A plan
+  // carries no scale of its own, and every distance the analysis reports —
+  // a dead zone's radius, most of all — is in pixels until this is set.
+  rpc CalibrateFloorPlan(CalibrateFloorPlanRequest) returns (CalibrateFloorPlanResponse);
+
+  // GetFloorPlanImage returns a floor's plan image.
+  //
+  // Its own call rather than a field on Floor: a plan runs to megabytes, and
+  // ListFloors is polled while a survey is walked. A client fetches the image
+  // once and the list stays light.
+  rpc GetFloorPlanImage(GetFloorPlanImageRequest) returns (GetFloorPlanImageResponse);
 }
 
 
@@ -178,6 +196,13 @@ message Floor {
   // The floor the survey collects onto, and the one the heatmap and coverage
   // RPCs read when a request names no floor.
   bool is_active = 6;
+
+  // The plan's pixel dimensions, and how many metres one of those pixels is.
+  // The scale is zero until an operator calibrates: a plan carries none of its
+  // own, so every distance derived from it is in pixels until then.
+  int32 plan_width = 7;
+  int32 plan_height = 8;
+  double scale_m = 9;
 }
 
 message ListFloorsRequest {
@@ -383,6 +408,48 @@ message ScannedNetwork {
   // macOS exposes no raw elements at all: 0 is a real reading for an idle
   // channel, so absent has to be distinguishable from it.
   optional int32 channel_utilization_percent = 13;
+}
+
+message GetFloorPlanImageRequest {
+  string survey_id = 1;
+  string floor_id = 2;
+}
+
+message GetFloorPlanImageResponse {
+  // The plan as it was uploaded, PNG or JPEG. Empty when the floor has none.
+  bytes image = 1;
+  int32 width = 2;
+  int32 height = 3;
+}
+
+message SetFloorPlanRequest {
+  string survey_id = 1;
+  // Floor to hang the plan on. Empty means the survey's active floor.
+  string floor_id = 2;
+  // The image itself, PNG or JPEG. Its dimensions are read from the file
+  // rather than taken from the caller: every stored point's position is in
+  // this pixel space.
+  bytes image = 3;
+}
+
+message SetFloorPlanResponse {
+  Floor floor = 1;
+}
+
+message CalibrateFloorPlanRequest {
+  string survey_id = 1;
+  string floor_id = 2;
+  // The two points, in the plan's own pixel space.
+  int32 x1 = 3;
+  int32 y1 = 4;
+  int32 x2 = 5;
+  int32 y2 = 6;
+  // How far apart they really are, in metres.
+  double metres = 7;
+}
+
+message CalibrateFloorPlanResponse {
+  Floor floor = 1;
 }
 
 message MeasureThroughputRequest {

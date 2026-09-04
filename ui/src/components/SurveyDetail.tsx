@@ -1,7 +1,8 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { CaptureSurface } from '@/components/CaptureSurface';
+import { FloorPlanPanel } from '@/components/FloorPlanPanel';
 import { SurveyLifecycle } from '@/components/SurveyLifecycle';
 import { ThroughputTarget } from '@/components/ThroughputTarget';
 import type { SurveySummary } from '@/gen/trellis/survey/v1/survey_pb';
@@ -27,6 +28,33 @@ interface SurveyDetailProps {
 
 export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
   const { t } = useTranslation(['common', 'pages']);
+
+  // The floors are read here rather than passed down: the plan's dimensions and
+  // scale live on the floor, and both the plan panel and the capture surface
+  // need them.
+  const floorsQuery = useQuery({
+    queryKey: ['floors', survey.id],
+    queryFn: () => surveyClient.listFloors({ surveyId: survey.id }),
+  });
+  const activeFloor =
+    floorsQuery.data?.floors.find((floor) => floor.isActive) ?? floorsQuery.data?.floors[0];
+
+  const planQuery = useQuery({
+    queryKey: ['floor-plan', survey.id, activeFloor?.id ?? ''],
+    queryFn: () =>
+      surveyClient.getFloorPlanImage({ surveyId: survey.id, floorId: activeFloor?.id ?? '' }),
+    enabled: activeFloor?.hasFloorPlan === true,
+  });
+  const planImage =
+    planQuery.data && planQuery.data.image.length > 0
+      ? {
+          width: planQuery.data.width,
+          height: planQuery.data.height,
+          // The plan is bytes on the wire; the surface draws it as an image, so
+          // it needs a URL. The same encoder the report PDF download uses.
+          imageUrl: bytesToDataUrl(planQuery.data.image, 'image/png'),
+        }
+      : undefined;
   const reportMutation = useMutation({
     mutationFn: async () => {
       const reply = await surveyClient.generateReport({ surveyId: survey.id });
@@ -67,6 +95,17 @@ export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
       </div>
 
       <div className="mt-6 border-t border-hairline pt-6">
+        {activeFloor ? (
+          <FloorPlanPanel
+            surveyId={survey.id}
+            floorId={activeFloor.id}
+            hasPlan={activeFloor.hasFloorPlan}
+            scaleM={activeFloor.scaleM}
+          />
+        ) : null}
+      </div>
+
+      <div className="mt-6 border-t border-hairline pt-6">
         <ThroughputTarget surveyId={survey.id} server={survey.iperfServer} />
       </div>
 
@@ -77,6 +116,7 @@ export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
           walking={survey.status === 'in_progress'}
           capture={survey.capture}
           throughputTarget={survey.iperfServer}
+          plan={planImage}
         />
       </div>
 

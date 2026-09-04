@@ -207,3 +207,47 @@ test('measures throughput at a point and maps it as its own layer', async ({ pag
   await expect(page.locator('#coverage-threshold')).toHaveCount(0);
   await expect(page.getByTestId('coverage-findings')).toHaveCount(0);
 });
+
+test('uploads a floor plan, calibrates it, and walks on it', async ({ page }) => {
+  await createSurvey(page, uniqueName('Plan'));
+
+  // Before a plan there is nothing to calibrate, and the surface is a blank
+  // canvas in pixels with no relationship to a building.
+  await expect(page.getByTestId('floor-plan-status')).toContainText('No plan on this floor');
+  await expect(page.getByTestId('calibrate-floor-plan')).toHaveCount(0);
+
+  await page.getByTestId('floor-plan-input').setInputFiles('e2e/fixtures/ninth-floor.png');
+  await expect(page.getByTestId('floor-plan-status')).toContainText('no scale yet');
+
+  // 20 metres across an 800-pixel plan is 0.025 m per pixel. The reading is
+  // stated as a distance a person can check against the building, not as a
+  // metres-per-pixel figure nobody can.
+  await page.getByTestId('plan-width-metres').fill('20');
+  await page.getByTestId('calibrate-floor-plan').click();
+  await expect(page.getByTestId('floor-plan-status')).toContainText(
+    '0.025 m per pixel — the plan is 20.0 m across',
+  );
+
+  // The surface is now drawn in the plan's own pixel space, so a click lands
+  // where the operator pointed on the drawing. The fixture is 800x600 where the
+  // blank surface is 800x500 — a surface that ignored the plan would put the
+  // same click 100 px out.
+  const surface = page.getByTestId('capture-surface');
+  await expect(surface.locator('svg')).toHaveAttribute('viewBox', '0 0 800 600');
+  await expect(surface.locator('image')).toHaveCount(1);
+
+  await page.getByTestId('survey-start').click();
+  const box = await surface.boundingBox();
+  if (!box) {
+    throw new Error('capture surface has no layout box');
+  }
+  await surface.click({ position: { x: box.width * 0.5, y: box.height * 0.5 } });
+  await expect(page.getByTestId('capture-pin')).toHaveCount(1);
+
+  const pin = page.getByTestId('capture-pin').locator('circle');
+  // Half way down a 600-pixel plan, not half way down a 500-pixel canvas.
+  expect(Number(await pin.getAttribute('cy'))).toBeGreaterThan(280);
+  expect(Number(await pin.getAttribute('cy'))).toBeLessThan(320);
+
+  await page.getByTestId('survey-complete').click();
+});

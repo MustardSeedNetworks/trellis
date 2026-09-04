@@ -3,7 +3,10 @@
 package api_test
 
 import (
+	"bytes"
 	"context"
+	"image"
+	"image/png"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -253,5 +256,89 @@ func TestListFloorsRequiresASurvey(t *testing.T) {
 		connect.NewRequest(&surveyv1.ListFloorsRequest{SurveyId: "no-such-survey"}))
 	if connect.CodeOf(err) != connect.CodeNotFound {
 		t.Errorf("ListFloors(unknown survey) = %v, want NotFound", connect.CodeOf(err))
+	}
+}
+
+// planPNG encodes an image of a given size for use as a floor plan.
+func planPNG(t *testing.T, width, height int) []byte {
+	t.Helper()
+
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		t.Fatalf("encode plan: %v", err)
+	}
+	return buf.Bytes()
+}
+
+func TestSetFloorPlanAndCalibrateIt(t *testing.T) {
+	t.Parallel()
+
+	handler, id := walkedSurvey(t, scriptedScanner{})
+	floors, err := handler.ListFloors(context.Background(),
+		connect.NewRequest(&surveyv1.ListFloorsRequest{SurveyId: id}))
+	if err != nil {
+		t.Fatalf("ListFloors: %v", err)
+	}
+	floorID := floors.Msg.GetFloors()[0].GetId()
+
+	stored, err := handler.SetFloorPlan(context.Background(),
+		connect.NewRequest(&surveyv1.SetFloorPlanRequest{
+			SurveyId: id, FloorId: floorID, Image: planPNG(t, 800, 600),
+		}))
+	if err != nil {
+		t.Fatalf("SetFloorPlan: %v", err)
+	}
+	floor := stored.Msg.GetFloor()
+	if !floor.GetHasFloorPlan() || floor.GetPlanWidth() != 800 || floor.GetPlanHeight() != 600 {
+		t.Fatalf("floor = %v, want an 800x600 plan", floor)
+	}
+	// Not calibrated yet, and the reply must say so rather than implying a
+	// scale nobody set.
+	if floor.GetScaleM() != 0 {
+		t.Errorf("scale = %v on an uncalibrated plan, want 0", floor.GetScaleM())
+	}
+
+	calibrated, err := handler.CalibrateFloorPlan(context.Background(),
+		connect.NewRequest(&surveyv1.CalibrateFloorPlanRequest{
+			SurveyId: id, FloorId: floorID,
+			X1: 100, Y1: 100, X2: 300, Y2: 100, Metres: 10,
+		}))
+	if err != nil {
+		t.Fatalf("CalibrateFloorPlan: %v", err)
+	}
+	if got := calibrated.Msg.GetFloor().GetScaleM(); got != 0.05 {
+		t.Errorf("scale = %v m/px, want 0.05 (10 m over 200 px)", got)
+	}
+}
+
+func TestSetFloorPlanRejectsAFileThatIsNotAnImage(t *testing.T) {
+	t.Parallel()
+
+	handler, id := walkedSurvey(t, scriptedScanner{})
+
+	// Stored anyway, it would be served to a browser that renders nothing —
+	// a plan that silently is not there. That is the caller's mistake, and the
+	// code has to say so rather than reporting a server fault.
+	_, err := handler.SetFloorPlan(context.Background(),
+		connect.NewRequest(&surveyv1.SetFloorPlanRequest{
+			SurveyId: id, Image: []byte("not an image"),
+		}))
+	if connect.CodeOf(err) != connect.CodeInvalidArgument {
+		t.Fatalf("uploading a non-image = %v (%s), want invalid_argument", err, connect.CodeOf(err))
+	}
+}
+
+func TestCalibratingAFloorWithNoPlan(t *testing.T) {
+	t.Parallel()
+
+	handler, id := walkedSurvey(t, scriptedScanner{})
+
+	_, err := handler.CalibrateFloorPlan(context.Background(),
+		connect.NewRequest(&surveyv1.CalibrateFloorPlanRequest{
+			SurveyId: id, X1: 0, Y1: 0, X2: 100, Y2: 0, Metres: 10,
+		}))
+	if connect.CodeOf(err) != connect.CodeFailedPrecondition {
+		t.Fatalf("calibrating with no plan = %v (%s), want failed_precondition", err, connect.CodeOf(err))
 	}
 }
