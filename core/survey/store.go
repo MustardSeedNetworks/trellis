@@ -129,9 +129,11 @@ func insertFloor(ctx context.Context, tx *sql.Tx, surveyID string, f *Floor) err
 func insertPoint(ctx context.Context, tx *sql.Tx, surveyID, floorID string, p *SamplePoint) error {
 	kind, passive, active := classifySample(p.SampleData)
 	res, err := tx.ExecContext(ctx, `
-		INSERT INTO survey_points (floor_id, survey_id, x, y, recorded_at, sample_kind)
-		VALUES (?, ?, ?, ?, ?, ?)`,
+		INSERT INTO survey_points (floor_id, survey_id, x, y, recorded_at, sample_kind,
+			interpolated)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		floorID, surveyID, p.X, p.Y, p.Timestamp.UTC().Format(rfc3339Nano), kind,
+		boolToInt(p.Interpolated),
 	)
 	if err != nil {
 		return fmt.Errorf("insert point: %w", err)
@@ -303,7 +305,7 @@ func (m *Manager) loadFloors(ctx context.Context, s *Survey) error {
 
 func (m *Manager) loadPoints(ctx context.Context, f *Floor) error {
 	rows, err := m.db.QueryContext(ctx, `
-		SELECT id, x, y, recorded_at, sample_kind
+		SELECT id, x, y, recorded_at, sample_kind, interpolated
 		FROM survey_points WHERE floor_id = ? ORDER BY id`, f.ID)
 	if err != nil {
 		return fmt.Errorf("list points: %w", err)
@@ -321,9 +323,11 @@ func (m *Manager) loadPoints(ctx context.Context, f *Floor) error {
 		var id int64
 		var p SamplePoint
 		var recorded, kind string
-		if err := rows.Scan(&id, &p.X, &p.Y, &recorded, &kind); err != nil {
+		var interpolated int
+		if err := rows.Scan(&id, &p.X, &p.Y, &recorded, &kind, &interpolated); err != nil {
 			return fmt.Errorf("scan point: %w", err)
 		}
+		p.Interpolated = interpolated != 0
 		p.Timestamp, _ = time.Parse(rfc3339Nano, recorded)
 		var ps *PassiveSample
 		if kind == "active" {

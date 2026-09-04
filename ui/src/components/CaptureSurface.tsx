@@ -266,17 +266,34 @@ export function CaptureSurface({ surveyId, surveyName, walking, capture }: Captu
             </g>
           ) : null}
           {pins.map((pin) => (
-            <g key={pinKey(pin)} data-testid="capture-pin">
+            <g
+              key={pinKey(pin)}
+              data-testid="capture-pin"
+              data-interpolated={pin.interpolated ? 'true' : undefined}
+            >
+              {/* A placed reading is drawn hollow and smaller: its position was
+                  worked out from the marks on either side of it, not recorded,
+                  and a survey that drew the two alike would show a claim about
+                  a position as a record of one. Shape, not only colour — the
+                  colour is already carrying the signal. */}
               <circle
                 cx={pin.x}
                 cy={pin.y}
-                r={9}
-                className={`${pinClass(pin.strongestDbm)} stroke-surface-raised`}
+                r={pin.interpolated ? 5 : 9}
+                className={
+                  pin.interpolated
+                    ? `fill-none ${strokeClass(pin.strongestDbm)}`
+                    : `${pinClass(pin.strongestDbm)} stroke-surface-raised`
+                }
                 strokeWidth={2}
               />
-              <text x={pin.x + 14} y={pin.y + 4} className="figure fill-text-primary text-[13px]">
-                {signalText(pin.strongestDbm)}
-              </text>
+              {/* Only the marks are labelled. A walk stores a reading every few
+                  seconds, and a value beside each one is an unreadable page. */}
+              {pin.interpolated ? null : (
+                <text x={pin.x + 14} y={pin.y + 4} className="figure fill-text-primary text-[13px]">
+                  {signalText(pin.strongestDbm)}
+                </text>
+              )}
             </g>
           ))}
         </svg>
@@ -325,4 +342,21 @@ function pinClass(strongestDbm: number | undefined): string {
     return 'fill-status-warning';
   }
   return 'fill-status-error';
+}
+
+/**
+ * The outline colour for a placed reading, matching the fill a pinned one gets
+ * so the same signal reads the same either way.
+ */
+function strokeClass(strongestDbm: number | undefined): string {
+  if (strongestDbm === undefined) {
+    return 'stroke-text-muted';
+  }
+  if (strongestDbm >= GOOD_DBM) {
+    return 'stroke-status-success';
+  }
+  if (strongestDbm >= WEAK_DBM) {
+    return 'stroke-status-warning';
+  }
+  return 'stroke-status-error';
 }

@@ -74,6 +74,7 @@ type continuousCapture struct {
 
 	mu        sync.Mutex
 	pos       Position
+	markedAt  time.Time
 	running   bool
 	lastError string
 	// lastSweep identifies the airspace the previous stored point was taken
@@ -87,10 +88,15 @@ func (c *continuousCapture) position() Position {
 	return c.pos
 }
 
-func (c *continuousCapture) moveTo(p Position) {
+// mark records the operator's new position and returns the segment they just
+// walked: where they were, when they said so, and now.
+func (c *continuousCapture) mark(p Position, now time.Time) (from Position, markedAt time.Time) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.pos = p
+
+	from, markedAt = c.pos, c.markedAt
+	c.pos, c.markedAt = p, now
+	return from, markedAt
 }
 
 func (c *continuousCapture) status() CaptureStatus {
@@ -161,18 +167,25 @@ func (m *Manager) StartContinuousCapture(surveyID string, x, y int) error {
 	}
 
 	// A capture that stopped itself is left in the map so its reason survives
-	// for a client to read; starting again replaces it rather than moving it.
+	// for a client to read; starting again replaces it rather than marking it.
 	if existing, ok := m.captures[surveyID]; ok && existing.status().Running {
-		existing.moveTo(Position{X: x, Y: y})
-		return nil
+		now := time.Now()
+		from, markedAt := existing.mark(Position{X: x, Y: y}, now)
+		// The readings taken since the last mark were taken on the way here.
+		// Placed under the same lock that guards the sample slices, so a reader
+		// sees the segment before or after, never mid-rewrite.
+		s.placeWalkedSegment(from, Position{X: x, Y: y}, markedAt, now)
+		s.UpdatedAt = now
+		return m.persistSurvey(s)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	capture := &continuousCapture{
-		cancel:  cancel,
-		done:    make(chan struct{}),
-		pos:     Position{X: x, Y: y},
-		running: true,
+		cancel:   cancel,
+		done:     make(chan struct{}),
+		pos:      Position{X: x, Y: y},
+		markedAt: time.Now(),
+		running:  true,
 	}
 	if m.captures == nil {
 		m.captures = make(map[string]*continuousCapture)
