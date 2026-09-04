@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.20](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.19...v0.2.20) (2026-09-04)
+
+
+### Features
+
+* **survey:** measure throughput at a point and map it as its own layer ([#304](https://github.com/MustardSeedNetworks/trellis/issues/304)) ([9146222](https://github.com/MustardSeedNetworks/trellis/commit/914622214fd479d5281409089e78cb4f2fffdca0))
+* **survey:** upload a floor plan and calibrate what a pixel of it is worth ([#306](https://github.com/MustardSeedNetworks/trellis/issues/306)) ([a833c10](https://github.com/MustardSeedNetworks/trellis/commit/a833c10b79030dacc6b928cf72bdbd63011e6735))
+
+
+### Continuous Integration
+
+* arm auto-merge on the release PR ([#309](https://github.com/MustardSeedNetworks/trellis/issues/309)) ([040cbd4](https://github.com/MustardSeedNetworks/trellis/commit/040cbd4c6937fd8759d1b03c5e3cfa0df926077a)), closes [#308](https://github.com/MustardSeedNetworks/trellis/issues/308)
+* collapse the file-size gate to one enforced limit ([#311](https://github.com/MustardSeedNetworks/trellis/issues/311)) ([94f04ac](https://github.com/MustardSeedNetworks/trellis/commit/94f04ac7e4c61c25ea2b2e6a5d566acf62b7de25)), closes [#310](https://github.com/MustardSeedNetworks/trellis/issues/310)
+* wire the shared dependency-review gate into CI ([#288](https://github.com/MustardSeedNetworks/trellis/issues/288)) ([b2bd0d1](https://github.com/MustardSeedNetworks/trellis/commit/b2bd0d1924e10815b64df96f31d9ff2826211079)), closes [#287](https://github.com/MustardSeedNetworks/trellis/issues/287)
+
 ## [0.2.19](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.18...v0.2.19) (2026-09-04)
 
 
