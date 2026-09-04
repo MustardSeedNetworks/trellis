@@ -4,7 +4,9 @@ package api
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"sort"
 
 	"connectrpc.com/connect"
@@ -76,13 +78,130 @@ func (h *SurveyServiceHandler) GetFloor(
 // toFloor maps a domain floor onto the wire, marking it active by identity
 // against the floor the survey collects onto.
 func toFloor(floor *survey.Floor, active *survey.Floor) *surveyv1.Floor {
-	return &surveyv1.Floor{
+	out := &surveyv1.Floor{
 		Id:           floor.ID,
 		Name:         floor.Name,
 		Level:        int32Of(floor.Level),
 		SampleCount:  int32Of(len(floor.Samples)),
 		HasFloorPlan: floor.FloorPlan != nil,
 		IsActive:     active != nil && active.ID == floor.ID,
+	}
+	if floor.FloorPlan != nil {
+		out.PlanWidth = int32Of(floor.FloorPlan.Width)
+		out.PlanHeight = int32Of(floor.FloorPlan.Height)
+		out.ScaleM = floor.FloorPlan.ScaleM
+	}
+	return out
+}
+
+// SetFloorPlan stores an image as a floor's plan.
+func (h *SurveyServiceHandler) SetFloorPlan(
+	_ context.Context,
+	req *connect.Request[surveyv1.SetFloorPlanRequest],
+) (*connect.Response[surveyv1.SetFloorPlanResponse], error) {
+	svy, floor, err := h.floorFor(req.Msg.GetSurveyId(), req.Msg.GetFloorId())
+	if err != nil {
+		return nil, err
+	}
+	if err := h.manager.SetFloorPlan(svy.ID, floor.ID, req.Msg.GetImage()); err != nil {
+		return nil, planError(err)
+	}
+	return connect.NewResponse(&surveyv1.SetFloorPlanResponse{
+		Floor: h.floorAfterChange(svy.ID, floor.ID),
+	}), nil
+}
+
+// CalibrateFloorPlan sets how many metres a pixel of the plan is.
+func (h *SurveyServiceHandler) CalibrateFloorPlan(
+	_ context.Context,
+	req *connect.Request[surveyv1.CalibrateFloorPlanRequest],
+) (*connect.Response[surveyv1.CalibrateFloorPlanResponse], error) {
+	svy, floor, err := h.floorFor(req.Msg.GetSurveyId(), req.Msg.GetFloorId())
+	if err != nil {
+		return nil, err
+	}
+	if err := h.manager.CalibrateFloorPlan(svy.ID, floor.ID,
+		survey.Position{X: int(req.Msg.GetX1()), Y: int(req.Msg.GetY1())},
+		survey.Position{X: int(req.Msg.GetX2()), Y: int(req.Msg.GetY2())},
+		req.Msg.GetMetres(),
+	); err != nil {
+		return nil, planError(err)
+	}
+	return connect.NewResponse(&surveyv1.CalibrateFloorPlanResponse{
+		Floor: h.floorAfterChange(svy.ID, floor.ID),
+	}), nil
+}
+
+// GetFloorPlanImage returns a floor's plan image, or nothing when it has none.
+//
+// An empty reply rather than an error: "this floor has no plan" is an ordinary
+// answer, and a client asking so it can draw one has to be able to tell that
+// from a failure.
+func (h *SurveyServiceHandler) GetFloorPlanImage(
+	_ context.Context,
+	req *connect.Request[surveyv1.GetFloorPlanImageRequest],
+) (*connect.Response[surveyv1.GetFloorPlanImageResponse], error) {
+	_, floor, err := h.floorFor(req.Msg.GetSurveyId(), req.Msg.GetFloorId())
+	if err != nil {
+		return nil, err
+	}
+	if floor.FloorPlan == nil {
+		return connect.NewResponse(&surveyv1.GetFloorPlanImageResponse{}), nil
+	}
+
+	image, err := base64.StdEncoding.DecodeString(floor.FloorPlan.ImageData)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal,
+			fmt.Errorf("decode stored floor plan: %w", err))
+	}
+	return connect.NewResponse(&surveyv1.GetFloorPlanImageResponse{
+		Image:  image,
+		Width:  int32Of(floor.FloorPlan.Width),
+		Height: int32Of(floor.FloorPlan.Height),
+	}), nil
+}
+
+// floorFor resolves the survey and floor a request named, with an empty floor
+// meaning the active one.
+func (h *SurveyServiceHandler) floorFor(
+	surveyID, floorID string,
+) (*survey.Survey, *survey.Floor, error) {
+	if surveyID == "" {
+		return nil, nil, connect.NewError(connect.CodeInvalidArgument,
+			errors.New("survey_id is required"))
+	}
+	svy, err := h.manager.GetSurvey(surveyID)
+	if err != nil {
+		return nil, nil, notFoundOrInternal(err)
+	}
+	floor, err := floorOf(svy, floorID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return svy, floor, nil
+}
+
+// floorAfterChange re-reads the floor so the reply describes what was stored
+// rather than what was asked for.
+func (h *SurveyServiceHandler) floorAfterChange(surveyID, floorID string) *surveyv1.Floor {
+	svy, err := h.manager.GetSurvey(surveyID)
+	if err != nil {
+		return nil
+	}
+	return toFloor(svy.GetFloorByID(floorID), svy.GetActiveFloor())
+}
+
+// planError maps a floor-plan failure onto a code that says whose problem it
+// is. A file that is not an image, and a calibration whose two points are the
+// same, are both the request's fault; the caller can fix either.
+func planError(err error) error {
+	switch {
+	case errors.Is(err, survey.ErrSurveyNotFound), errors.Is(err, survey.ErrFloorNotFound):
+		return connect.NewError(connect.CodeNotFound, err)
+	case errors.Is(err, survey.ErrNoFloorPlan):
+		return connect.NewError(connect.CodeFailedPrecondition, err)
+	default:
+		return connect.NewError(connect.CodeInvalidArgument, err)
 	}
 }
 

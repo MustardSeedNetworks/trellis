@@ -223,3 +223,61 @@ func TestThroughputReadingsSurviveAReload(t *testing.T) {
 		t.Errorf("association after reload = %q, want the AP the link ran over", stored.BSSID)
 	}
 }
+
+// TestAMeasurementIsKeptEvenWhenItsAPCannotBeNamed covers the deliberate
+// asymmetry between the rate and its label.
+//
+// The rate is the measurement; the AP it ran over is how it is compared with
+// the passive points around it. A host that cannot report an association —
+// Windows always, a laptop between roams sometimes — still measured a real
+// rate, and refusing to store it because the tag is missing would lose the
+// measurement over its label.
+func TestAMeasurementIsKeptEvenWhenItsAPCannotBeNamed(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name    string
+		scanner survey.Scanner
+	}{
+		{"the radio failed", &failingScanner{err: errors.New("capture: no Wi-Fi interface")}},
+		{"the host is not associated", &unassociatedScanner{}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			meter := &scriptedMeter{sample: survey.ThroughputSample{DownloadMbps: 180}}
+			mgr := mustManager(t, t.TempDir(), tc.scanner, nil, meter, nil)
+			s, err := mgr.CreateSurvey("untagged", "", "en0", survey.TypePassive)
+			if err != nil {
+				t.Fatalf("CreateSurvey: %v", err)
+			}
+			if err := mgr.SetThroughputTarget(s.ID, "10.44.30.30", 4); err != nil {
+				t.Fatalf("SetThroughputTarget: %v", err)
+			}
+			if err := mgr.StartSurvey(s.ID); err != nil {
+				t.Fatalf("StartSurvey: %v", err)
+			}
+
+			got, err := mgr.MeasureThroughput(context.Background(), s.ID, 40, 40)
+			if err != nil {
+				t.Fatalf("MeasureThroughput: %v", err)
+			}
+			if got.DownloadMbps != 180 {
+				t.Errorf("rate = %v, want the 180 that was measured", got.DownloadMbps)
+			}
+			if got.BSSID != "" {
+				t.Errorf("an AP was named where none could be: %q", got.BSSID)
+			}
+		})
+	}
+}
+
+// unassociatedScanner sees an airspace it is not joined to, which is the
+// ordinary state of a survey laptop walking someone else's building.
+type unassociatedScanner struct{}
+
+func (unassociatedScanner) Scan(context.Context) ([]wifi.ScannedNetwork, error) {
+	return []wifi.ScannedNetwork{
+		{SSID: "guest", BSSID: "aa:bb:cc:00:00:09", Signal: -66, Channel: 11, Frequency: 2462},
+	}, nil
+}

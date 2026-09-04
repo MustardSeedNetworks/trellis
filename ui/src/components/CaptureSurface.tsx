@@ -11,6 +11,8 @@ interface CaptureSurfaceProps {
   surveyName: string;
   /** The iperf3 server active measurements run against; empty when none is set. */
   throughputTarget: string;
+  /** The floor's plan, when it has one. The surface is drawn in its pixel space. */
+  plan?: { width: number; height: number; imageUrl: string };
   /** Only a survey in progress accepts a point; otherwise the surface is a picture. */
   walking: boolean;
   /** The survey's continuous capture, from the summary. Absent when it has never had one. */
@@ -75,11 +77,20 @@ export function CaptureSurface({
   walking,
   capture,
   throughputTarget,
+  plan,
 }: CaptureSurfaceProps) {
   const { t } = useTranslation(['common', 'pages']);
   const queryClient = useQueryClient();
   const [cursor, setCursor] = useState<Point>({ x: SURFACE_WIDTH / 2, y: SURFACE_HEIGHT / 2 });
   const [focused, setFocused] = useState(false);
+
+  // The plan's own pixel space when there is one, so a click lands where the
+  // operator pointed on the drawing rather than on a canvas that has no
+  // relationship to the building. Without a plan the surface keeps its fixed
+  // space, which is what every survey walked before plans could be uploaded
+  // was measured in.
+  const width = plan?.width || SURFACE_WIDTH;
+  const height = plan?.height || SURFACE_HEIGHT;
 
   const capturing = capture?.running === true;
   const samplesQuery = useQuery({
@@ -145,13 +156,13 @@ export function CaptureSurface({
       return;
     }
     if (capturing) {
-      walkMutation.mutate(clamp(point));
+      walkMutation.mutate(clampTo(point, width, height));
       return;
     }
     if (captureMutation.isPending) {
       return;
     }
-    captureMutation.mutate(clamp(point));
+    captureMutation.mutate(clampTo(point, width, height));
   }
 
   function handleClick(event: MouseEvent<HTMLButtonElement>) {
@@ -170,10 +181,10 @@ export function CaptureSurface({
       return;
     }
     const point = {
-      x: Math.round(((event.clientX - rect.left) / rect.width) * SURFACE_WIDTH),
-      y: Math.round(((event.clientY - rect.top) / rect.height) * SURFACE_HEIGHT),
+      x: Math.round(((event.clientX - rect.left) / rect.width) * width),
+      y: Math.round(((event.clientY - rect.top) / rect.height) * height),
     };
-    setCursor(clamp(point));
+    setCursor(clampTo(point, width, height));
     markPosition(point);
   }
 
@@ -190,7 +201,9 @@ export function CaptureSurface({
     const move = moves[event.key];
     if (move) {
       event.preventDefault();
-      setCursor((current) => clamp({ x: current.x + move.x, y: current.y + move.y }));
+      setCursor((current) =>
+        clampTo({ x: current.x + move.x, y: current.y + move.y }, width, height),
+      );
     }
   }
 
@@ -252,7 +265,7 @@ export function CaptureSurface({
             <button
               type="button"
               disabled={!walking || capturing || throughputMutation.isPending}
-              onClick={() => throughputMutation.mutate(clamp(cursor))}
+              onClick={() => throughputMutation.mutate(clampTo(cursor, width, height))}
               data-testid="measure-throughput"
               className="rounded border border-hairline px-3 py-1 text-sm text-text-primary hover:bg-surface-raised disabled:opacity-50"
             >
@@ -264,7 +277,11 @@ export function CaptureSurface({
           <button
             type="button"
             disabled={!walking || walkMutation.isPending || stopMutation.isPending}
-            onClick={() => (capturing ? stopMutation.mutate() : walkMutation.mutate(clamp(cursor)))}
+            onClick={() =>
+              capturing
+                ? stopMutation.mutate()
+                : walkMutation.mutate(clampTo(cursor, width, height))
+            }
             data-testid="toggle-continuous"
             className="rounded border border-hairline px-3 py-1 text-sm text-text-primary hover:bg-surface-raised disabled:opacity-50"
           >
@@ -301,11 +318,8 @@ export function CaptureSurface({
         data-testid="capture-surface"
         data-walking={walking}
       >
-        <svg
-          viewBox={`0 0 ${SURFACE_WIDTH} ${SURFACE_HEIGHT}`}
-          aria-hidden="true"
-          className="block w-full"
-        >
+        <svg viewBox={`0 0 ${width} ${height}`} aria-hidden="true" className="block w-full">
+          {plan ? <image href={plan.imageUrl} x={0} y={0} width={width} height={height} /> : null}
           {focused && walking ? (
             <g className="stroke-brand-primary" strokeWidth={1.5} data-testid="capture-cursor">
               <line x1={cursor.x - 14} y1={cursor.y} x2={cursor.x + 14} y2={cursor.y} />
@@ -367,10 +381,10 @@ function pinKey(pin: SurveySample): string {
   return `${at}:${pin.x}:${pin.y}`;
 }
 
-function clamp(point: Point): Point {
+function clampTo(point: Point, width: number, height: number): Point {
   return {
-    x: Math.min(Math.max(point.x, 0), SURFACE_WIDTH),
-    y: Math.min(Math.max(point.y, 0), SURFACE_HEIGHT),
+    x: Math.min(Math.max(point.x, 0), width),
+    y: Math.min(Math.max(point.y, 0), height),
   };
 }
 
