@@ -566,6 +566,43 @@ jobs:
       - name: Validate i18n (parity, glossary, banned vocab, etc.)
         uses: MustardSeedNetworks/.github/.github/actions/i18n-validate@a146506fd53fe5e01fdc01892dd838c10081d183 # v1.9.0
 
+  # actionlint + zizmor over .github/workflows. Ported from seed, which has had
+  # this since the fleet CI pass; trellis was the one repo where a workflow
+  # change went to main with nothing checking it — the same pins, the same
+  # zizmor severity floor, so a finding here means the same thing it does
+  # in the other three.
+  #
+  # No path filter: this repo has no `changes` job, and both tools finish in
+  # under a minute on a tree this size.
+  workflow-lint:
+    name: Workflow Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: ./.github/actions/setup-go
+
+      - name: Run actionlint
+        run: |
+          go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+          # SC2129 is a pure style preference about grouping `>>` redirects in
+          # step summaries; the ungrouped form stays readable and diffs one
+          # line at a time. Every correctness-level rule stays enabled.
+          actionlint -ignore 'SC2129' -color
+
+      - name: Run zizmor
+        env:
+          # zizmor resolves action refs against the API; without a token it
+          # falls back to unauthenticated requests and gets rate-limited.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pipx install zizmor==1.29.0
+          zizmor --min-severity high --color always .github/workflows/
+
   # Fleet-shared SAST gate (MustardSeedNetworks/.github, pinned).
   semgrep:
     uses: MustardSeedNetworks/.github/.github/workflows/semgrep.yml@a146506fd53fe5e01fdc01892dd838c10081d183 # v1.9.0
@@ -619,6 +656,7 @@ jobs:
       - backend-darwin
       - backend-windows
       - quality
+      - workflow-lint
       - govulncheck
       - security
       - frontend
