@@ -1,5 +1,59 @@
 # Changelog
 
+## [0.2.19](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.18...v0.2.19) (2026-09-04)
+
+
+### Features
+
+* **api:** serve a survey's floors and scope the heatmap to one of them ([#282](https://github.com/MustardSeedNetworks/trellis/issues/282)) ([d77e013](https://github.com/MustardSeedNetworks/trellis/commit/d77e0134f792ecf25ec9f012087b2328f3346d95)), closes [#65](https://github.com/MustardSeedNetworks/trellis/issues/65)
+* **coverage:** read the measured value under the pointer and zoom the surface ([#286](https://github.com/MustardSeedNetworks/trellis/issues/286)) ([5a1cf7b](https://github.com/MustardSeedNetworks/trellis/commit/5a1cf7b15a6f4bb34c4a5729b8b2b8e7bacd916a))
+* **live:** read the airspace this host hears, without recording a survey ([#296](https://github.com/MustardSeedNetworks/trellis/issues/296)) ([80efab8](https://github.com/MustardSeedNetworks/trellis/commit/80efab8bdf696f223ed90f76c58bca16c96ef608))
+* **survey:** place a walk's readings along the way between two marks ([#301](https://github.com/MustardSeedNetworks/trellis/issues/301)) ([9b9d5c9](https://github.com/MustardSeedNetworks/trellis/commit/9b9d5c9183ae4d70e5896cdace4c07a089f8d5d6)), closes [#300](https://github.com/MustardSeedNetworks/trellis/issues/300)
+* **survey:** walk a floor continuously instead of stopping at every point ([#299](https://github.com/MustardSeedNetworks/trellis/issues/299)) ([71d0b29](https://github.com/MustardSeedNetworks/trellis/commit/71d0b29b875a5b46f87832885c50133fa348ac8f)), closes [#298](https://github.com/MustardSeedNetworks/trellis/issues/298)
+* **ui:** wire the survey page to the walk lifecycle the service already serves ([#268](https://github.com/MustardSeedNetworks/trellis/issues/268)) ([d2db80b](https://github.com/MustardSeedNetworks/trellis/commit/d2db80b9d40bab250e70507bf435e43a69f99ca8)), closes [#267](https://github.com/MustardSeedNetworks/trellis/issues/267)
+
+
+### Bug Fixes
+
+* **survey:** cap what one AirMapper archive entry may inflate to ([#272](https://github.com/MustardSeedNetworks/trellis/issues/272)) ([852bb0e](https://github.com/MustardSeedNetworks/trellis/commit/852bb0e2eacb1135578b080c04c2bc039e569da0)), closes [#271](https://github.com/MustardSeedNetworks/trellis/issues/271)
+* **trellisd:** refuse a non-loopback TRELLIS_ADDR at startup ([#270](https://github.com/MustardSeedNetworks/trellis/issues/270)) ([0d2fbdb](https://github.com/MustardSeedNetworks/trellis/commit/0d2fbdb7f924c55fba82c650a2923f544a64a857))
+
+
+### Performance Improvements
+
+* **ui:** load each page lazily so the entry chunk stops carrying all four ([#281](https://github.com/MustardSeedNetworks/trellis/issues/281)) ([6027252](https://github.com/MustardSeedNetworks/trellis/commit/6027252cb4832bac8daac748375af1d0434e260c))
+
+
+### Documentation
+
+* state what exists as of 2026-09-03 and the Seed/Trellis Wi-Fi decision ([#280](https://github.com/MustardSeedNetworks/trellis/issues/280)) ([dc4937c](https://github.com/MustardSeedNetworks/trellis/commit/dc4937c3460be6568466b523aae2979d87424724))
+
+
+### Tests
+
+* **e2e:** import, threshold and report journeys through the daemon ([#274](https://github.com/MustardSeedNetworks/trellis/issues/274)) ([90e8051](https://github.com/MustardSeedNetworks/trellis/commit/90e8051fa7b017ff1208ba28afab8a3bfc4550cb))
+
+
+### Continuous Integration
+
+* block on token discipline and add the Storybook interaction/a11y gate ([#275](https://github.com/MustardSeedNetworks/trellis/issues/275)) ([ee5a0bd](https://github.com/MustardSeedNetworks/trellis/commit/ee5a0bd179e381c28a8aec14946a35cda703d7d3)), closes [#145](https://github.com/MustardSeedNetworks/trellis/issues/145)
+* gate workflow changes on actionlint and zizmor ([#292](https://github.com/MustardSeedNetworks/trellis/issues/292)) ([80303ea](https://github.com/MustardSeedNetworks/trellis/commit/80303ea20f0d774763bb2803694df5d05b706e28)), closes [#291](https://github.com/MustardSeedNetworks/trellis/issues/291)
+* give each main commit its own concurrency group ([#279](https://github.com/MustardSeedNetworks/trellis/issues/279)) ([fd2b20b](https://github.com/MustardSeedNetworks/trellis/commit/fd2b20bb1a97c572ca52c613b6fc76f8a92c2bef)), closes [#278](https://github.com/MustardSeedNetworks/trellis/issues/278)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#269](https://github.com/MustardSeedNetworks/trellis/issues/269)) ([9d2a90c](https://github.com/MustardSeedNetworks/trellis/commit/9d2a90cb0f3cb0a83b981af5bd7c7dcafbd2df7c))
+* **deps:** lock file maintenance ([#277](https://github.com/MustardSeedNetworks/trellis/issues/277)) ([4a9201d](https://github.com/MustardSeedNetworks/trellis/commit/4a9201dea54e10f6e352a046e8c2145dcc81ddd0))
+* **deps:** lock file maintenance ([#285](https://github.com/MustardSeedNetworks/trellis/issues/285)) ([7ddf706](https://github.com/MustardSeedNetworks/trellis/commit/7ddf706a47398a078b79b80f6f3d8c2cda0e43a8))
+* **deps:** lock file maintenance ([#289](https://github.com/MustardSeedNetworks/trellis/issues/289)) ([ea39da0](https://github.com/MustardSeedNetworks/trellis/commit/ea39da0764b3fb10ea5ad41d2a44b6b710a3b355))
+* **deps:** lock file maintenance ([#293](https://github.com/MustardSeedNetworks/trellis/issues/293)) ([63d842c](https://github.com/MustardSeedNetworks/trellis/commit/63d842c1da579a00563900d9e05e477f078e85a5))
+* **deps:** lock file maintenance ([#302](https://github.com/MustardSeedNetworks/trellis/issues/302)) ([1061e00](https://github.com/MustardSeedNetworks/trellis/commit/1061e007e18795d37964eba7badcf2c791ea4a72))
+* **deps:** update dependency @biomejs/biome to v2.5.11 ([#265](https://github.com/MustardSeedNetworks/trellis/issues/265)) ([09189a2](https://github.com/MustardSeedNetworks/trellis/commit/09189a2fb00ec3e8eea80fee2ab190c0f5cb133c))
+* **deps:** update dependency @biomejs/biome to v2.5.11 ([#276](https://github.com/MustardSeedNetworks/trellis/issues/276)) ([ffdc941](https://github.com/MustardSeedNetworks/trellis/commit/ffdc9412825e9b76dbd8a0e59a1f384f3c6c6f44))
+* **deps:** update dependency @vitejs/plugin-react to v6.1.1 ([#297](https://github.com/MustardSeedNetworks/trellis/issues/297)) ([33a2c3b](https://github.com/MustardSeedNetworks/trellis/commit/33a2c3bc1d16fd568638b0aaf0c1edcd498da05b))
+* refresh Go dependencies and fix Biome schema drift ([#264](https://github.com/MustardSeedNetworks/trellis/issues/264)) ([f98e2b9](https://github.com/MustardSeedNetworks/trellis/commit/f98e2b94e5bc89247478d7ab20d24959115c6931)), closes [#263](https://github.com/MustardSeedNetworks/trellis/issues/263)
+
 ## [0.2.18](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.17...v0.2.18) (2026-09-01)
 
 
