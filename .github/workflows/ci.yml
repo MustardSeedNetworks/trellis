@@ -289,7 +289,52 @@ jobs:
         working-directory: ui
         run: |
           npm ci
-          npm audit --audit-level=high
+
+          # npm audit's exit code conflates "the advisory endpoint is
+          # unreachable" with "there is a real finding" -- a registry outage
+          # on 2026-09-04 turned this job red on unrelated PRs in seed and
+          # trellis, and the log read "npm error" as if it were a dependency
+          # problem. --json separates the two without parsing npm's prose: a
+          # transport failure returns a top-level "error" key, a completed
+          # run returns metadata.vulnerabilities. Only the former is retried
+          # -- a real finding will not heal in 15 seconds, and it fails
+          # immediately with no delay.
+          attempts=3
+          delay=5
+          out=""
+          for attempt in $(seq 1 "$attempts"); do
+            out="$(npm audit --json --audit-level=high || true)"
+
+            if ! jq -e 'has("error")' >/dev/null 2>&1 <<<"$out"; then
+              break
+            fi
+
+            endpoint="$(jq -r '(.error.summary | select(. != "")) // .message // "registry.npmjs.org advisory endpoint"' <<<"$out")"
+            if [ "$attempt" -lt "$attempts" ]; then
+              echo "npm audit's advisory endpoint did not answer (attempt $attempt/$attempts): $endpoint"
+              sleep "$delay"
+              delay=$((delay * 3))
+              continue
+            fi
+            echo "::error::npm audit could not reach the advisory endpoint (registry.npmjs.org) after $attempts attempts: $endpoint -- this is not a dependency finding, but the audit did not run so the gate fails rather than claiming a clean scan"
+            exit 1
+          done
+
+          vulns="$(jq -e '.metadata.vulnerabilities' <<<"$out" 2>/dev/null)" || {
+            echo "::error::npm audit returned no metadata.vulnerabilities -- unexpected output, failing closed"
+            echo "$out"
+            exit 1
+          }
+
+          high="$(jq -r '.high // 0' <<<"$vulns")"
+          critical="$(jq -r '.critical // 0' <<<"$vulns")"
+          total="$(jq -r '.total // 0' <<<"$vulns")"
+          echo "npm audit: $total vulnerabilities found ($high high, $critical critical)"
+
+          if [ "$((high + critical))" -gt 0 ]; then
+            jq -r '(.vulnerabilities // {}) | to_entries[] | select(.value.severity == "high" or .value.severity == "critical") | "  \(.value.severity): \(.key) (\(.value.range))"' <<<"$out"
+            exit 1
+          fi
 
       # gitleaks-action needs a paid licence for organisation repos and fails
       # red without ever scanning. The MIT-licensed CLI is the same engine.
