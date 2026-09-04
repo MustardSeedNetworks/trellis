@@ -11,16 +11,21 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { SurveySampleSchema } from '@/gen/trellis/survey/v1/survey_pb';
+import type { CaptureStatus } from '@/gen/trellis/survey/v1/survey_pb';
+import { CaptureStatusSchema, SurveySampleSchema } from '@/gen/trellis/survey/v1/survey_pb';
 import { CaptureSurface, SURFACE_HEIGHT, SURFACE_WIDTH } from './CaptureSurface';
 
 const capturePoint = vi.fn();
 const listSamples = vi.fn();
+const startContinuousCapture = vi.fn();
+const stopContinuousCapture = vi.fn();
 
 vi.mock('@/lib/client', () => ({
   surveyClient: {
     capturePoint: (req: unknown) => capturePoint(req),
     listSamples: (req: unknown) => listSamples(req),
+    startContinuousCapture: (req: unknown) => startContinuousCapture(req),
+    stopContinuousCapture: (req: unknown) => stopContinuousCapture(req),
   },
 }));
 
@@ -41,14 +46,20 @@ function sample(x: number, y: number, strongestDbm: number | undefined, atMs: nu
   });
 }
 
-function renderSurface(walking = true) {
+/** A survey's continuous capture as the summary reports it. */
+function captureStatus(over: Partial<CaptureStatus> = {}): CaptureStatus {
+  return create(CaptureStatusSchema, { running: true, x: 100, y: 200, lastError: '', ...over });
+}
+
+function renderSurface(walking = true, capture?: CaptureStatus) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   function wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   }
-  return render(<CaptureSurface surveyId="svy-9" surveyName="Everett HQ" walking={walking} />, {
-    wrapper,
-  });
+  return render(
+    <CaptureSurface surveyId="svy-9" surveyName="Everett HQ" walking={walking} capture={capture} />,
+    { wrapper },
+  );
 }
 
 // jsdom lays nothing out, so the surface reports a zero box and the click math
@@ -67,6 +78,10 @@ const halfScale = {
 beforeEach(() => {
   capturePoint.mockReset();
   listSamples.mockReset();
+  startContinuousCapture.mockReset();
+  stopContinuousCapture.mockReset();
+  startContinuousCapture.mockResolvedValue({ capture: captureStatus() });
+  stopContinuousCapture.mockResolvedValue({});
   listSamples.mockResolvedValue({ samples: [] });
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(halfScale);
 });
@@ -201,5 +216,65 @@ describe('CaptureSurface', () => {
 
     await waitFor(() => expect(capturePoint).toHaveBeenCalledTimes(1));
     expect(capturePoint).toHaveBeenCalledWith({ surveyId: 'svy-9', x: 500, y: 240 });
+  });
+});
+
+describe('continuous capture', () => {
+  it('starts a walk at the cursor rather than capturing a point', async () => {
+    renderSurface(true);
+
+    fireEvent.click(screen.getByTestId('toggle-continuous'));
+
+    await waitFor(() => expect(startContinuousCapture).toHaveBeenCalled());
+    // The centre of the surface is where the cursor starts.
+    expect(startContinuousCapture.mock.calls[0]?.[0]).toMatchObject({
+      surveyId: 'svy-9',
+      x: SURFACE_WIDTH / 2,
+      y: SURFACE_HEIGHT / 2,
+    });
+    expect(capturePoint).not.toHaveBeenCalled();
+  });
+
+  it('moves the walk instead of taking a point while it is running', async () => {
+    renderSurface(true, captureStatus());
+
+    fireEvent.click(screen.getByTestId('capture-surface'), {
+      clientX: 100,
+      clientY: 50,
+      detail: 1,
+    });
+
+    // The same gesture means "I am here now" during a walk. Taking a one-shot
+    // point here would put a second reading at a position the daemon is already
+    // sampling.
+    await waitFor(() => expect(startContinuousCapture).toHaveBeenCalled());
+    expect(startContinuousCapture.mock.calls[0]?.[0]).toMatchObject({ x: 200, y: 100 });
+    expect(capturePoint).not.toHaveBeenCalled();
+  });
+
+  it('stops a running walk', async () => {
+    renderSurface(true, captureStatus());
+
+    fireEvent.click(screen.getByTestId('toggle-continuous'));
+
+    await waitFor(() => expect(stopContinuousCapture).toHaveBeenCalledWith({ surveyId: 'svy-9' }));
+    expect(startContinuousCapture).not.toHaveBeenCalled();
+  });
+
+  it('says why a walk stopped instead of letting the points just cease', async () => {
+    renderSurface(
+      true,
+      captureStatus({ running: false, lastError: 'capture: no Wi-Fi interface' }),
+    );
+
+    const status = await screen.findByTestId('capture-status');
+    expect(status).toHaveTextContent('no Wi-Fi interface');
+    expect(status).toHaveClass('text-status-error');
+  });
+
+  it('offers no walk on a survey that is not in progress', () => {
+    renderSurface(false);
+
+    expect(screen.getByTestId('toggle-continuous')).toBeDisabled();
   });
 });

@@ -79,6 +79,21 @@ service SurveyService {
   // seconds and the radio serves its cache inside that window, so a stream
   // would repeat itself at whatever rate a client asked for. The client polls.
   rpc Scan(ScanRequest) returns (ScanResponse);
+
+  // StartContinuousCapture samples repeatedly at a position until it is
+  // stopped — the walking half of a measured survey, where CapturePoint is the
+  // stop-and-go half.
+  //
+  // Calling it again on a running survey moves the capture rather than starting
+  // a second one: it is the operator saying "I am here now", which is the whole
+  // interaction in a walking survey.
+  rpc StartContinuousCapture(StartContinuousCaptureRequest)
+      returns (StartContinuousCaptureResponse);
+
+  // StopContinuousCapture ends a survey's capture loop. Stopping one that is not
+  // running is not an error.
+  rpc StopContinuousCapture(StopContinuousCaptureRequest)
+      returns (StopContinuousCaptureResponse);
 }
 
 
@@ -91,6 +106,12 @@ message SurveySummary {
   int32 floor_count = 4;
   int32 sample_count = 5;
   bool has_floor_plan = 6;
+
+  // The survey's continuous capture, absent when it has never had one. It rides
+  // on the summary rather than on an RPC of its own because a client already
+  // polls this while walking, and a walk that a reload cannot see is a walk the
+  // operator will start a second time.
+  optional CaptureStatus capture = 7;
 }
 
 message ImportAirMapperRequest {
@@ -340,6 +361,37 @@ message ScannedNetwork {
   // macOS exposes no raw elements at all: 0 is a real reading for an idle
   // channel, so absent has to be distinguishable from it.
   optional int32 channel_utilization_percent = 13;
+}
+
+message StartContinuousCaptureRequest {
+  string survey_id = 1;
+  // Where the operator is standing, in floor-plan pixel coordinates — the same
+  // space CapturePoint and imported samples use.
+  int32 x = 2;
+  int32 y = 3;
+}
+
+message StartContinuousCaptureResponse {
+  CaptureStatus capture = 1;
+}
+
+message StopContinuousCaptureRequest {
+  string survey_id = 1;
+}
+
+message StopContinuousCaptureResponse {}
+
+// CaptureStatus is a survey's continuous capture as it stands, so a client that
+// reloads mid-walk can draw a walk it did not start.
+message CaptureStatus {
+  bool running = 1;
+  int32 x = 2;
+  int32 y = 3;
+
+  // Why the walk stopped, when it stopped itself. Empty while it is running and
+  // when it was stopped deliberately. A walk whose points simply cease, with
+  // nothing saying why, is worse than either.
+  string last_error = 4;
 }
 
 message ScanRequest {}

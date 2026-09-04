@@ -57,7 +57,7 @@ func (h *SurveyServiceHandler) ImportAirMapper(
 	}
 
 	return connect.NewResponse(&surveyv1.ImportAirMapperResponse{
-		Survey: toSurveySummary(svy),
+		Survey: h.surveySummary(svy),
 	}), nil
 }
 
@@ -69,7 +69,7 @@ func (h *SurveyServiceHandler) ListSurveys(
 	surveys := h.manager.ListSurveys()
 	summaries := make([]*surveyv1.SurveySummary, 0, len(surveys))
 	for _, svy := range surveys {
-		summaries = append(summaries, toSurveySummary(svy))
+		summaries = append(summaries, h.surveySummary(svy))
 	}
 
 	return connect.NewResponse(&surveyv1.ListSurveysResponse{Surveys: summaries}), nil
@@ -90,7 +90,7 @@ func (h *SurveyServiceHandler) GetSurvey(
 		return nil, notFoundOrInternal(err)
 	}
 
-	return connect.NewResponse(&surveyv1.GetSurveyResponse{Survey: toSurveySummary(svy)}), nil
+	return connect.NewResponse(&surveyv1.GetSurveyResponse{Survey: h.surveySummary(svy)}), nil
 }
 
 // DeleteSurvey removes a stored survey.
@@ -282,7 +282,7 @@ func reportOptions(opts *surveyv1.ReportOptions) survey.ReportOptions {
 }
 
 // toSurveySummary maps a core survey.Survey onto the proto SurveySummary.
-func toSurveySummary(svy *survey.Survey) *surveyv1.SurveySummary {
+func (h *SurveyServiceHandler) surveySummary(svy *survey.Survey) *surveyv1.SurveySummary {
 	hasFloorPlan := false
 	if floor := svy.GetActiveFloor(); floor != nil {
 		hasFloorPlan = floor.FloorPlan != nil
@@ -295,6 +295,21 @@ func toSurveySummary(svy *survey.Survey) *surveyv1.SurveySummary {
 		FloorCount:   int32(len(svy.Floors)),
 		SampleCount:  int32(len(svy.GetAllSamples())),
 		HasFloorPlan: hasFloorPlan,
+		Capture:      captureStatusOf(h.manager.CapturingAt(svy.ID)),
+	}
+}
+
+// captureStatusOf narrows a survey's continuous capture for the wire. nil stays
+// nil: a survey that never had a walk must not read as one stopped at (0,0).
+func captureStatusOf(status *survey.CaptureStatus) *surveyv1.CaptureStatus {
+	if status == nil {
+		return nil
+	}
+	return &surveyv1.CaptureStatus{
+		Running:   status.Running,
+		X:         int32Of(status.X),
+		Y:         int32Of(status.Y),
+		LastError: status.LastError,
 	}
 }
 

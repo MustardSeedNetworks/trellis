@@ -2,7 +2,7 @@ import { timestampMs } from '@bufbuild/protobuf/wkt';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type KeyboardEvent, type MouseEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { SurveySample } from '@/gen/trellis/survey/v1/survey_pb';
+import type { CaptureStatus, SurveySample } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
 import { formatSignal } from '@/lib/format';
 
@@ -11,6 +11,8 @@ interface CaptureSurfaceProps {
   surveyName: string;
   /** Only a survey in progress accepts a point; otherwise the surface is a picture. */
   walking: boolean;
+  /** The survey's continuous capture, from the summary. Absent when it has never had one. */
+  capture?: CaptureStatus;
 }
 
 /**
@@ -26,6 +28,9 @@ export const SURFACE_HEIGHT = 500;
 const GOOD_DBM = -60;
 const WEAK_DBM = -75;
 
+/** How often the stored points are re-read while a continuous capture runs. */
+const WALK_POLL_MS = 2000;
+
 /** Arrow keys move the keyboard cursor by this much; with Shift, five times it. */
 const KEY_STEP = 10;
 const KEY_STEP_FAST = 50;
@@ -36,10 +41,22 @@ interface Point {
 }
 
 /**
- * CaptureSurface is the stop-and-go walk: the operator stands at a point,
- * clicks where they are, and the radio samples there. One click is one point,
- * matching the unary RPC — an active scan takes seconds and cannot be
- * cancelled, so further clicks are ignored until it returns rather than queued.
+ * CaptureSurface is both survey modes over one surface.
+ *
+ * **Stop-and-go**: the operator stands at a point, clicks where they are, and
+ * the radio samples there. One click is one point, matching the unary RPC — an
+ * active scan takes seconds and cannot be cancelled, so further clicks are
+ * ignored until it returns rather than queued.
+ *
+ * **Continuous**: the daemon samples repeatedly at the position the operator
+ * last marked, and a click moves that position rather than taking a point. It is
+ * the same gesture meaning "I am here now" instead of "sample here" — which is
+ * what walking a floor actually is, and why the two modes share a surface
+ * instead of being two controls that look alike.
+ *
+ * The mode is a toggle rather than two buttons because the two are exclusive on
+ * one radio, and a surface offering both at once would invite a click that means
+ * nothing.
  *
  * The keyboard gets the same walk: the surface takes focus, the arrow keys move
  * a cursor across it and Enter or Space captures there. A surface that only a
@@ -50,15 +67,20 @@ interface Point {
  * heatmap, by a reload, by the daemon restarting; the dots have to survive all
  * of those or the operator cannot see where they have already been.
  */
-export function CaptureSurface({ surveyId, surveyName, walking }: CaptureSurfaceProps) {
+export function CaptureSurface({ surveyId, surveyName, walking, capture }: CaptureSurfaceProps) {
   const { t } = useTranslation(['common', 'pages']);
   const queryClient = useQueryClient();
   const [cursor, setCursor] = useState<Point>({ x: SURFACE_WIDTH / 2, y: SURFACE_HEIGHT / 2 });
   const [focused, setFocused] = useState(false);
 
+  const capturing = capture?.running === true;
   const samplesQuery = useQuery({
     queryKey: ['samples', surveyId],
     queryFn: () => surveyClient.listSamples({ surveyId }),
+    // Polled only while the daemon is walking: nothing else adds a point behind
+    // this component's back, and pins that only appear on a reload would make a
+    // running walk look stalled.
+    refetchInterval: capturing ? WALK_POLL_MS : false,
   });
   const pins = samplesQuery.data?.samples ?? [];
 
@@ -72,8 +94,37 @@ export function CaptureSurface({ surveyId, surveyName, walking }: CaptureSurface
     },
   });
 
-  function capture(point: Point) {
-    if (!walking || captureMutation.isPending) {
+  const walkMutation = useMutation({
+    mutationFn: (point: Point) =>
+      surveyClient.startContinuousCapture({ surveyId, x: point.x, y: point.y }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['surveys'] });
+    },
+  });
+
+  const stopMutation = useMutation({
+    mutationFn: () => surveyClient.stopContinuousCapture({ surveyId }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['samples', surveyId] }),
+        queryClient.invalidateQueries({ queryKey: ['surveys'] }),
+      ]);
+    },
+  });
+
+  // While walking, activating the surface moves the capture; otherwise it takes
+  // one point. The pending guard is only the one-shot mode's: moving a walking
+  // capture is a position write, not a scan, so it does not have to wait for the
+  // sweep in flight.
+  function markPosition(point: Point) {
+    if (!walking) {
+      return;
+    }
+    if (capturing) {
+      walkMutation.mutate(clamp(point));
+      return;
+    }
+    if (captureMutation.isPending) {
       return;
     }
     captureMutation.mutate(clamp(point));
@@ -84,7 +135,7 @@ export function CaptureSurface({ surveyId, surveyName, walking }: CaptureSurface
     // browser reports detail 0 for a keyboard activation. That capture goes at
     // the cursor; a pointer click goes where it landed.
     if (event.detail === 0) {
-      capture(cursor);
+      markPosition(cursor);
       return;
     }
     // The surface scales to its container; the service wants integer
@@ -99,7 +150,7 @@ export function CaptureSurface({ surveyId, surveyName, walking }: CaptureSurface
       y: Math.round(((event.clientY - rect.top) / rect.height) * SURFACE_HEIGHT),
     };
     setCursor(clamp(point));
-    capture(point);
+    markPosition(point);
   }
 
   // Arrow keys only; Enter and Space are the button's own activation and reach
@@ -121,23 +172,35 @@ export function CaptureSurface({ surveyId, surveyName, walking }: CaptureSurface
 
   const captured = captureMutation.data;
   const capturedAt = captureMutation.variables;
-  const status = captureMutation.isPending
-    ? t('pages:surveys.capturing')
-    : captureMutation.isError
-      ? t('pages:surveys.captureFailed', { error: String(captureMutation.error) })
-      : samplesQuery.isError
-        ? t('pages:surveys.samplesFailed', { error: String(samplesQuery.error) })
-        : captured && capturedAt
-          ? t('pages:surveys.captured', {
-              count: captured.networks.length,
-              x: capturedAt.x,
-              y: capturedAt.y,
-              signal: signalText(captured.networks[0]?.signalDbm),
-            })
-          : pins.length === 0
-            ? t('pages:surveys.noPoints')
-            : '';
-  const failed = captureMutation.isError || samplesQuery.isError;
+  // A walk that stopped by itself says why. Points that simply cease appearing,
+  // with a calm surface above them, is the failure this reading exists for.
+  const status =
+    capture && !capture.running && capture.lastError !== ''
+      ? t('pages:surveys.walkStopped', { error: capture.lastError })
+      : capturing
+        ? t('pages:surveys.walkingAt', { x: capture.x, y: capture.y, count: pins.length })
+        : captureMutation.isPending
+          ? t('pages:surveys.capturing')
+          : captureMutation.isError
+            ? t('pages:surveys.captureFailed', { error: String(captureMutation.error) })
+            : samplesQuery.isError
+              ? t('pages:surveys.samplesFailed', { error: String(samplesQuery.error) })
+              : captured && capturedAt
+                ? t('pages:surveys.captured', {
+                    count: captured.networks.length,
+                    x: capturedAt.x,
+                    y: capturedAt.y,
+                    signal: signalText(captured.networks[0]?.signalDbm),
+                  })
+                : pins.length === 0
+                  ? t('pages:surveys.noPoints')
+                  : '';
+  const failed =
+    captureMutation.isError ||
+    samplesQuery.isError ||
+    walkMutation.isError ||
+    stopMutation.isError ||
+    (capture !== undefined && !capture.running && capture.lastError !== '');
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="capture-title">
@@ -145,12 +208,29 @@ export function CaptureSurface({ surveyId, surveyName, walking }: CaptureSurface
         <h3 id="capture-title" className="kicker">
           {t('pages:surveys.captureTitle')}
         </h3>
-        <span className="text-xs text-text-muted" data-testid="capture-count">
-          {t('pages:surveys.pointsOnFloor', { count: pins.length })}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-text-muted" data-testid="capture-count">
+            {t('pages:surveys.pointsOnFloor', { count: pins.length })}
+          </span>
+          {/* Only offered while the survey is walking: continuous capture on a
+              paused or completed survey has nothing to write into. */}
+          <button
+            type="button"
+            disabled={!walking || walkMutation.isPending || stopMutation.isPending}
+            onClick={() => (capturing ? stopMutation.mutate() : walkMutation.mutate(clamp(cursor)))}
+            data-testid="toggle-continuous"
+            className="rounded border border-hairline px-3 py-1 text-sm text-text-primary hover:bg-surface-raised disabled:opacity-50"
+          >
+            {capturing ? t('pages:surveys.stopWalking') : t('pages:surveys.startWalking')}
+          </button>
+        </div>
       </div>
       <p className="text-sm text-text-secondary">
-        {walking ? t('pages:surveys.captureHint') : t('pages:surveys.captureHintIdle')}
+        {!walking
+          ? t('pages:surveys.captureHintIdle')
+          : capturing
+            ? t('pages:surveys.captureHintWalking')
+            : t('pages:surveys.captureHint')}
       </p>
 
       {/* One button, not a clickable picture: the whole surface is a single

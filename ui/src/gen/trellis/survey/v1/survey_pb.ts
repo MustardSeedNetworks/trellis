@@ -20,7 +20,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file trellis/survey/v1/survey.proto.
  */
 export const file_trellis_survey_v1_survey: GenFile = /*@__PURE__*/
-  fileDesc("Ch50cmVsbGlzL3N1cnZleS92MS9zdXJ2ZXkucHJvdG8SEXRyZWxsaXMuc3VydmV5LnYxInwKDVN1cnZleVN1bW1hcnkSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIOCgZzdGF0dXMYAyABKAkSEwoLZmxvb3JfY291bnQYBCABKAUSFAoMc2FtcGxlX2NvdW50GAUgASgFEhYKDmhhc19mbG9vcl9wbGFuGAYgASgIIjgKFkltcG9ydEFpck1hcHBlclJlcXVlc3QSDAoEbmFtZRgBIAEoCRIQCghhbXBfZGF0YRgCIAEoDCJLChdJbXBvcnRBaXJNYXBwZXJSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5IhQKEkxpc3RTdXJ2ZXlzUmVxdWVzdCJIChNMaXN0U3VydmV5c1Jlc3BvbnNlEjEKB3N1cnZleXMYASADKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5Ih4KEEdldFN1cnZleVJlcXVlc3QSCgoCaWQYASABKAkiRQoRR2V0U3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIhChNEZWxldGVTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIhYKFERlbGV0ZVN1cnZleVJlc3BvbnNlInEKBUZsb29yEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDQoFbGV2ZWwYAyABKAUSFAoMc2FtcGxlX2NvdW50GAQgASgFEhYKDmhhc19mbG9vcl9wbGFuGAUgASgIEhEKCWlzX2FjdGl2ZRgGIAEoCCImChFMaXN0Rmxvb3JzUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkiPgoSTGlzdEZsb29yc1Jlc3BvbnNlEigKBmZsb29ycxgBIAMoCzIYLnRyZWxsaXMuc3VydmV5LnYxLkZsb29yIjYKD0dldEZsb29yUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSEAoIZmxvb3JfaWQYAiABKAkiOwoQR2V0Rmxvb3JSZXNwb25zZRInCgVmbG9vchgBIAEoCzIYLnRyZWxsaXMuc3VydmV5LnYxLkZsb29yIkgKEUdldEhlYXRtYXBSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIOCgZtZXRyaWMYAiABKAkSEAoIZmxvb3JfaWQYAyABKAki9gEKEkdldEhlYXRtYXBSZXNwb25zZRILCgNwbmcYASABKAwSDQoFd2lkdGgYAiABKAUSDgoGaGVpZ2h0GAMgASgFEgsKA21pbhgEIAEoARILCgNtYXgYBSABKAESFAoMc2FtcGxlX2NvdW50GAYgASgFEg4KBm1ldHJpYxgHIAEoCRItCgZsZWdlbmQYCCADKAsyHS50cmVsbGlzLnN1cnZleS52MS5MZWdlbmRTdG9wEgwKBGdyaWQYCSADKAISEQoJZ3JpZF9jb2xzGAogASgFEhEKCWdyaWRfcm93cxgLIAEoBRIRCgljZWxsX3NpemUYDCABKAUiKgoKTGVnZW5kU3RvcBINCgV2YWx1ZRgBIAEoARINCgVjb2xvchgCIAEoCSJQChJHZXRDb3ZlcmFnZVJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEhUKDXRocmVzaG9sZF9kYm0YAiABKAUSEAoIZmxvb3JfaWQYAyABKAkiXwoTR2V0Q292ZXJhZ2VSZXNwb25zZRIWCg5jb3ZlcmFnZV9zY29yZRgBIAEoARIXCg9kZWFkX3pvbmVfY291bnQYAiABKAUSFwoPcmVjb21tZW5kYXRpb25zGAMgAygJIl0KFUdlbmVyYXRlUmVwb3J0UmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSMQoHb3B0aW9ucxgCIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLlJlcG9ydE9wdGlvbnMinQEKDVJlcG9ydE9wdGlvbnMSGAoQaW5jbHVkZV9oZWF0bWFwcxgBIAEoCBIYChBpbmNsdWRlX3Jhd19kYXRhGAIgASgIEh8KF2luY2x1ZGVfcmVjb21tZW5kYXRpb25zGAMgASgIEiEKGWluY2x1ZGVfZXhlY3V0aXZlX3N1bW1hcnkYBCABKAgSFAoMY29tcGFueV9uYW1lGAUgASgJIiUKFkdlbmVyYXRlUmVwb3J0UmVzcG9uc2USCwoDcGRmGAEgASgMIksKE0NyZWF0ZVN1cnZleVJlcXVlc3QSDAoEbmFtZRgBIAEoCRITCgtkZXNjcmlwdGlvbhgCIAEoCRIRCglpbnRlcmZhY2UYAyABKAkiSAoUQ3JlYXRlU3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIgChJTdGFydFN1cnZleVJlcXVlc3QSCgoCaWQYASABKAkiRwoTU3RhcnRTdXJ2ZXlSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5IiAKElBhdXNlU3VydmV5UmVxdWVzdBIKCgJpZBgBIAEoCSJHChNQYXVzZVN1cnZleVJlc3BvbnNlEjAKBnN1cnZleRgBIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLlN1cnZleVN1bW1hcnkiIwoVQ29tcGxldGVTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIkoKFkNvbXBsZXRlU3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSI+ChNDYXB0dXJlUG9pbnRSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIJCgF4GAIgASgFEgkKAXkYAyABKAUi8AEKFENhcHR1cmVQb2ludFJlc3BvbnNlEjMKCG5ldHdvcmtzGAEgAygLMiEudHJlbGxpcy5zdXJ2ZXkudjEuU2Nhbm5lZE5ldHdvcmsSFAoMdW5pcXVlX3NzaWRzGAIgASgFEhUKDXVuaXF1ZV9ic3NpZHMYAyABKAUSFwoPYXBfY291bnRfMl80Z2h6GAQgASgFEhUKDWFwX2NvdW50XzVnaHoYBSABKAUSFQoNYXBfY291bnRfNmdoehgGIAEoBRIWCg5jb19jaGFubmVsX2FwcxgHIAEoBRIXCg9hZGpfY2hhbm5lbF9hcHMYCCABKAUivgIKDlNjYW5uZWROZXR3b3JrEgwKBHNzaWQYASABKAkSDQoFYnNzaWQYAiABKAkSEgoKc2lnbmFsX2RibRgDIAEoBRIPCgdjaGFubmVsGAQgASgFEhUKDWZyZXF1ZW5jeV9taHoYBSABKAUSEAoIc2VjdXJpdHkYBiABKAkSGQoRY2hhbm5lbF93aWR0aF9taHoYByABKAUSFwoPbm9pc2VfZmxvb3JfZGJtGAggASgFEg4KBnNucl9kYhgJIAEoBRIPCgdodF9tb2RlGAogASgJEg4KBmlzX2RmcxgLIAEoCBISCgphc3NvY2lhdGVkGAwgASgIEigKG2NoYW5uZWxfdXRpbGl6YXRpb25fcGVyY2VudBgNIAEoBUgAiAEBQh4KHF9jaGFubmVsX3V0aWxpemF0aW9uX3BlcmNlbnQiDQoLU2NhblJlcXVlc3QicwoMU2NhblJlc3BvbnNlEjMKCG5ldHdvcmtzGAEgAygLMiEudHJlbGxpcy5zdXJ2ZXkudjEuU2Nhbm5lZE5ldHdvcmsSLgoKc2Nhbm5lZF9hdBgCIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiJwoSTGlzdFNhbXBsZXNSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCSJHChNMaXN0U2FtcGxlc1Jlc3BvbnNlEjAKB3NhbXBsZXMYASADKAsyHy50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTYW1wbGUimgEKDFN1cnZleVNhbXBsZRIJCgF4GAEgASgFEgkKAXkYAiABKAUSLwoLY2FwdHVyZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhUKDW5ldHdvcmtfY291bnQYBCABKAUSGgoNc3Ryb25nZXN0X2RibRgFIAEoBUgAiAEBQhAKDl9zdHJvbmdlc3RfZGJtMuwLCg1TdXJ2ZXlTZXJ2aWNlEmgKD0ltcG9ydEFpck1hcHBlchIpLnRyZWxsaXMuc3VydmV5LnYxLkltcG9ydEFpck1hcHBlclJlcXVlc3QaKi50cmVsbGlzLnN1cnZleS52MS5JbXBvcnRBaXJNYXBwZXJSZXNwb25zZRJcCgtMaXN0U3VydmV5cxIlLnRyZWxsaXMuc3VydmV5LnYxLkxpc3RTdXJ2ZXlzUmVxdWVzdBomLnRyZWxsaXMuc3VydmV5LnYxLkxpc3RTdXJ2ZXlzUmVzcG9uc2USVgoJR2V0U3VydmV5EiMudHJlbGxpcy5zdXJ2ZXkudjEuR2V0U3VydmV5UmVxdWVzdBokLnRyZWxsaXMuc3VydmV5LnYxLkdldFN1cnZleVJlc3BvbnNlEl8KDERlbGV0ZVN1cnZleRImLnRyZWxsaXMuc3VydmV5LnYxLkRlbGV0ZVN1cnZleVJlcXVlc3QaJy50cmVsbGlzLnN1cnZleS52MS5EZWxldGVTdXJ2ZXlSZXNwb25zZRJZCgpHZXRIZWF0bWFwEiQudHJlbGxpcy5zdXJ2ZXkudjEuR2V0SGVhdG1hcFJlcXVlc3QaJS50cmVsbGlzLnN1cnZleS52MS5HZXRIZWF0bWFwUmVzcG9uc2USXAoLR2V0Q292ZXJhZ2USJS50cmVsbGlzLnN1cnZleS52MS5HZXRDb3ZlcmFnZVJlcXVlc3QaJi50cmVsbGlzLnN1cnZleS52MS5HZXRDb3ZlcmFnZVJlc3BvbnNlElkKCkxpc3RGbG9vcnMSJC50cmVsbGlzLnN1cnZleS52MS5MaXN0Rmxvb3JzUmVxdWVzdBolLnRyZWxsaXMuc3VydmV5LnYxLkxpc3RGbG9vcnNSZXNwb25zZRJTCghHZXRGbG9vchIiLnRyZWxsaXMuc3VydmV5LnYxLkdldEZsb29yUmVxdWVzdBojLnRyZWxsaXMuc3VydmV5LnYxLkdldEZsb29yUmVzcG9uc2USZQoOR2VuZXJhdGVSZXBvcnQSKC50cmVsbGlzLnN1cnZleS52MS5HZW5lcmF0ZVJlcG9ydFJlcXVlc3QaKS50cmVsbGlzLnN1cnZleS52MS5HZW5lcmF0ZVJlcG9ydFJlc3BvbnNlEl8KDENyZWF0ZVN1cnZleRImLnRyZWxsaXMuc3VydmV5LnYxLkNyZWF0ZVN1cnZleVJlcXVlc3QaJy50cmVsbGlzLnN1cnZleS52MS5DcmVhdGVTdXJ2ZXlSZXNwb25zZRJcCgtTdGFydFN1cnZleRIlLnRyZWxsaXMuc3VydmV5LnYxLlN0YXJ0U3VydmV5UmVxdWVzdBomLnRyZWxsaXMuc3VydmV5LnYxLlN0YXJ0U3VydmV5UmVzcG9uc2USXAoLUGF1c2VTdXJ2ZXkSJS50cmVsbGlzLnN1cnZleS52MS5QYXVzZVN1cnZleVJlcXVlc3QaJi50cmVsbGlzLnN1cnZleS52MS5QYXVzZVN1cnZleVJlc3BvbnNlEmUKDkNvbXBsZXRlU3VydmV5EigudHJlbGxpcy5zdXJ2ZXkudjEuQ29tcGxldGVTdXJ2ZXlSZXF1ZXN0GikudHJlbGxpcy5zdXJ2ZXkudjEuQ29tcGxldGVTdXJ2ZXlSZXNwb25zZRJfCgxDYXB0dXJlUG9pbnQSJi50cmVsbGlzLnN1cnZleS52MS5DYXB0dXJlUG9pbnRSZXF1ZXN0GicudHJlbGxpcy5zdXJ2ZXkudjEuQ2FwdHVyZVBvaW50UmVzcG9uc2USXAoLTGlzdFNhbXBsZXMSJS50cmVsbGlzLnN1cnZleS52MS5MaXN0U2FtcGxlc1JlcXVlc3QaJi50cmVsbGlzLnN1cnZleS52MS5MaXN0U2FtcGxlc1Jlc3BvbnNlEkcKBFNjYW4SHi50cmVsbGlzLnN1cnZleS52MS5TY2FuUmVxdWVzdBofLnRyZWxsaXMuc3VydmV5LnYxLlNjYW5SZXNwb25zZUJHWkVnaXRodWIuY29tL011c3RhcmRTZWVkTmV0d29ya3MvdHJlbGxpcy9nZW4vdHJlbGxpcy9zdXJ2ZXkvdjE7c3VydmV5djFiBnByb3RvMw", [file_google_protobuf_timestamp]);
+  fileDesc("Ch50cmVsbGlzL3N1cnZleS92MS9zdXJ2ZXkucHJvdG8SEXRyZWxsaXMuc3VydmV5LnYxIsABCg1TdXJ2ZXlTdW1tYXJ5EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDgoGc3RhdHVzGAMgASgJEhMKC2Zsb29yX2NvdW50GAQgASgFEhQKDHNhbXBsZV9jb3VudBgFIAEoBRIWCg5oYXNfZmxvb3JfcGxhbhgGIAEoCBI2CgdjYXB0dXJlGAcgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuQ2FwdHVyZVN0YXR1c0gAiAEBQgoKCF9jYXB0dXJlIjgKFkltcG9ydEFpck1hcHBlclJlcXVlc3QSDAoEbmFtZRgBIAEoCRIQCghhbXBfZGF0YRgCIAEoDCJLChdJbXBvcnRBaXJNYXBwZXJSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5IhQKEkxpc3RTdXJ2ZXlzUmVxdWVzdCJIChNMaXN0U3VydmV5c1Jlc3BvbnNlEjEKB3N1cnZleXMYASADKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5Ih4KEEdldFN1cnZleVJlcXVlc3QSCgoCaWQYASABKAkiRQoRR2V0U3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIhChNEZWxldGVTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIhYKFERlbGV0ZVN1cnZleVJlc3BvbnNlInEKBUZsb29yEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDQoFbGV2ZWwYAyABKAUSFAoMc2FtcGxlX2NvdW50GAQgASgFEhYKDmhhc19mbG9vcl9wbGFuGAUgASgIEhEKCWlzX2FjdGl2ZRgGIAEoCCImChFMaXN0Rmxvb3JzUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkiPgoSTGlzdEZsb29yc1Jlc3BvbnNlEigKBmZsb29ycxgBIAMoCzIYLnRyZWxsaXMuc3VydmV5LnYxLkZsb29yIjYKD0dldEZsb29yUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSEAoIZmxvb3JfaWQYAiABKAkiOwoQR2V0Rmxvb3JSZXNwb25zZRInCgVmbG9vchgBIAEoCzIYLnRyZWxsaXMuc3VydmV5LnYxLkZsb29yIkgKEUdldEhlYXRtYXBSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIOCgZtZXRyaWMYAiABKAkSEAoIZmxvb3JfaWQYAyABKAki9gEKEkdldEhlYXRtYXBSZXNwb25zZRILCgNwbmcYASABKAwSDQoFd2lkdGgYAiABKAUSDgoGaGVpZ2h0GAMgASgFEgsKA21pbhgEIAEoARILCgNtYXgYBSABKAESFAoMc2FtcGxlX2NvdW50GAYgASgFEg4KBm1ldHJpYxgHIAEoCRItCgZsZWdlbmQYCCADKAsyHS50cmVsbGlzLnN1cnZleS52MS5MZWdlbmRTdG9wEgwKBGdyaWQYCSADKAISEQoJZ3JpZF9jb2xzGAogASgFEhEKCWdyaWRfcm93cxgLIAEoBRIRCgljZWxsX3NpemUYDCABKAUiKgoKTGVnZW5kU3RvcBINCgV2YWx1ZRgBIAEoARINCgVjb2xvchgCIAEoCSJQChJHZXRDb3ZlcmFnZVJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEhUKDXRocmVzaG9sZF9kYm0YAiABKAUSEAoIZmxvb3JfaWQYAyABKAkiXwoTR2V0Q292ZXJhZ2VSZXNwb25zZRIWCg5jb3ZlcmFnZV9zY29yZRgBIAEoARIXCg9kZWFkX3pvbmVfY291bnQYAiABKAUSFwoPcmVjb21tZW5kYXRpb25zGAMgAygJIl0KFUdlbmVyYXRlUmVwb3J0UmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSMQoHb3B0aW9ucxgCIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLlJlcG9ydE9wdGlvbnMinQEKDVJlcG9ydE9wdGlvbnMSGAoQaW5jbHVkZV9oZWF0bWFwcxgBIAEoCBIYChBpbmNsdWRlX3Jhd19kYXRhGAIgASgIEh8KF2luY2x1ZGVfcmVjb21tZW5kYXRpb25zGAMgASgIEiEKGWluY2x1ZGVfZXhlY3V0aXZlX3N1bW1hcnkYBCABKAgSFAoMY29tcGFueV9uYW1lGAUgASgJIiUKFkdlbmVyYXRlUmVwb3J0UmVzcG9uc2USCwoDcGRmGAEgASgMIksKE0NyZWF0ZVN1cnZleVJlcXVlc3QSDAoEbmFtZRgBIAEoCRITCgtkZXNjcmlwdGlvbhgCIAEoCRIRCglpbnRlcmZhY2UYAyABKAkiSAoUQ3JlYXRlU3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIgChJTdGFydFN1cnZleVJlcXVlc3QSCgoCaWQYASABKAkiRwoTU3RhcnRTdXJ2ZXlSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5IiAKElBhdXNlU3VydmV5UmVxdWVzdBIKCgJpZBgBIAEoCSJHChNQYXVzZVN1cnZleVJlc3BvbnNlEjAKBnN1cnZleRgBIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLlN1cnZleVN1bW1hcnkiIwoVQ29tcGxldGVTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIkoKFkNvbXBsZXRlU3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSI+ChNDYXB0dXJlUG9pbnRSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIJCgF4GAIgASgFEgkKAXkYAyABKAUi8AEKFENhcHR1cmVQb2ludFJlc3BvbnNlEjMKCG5ldHdvcmtzGAEgAygLMiEudHJlbGxpcy5zdXJ2ZXkudjEuU2Nhbm5lZE5ldHdvcmsSFAoMdW5pcXVlX3NzaWRzGAIgASgFEhUKDXVuaXF1ZV9ic3NpZHMYAyABKAUSFwoPYXBfY291bnRfMl80Z2h6GAQgASgFEhUKDWFwX2NvdW50XzVnaHoYBSABKAUSFQoNYXBfY291bnRfNmdoehgGIAEoBRIWCg5jb19jaGFubmVsX2FwcxgHIAEoBRIXCg9hZGpfY2hhbm5lbF9hcHMYCCABKAUivgIKDlNjYW5uZWROZXR3b3JrEgwKBHNzaWQYASABKAkSDQoFYnNzaWQYAiABKAkSEgoKc2lnbmFsX2RibRgDIAEoBRIPCgdjaGFubmVsGAQgASgFEhUKDWZyZXF1ZW5jeV9taHoYBSABKAUSEAoIc2VjdXJpdHkYBiABKAkSGQoRY2hhbm5lbF93aWR0aF9taHoYByABKAUSFwoPbm9pc2VfZmxvb3JfZGJtGAggASgFEg4KBnNucl9kYhgJIAEoBRIPCgdodF9tb2RlGAogASgJEg4KBmlzX2RmcxgLIAEoCBISCgphc3NvY2lhdGVkGAwgASgIEigKG2NoYW5uZWxfdXRpbGl6YXRpb25fcGVyY2VudBgNIAEoBUgAiAEBQh4KHF9jaGFubmVsX3V0aWxpemF0aW9uX3BlcmNlbnQiSAodU3RhcnRDb250aW51b3VzQ2FwdHVyZVJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEgkKAXgYAiABKAUSCQoBeRgDIAEoBSJTCh5TdGFydENvbnRpbnVvdXNDYXB0dXJlUmVzcG9uc2USMQoHY2FwdHVyZRgBIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLkNhcHR1cmVTdGF0dXMiMQocU3RvcENvbnRpbnVvdXNDYXB0dXJlUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkiHwodU3RvcENvbnRpbnVvdXNDYXB0dXJlUmVzcG9uc2UiSgoNQ2FwdHVyZVN0YXR1cxIPCgdydW5uaW5nGAEgASgIEgkKAXgYAiABKAUSCQoBeRgDIAEoBRISCgpsYXN0X2Vycm9yGAQgASgJIg0KC1NjYW5SZXF1ZXN0InMKDFNjYW5SZXNwb25zZRIzCghuZXR3b3JrcxgBIAMoCzIhLnRyZWxsaXMuc3VydmV5LnYxLlNjYW5uZWROZXR3b3JrEi4KCnNjYW5uZWRfYXQYAiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIicKEkxpc3RTYW1wbGVzUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkiRwoTTGlzdFNhbXBsZXNSZXNwb25zZRIwCgdzYW1wbGVzGAEgAygLMh8udHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U2FtcGxlIpoBCgxTdXJ2ZXlTYW1wbGUSCQoBeBgBIAEoBRIJCgF5GAIgASgFEi8KC2NhcHR1cmVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIVCg1uZXR3b3JrX2NvdW50GAQgASgFEhoKDXN0cm9uZ2VzdF9kYm0YBSABKAVIAIgBAUIQCg5fc3Ryb25nZXN0X2RibTLnDQoNU3VydmV5U2VydmljZRJoCg9JbXBvcnRBaXJNYXBwZXISKS50cmVsbGlzLnN1cnZleS52MS5JbXBvcnRBaXJNYXBwZXJSZXF1ZXN0GioudHJlbGxpcy5zdXJ2ZXkudjEuSW1wb3J0QWlyTWFwcGVyUmVzcG9uc2USXAoLTGlzdFN1cnZleXMSJS50cmVsbGlzLnN1cnZleS52MS5MaXN0U3VydmV5c1JlcXVlc3QaJi50cmVsbGlzLnN1cnZleS52MS5MaXN0U3VydmV5c1Jlc3BvbnNlElYKCUdldFN1cnZleRIjLnRyZWxsaXMuc3VydmV5LnYxLkdldFN1cnZleVJlcXVlc3QaJC50cmVsbGlzLnN1cnZleS52MS5HZXRTdXJ2ZXlSZXNwb25zZRJfCgxEZWxldGVTdXJ2ZXkSJi50cmVsbGlzLnN1cnZleS52MS5EZWxldGVTdXJ2ZXlSZXF1ZXN0GicudHJlbGxpcy5zdXJ2ZXkudjEuRGVsZXRlU3VydmV5UmVzcG9uc2USWQoKR2V0SGVhdG1hcBIkLnRyZWxsaXMuc3VydmV5LnYxLkdldEhlYXRtYXBSZXF1ZXN0GiUudHJlbGxpcy5zdXJ2ZXkudjEuR2V0SGVhdG1hcFJlc3BvbnNlElwKC0dldENvdmVyYWdlEiUudHJlbGxpcy5zdXJ2ZXkudjEuR2V0Q292ZXJhZ2VSZXF1ZXN0GiYudHJlbGxpcy5zdXJ2ZXkudjEuR2V0Q292ZXJhZ2VSZXNwb25zZRJZCgpMaXN0Rmxvb3JzEiQudHJlbGxpcy5zdXJ2ZXkudjEuTGlzdEZsb29yc1JlcXVlc3QaJS50cmVsbGlzLnN1cnZleS52MS5MaXN0Rmxvb3JzUmVzcG9uc2USUwoIR2V0Rmxvb3ISIi50cmVsbGlzLnN1cnZleS52MS5HZXRGbG9vclJlcXVlc3QaIy50cmVsbGlzLnN1cnZleS52MS5HZXRGbG9vclJlc3BvbnNlEmUKDkdlbmVyYXRlUmVwb3J0EigudHJlbGxpcy5zdXJ2ZXkudjEuR2VuZXJhdGVSZXBvcnRSZXF1ZXN0GikudHJlbGxpcy5zdXJ2ZXkudjEuR2VuZXJhdGVSZXBvcnRSZXNwb25zZRJfCgxDcmVhdGVTdXJ2ZXkSJi50cmVsbGlzLnN1cnZleS52MS5DcmVhdGVTdXJ2ZXlSZXF1ZXN0GicudHJlbGxpcy5zdXJ2ZXkudjEuQ3JlYXRlU3VydmV5UmVzcG9uc2USXAoLU3RhcnRTdXJ2ZXkSJS50cmVsbGlzLnN1cnZleS52MS5TdGFydFN1cnZleVJlcXVlc3QaJi50cmVsbGlzLnN1cnZleS52MS5TdGFydFN1cnZleVJlc3BvbnNlElwKC1BhdXNlU3VydmV5EiUudHJlbGxpcy5zdXJ2ZXkudjEuUGF1c2VTdXJ2ZXlSZXF1ZXN0GiYudHJlbGxpcy5zdXJ2ZXkudjEuUGF1c2VTdXJ2ZXlSZXNwb25zZRJlCg5Db21wbGV0ZVN1cnZleRIoLnRyZWxsaXMuc3VydmV5LnYxLkNvbXBsZXRlU3VydmV5UmVxdWVzdBopLnRyZWxsaXMuc3VydmV5LnYxLkNvbXBsZXRlU3VydmV5UmVzcG9uc2USXwoMQ2FwdHVyZVBvaW50EiYudHJlbGxpcy5zdXJ2ZXkudjEuQ2FwdHVyZVBvaW50UmVxdWVzdBonLnRyZWxsaXMuc3VydmV5LnYxLkNhcHR1cmVQb2ludFJlc3BvbnNlElwKC0xpc3RTYW1wbGVzEiUudHJlbGxpcy5zdXJ2ZXkudjEuTGlzdFNhbXBsZXNSZXF1ZXN0GiYudHJlbGxpcy5zdXJ2ZXkudjEuTGlzdFNhbXBsZXNSZXNwb25zZRJHCgRTY2FuEh4udHJlbGxpcy5zdXJ2ZXkudjEuU2NhblJlcXVlc3QaHy50cmVsbGlzLnN1cnZleS52MS5TY2FuUmVzcG9uc2USfQoWU3RhcnRDb250aW51b3VzQ2FwdHVyZRIwLnRyZWxsaXMuc3VydmV5LnYxLlN0YXJ0Q29udGludW91c0NhcHR1cmVSZXF1ZXN0GjEudHJlbGxpcy5zdXJ2ZXkudjEuU3RhcnRDb250aW51b3VzQ2FwdHVyZVJlc3BvbnNlEnoKFVN0b3BDb250aW51b3VzQ2FwdHVyZRIvLnRyZWxsaXMuc3VydmV5LnYxLlN0b3BDb250aW51b3VzQ2FwdHVyZVJlcXVlc3QaMC50cmVsbGlzLnN1cnZleS52MS5TdG9wQ29udGludW91c0NhcHR1cmVSZXNwb25zZUJHWkVnaXRodWIuY29tL011c3RhcmRTZWVkTmV0d29ya3MvdHJlbGxpcy9nZW4vdHJlbGxpcy9zdXJ2ZXkvdjE7c3VydmV5djFiBnByb3RvMw", [file_google_protobuf_timestamp]);
 
 /**
  * SurveySummary is the lightweight survey representation used in list and
@@ -58,6 +58,16 @@ export type SurveySummary = Message<"trellis.survey.v1.SurveySummary"> & {
    * @generated from field: bool has_floor_plan = 6;
    */
   hasFloorPlan: boolean;
+
+  /**
+   * The survey's continuous capture, absent when it has never had one. It rides
+   * on the summary rather than on an RPC of its own because a client already
+   * polls this while walking, and a walk that a reload cannot see is a walk the
+   * operator will start a second time.
+   *
+   * @generated from field: optional trellis.survey.v1.CaptureStatus capture = 7;
+   */
+  capture?: CaptureStatus | undefined;
 };
 
 /**
@@ -967,6 +977,122 @@ export const ScannedNetworkSchema: GenMessage<ScannedNetwork> = /*@__PURE__*/
   messageDesc(file_trellis_survey_v1_survey, 32);
 
 /**
+ * @generated from message trellis.survey.v1.StartContinuousCaptureRequest
+ */
+export type StartContinuousCaptureRequest = Message<"trellis.survey.v1.StartContinuousCaptureRequest"> & {
+  /**
+   * @generated from field: string survey_id = 1;
+   */
+  surveyId: string;
+
+  /**
+   * Where the operator is standing, in floor-plan pixel coordinates — the same
+   * space CapturePoint and imported samples use.
+   *
+   * @generated from field: int32 x = 2;
+   */
+  x: number;
+
+  /**
+   * @generated from field: int32 y = 3;
+   */
+  y: number;
+};
+
+/**
+ * Describes the message trellis.survey.v1.StartContinuousCaptureRequest.
+ * Use `create(StartContinuousCaptureRequestSchema)` to create a new message.
+ */
+export const StartContinuousCaptureRequestSchema: GenMessage<StartContinuousCaptureRequest> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 33);
+
+/**
+ * @generated from message trellis.survey.v1.StartContinuousCaptureResponse
+ */
+export type StartContinuousCaptureResponse = Message<"trellis.survey.v1.StartContinuousCaptureResponse"> & {
+  /**
+   * @generated from field: trellis.survey.v1.CaptureStatus capture = 1;
+   */
+  capture?: CaptureStatus | undefined;
+};
+
+/**
+ * Describes the message trellis.survey.v1.StartContinuousCaptureResponse.
+ * Use `create(StartContinuousCaptureResponseSchema)` to create a new message.
+ */
+export const StartContinuousCaptureResponseSchema: GenMessage<StartContinuousCaptureResponse> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 34);
+
+/**
+ * @generated from message trellis.survey.v1.StopContinuousCaptureRequest
+ */
+export type StopContinuousCaptureRequest = Message<"trellis.survey.v1.StopContinuousCaptureRequest"> & {
+  /**
+   * @generated from field: string survey_id = 1;
+   */
+  surveyId: string;
+};
+
+/**
+ * Describes the message trellis.survey.v1.StopContinuousCaptureRequest.
+ * Use `create(StopContinuousCaptureRequestSchema)` to create a new message.
+ */
+export const StopContinuousCaptureRequestSchema: GenMessage<StopContinuousCaptureRequest> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 35);
+
+/**
+ * @generated from message trellis.survey.v1.StopContinuousCaptureResponse
+ */
+export type StopContinuousCaptureResponse = Message<"trellis.survey.v1.StopContinuousCaptureResponse"> & {
+};
+
+/**
+ * Describes the message trellis.survey.v1.StopContinuousCaptureResponse.
+ * Use `create(StopContinuousCaptureResponseSchema)` to create a new message.
+ */
+export const StopContinuousCaptureResponseSchema: GenMessage<StopContinuousCaptureResponse> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 36);
+
+/**
+ * CaptureStatus is a survey's continuous capture as it stands, so a client that
+ * reloads mid-walk can draw a walk it did not start.
+ *
+ * @generated from message trellis.survey.v1.CaptureStatus
+ */
+export type CaptureStatus = Message<"trellis.survey.v1.CaptureStatus"> & {
+  /**
+   * @generated from field: bool running = 1;
+   */
+  running: boolean;
+
+  /**
+   * @generated from field: int32 x = 2;
+   */
+  x: number;
+
+  /**
+   * @generated from field: int32 y = 3;
+   */
+  y: number;
+
+  /**
+   * Why the walk stopped, when it stopped itself. Empty while it is running and
+   * when it was stopped deliberately. A walk whose points simply cease, with
+   * nothing saying why, is worse than either.
+   *
+   * @generated from field: string last_error = 4;
+   */
+  lastError: string;
+};
+
+/**
+ * Describes the message trellis.survey.v1.CaptureStatus.
+ * Use `create(CaptureStatusSchema)` to create a new message.
+ */
+export const CaptureStatusSchema: GenMessage<CaptureStatus> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 37);
+
+/**
  * @generated from message trellis.survey.v1.ScanRequest
  */
 export type ScanRequest = Message<"trellis.survey.v1.ScanRequest"> & {
@@ -977,7 +1103,7 @@ export type ScanRequest = Message<"trellis.survey.v1.ScanRequest"> & {
  * Use `create(ScanRequestSchema)` to create a new message.
  */
 export const ScanRequestSchema: GenMessage<ScanRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 33);
+  messageDesc(file_trellis_survey_v1_survey, 38);
 
 /**
  * @generated from message trellis.survey.v1.ScanResponse
@@ -1004,7 +1130,7 @@ export type ScanResponse = Message<"trellis.survey.v1.ScanResponse"> & {
  * Use `create(ScanResponseSchema)` to create a new message.
  */
 export const ScanResponseSchema: GenMessage<ScanResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 34);
+  messageDesc(file_trellis_survey_v1_survey, 39);
 
 /**
  * @generated from message trellis.survey.v1.ListSamplesRequest
@@ -1021,7 +1147,7 @@ export type ListSamplesRequest = Message<"trellis.survey.v1.ListSamplesRequest">
  * Use `create(ListSamplesRequestSchema)` to create a new message.
  */
 export const ListSamplesRequestSchema: GenMessage<ListSamplesRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 35);
+  messageDesc(file_trellis_survey_v1_survey, 40);
 
 /**
  * @generated from message trellis.survey.v1.ListSamplesResponse
@@ -1038,7 +1164,7 @@ export type ListSamplesResponse = Message<"trellis.survey.v1.ListSamplesResponse
  * Use `create(ListSamplesResponseSchema)` to create a new message.
  */
 export const ListSamplesResponseSchema: GenMessage<ListSamplesResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 36);
+  messageDesc(file_trellis_survey_v1_survey, 41);
 
 /**
  * SurveySample is one stored measurement point, reduced to what a client
@@ -1087,7 +1213,7 @@ export type SurveySample = Message<"trellis.survey.v1.SurveySample"> & {
  * Use `create(SurveySampleSchema)` to create a new message.
  */
 export const SurveySampleSchema: GenMessage<SurveySample> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 37);
+  messageDesc(file_trellis_survey_v1_survey, 42);
 
 /**
  * SurveyService serves measured Wi-Fi site surveys backed by core/survey.
@@ -1271,6 +1397,33 @@ export const SurveyService: GenService<{
     methodKind: "unary";
     input: typeof ScanRequestSchema;
     output: typeof ScanResponseSchema;
+  },
+  /**
+   * StartContinuousCapture samples repeatedly at a position until it is
+   * stopped — the walking half of a measured survey, where CapturePoint is the
+   * stop-and-go half.
+   *
+   * Calling it again on a running survey moves the capture rather than starting
+   * a second one: it is the operator saying "I am here now", which is the whole
+   * interaction in a walking survey.
+   *
+   * @generated from rpc trellis.survey.v1.SurveyService.StartContinuousCapture
+   */
+  startContinuousCapture: {
+    methodKind: "unary";
+    input: typeof StartContinuousCaptureRequestSchema;
+    output: typeof StartContinuousCaptureResponseSchema;
+  },
+  /**
+   * StopContinuousCapture ends a survey's capture loop. Stopping one that is not
+   * running is not an error.
+   *
+   * @generated from rpc trellis.survey.v1.SurveyService.StopContinuousCapture
+   */
+  stopContinuousCapture: {
+    methodKind: "unary";
+    input: typeof StopContinuousCaptureRequestSchema;
+    output: typeof StopContinuousCaptureResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_trellis_survey_v1_survey, 0);
