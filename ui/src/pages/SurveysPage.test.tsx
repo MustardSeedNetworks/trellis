@@ -39,6 +39,7 @@ const everett = {
   floorCount: 2,
   sampleCount: 87,
   hasFloorPlan: true,
+  iperfServer: '',
 };
 
 const vegas = {
@@ -48,6 +49,7 @@ const vegas = {
   floorCount: 1,
   sampleCount: 5,
   hasFloorPlan: false,
+  iperfServer: '',
 };
 
 function renderPage() {
@@ -235,6 +237,7 @@ describe('SurveysPage walk', () => {
     floorCount: 1,
     sampleCount: 0,
     hasFloorPlan: false,
+    iperfServer: '',
   };
 
   it('creates a survey and selects it, so the walk can start from where it was made', async () => {

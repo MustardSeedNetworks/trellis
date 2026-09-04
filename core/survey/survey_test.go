@@ -29,7 +29,9 @@ func (fakeConnMonitor) ConnectionInfo(context.Context) (string, string, int, err
 // fakeThroughputMeter is a no-op survey.ThroughputMeter.
 type fakeThroughputMeter struct{}
 
-func (fakeThroughputMeter) Measure(context.Context, string, int) (survey.ThroughputSample, error) {
+func (fakeThroughputMeter) Measure(
+	context.Context, string, string, int,
+) (survey.ThroughputSample, error) {
 	return survey.ThroughputSample{}, nil
 }
 

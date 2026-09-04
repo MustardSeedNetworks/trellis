@@ -271,7 +271,12 @@ func extractPassiveValue(data *PassiveSample, valueType string) float64 {
 	case "ap_6":
 		return float64(data.APCount6)
 	default:
-		return float64(data.Networks[0].Signal)
+		// A metric this sample never measured is not zero and not the signal
+		// strength: it is absent, and NaN is what the heatmap leaves out. The
+		// three extractors used to fall through to RSSI, so asking a passive
+		// point for "download" answered -50 — a plausible number in the wrong
+		// unit, blended into the same interpolated field as the real ones.
+		return math.NaN()
 	}
 }
 
@@ -286,7 +291,12 @@ func extractActiveValue(data *ActiveSample, valueType string) float64 {
 	case "datarate", "speed":
 		return data.DataRate
 	default:
-		return float64(data.RSSI)
+		// A metric this sample never measured is not zero and not the signal
+		// strength: it is absent, and NaN is what the heatmap leaves out. The
+		// three extractors used to fall through to RSSI, so asking a passive
+		// point for "download" answered -50 — a plausible number in the wrong
+		// unit, blended into the same interpolated field as the real ones.
+		return math.NaN()
 	}
 }
 
@@ -307,7 +317,12 @@ func extractThroughputValue(data *ThroughputSample, valueType string) float64 {
 	case "jitter":
 		return data.Jitter
 	default:
-		return float64(data.RSSI)
+		// A metric this sample never measured is not zero and not the signal
+		// strength: it is absent, and NaN is what the heatmap leaves out. The
+		// three extractors used to fall through to RSSI, so asking a passive
+		// point for "download" answered -50 — a plausible number in the wrong
+		// unit, blended into the same interpolated field as the real ones.
+		return math.NaN()
 	}
 }
 

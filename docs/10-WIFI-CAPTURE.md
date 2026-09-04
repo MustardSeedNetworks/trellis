@@ -229,8 +229,15 @@ is linked into `trellisd` today rather than split out.
 - Coverage survey (RSSI, SNR, channel, band, width, security per BSS): **yes**,
   on all three platforms — the Linux (nl80211) and Windows (Native Wifi)
   backends have landed.
-- Continuous capture while walking: **yes on macOS, at ~3–4 s per sample.** Not
-  a fast continuous walk.
+- Continuous capture while walking: **yes**, at the rate each radio actually
+  refreshes, which is not the rate a loop can ask at. Measured 2026-09-04:
+  CoreWLAN sweeps the air about every 7-14 seconds and answers anything asked in
+  between from its cache in a tenth of a second, so a Mac yields **a point every
+  ~6.6 s**; nl80211 triggers a real sweep on every call and a Linux adapter
+  yields **one every ~3 s**. The capture loop stores only a sweep that differs
+  from the last, so the stored points are measurements rather than repeats — an
+  earlier version stored 94 points holding two distinct readings. Not a fast
+  continuous walk on either platform, and slower on macOS than on Linux.
 - Channel utilisation as *the AP advertises it* (BSS Load, element 11): **yes
   on Linux and Windows**, which hand back raw information elements; **no on
   macOS**, where CoreWLAN decodes the beacon for us and exposes no elements.

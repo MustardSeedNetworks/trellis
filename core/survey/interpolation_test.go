@@ -359,13 +359,19 @@ func TestExtractPassiveValue(t *testing.T) {
 		{"ap_2_4", "ap_2_4", 3},
 		{"ap_5", "ap_5", 2},
 		{"ap_6", "ap_6", 1},
-		{"default", "unknown", -55}, // Defaults to signal.
+		// A metric this sample kind cannot answer is absent, not the signal.
+		// ParseHeatmapType and mapHeatmapTypeToValueType already funnel an
+		// unrecognised *string* to RSSI, so the case that actually reaches here
+		// is a known metric asked of the wrong sample kind — a passive scan
+		// asked for a download speed — and answering that with dBm put a
+		// plausible number in the wrong unit onto the layer.
+		{"a metric this sample never measured", "download", math.NaN()},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := survey.ExportExtractPassiveValue(sample, tt.valueType)
-			if got != tt.expected {
+			if !sameValue(got, tt.expected) {
 				t.Errorf("extractPassiveValue(%q) = %f, want %f", tt.valueType, got, tt.expected)
 			}
 		})
@@ -402,13 +408,13 @@ func TestExtractActiveValue(t *testing.T) {
 		{"signal alias", "signal", -60},
 		{"datarate", "datarate", 100.5},
 		{"speed alias", "speed", 100.5},
-		{"default", "unknown", -60}, // Defaults to RSSI.
+		{"a metric this sample never measured", "download", math.NaN()},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := survey.ExportExtractActiveValue(sample, tt.valueType)
-			if got != tt.expected {
+			if !sameValue(got, tt.expected) {
 				t.Errorf("extractActiveValue(%q) = %f, want %f", tt.valueType, got, tt.expected)
 			}
 		})
@@ -442,17 +448,26 @@ func TestExtractThroughputValue(t *testing.T) {
 		{"upload", "upload", 50.0},
 		{"latency", "latency", 10.5},
 		{"jitter", "jitter", 2.3},
-		{"default", "unknown", -65}, // Defaults to RSSI.
+		{"a metric this sample never measured", "density", math.NaN()},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := survey.ExportExtractThroughputValue(sample, tt.valueType)
-			if got != tt.expected {
+			if !sameValue(got, tt.expected) {
 				t.Errorf("extractThroughputValue(%q) = %f, want %f", tt.valueType, got, tt.expected)
 			}
 		})
 	}
+}
+
+// sameValue compares two readings, treating "absent" as equal to itself: NaN is
+// how an extractor says a sample never measured this metric, and NaN != NaN.
+func sameValue(got, want float64) bool {
+	if math.IsNaN(want) {
+		return math.IsNaN(got)
+	}
+	return got == want
 }
 
 func TestExtractThroughputValue_Nil(t *testing.T) {
@@ -562,5 +577,76 @@ func TestExtractValue_ThroughputSampleDirect(t *testing.T) {
 	result := survey.ExportExtractValue(sample, "rssi")
 	if result != -65 {
 		t.Errorf("Expected -65, got %f", result)
+	}
+}
+
+// TestExtractValueRefusesAMetricASampleDoesNotHave covers the defect a
+// throughput layer would otherwise be built on.
+//
+// Every extractor fell through to the signal strength for a metric it did not
+// recognise. A download heatmap over a passive point therefore rendered -50 as
+// if it were 50 Mbps: not a zero that reads as a gap, but a plausible number in
+// the wrong unit, blended into the same interpolated field as the real ones.
+func TestExtractValueRefusesAMetricASampleDoesNotHave(t *testing.T) {
+	t.Parallel()
+
+	passive := &survey.PassiveSample{
+		Networks: []*wifi.ScannedNetwork{{Signal: -50, SNR: 45}},
+	}
+	throughput := &survey.ThroughputSample{RSSI: -50, DownloadMbps: 220}
+	active := &survey.ActiveSample{RSSI: -50, DataRate: 866}
+
+	tests := []struct {
+		name   string
+		sample any
+		metric string
+	}{
+		{"a passive scan measured no download", passive, "download"},
+		{"a passive scan measured no upload", passive, "upload"},
+		{"a passive scan measured no latency", passive, "latency"},
+		{"a throughput test counted no access points", throughput, "density"},
+		{"an active sample has no throughput", active, "download"},
+		{"nothing answers a metric that does not exist", passive, "not-a-metric"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			// NaN is what the heatmap skips. Any real number here is a point
+			// drawn on a layer it was never measured for.
+			if got := survey.ExportExtractValue(tc.sample, tc.metric); !math.IsNaN(got) {
+				t.Errorf("%s = %v, want NaN so the point is left out of the layer",
+					tc.metric, got)
+			}
+		})
+	}
+}
+
+// TestExtractValueStillAnswersTheMetricsASampleHas is the other half: refusing
+// too much would empty every layer.
+func TestExtractValueStillAnswersTheMetricsASampleHas(t *testing.T) {
+	t.Parallel()
+
+	passive := &survey.PassiveSample{
+		Networks: []*wifi.ScannedNetwork{{Signal: -50, SNR: 45}},
+	}
+	throughput := &survey.ThroughputSample{RSSI: -60, DownloadMbps: 220, UploadMbps: 88}
+
+	for _, tc := range []struct {
+		metric string
+		sample any
+		want   float64
+	}{
+		{"rssi", passive, -50},
+		{"signal", passive, -50},
+		{"snr", passive, 45},
+		{"download", throughput, 220},
+		{"upload", throughput, 88},
+		{"rssi", throughput, -60},
+	} {
+		if got := survey.ExportExtractValue(tc.sample, tc.metric); got != tc.want {
+			t.Errorf("%s = %v, want %v", tc.metric, got, tc.want)
+		}
 	}
 }

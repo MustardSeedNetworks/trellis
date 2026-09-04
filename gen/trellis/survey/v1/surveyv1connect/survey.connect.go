@@ -92,6 +92,12 @@ const (
 	// SurveyServiceStopContinuousCaptureProcedure is the fully-qualified name of the SurveyService's
 	// StopContinuousCapture RPC.
 	SurveyServiceStopContinuousCaptureProcedure = "/trellis.survey.v1.SurveyService/StopContinuousCapture"
+	// SurveyServiceMeasureThroughputProcedure is the fully-qualified name of the SurveyService's
+	// MeasureThroughput RPC.
+	SurveyServiceMeasureThroughputProcedure = "/trellis.survey.v1.SurveyService/MeasureThroughput"
+	// SurveyServiceSetThroughputTargetProcedure is the fully-qualified name of the SurveyService's
+	// SetThroughputTarget RPC.
+	SurveyServiceSetThroughputTargetProcedure = "/trellis.survey.v1.SurveyService/SetThroughputTarget"
 )
 
 // SurveyServiceClient is a client for the trellis.survey.v1.SurveyService service.
@@ -156,6 +162,20 @@ type SurveyServiceClient interface {
 	// StopContinuousCapture ends a survey's capture loop. Stopping one that is not
 	// running is not an error.
 	StopContinuousCapture(context.Context, *connect.Request[v1.StopContinuousCaptureRequest]) (*connect.Response[v1.StopContinuousCaptureResponse], error)
+	// MeasureThroughput runs a throughput test at a position and stores what it
+	// measured — the active half of a survey, where the scan-based points are the
+	// passive half. A strong signal on a congested channel carries very little,
+	// and only this says which of those a room is.
+	//
+	// Stop-and-go by nature: the test takes seconds in each direction and means
+	// nothing if the operator moves during it, so there is no continuous
+	// equivalent.
+	MeasureThroughput(context.Context, *connect.Request[v1.MeasureThroughputRequest]) (*connect.Response[v1.MeasureThroughputResponse], error)
+	// SetThroughputTarget names the server a survey's active measurements run
+	// against. Survey state rather than a per-measurement argument: comparing two
+	// positions only means something if both were measured against the same
+	// thing.
+	SetThroughputTarget(context.Context, *connect.Request[v1.SetThroughputTargetRequest]) (*connect.Response[v1.SetThroughputTargetResponse], error)
 }
 
 // NewSurveyServiceClient constructs a client for the trellis.survey.v1.SurveyService service. By
@@ -277,6 +297,18 @@ func NewSurveyServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(surveyServiceMethods.ByName("StopContinuousCapture")),
 			connect.WithClientOptions(opts...),
 		),
+		measureThroughput: connect.NewClient[v1.MeasureThroughputRequest, v1.MeasureThroughputResponse](
+			httpClient,
+			baseURL+SurveyServiceMeasureThroughputProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("MeasureThroughput")),
+			connect.WithClientOptions(opts...),
+		),
+		setThroughputTarget: connect.NewClient[v1.SetThroughputTargetRequest, v1.SetThroughputTargetResponse](
+			httpClient,
+			baseURL+SurveyServiceSetThroughputTargetProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("SetThroughputTarget")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -300,6 +332,8 @@ type surveyServiceClient struct {
 	scan                   *connect.Client[v1.ScanRequest, v1.ScanResponse]
 	startContinuousCapture *connect.Client[v1.StartContinuousCaptureRequest, v1.StartContinuousCaptureResponse]
 	stopContinuousCapture  *connect.Client[v1.StopContinuousCaptureRequest, v1.StopContinuousCaptureResponse]
+	measureThroughput      *connect.Client[v1.MeasureThroughputRequest, v1.MeasureThroughputResponse]
+	setThroughputTarget    *connect.Client[v1.SetThroughputTargetRequest, v1.SetThroughputTargetResponse]
 }
 
 // ImportAirMapper calls trellis.survey.v1.SurveyService.ImportAirMapper.
@@ -392,6 +426,16 @@ func (c *surveyServiceClient) StopContinuousCapture(ctx context.Context, req *co
 	return c.stopContinuousCapture.CallUnary(ctx, req)
 }
 
+// MeasureThroughput calls trellis.survey.v1.SurveyService.MeasureThroughput.
+func (c *surveyServiceClient) MeasureThroughput(ctx context.Context, req *connect.Request[v1.MeasureThroughputRequest]) (*connect.Response[v1.MeasureThroughputResponse], error) {
+	return c.measureThroughput.CallUnary(ctx, req)
+}
+
+// SetThroughputTarget calls trellis.survey.v1.SurveyService.SetThroughputTarget.
+func (c *surveyServiceClient) SetThroughputTarget(ctx context.Context, req *connect.Request[v1.SetThroughputTargetRequest]) (*connect.Response[v1.SetThroughputTargetResponse], error) {
+	return c.setThroughputTarget.CallUnary(ctx, req)
+}
+
 // SurveyServiceHandler is an implementation of the trellis.survey.v1.SurveyService service.
 type SurveyServiceHandler interface {
 	// ImportAirMapper imports an AirMapper (.amp) archive into a new stored
@@ -454,6 +498,20 @@ type SurveyServiceHandler interface {
 	// StopContinuousCapture ends a survey's capture loop. Stopping one that is not
 	// running is not an error.
 	StopContinuousCapture(context.Context, *connect.Request[v1.StopContinuousCaptureRequest]) (*connect.Response[v1.StopContinuousCaptureResponse], error)
+	// MeasureThroughput runs a throughput test at a position and stores what it
+	// measured — the active half of a survey, where the scan-based points are the
+	// passive half. A strong signal on a congested channel carries very little,
+	// and only this says which of those a room is.
+	//
+	// Stop-and-go by nature: the test takes seconds in each direction and means
+	// nothing if the operator moves during it, so there is no continuous
+	// equivalent.
+	MeasureThroughput(context.Context, *connect.Request[v1.MeasureThroughputRequest]) (*connect.Response[v1.MeasureThroughputResponse], error)
+	// SetThroughputTarget names the server a survey's active measurements run
+	// against. Survey state rather than a per-measurement argument: comparing two
+	// positions only means something if both were measured against the same
+	// thing.
+	SetThroughputTarget(context.Context, *connect.Request[v1.SetThroughputTargetRequest]) (*connect.Response[v1.SetThroughputTargetResponse], error)
 }
 
 // NewSurveyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -571,6 +629,18 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(surveyServiceMethods.ByName("StopContinuousCapture")),
 		connect.WithHandlerOptions(opts...),
 	)
+	surveyServiceMeasureThroughputHandler := connect.NewUnaryHandler(
+		SurveyServiceMeasureThroughputProcedure,
+		svc.MeasureThroughput,
+		connect.WithSchema(surveyServiceMethods.ByName("MeasureThroughput")),
+		connect.WithHandlerOptions(opts...),
+	)
+	surveyServiceSetThroughputTargetHandler := connect.NewUnaryHandler(
+		SurveyServiceSetThroughputTargetProcedure,
+		svc.SetThroughputTarget,
+		connect.WithSchema(surveyServiceMethods.ByName("SetThroughputTarget")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/trellis.survey.v1.SurveyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case SurveyServiceImportAirMapperProcedure:
@@ -609,6 +679,10 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 			surveyServiceStartContinuousCaptureHandler.ServeHTTP(w, r)
 		case SurveyServiceStopContinuousCaptureProcedure:
 			surveyServiceStopContinuousCaptureHandler.ServeHTTP(w, r)
+		case SurveyServiceMeasureThroughputProcedure:
+			surveyServiceMeasureThroughputHandler.ServeHTTP(w, r)
+		case SurveyServiceSetThroughputTargetProcedure:
+			surveyServiceSetThroughputTargetHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -688,4 +762,12 @@ func (UnimplementedSurveyServiceHandler) StartContinuousCapture(context.Context,
 
 func (UnimplementedSurveyServiceHandler) StopContinuousCapture(context.Context, *connect.Request[v1.StopContinuousCaptureRequest]) (*connect.Response[v1.StopContinuousCaptureResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.StopContinuousCapture is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) MeasureThroughput(context.Context, *connect.Request[v1.MeasureThroughputRequest]) (*connect.Response[v1.MeasureThroughputResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.MeasureThroughput is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) SetThroughputTarget(context.Context, *connect.Request[v1.SetThroughputTargetRequest]) (*connect.Response[v1.SetThroughputTargetResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.SetThroughputTarget is not implemented"))
 }

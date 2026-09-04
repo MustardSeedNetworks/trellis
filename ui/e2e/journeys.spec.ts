@@ -162,3 +162,48 @@ test('reads the live airspace and stops taking the radio when paused', async ({ 
   await page.waitForTimeout(6000);
   await expect(signal).toHaveText(held ?? '');
 });
+
+test('measures throughput at a point and maps it as its own layer', async ({ page }) => {
+  const name = uniqueName('Throughput');
+  await createSurvey(page, name);
+
+  // No target, no button: the remedy is to name a server, which a click cannot
+  // discover.
+  await expect(page.getByTestId('measure-throughput')).toHaveCount(0);
+  await page.getByTestId('throughput-target').fill('10.44.10.9');
+  await page.getByTestId('save-throughput-target').click();
+  await expect(page.getByTestId('measure-throughput')).toBeVisible();
+
+  await page.getByTestId('survey-start').click();
+  const surface = page.getByTestId('capture-surface');
+  await expect(surface).toBeEnabled();
+
+  // A passive point beside an active one, so the layers have to tell them
+  // apart rather than rendering everything they hold.
+  const box = await surface.boundingBox();
+  if (!box) {
+    throw new Error('capture surface has no layout box');
+  }
+  await surface.click({ position: { x: box.width * 0.25, y: box.height * 0.3 } });
+  await expect(page.getByTestId('capture-pin')).toHaveCount(1);
+
+  await page.getByTestId('measure-throughput').click();
+  await expect(page.getByTestId('capture-status')).toContainText('221.4 Mbps down, 88.2 Mbps up');
+  await expect(page.getByTestId('capture-pin')).toHaveCount(2);
+
+  await page.getByTestId('survey-complete').click();
+  await page.getByTestId('plot-coverage').click();
+  await expect(page.getByTestId('heatmap-image')).toBeVisible();
+
+  // The download layer holds the one measured point, not both: a passive scan
+  // measured no throughput, and rendering its signal on this layer would put
+  // dBm on a map of Mbps.
+  await page.getByRole('button', { name: 'Download' }).click();
+  await expect(page.getByTestId('surface-meta')).toContainText('download');
+  await expect(page.getByTestId('surface-meta')).toContainText('1 sample');
+
+  // The dead-zone threshold and its findings speak about dBm. Over a
+  // throughput layer they would answer a question nobody asked.
+  await expect(page.locator('#coverage-threshold')).toHaveCount(0);
+  await expect(page.getByTestId('coverage-findings')).toHaveCount(0);
+});

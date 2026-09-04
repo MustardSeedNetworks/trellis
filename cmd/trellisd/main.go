@@ -87,7 +87,7 @@ func run() error {
 		go reportCaptureReadiness(ctx, scanner)
 	}
 
-	manager, err := survey.NewManager(dataDir, scanner, nil, nil, nil)
+	manager, err := survey.NewManager(dataDir, scanner, nil, newThroughputMeter(), nil)
 	if err != nil {
 		return fmt.Errorf("open survey store %s: %w", dataDir, err)
 	}

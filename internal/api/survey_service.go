@@ -10,7 +10,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"connectrpc.com/connect"
 
@@ -127,11 +126,12 @@ func (h *SurveyServiceHandler) GetHeatmap(
 	}
 
 	config := survey.DefaultHeatmapConfig()
-	if strings.EqualFold(req.Msg.GetMetric(), "snr") {
-		config.Type = survey.HeatmapSNR
-	} else {
-		config.Type = survey.HeatmapRSSI
-	}
+	// The domain owns the vocabulary, including the aliases and the fallback
+	// for a metric it does not know. This used to test for "snr" and send
+	// everything else to RSSI, so a client asking for a download layer was
+	// handed a signal one labelled Mbps — the values looked plausible and were
+	// in the wrong unit.
+	config.Type = survey.ParseHeatmapType(req.Msg.GetMetric())
 
 	floor, err := floorOf(svy, req.Msg.GetFloorId())
 	if err != nil {
@@ -296,6 +296,9 @@ func (h *SurveyServiceHandler) surveySummary(svy *survey.Survey) *surveyv1.Surve
 		SampleCount:  int32(len(svy.GetAllSamples())),
 		HasFloorPlan: hasFloorPlan,
 		Capture:      captureStatusOf(h.manager.CapturingAt(svy.ID)),
+
+		IperfServer:     svy.IperfServer,
+		TestDurationSec: int32Of(svy.TestDuration),
 	}
 }
 
