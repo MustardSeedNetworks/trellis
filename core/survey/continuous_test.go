@@ -5,6 +5,7 @@ package survey_test
 import (
 	"context"
 	"errors"
+	"slices"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -381,4 +382,148 @@ func (s *cachingScanner) Scan(ctx context.Context) ([]wifi.ScannedNetwork, error
 			Channel: 36, Frequency: 5180,
 		},
 	}, nil
+}
+
+// TestMovingTheWalkPlacesTheReadingsBetween is the walking survey's whole
+// claim: readings taken while the operator moved belong along the way, not
+// piled on the mark they set out from.
+func TestMovingTheWalkPlacesTheReadingsBetween(t *testing.T) {
+	t.Parallel()
+
+	mgr, id := walkingSurvey(t, &countingScanner{})
+	if err := mgr.StartContinuousCapture(id, 0, 0); err != nil {
+		t.Fatalf("StartContinuousCapture: %v", err)
+	}
+	t.Cleanup(func() { mgr.StopContinuousCapture(id) })
+
+	waitForSamples(t, mgr, id, 4)
+	if err := mgr.StartContinuousCapture(id, 400, 200); err != nil {
+		t.Fatalf("mark the next position: %v", err)
+	}
+
+	s, err := mgr.GetSurvey(id)
+	if err != nil {
+		t.Fatalf("GetSurvey: %v", err)
+	}
+	points := s.GetAllSamples()
+
+	// Every reading taken after the mark was taken while moving, so all of them
+	// are placed — the earliest of them lands within a pixel of the mark it set
+	// out from, which is where the operator still was.
+	if points[0].X > 2 || points[0].Y > 2 {
+		t.Errorf("first point at (%d,%d), want it still on the mark (0,0)", points[0].X, points[0].Y)
+	}
+
+	var placed []*survey.SamplePoint
+	for _, p := range points {
+		if p.Interpolated {
+			placed = append(placed, p)
+		}
+	}
+	if len(placed) < 2 {
+		t.Fatalf("%d readings placed along the segment, want at least 2", len(placed))
+	}
+
+	for i, p := range placed {
+		// On the line from (0,0) to (400,200), y is half of x. Each axis rounds
+		// to its own pixel, so a point can sit half a pixel off the ideal line
+		// without being off the walk.
+		if drift := p.X - 2*p.Y; drift > 1 || drift < -1 {
+			t.Errorf("placed point %d at (%d,%d) is %d px off the walked segment", i, p.X, p.Y, drift)
+		}
+		if p.X < 0 || p.X > 400 {
+			t.Errorf("placed point %d at x=%d, outside the segment", i, p.X)
+		}
+		// Later readings are further along: a walk that placed them out of
+		// order would draw the operator moving backwards.
+		if i > 0 && p.X < placed[i-1].X {
+			t.Errorf("point %d at x=%d comes before point %d at x=%d in space but after in time",
+				i, p.X, i-1, placed[i-1].X)
+		}
+	}
+}
+
+// TestStoppingLeavesTheLastReadingsWhereTheyWereTaken pins the deliberate
+// asymmetry: a stop is not a mark. The operator stopped where they were
+// standing, so the readings since the last mark were taken there — placing them
+// along a segment to nowhere would invent a walk that did not happen.
+func TestStoppingLeavesTheLastReadingsWhereTheyWereTaken(t *testing.T) {
+	t.Parallel()
+
+	mgr, id := walkingSurvey(t, &countingScanner{})
+	if err := mgr.StartContinuousCapture(id, 90, 90); err != nil {
+		t.Fatalf("StartContinuousCapture: %v", err)
+	}
+	waitForSamples(t, mgr, id, 3)
+	mgr.StopContinuousCapture(id)
+
+	s, _ := mgr.GetSurvey(id)
+	for i, p := range s.GetAllSamples() {
+		if p.Interpolated {
+			t.Errorf("point %d was placed along a segment that a stop did not create", i)
+		}
+		if p.X != 90 || p.Y != 90 {
+			t.Errorf("point %d at (%d,%d), want the mark (90,90)", i, p.X, p.Y)
+		}
+	}
+}
+
+// TestPlacedReadingsSurviveAReload keeps the distinction where it has to live.
+// A walk's positions are worked out once, in memory, at the moment the operator
+// marks; a reload that lost the flag would turn every interpolated point into a
+// pinned one and the survey would claim precision it never had.
+func TestPlacedReadingsSurviveAReload(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	mgr := mustManager(t, dir, &countingScanner{}, nil, nil, nil)
+	mgr.SetCaptureGap(10 * time.Millisecond)
+
+	s, err := mgr.CreateSurvey("reloaded walk", "", "en0", survey.TypePassive)
+	if err != nil {
+		t.Fatalf("CreateSurvey: %v", err)
+	}
+	if err := mgr.StartSurvey(s.ID); err != nil {
+		t.Fatalf("StartSurvey: %v", err)
+	}
+	if err := mgr.StartContinuousCapture(s.ID, 0, 0); err != nil {
+		t.Fatalf("StartContinuousCapture: %v", err)
+	}
+	waitForSamples(t, mgr, s.ID, 3)
+	if err := mgr.StartContinuousCapture(s.ID, 300, 150); err != nil {
+		t.Fatalf("mark: %v", err)
+	}
+	mgr.StopContinuousCapture(s.ID)
+
+	before, _ := mgr.GetSurvey(s.ID)
+	want := placedPositions(before.GetAllSamples())
+	if len(want) < 2 {
+		t.Fatalf("only %d placed readings before the reload", len(want))
+	}
+	if err := mgr.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	reopened := mustManager(t, dir, nil, nil, nil, nil)
+	if err := reopened.LoadSurveys(); err != nil {
+		t.Fatalf("LoadSurveys: %v", err)
+	}
+	after, err := reopened.GetSurvey(s.ID)
+	if err != nil {
+		t.Fatalf("GetSurvey after reload: %v", err)
+	}
+	if got := placedPositions(after.GetAllSamples()); !slices.Equal(got, want) {
+		t.Errorf("placed readings after reload = %v, want %v", got, want)
+	}
+}
+
+// placedPositions is where the interpolated readings sit, in order.
+func placedPositions(points []*survey.SamplePoint) []survey.Position {
+	var placed []survey.Position
+	for _, p := range points {
+		if p.Interpolated {
+			placed = append(placed, survey.Position{X: p.X, Y: p.Y})
+		}
+	}
+	return placed
 }

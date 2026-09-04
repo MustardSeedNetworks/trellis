@@ -308,9 +308,10 @@ func (h *SurveyServiceHandler) ListSamples(
 // depend on that ordering having survived.
 func surveySampleOf(sp *survey.SamplePoint) *surveyv1.SurveySample {
 	out := &surveyv1.SurveySample{
-		X:          int32Of(sp.X),
-		Y:          int32Of(sp.Y),
-		CapturedAt: timestamppb.New(sp.Timestamp),
+		X:            int32Of(sp.X),
+		Y:            int32Of(sp.Y),
+		CapturedAt:   timestamppb.New(sp.Timestamp),
+		Interpolated: sp.Interpolated,
 	}
 
 	var passive *survey.PassiveSample

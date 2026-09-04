@@ -427,4 +427,10 @@ message SurveySample {
   // Signal of the strongest BSS observed, in dBm. Absent when nothing was
   // observed, since 0 dBm would read as a very strong signal.
   optional int32 strongest_dbm = 5;
+
+  // The position was worked out from the marks on either side of this reading
+  // rather than recorded by the operator. Only a continuous walk produces
+  // these; a pin-drop and an import never do. A client that drew the two alike
+  // would show a claim about a position as a record of one.
+  bool interpolated = 6;
 }

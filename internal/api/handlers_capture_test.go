@@ -460,3 +460,49 @@ func TestStoppingACaptureThatIsNotRunningIsNotAnError(t *testing.T) {
 		t.Fatalf("StopContinuousCapture with nothing running: %v", err)
 	}
 }
+
+func TestListSamplesTellsPlacedReadingsFromPinnedOnes(t *testing.T) {
+	t.Parallel()
+
+	handler, id := walkedSurvey(t, scriptedScanner{networks: []wifi.ScannedNetwork{
+		{SSID: "lab", BSSID: "aa:bb:cc:00:00:01", Signal: -50, Channel: 36, Frequency: 5180},
+	}})
+
+	// One pinned reading, then a walk that is marked twice so the readings
+	// between the marks are placed along the way.
+	if _, err := handler.CapturePoint(context.Background(),
+		connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: 10, Y: 10})); err != nil {
+		t.Fatalf("CapturePoint: %v", err)
+	}
+	for _, at := range []struct{ x, y int32 }{{20, 20}, {200, 100}} {
+		if _, err := handler.StartContinuousCapture(context.Background(),
+			connect.NewRequest(&surveyv1.StartContinuousCaptureRequest{
+				SurveyId: id, X: at.x, Y: at.y,
+			})); err != nil {
+			t.Fatalf("StartContinuousCapture: %v", err)
+		}
+	}
+	if _, err := handler.StopContinuousCapture(context.Background(),
+		connect.NewRequest(&surveyv1.StopContinuousCaptureRequest{SurveyId: id})); err != nil {
+		t.Fatalf("StopContinuousCapture: %v", err)
+	}
+
+	got, err := handler.ListSamples(context.Background(),
+		connect.NewRequest(&surveyv1.ListSamplesRequest{SurveyId: id}))
+	if err != nil {
+		t.Fatalf("ListSamples: %v", err)
+	}
+
+	samples := got.Msg.GetSamples()
+	if len(samples) == 0 {
+		t.Fatal("no samples")
+	}
+	// The pin-drop is a record of where the operator was. Sending it as
+	// interpolated would tell a client to draw a measurement as an estimate.
+	if samples[0].GetInterpolated() {
+		t.Error("the pinned reading reached the wire as interpolated")
+	}
+	if samples[0].GetX() != 10 || samples[0].GetY() != 10 {
+		t.Errorf("pinned reading at (%d,%d), want (10,10)", samples[0].GetX(), samples[0].GetY())
+	}
+}

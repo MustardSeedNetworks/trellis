@@ -198,6 +198,13 @@ type SamplePoint struct {
 	Y          int       `json:"y"` // Pixel Y coordinate on floor plan
 	Timestamp  time.Time `json:"timestamp"`
 	SampleData any       `json:"sampleData"` // PassiveSample | ActiveSample | ThroughputSample
+
+	// Interpolated marks a point whose position was worked out from the marks
+	// on either side of it rather than recorded by the operator. Only a
+	// continuous walk produces them; a pin-drop never does. The distinction is
+	// kept because the two are different kinds of claim, and a survey that lost
+	// it would assert a precision nobody measured.
+	Interpolated bool `json:"interpolated,omitempty"`
 }
 
 // Survey represents a WiFi site survey.
@@ -338,4 +345,21 @@ func (s *Survey) snapshot() *Survey {
 	copied.ClientLocations = slices.Clone(s.ClientLocations)
 	copied.PassFailCriteria = slices.Clone(s.PassFailCriteria)
 	return &copied
+}
+
+// placeWalkedSegment gives every reading taken between two marks a position
+// along the way between them.
+//
+// It walks every floor rather than the active one alone: a survey can change
+// floors mid-walk, and readings left on the floor the operator came from would
+// otherwise keep the position they were taken at — the previous mark, which is
+// on a different floor.
+func (s *Survey) placeWalkedSegment(from, to Position, markedAt, now time.Time) {
+	for _, floor := range s.Floors {
+		if floor == nil {
+			continue
+		}
+		floor.Samples = placeAlongSegment(floor.Samples, from, to, markedAt, now)
+	}
+	s.Samples = placeAlongSegment(s.Samples, from, to, markedAt, now)
 }

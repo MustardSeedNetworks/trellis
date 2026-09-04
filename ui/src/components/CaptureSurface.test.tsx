@@ -36,13 +36,20 @@ const scan = {
   ],
 };
 
-function sample(x: number, y: number, strongestDbm: number | undefined, atMs: number) {
+function sample(
+  x: number,
+  y: number,
+  strongestDbm: number | undefined,
+  atMs: number,
+  interpolated = false,
+) {
   return create(SurveySampleSchema, {
     x,
     y,
     strongestDbm,
     networkCount: strongestDbm === undefined ? 0 : 2,
     capturedAt: timestampFromMs(atMs),
+    interpolated,
   });
 }
 
@@ -276,5 +283,32 @@ describe('continuous capture', () => {
     renderSurface(false);
 
     expect(screen.getByTestId('toggle-continuous')).toBeDisabled();
+  });
+});
+
+describe('placed readings', () => {
+  it('draws a reading whose position was worked out differently from one that was marked', async () => {
+    listSamples.mockResolvedValue({
+      samples: [sample(10, 10, -50, 1000), sample(60, 40, -50, 2000, true)],
+    });
+    renderSurface(true);
+
+    const [marked, placed] = await screen.findAllByTestId('capture-pin');
+    if (!marked || !placed) {
+      throw new Error('expected a marked pin and a placed one');
+    }
+    expect(marked).not.toHaveAttribute('data-interpolated');
+    expect(placed).toHaveAttribute('data-interpolated', 'true');
+
+    // Told apart by shape, not only by colour: the colour is already carrying
+    // the signal, and the difference has to survive a reader who cannot use it.
+    expect(marked.querySelector('circle')).toHaveAttribute('r', '9');
+    expect(placed.querySelector('circle')).toHaveAttribute('r', '5');
+    expect(placed.querySelector('circle')?.getAttribute('class')).toContain('fill-none');
+
+    // Only the marks are labelled — a walk stores a reading every few seconds,
+    // and a value beside each one is an unreadable page.
+    expect(marked.querySelector('text')).toHaveTextContent('-50.0 dBm');
+    expect(placed.querySelector('text')).toBeNull();
   });
 });

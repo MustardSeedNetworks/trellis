@@ -91,6 +91,19 @@ test('walks continuously and stops when told', async ({ page }) => {
     })
     .toBe(true);
 
+  // Marking a second position places every reading taken on the way there
+  // along the segment. They are drawn as placed rather than as marks, because
+  // their positions were worked out and not recorded.
+  const placed = page.locator('[data-testid="capture-pin"][data-interpolated="true"]');
+  await expect(placed).toHaveCount(3, { timeout: 30000 });
+  const xs = await placed.evaluateAll((nodes) =>
+    nodes.map((node) => Number(node.querySelector('circle')?.getAttribute('cx') ?? '0')),
+  );
+  // Along the walk, in the order they were taken: a placement that ignored the
+  // timestamps would still produce three points somewhere.
+  expect(xs).toEqual([...xs].sort((a, b) => a - b));
+  expect(Math.max(...xs)).toBeLessThanOrEqual(641);
+
   const walked = await page.getByTestId('capture-pin').count();
   await page.getByTestId('toggle-continuous').click();
   await expect(page.getByTestId('toggle-continuous')).toHaveText('Start walking');
