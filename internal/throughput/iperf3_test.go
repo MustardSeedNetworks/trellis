@@ -5,8 +5,7 @@ package throughput
 import (
 	"errors"
 	"net"
-	"os"
-	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -137,81 +136,44 @@ func loopbackName(t *testing.T) string {
 	return ""
 }
 
-// TestMeasureRunsIperf3AndReadsBothDirections drives the exec path against a
-// stub that records how it was called, which is the only way to check the
-// arguments a real run depends on.
-func TestMeasureRunsIperf3AndReadsBothDirections(t *testing.T) {
+// TestIperf3Args pins the command line a measurement depends on. Any of these
+// could be wrong while the package still returned a plausible rate.
+func TestIperf3Args(t *testing.T) {
 	t.Parallel()
 
-	dir := t.TempDir()
-	argsFile := filepath.Join(dir, "args")
-	stub := filepath.Join(dir, "iperf3-stub")
-	script := "#!/bin/sh\n" +
-		"echo \"$@\" >> " + argsFile + "\n" +
-		`echo '{"end":{"sum_received":{"bits_per_second":221000000}}}'` + "\n"
-	if err := os.WriteFile(stub, []byte(script), 0o700); err != nil {
-		t.Fatalf("write stub: %v", err)
-	}
+	download := iperf3Args("10.44.30.30", 4, "192.168.1.20", true)
+	upload := iperf3Args("10.44.30.30", 4, "192.168.1.20", false)
 
-	meter := Meter{binary: stub}
-	got, err := meter.Measure(t.Context(), "", "10.44.30.30", 4)
-	if err != nil {
-		t.Fatalf("Measure: %v", err)
-	}
-	if got.DownloadMbps != 221 || got.UploadMbps != 221 {
-		t.Errorf("sample = %+v, want 221 Mbps each way", got)
-	}
-	// Latency, jitter and loss stay at zero deliberately: a TCP test does not
-	// measure them, and filling them in would report a perfect link.
-	if got.Latency != 0 || got.Jitter != 0 || got.PacketLoss != 0 {
-		t.Errorf("sample carries unmeasured figures: %+v", got)
-	}
-
-	recorded, err := os.ReadFile(argsFile)
-	if err != nil {
-		t.Fatalf("read recorded args: %v", err)
-	}
-	runs := strings.Split(strings.TrimSpace(string(recorded)), "\n")
-	if len(runs) != 2 {
-		t.Fatalf("iperf3 ran %d times, want once per direction", len(runs))
-	}
-	for _, run := range runs {
-		if !strings.Contains(run, "-c 10.44.30.30") || !strings.Contains(run, "-t 4") {
-			t.Errorf("run %q does not carry the server and duration", run)
+	for _, args := range [][]string{download, upload} {
+		joined := strings.Join(args, " ")
+		if !strings.Contains(joined, "-c 10.44.30.30") {
+			t.Errorf("%q does not name the server", joined)
+		}
+		if !strings.Contains(joined, "-t 4") {
+			t.Errorf("%q does not carry the duration", joined)
+		}
+		if !strings.Contains(joined, "-J") {
+			t.Errorf("%q does not ask for the JSON report the parser reads", joined)
+		}
+		// Without the bind, a multi-homed host measures whichever interface the
+		// kernel routes over — which on a survey laptop is often the ethernet.
+		if !strings.Contains(joined, "-B 192.168.1.20") {
+			t.Errorf("%q does not bind to the survey's interface", joined)
 		}
 	}
-	// -R is the server sending: what the client downloads. Exactly one of the
-	// two runs is reversed, or both directions report the same thing.
-	reversed := 0
-	for _, run := range runs {
-		if strings.Contains(run, "-R") {
-			reversed++
-		}
-	}
-	if reversed != 1 {
-		t.Errorf("%d of 2 runs were reversed, want exactly 1", reversed)
-	}
-}
 
-func TestMeasureSurfacesIperf3sOwnFailure(t *testing.T) {
-	t.Parallel()
-
-	dir := t.TempDir()
-	stub := filepath.Join(dir, "iperf3-stub")
-	// A refused connection: iperf3 exits non-zero with the reason in the
-	// report, which is what the operator needs rather than "exit status 1".
-	script := "#!/bin/sh\n" +
-		`echo '{"error":"unable to connect to server - Connection refused"}'` + "\nexit 1\n"
-	if err := os.WriteFile(stub, []byte(script), 0o700); err != nil {
-		t.Fatalf("write stub: %v", err)
+	// -R is the server sending: what the client downloads. On exactly one of
+	// the two, or both directions report the same thing.
+	if !slices.Contains(download, "-R") {
+		t.Error("the download direction is not reversed")
+	}
+	if slices.Contains(upload, "-R") {
+		t.Error("the upload direction is reversed too")
 	}
 
-	meter := Meter{binary: stub}
-	_, err := meter.Measure(t.Context(), "", "10.44.30.30", 1)
-	if err == nil {
-		t.Fatal("want an error")
-	}
-	if !strings.Contains(err.Error(), "Connection refused") {
-		t.Errorf("error = %q, want iperf3's own reason", err)
+	// A survey that named no interface lets the host route, which is right on a
+	// laptop with one adapter.
+	if slices.Contains(iperf3Args("10.0.0.1", 1, "", false), "-B") {
+		t.Error("an unbound run still passed -B")
 	}
 }

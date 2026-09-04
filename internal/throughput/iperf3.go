@@ -121,15 +121,7 @@ func (m *Meter) run(
 		return 0, fmt.Errorf("%w: install iperf3 to measure throughput", ErrNotInstalled)
 	}
 
-	args := []string{"-c", server, "-J", "-t", strconv.Itoa(durationSec)}
-	if bind != "" {
-		args = append(args, "-B", bind)
-	}
-	if reverse {
-		// The server sends: what the client downloads, which is the direction a
-		// survey is usually about.
-		args = append(args, "-R")
-	}
+	args := iperf3Args(server, durationSec, bind, reverse)
 
 	// Output, not CombinedOutput: iperf3 writes its report to stdout and
 	// diagnostics to stderr, and mixing them makes the JSON unparseable exactly
@@ -147,6 +139,25 @@ func (m *Meter) run(
 		return 0, fmt.Errorf("throughput: run iperf3 against %s: %w", server, err)
 	}
 	return parseReport(out)
+}
+
+// iperf3Args builds one run's command line.
+//
+// Its own function so the arguments a measurement depends on can be asserted
+// without a subprocess: the server, the duration, the bind, and -R on exactly
+// one of the two directions. Any of those could be wrong while the package
+// still returned a plausible rate.
+func iperf3Args(server string, durationSec int, bind string, reverse bool) []string {
+	args := []string{"-c", server, "-J", "-t", strconv.Itoa(durationSec)}
+	if bind != "" {
+		args = append(args, "-B", bind)
+	}
+	if reverse {
+		// The server sends: what the client downloads, which is the direction a
+		// survey is usually about.
+		args = append(args, "-R")
+	}
+	return args
 }
 
 // report is the part of iperf3's JSON a survey reads.
