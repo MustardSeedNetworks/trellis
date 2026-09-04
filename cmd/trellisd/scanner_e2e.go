@@ -48,6 +48,9 @@ type scriptedScanner struct {
 const (
 	fadePerScanDBm = 6
 	fadeSteps      = 4
+	// Busy enough to be a real reading, quiet enough that the live view's
+	// verdict is decided by the SNR the fade drives rather than by congestion.
+	scriptedUtilizationPercent = 18
 )
 
 func (s *scriptedScanner) Scan(ctx context.Context) ([]wifi.ScannedNetwork, error) {
@@ -56,10 +59,15 @@ func (s *scriptedScanner) Scan(ctx context.Context) ([]wifi.ScannedNetwork, erro
 	}
 	fade := int((s.scans.Add(1)-1)%fadeSteps) * fadePerScanDBm
 	seen := time.Now().UTC()
+	// One BSS is associated and advertises a BSS Load element: the live view
+	// reads the connection and the channel it sits on, and a scripted airspace
+	// where nothing is joined could only ever exercise its unassociated branch.
+	utilization := scriptedUtilizationPercent
 	return []wifi.ScannedNetwork{
 		{SSID: "Trellis Lab", BSSID: "02:00:00:00:00:01", Signal: -48 - fade,
 			Channel: 36, Frequency: 5180, Security: "WPA3", ChannelWidth: 80,
-			NoiseFloor: -95, SNR: 47 - fade, HTMode: "VHT80", LastSeen: seen},
+			NoiseFloor: -95, SNR: 47 - fade, HTMode: "VHT80", LastSeen: seen,
+			Associated: true, ChannelUtilization: &utilization},
 		{SSID: "Trellis Lab", BSSID: "02:00:00:00:00:02", Signal: -62,
 			Channel: 6, Frequency: 2437, Security: "WPA2", ChannelWidth: 20,
 			NoiseFloor: -95, SNR: 33, HTMode: "HT20", LastSeen: seen},

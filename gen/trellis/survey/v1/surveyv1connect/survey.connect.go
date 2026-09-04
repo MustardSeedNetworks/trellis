@@ -84,6 +84,8 @@ const (
 	// SurveyServiceListSamplesProcedure is the fully-qualified name of the SurveyService's ListSamples
 	// RPC.
 	SurveyServiceListSamplesProcedure = "/trellis.survey.v1.SurveyService/ListSamples"
+	// SurveyServiceScanProcedure is the fully-qualified name of the SurveyService's Scan RPC.
+	SurveyServiceScanProcedure = "/trellis.survey.v1.SurveyService/Scan"
 )
 
 // SurveyServiceClient is a client for the trellis.survey.v1.SurveyService service.
@@ -129,6 +131,14 @@ type SurveyServiceClient interface {
 	// capture order. SurveySummary carries only a count; this is what lets a
 	// client draw where a walk has already been, across a reload or a restart.
 	ListSamples(context.Context, *connect.Request[v1.ListSamplesRequest]) (*connect.Response[v1.ListSamplesResponse], error)
+	// Scan reads the airspace and records nothing. It is what the live analysis
+	// view runs on, and it belongs to no survey: a reading taken while someone
+	// is looking at a page was taken at no position on any floor.
+	//
+	// Unary for the same reason CapturePoint is: a scan blocks in the driver for
+	// seconds and the radio serves its cache inside that window, so a stream
+	// would repeat itself at whatever rate a client asked for. The client polls.
+	Scan(context.Context, *connect.Request[v1.ScanRequest]) (*connect.Response[v1.ScanResponse], error)
 }
 
 // NewSurveyServiceClient constructs a client for the trellis.survey.v1.SurveyService service. By
@@ -232,6 +242,12 @@ func NewSurveyServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(surveyServiceMethods.ByName("ListSamples")),
 			connect.WithClientOptions(opts...),
 		),
+		scan: connect.NewClient[v1.ScanRequest, v1.ScanResponse](
+			httpClient,
+			baseURL+SurveyServiceScanProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("Scan")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -252,6 +268,7 @@ type surveyServiceClient struct {
 	completeSurvey  *connect.Client[v1.CompleteSurveyRequest, v1.CompleteSurveyResponse]
 	capturePoint    *connect.Client[v1.CapturePointRequest, v1.CapturePointResponse]
 	listSamples     *connect.Client[v1.ListSamplesRequest, v1.ListSamplesResponse]
+	scan            *connect.Client[v1.ScanRequest, v1.ScanResponse]
 }
 
 // ImportAirMapper calls trellis.survey.v1.SurveyService.ImportAirMapper.
@@ -329,6 +346,11 @@ func (c *surveyServiceClient) ListSamples(ctx context.Context, req *connect.Requ
 	return c.listSamples.CallUnary(ctx, req)
 }
 
+// Scan calls trellis.survey.v1.SurveyService.Scan.
+func (c *surveyServiceClient) Scan(ctx context.Context, req *connect.Request[v1.ScanRequest]) (*connect.Response[v1.ScanResponse], error) {
+	return c.scan.CallUnary(ctx, req)
+}
+
 // SurveyServiceHandler is an implementation of the trellis.survey.v1.SurveyService service.
 type SurveyServiceHandler interface {
 	// ImportAirMapper imports an AirMapper (.amp) archive into a new stored
@@ -372,6 +394,14 @@ type SurveyServiceHandler interface {
 	// capture order. SurveySummary carries only a count; this is what lets a
 	// client draw where a walk has already been, across a reload or a restart.
 	ListSamples(context.Context, *connect.Request[v1.ListSamplesRequest]) (*connect.Response[v1.ListSamplesResponse], error)
+	// Scan reads the airspace and records nothing. It is what the live analysis
+	// view runs on, and it belongs to no survey: a reading taken while someone
+	// is looking at a page was taken at no position on any floor.
+	//
+	// Unary for the same reason CapturePoint is: a scan blocks in the driver for
+	// seconds and the radio serves its cache inside that window, so a stream
+	// would repeat itself at whatever rate a client asked for. The client polls.
+	Scan(context.Context, *connect.Request[v1.ScanRequest]) (*connect.Response[v1.ScanResponse], error)
 }
 
 // NewSurveyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -471,6 +501,12 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(surveyServiceMethods.ByName("ListSamples")),
 		connect.WithHandlerOptions(opts...),
 	)
+	surveyServiceScanHandler := connect.NewUnaryHandler(
+		SurveyServiceScanProcedure,
+		svc.Scan,
+		connect.WithSchema(surveyServiceMethods.ByName("Scan")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/trellis.survey.v1.SurveyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case SurveyServiceImportAirMapperProcedure:
@@ -503,6 +539,8 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 			surveyServiceCapturePointHandler.ServeHTTP(w, r)
 		case SurveyServiceListSamplesProcedure:
 			surveyServiceListSamplesHandler.ServeHTTP(w, r)
+		case SurveyServiceScanProcedure:
+			surveyServiceScanHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -570,4 +608,8 @@ func (UnimplementedSurveyServiceHandler) CapturePoint(context.Context, *connect.
 
 func (UnimplementedSurveyServiceHandler) ListSamples(context.Context, *connect.Request[v1.ListSamplesRequest]) (*connect.Response[v1.ListSamplesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.ListSamples is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) Scan(context.Context, *connect.Request[v1.ScanRequest]) (*connect.Response[v1.ScanResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.Scan is not implemented"))
 }

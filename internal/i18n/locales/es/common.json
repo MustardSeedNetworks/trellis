@@ -36,14 +36,15 @@
     "page": "Cargando…"
   },
   "nav": {
+    "analysis": "Análisis",
     "capacity": "Capacidad",
     "capture": "Captura",
-    "analysis": "Análisis",
     "coverage": "Cobertura",
     "deliver": "Entrega",
     "floors": "Plantas",
     "import": "Importar",
     "interference": "Interferencias",
+    "live": "En vivo",
     "reports": "Informes",
     "surveys": "Estudios"
   },

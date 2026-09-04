@@ -40,3 +40,25 @@ export function reportFilename(surveyName: string): string {
     .replace(/^-+|-+$/g, '');
   return `${slug || 'survey'}-survey-report.pdf`;
 }
+
+/**
+ * Names the band a frequency sits in, e.g. 5180 MHz → "5 GHz".
+ *
+ * Read from the frequency rather than the channel number because channel
+ * numbers collide across bands — channel 1 is 2412 MHz in 2.4 GHz and 5955 MHz
+ * in 6 GHz — so a label derived from the channel would put 6 GHz APs in the
+ * 2.4 GHz band. A frequency outside the three allocations is reported as
+ * unknown rather than guessed.
+ */
+export function bandLabel(frequencyMHz: number): string {
+  if (frequencyMHz >= 2400 && frequencyMHz < 2500) {
+    return '2.4 GHz';
+  }
+  if (frequencyMHz >= 4900 && frequencyMHz < 5900) {
+    return '5 GHz';
+  }
+  if (frequencyMHz >= 5900 && frequencyMHz <= 7125) {
+    return '6 GHz';
+  }
+  return '—';
+}

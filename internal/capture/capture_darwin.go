@@ -56,7 +56,28 @@ func (coreWLANScanner) Scan(ctx context.Context) ([]wifi.ScannedNetwork, error) 
 	for _, n := range observed {
 		networks = append(networks, networkFrom(n, seen))
 	}
-	return networks, nil
+	// Deduped before anything counts them: CoreWLAN answers with observations
+	// rather than with BSSs, and this office's radio reports some of them more
+	// than once. nl80211 and Native Wifi both hand back a BSS list keyed by
+	// BSSID, so neither needs this.
+	return withAssociation(dedupeBSSes(networks), currentNetwork(seen)), nil
+}
+
+// currentNetwork reports the BSS this host is joined to, or nil.
+//
+// Not being associated is the ordinary state of a survey laptop walking a
+// floor, and a radio that cannot answer is no reason to fail a scan that
+// already succeeded, so every failure here means "no association" rather than
+// an error. CoreWLAN is the only one of the three platforms that has to be
+// asked separately: nl80211 flags the joined BSS on the scan dump itself, and
+// Native Wifi's equivalent query is not wired up yet (see docs/10-WIFI-CAPTURE).
+func currentNetwork(seen time.Time) *wifi.ScannedNetwork {
+	current, err := corewlan.Current()
+	if err != nil || current == nil {
+		return nil
+	}
+	network := networkFrom(*current, seen)
+	return &network
 }
 
 // networkFrom maps a CoreWLAN observation onto Trellis's scan model.

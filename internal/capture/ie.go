@@ -16,6 +16,7 @@ import "encoding/binary"
 // Element IDs used here, from IEEE 802.11.
 const (
 	elemSSID         = 0
+	elemBSSLoad      = 11
 	elemHTOperation  = 61
 	elemRSN          = 48
 	elemVendor       = 221
@@ -224,4 +225,32 @@ func vhtWidth(field byte) int {
 	default:
 		return width20MHz
 	}
+}
+
+// bssLoadLen is the fixed length of a BSS Load element: station count (2),
+// channel utilisation (1), available admission capacity (2).
+const bssLoadLen = 5
+
+// channelUtilizationScale converts the element's 0-255 reading to a percentage.
+const channelUtilizationScale = 255
+
+// channelUtilizationFromElements reads the channel utilisation an AP advertises
+// in its BSS Load element (802.11 11.10.2), as a percentage of the beacon
+// interval it measured its own channel busy.
+//
+// It is the only utilisation figure a scan can yield. The alternative — an
+// nl80211 survey dump — measures the channel the adapter is parked on and
+// nothing else, so it says nothing about the other channels a walk sees, and it
+// has no equivalent on the other two platforms. Not every AP advertises the
+// element, and CoreWLAN hands back no raw elements at all, so the absence of a
+// reading is reported rather than substituted with a zero that would read as an
+// idle channel.
+func channelUtilizationFromElements(elements []element) (int, bool) {
+	for _, e := range elements {
+		if e.id != elemBSSLoad || len(e.data) < bssLoadLen {
+			continue
+		}
+		return int(e.data[2]) * 100 / channelUtilizationScale, true
+	}
+	return 0, false
 }

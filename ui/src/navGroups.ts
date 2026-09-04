@@ -23,7 +23,7 @@
  */
 
 import type { LucideIcon } from 'lucide-react';
-import { Activity, FileText, Layers, Radio, Signal, Upload, Waypoints } from 'lucide-react';
+import { Activity, FileText, Layers, Radar, Radio, Signal, Upload, Waypoints } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export interface TrellisNavItem {
@@ -59,6 +59,7 @@ export function useNavGroups(): TrellisNavGroup[] {
       label: t('nav.analysis'),
       items: [
         { label: t('nav.coverage'), path: '/coverage', icon: Signal },
+        { label: t('nav.live'), path: '/live', icon: Radar },
         { label: t('nav.interference'), path: '/interference', icon: Radio },
         { label: t('nav.capacity'), path: '/capacity', icon: Activity },
       ],

@@ -116,3 +116,35 @@ test('reads a measured value off the heatmap and zooms it', async ({ page }) => 
   await page.getByTestId('zoom-reset').click();
   await expect(viewport).toHaveAttribute('data-zoom', '1');
 });
+
+test('reads the live airspace and stops taking the radio when paused', async ({ page }) => {
+  await page.goto('/live');
+
+  const rollup = page.getByTestId('status-rollup');
+  // The scripted radio is joined to Trellis Lab, whose SNR fades 47 → 29 dB
+  // across the cycle and stays above the 20 dB the page calls weak.
+  await expect(rollup).toContainText('Connected to Trellis Lab');
+  await expect(rollup).toHaveAttribute('data-state', 'ok');
+
+  const rows = page.getByTestId('neighbour-row');
+  await expect(rows).toHaveCount(3);
+  // Strongest first, and the row the host is joined to is marked as such —
+  // asserted by value, since a table that rendered three rows in radio order
+  // would look the same.
+  await expect(rows.first()).toHaveAttribute('data-associated', 'true');
+  await expect(rows.first()).toContainText('18%');
+  // The third BSS broadcasts no SSID and sits on a DFS channel.
+  await expect(rows.nth(2)).toContainText('Hidden network');
+  await expect(rows.nth(2)).toContainText('(DFS)');
+  // An AP that sent no BSS Load element must not read as an idle channel.
+  await expect(rows.nth(2)).toContainText('Not reported');
+
+  // Pausing has to stop the polling, not just relabel the button: the same
+  // adapter is what a walk captures with.
+  const signal = rows.first().locator('td').nth(3);
+  const paused = await signal.textContent();
+  await page.getByTestId('toggle-polling').click();
+  await expect(page.getByTestId('toggle-polling')).toHaveText('Resume scanning');
+  await page.waitForTimeout(6000);
+  await expect(signal).toHaveText(paused ?? '');
+});

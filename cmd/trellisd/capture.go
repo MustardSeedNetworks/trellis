@@ -34,7 +34,7 @@ func reportCaptureReadiness(ctx context.Context, scanner survey.Scanner) {
 	case errors.Is(err, capture.ErrPermission):
 		slog.Error("capture cannot read network names; a survey would record nameless BSSIDs",
 			"error", err,
-			"fix", "enable Trellis in System Settings > Privacy & Security > Location Services")
+			"fix", capture.PermissionRemedy)
 	case err != nil:
 		slog.Error("capture scan failed", "error", err)
 	default:

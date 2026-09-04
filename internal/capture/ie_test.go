@@ -185,3 +185,49 @@ func TestParseElementsEmpty(t *testing.T) {
 		}
 	}
 }
+
+// TestChannelUtilizationFromElements covers the BSS Load element, the only
+// channel-utilisation reading available from a scan: the AP advertises how busy
+// it saw its own channel, so a client learns it without a survey-dump call and
+// without listening on every channel itself.
+func TestChannelUtilizationFromElements(t *testing.T) {
+	t.Parallel()
+
+	// BSS Load is station count (2 bytes), channel utilisation (1 byte, 0-255),
+	// available admission capacity (2 bytes).
+	bssLoad := func(stations uint16, utilization byte) []byte {
+		var count [2]byte
+		binary.LittleEndian.PutUint16(count[:], stations)
+		return ie(elemBSSLoad, count[0], count[1], utilization, 0x00, 0x00)
+	}
+
+	tests := []struct {
+		name     string
+		elements []byte
+		want     int
+		wantOK   bool
+	}{
+		{name: "absent leaves it unknown", elements: ie(elemSSID, 'a')},
+		{name: "idle channel", elements: bssLoad(0, 0), want: 0, wantOK: true},
+		{name: "half busy", elements: bssLoad(4, 128), want: 50, wantOK: true},
+		{name: "saturated", elements: bssLoad(30, 255), want: 100, wantOK: true},
+		{
+			name:     "truncated element is not a reading",
+			elements: ie(elemBSSLoad, 0x00, 0x00),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, ok := channelUtilizationFromElements(parseElements(tc.elements))
+			if ok != tc.wantOK {
+				t.Fatalf("reported = %v, want %v", ok, tc.wantOK)
+			}
+			if ok && got != tc.want {
+				t.Errorf("utilization = %d%%, want %d%%", got, tc.want)
+			}
+		})
+	}
+}

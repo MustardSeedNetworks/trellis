@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
 )
@@ -33,7 +34,7 @@ func (m *Manager) CapturePoint(ctx context.Context, surveyID string, x, y int) (
 		return nil, ErrNoScanner
 	}
 
-	networks, err := scanner.Scan(ctx)
+	networks, err := m.scan(ctx, scanner)
 	if err != nil {
 		return nil, fmt.Errorf("scan at (%d,%d): %w", x, y, err)
 	}
@@ -50,4 +51,56 @@ func (m *Manager) CapturePoint(ctx context.Context, surveyID string, x, y int) (
 		return nil, err
 	}
 	return sample, nil
+}
+
+// Scan reads the airspace without recording it anywhere.
+//
+// This is what the live view runs on. It is deliberately not a survey
+// operation: a reading taken while an operator is looking at a page belongs to
+// no floor and no position, and storing it would fill a walk with points nobody
+// stood at.
+func (m *Manager) Scan(ctx context.Context) ([]wifi.ScannedNetwork, error) {
+	m.mu.RLock()
+	scanner := m.scanner
+	m.mu.RUnlock()
+
+	if scanner == nil {
+		return nil, ErrNoScanner
+	}
+
+	networks, err := m.scan(ctx, scanner)
+	if err != nil {
+		return nil, err
+	}
+	// Strongest first, the same order CapturePoint's aggregation puts a stored
+	// sample in. A radio reports its cache in whatever order it holds it, and a
+	// reader comparing a live view against a walked point should not have to
+	// account for the two being ordered differently.
+	slices.SortStableFunc(networks, func(a, b wifi.ScannedNetwork) int {
+		return b.Signal - a.Signal
+	})
+	return networks, nil
+}
+
+// scan is the single door to the radio.
+//
+// There is one adapter, and an OS scan is a blocking call into its driver, so a
+// live view polling while a walk captures a point would have the two of them
+// inside that call together. scanMu makes the second wait for the first instead
+// — a live poll behind a survey point is a second of staleness, which is the
+// honest cost of one radio, where two concurrent sweeps are a driver's problem.
+//
+// It is its own lock rather than the manager's: m.mu guards the survey map, and
+// holding that across a multi-second driver call would stall every other
+// request on the daemon.
+func (m *Manager) scan(ctx context.Context, scanner Scanner) ([]wifi.ScannedNetwork, error) {
+	m.scanMu.Lock()
+	defer m.scanMu.Unlock()
+
+	// Checked under the lock as well as by the backend: a caller that gave up
+	// while queueing behind another scan should not then start one.
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	return scanner.Scan(ctx)
 }

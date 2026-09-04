@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { FileText, Signal, Upload, Waypoints } from 'lucide-react';
+import { FileText, Radar, Signal, Upload, Waypoints } from 'lucide-react';
 import { type ComponentType, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -18,6 +18,7 @@ const CoveragePage = lazy(() =>
 const ReportsPage = lazy(() =>
   import('@/pages/ReportsPage').then((m) => ({ default: m.ReportsPage })),
 );
+const LivePage = lazy(() => import('@/pages/LivePage').then((m) => ({ default: m.LivePage })));
 
 /**
  * Page registry — declarative route table for Trellis.
@@ -32,7 +33,7 @@ const ReportsPage = lazy(() =>
  * built from the entry (`t(page.titleKey)`), so the key checker can see them.
  * The siblings build theirs dynamically and pay for it with broad
  * `dynamic-prefixes.txt` entries that switch the unused-key check off for
- * whole namespaces; at four pages there is no reason to do that here.
+ * whole namespaces; at five pages there is no reason to do that here.
  */
 export interface PageConfig {
   path: string;
@@ -70,6 +71,14 @@ export function usePages(): PageConfig[] {
       description: t('pages:coverage.description'),
       icon: Signal,
       component: CoveragePage,
+    },
+    {
+      path: '/live',
+      eyebrow: t('common:nav.analysis'),
+      title: t('pages:live.title'),
+      description: t('pages:live.description'),
+      icon: Radar,
+      component: LivePage,
     },
     {
       path: '/reports',

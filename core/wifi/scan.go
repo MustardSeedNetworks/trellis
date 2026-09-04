@@ -28,4 +28,17 @@ type ScannedNetwork struct {
 	HTMode       string    `json:"htMode"`       // HT20, HT40, VHT80, HE160, EHT320, etc.
 	IsDFS        bool      `json:"isDFS"`        // channel is DFS (Dynamic Frequency Selection)
 	LastSeen     time.Time `json:"lastSeen"`
+
+	// Associated marks the BSS the host is currently joined to, which is what
+	// lets a live view say "your connection" instead of listing the airspace
+	// flat. It is a property of the observer, not of the BSS, so at most one
+	// network in a scan carries it and none does on an unassociated host.
+	Associated bool `json:"associated,omitempty"`
+
+	// ChannelUtilization is the percentage of airtime the AP advertised its own
+	// channel busy, read from its BSS Load element. A pointer because not every
+	// AP sends that element and CoreWLAN exposes no raw elements at all: 0% is
+	// a genuine reading for an idle channel, so "unreported" has to be a
+	// different value from it.
+	ChannelUtilization *int `json:"channelUtilization,omitempty"`
 }

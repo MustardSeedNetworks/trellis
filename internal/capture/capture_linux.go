@@ -59,7 +59,13 @@ const (
 	nl80211BSSCapability          = 5
 	nl80211BSSInformationElements = 6
 	nl80211BSSSignalMBM           = 7
+	nl80211BSSStatus              = 9
 )
+
+// nl80211BSSStatusAssociated is the NL80211_BSS_STATUS value marking the BSS
+// this interface is currently joined to. The kernel reports it on the scan
+// dump, so the association costs no extra round trip.
+const nl80211BSSStatusAssociated = 1
 
 // nl80211IftypeStation is the only interface type worth surveying from: a
 // monitor or AP interface reports a radio that is not scanning for us.
@@ -357,6 +363,7 @@ func networkFromBSS(data []byte, seen time.Time) (wifi.ScannedNetwork, bool, err
 		capability uint16
 		elements   []element
 		found      bool
+		associated bool
 	)
 
 	for ad.Next() {
@@ -380,6 +387,8 @@ func networkFromBSS(data []byte, seen time.Time) (wifi.ScannedNetwork, bool, err
 					capability = nad.Uint16()
 				case nl80211BSSInformationElements:
 					elements = parseElements(nad.Bytes())
+				case nl80211BSSStatus:
+					associated = nad.Uint32() == nl80211BSSStatusAssociated
 				}
 			}
 			return nil
@@ -394,6 +403,11 @@ func networkFromBSS(data []byte, seen time.Time) (wifi.ScannedNetwork, bool, err
 
 	channel, band := channelForFrequency(freqMHz)
 	width := widthFromElements(elements)
+
+	var utilization *int
+	if percent, ok := channelUtilizationFromElements(elements); ok {
+		utilization = &percent
+	}
 
 	return wifi.ScannedNetwork{
 		SSID:         ssidFromElements(elements),
@@ -412,5 +426,8 @@ func networkFromBSS(data []byte, seen time.Time) (wifi.ScannedNetwork, bool, err
 		HTMode:     htModeForWidth(width),
 		IsDFS:      band == band5GHz && isDFSChannel(channel),
 		LastSeen:   seen,
+
+		Associated:         associated,
+		ChannelUtilization: utilization,
 	}, true, nil
 }
