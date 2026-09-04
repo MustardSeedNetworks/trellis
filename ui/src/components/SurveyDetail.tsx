@@ -70,6 +70,7 @@ export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
           surveyId={survey.id}
           surveyName={survey.name}
           walking={survey.status === 'in_progress'}
+          capture={survey.capture}
         />
       </div>
 

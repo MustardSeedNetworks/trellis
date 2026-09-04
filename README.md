@@ -8,9 +8,9 @@ source-available alternative to Ekahau / Hamina / iBwave. **Both Seed and Trelli
 Wi-Fi analysis; Trellis owns survey/planning** (decided 2026-09-03, superseding the
 2026-06-20 "Seed exits Wi-Fi" decision).
 
-> Status (2026-09-03): pre-alpha, one binary (`trellisd`). **Exists:** the measured-
+> Status (2026-09-04): pre-alpha, one binary (`trellisd`). **Exists:** the measured-
 > survey engine migrated from Seed (`core/survey`, ~92% covered), the survey Connect/gRPC
-> API (`proto/trellis/survey/v1`), a four-page UI (Surveys, Import, Coverage, Reports)
+> API (`proto/trellis/survey/v1`), a five-page UI (Surveys, Import, Coverage, Live, Reports)
 > wired to the live measured-survey workflow, and per-OS scan capture (macOS CoreWLAN,
 > Linux nl80211, Windows Native WiFi — passive/active scan, no monitor mode). **Does
 > not exist:** the predictive C++/GPU RF engine (Gate G1 has never run), licensing, and

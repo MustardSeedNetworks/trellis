@@ -50,6 +50,12 @@ type Manager struct {
 	connMonitor     ConnectionMonitor
 	throughputMeter ThroughputMeter
 	anomalyDetector AnomalyDetector
+
+	// captures holds the running continuous-capture loop for each survey that
+	// has one, guarded by mu like the survey map itself.
+	captures map[string]*continuousCapture
+	// testCaptureGap shortens the loop's cadence for the package's own tests.
+	testCaptureGap time.Duration
 }
 
 // NewManager creates a new survey manager. Each capability is optional (nil
@@ -81,6 +87,11 @@ func NewManager(
 
 // Close releases the survey database.
 func (m *Manager) Close() error {
+	// Before the database: a capture loop mid-sweep will try to store its point
+	// when the scan returns, and a closed store underneath it is a write to a
+	// closed database rather than a walk that ended.
+	m.stopEveryCapture()
+
 	if m.db == nil {
 		return nil
 	}
@@ -137,7 +148,7 @@ func (m *Manager) GetSurvey(id string) (*Survey, error) {
 		return nil, fmt.Errorf("%w: %s", ErrSurveyNotFound, id)
 	}
 
-	return survey, nil
+	return survey.snapshot(), nil
 }
 
 // ListSurveys returns all surveys.
@@ -147,7 +158,7 @@ func (m *Manager) ListSurveys() []*Survey {
 
 	surveys := make([]*Survey, 0, len(m.surveys))
 	for _, survey := range m.surveys {
-		surveys = append(surveys, survey)
+		surveys = append(surveys, survey.snapshot())
 	}
 
 	return surveys
@@ -155,6 +166,13 @@ func (m *Manager) ListSurveys() []*Survey {
 
 // DeleteSurvey deletes a survey.
 func (m *Manager) DeleteSurvey(id string) error {
+	// Outside the lock, and first: the loop's own sweeps take m.mu to store a
+	// point, so stopping it while holding the lock would deadlock on the sweep
+	// in flight. A start that slips in between the two is harmless — AddSample
+	// refuses a survey that is no longer walking, and the loop ends itself on
+	// that.
+	m.StopContinuousCapture(id)
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -193,6 +211,13 @@ func (m *Manager) StartSurvey(id string) error {
 
 // PauseSurvey pauses a survey.
 func (m *Manager) PauseSurvey(id string) error {
+	// Outside the lock, and first: the loop's own sweeps take m.mu to store a
+	// point, so stopping it while holding the lock would deadlock on the sweep
+	// in flight. A start that slips in between the two is harmless — AddSample
+	// refuses a survey that is no longer walking, and the loop ends itself on
+	// that.
+	m.StopContinuousCapture(id)
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -209,6 +234,13 @@ func (m *Manager) PauseSurvey(id string) error {
 
 // CompleteSurvey completes a survey.
 func (m *Manager) CompleteSurvey(id string) error {
+	// Outside the lock, and first: the loop's own sweeps take m.mu to store a
+	// point, so stopping it while holding the lock would deadlock on the sweep
+	// in flight. A start that slips in between the two is harmless — AddSample
+	// refuses a survey that is no longer walking, and the loop ends itself on
+	// that.
+	m.StopContinuousCapture(id)
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -328,7 +360,7 @@ func (m *Manager) AddSample(id string, x, y int, sampleData any) error {
 	}
 
 	if survey.Status != StatusInProgress {
-		return errors.New("survey not in progress")
+		return fmt.Errorf("%w: %s is %s", ErrNotWalking, id, survey.Status)
 	}
 
 	floor := survey.GetActiveFloor()
@@ -356,7 +388,7 @@ func (m *Manager) AddSampleToFloor(surveyID, floorID string, x, y int, sampleDat
 	}
 
 	if survey.Status != StatusInProgress {
-		return errors.New("survey not in progress")
+		return fmt.Errorf("%w: %s is %s", ErrNotWalking, surveyID, survey.Status)
 	}
 
 	floor := survey.GetFloorByID(floorID)

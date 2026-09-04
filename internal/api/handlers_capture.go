@@ -68,7 +68,7 @@ func (h *SurveyServiceHandler) CreateSurvey(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&surveyv1.CreateSurveyResponse{Survey: toSurveySummary(created)}), nil
+	return connect.NewResponse(&surveyv1.CreateSurveyResponse{Survey: h.surveySummary(created)}), nil
 }
 
 // StartSurvey moves a survey into the state that accepts samples.
@@ -80,7 +80,7 @@ func (h *SurveyServiceHandler) StartSurvey(
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&surveyv1.StartSurveyResponse{Survey: toSurveySummary(s)}), nil
+	return connect.NewResponse(&surveyv1.StartSurveyResponse{Survey: h.surveySummary(s)}), nil
 }
 
 // PauseSurvey stops a survey accepting samples without completing it.
@@ -92,7 +92,7 @@ func (h *SurveyServiceHandler) PauseSurvey(
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&surveyv1.PauseSurveyResponse{Survey: toSurveySummary(s)}), nil
+	return connect.NewResponse(&surveyv1.PauseSurveyResponse{Survey: h.surveySummary(s)}), nil
 }
 
 // CompleteSurvey closes a survey to further samples.
@@ -104,7 +104,7 @@ func (h *SurveyServiceHandler) CompleteSurvey(
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&surveyv1.CompleteSurveyResponse{Survey: toSurveySummary(s)}), nil
+	return connect.NewResponse(&surveyv1.CompleteSurveyResponse{Survey: h.surveySummary(s)}), nil
 }
 
 // CapturePoint scans the airspace and records it at a position on the survey's
@@ -157,6 +157,40 @@ func (h *SurveyServiceHandler) Scan(
 		reply.Networks[i] = scannedNetworkOf(&networks[i])
 	}
 	return connect.NewResponse(reply), nil
+}
+
+// StartContinuousCapture begins, or moves, a survey's walking capture.
+func (h *SurveyServiceHandler) StartContinuousCapture(
+	_ context.Context,
+	req *connect.Request[surveyv1.StartContinuousCaptureRequest],
+) (*connect.Response[surveyv1.StartContinuousCaptureResponse], error) {
+	id := req.Msg.GetSurveyId()
+	if id == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+	}
+
+	if err := h.manager.StartContinuousCapture(id, int(req.Msg.GetX()), int(req.Msg.GetY())); err != nil {
+		return nil, captureError(err)
+	}
+	return connect.NewResponse(&surveyv1.StartContinuousCaptureResponse{
+		Capture: captureStatusOf(h.manager.CapturingAt(id)),
+	}), nil
+}
+
+// StopContinuousCapture ends a survey's walking capture. Stopping one that is
+// not running is not an error: pause, complete and delete all stop the capture
+// without knowing whether there was one.
+func (h *SurveyServiceHandler) StopContinuousCapture(
+	_ context.Context,
+	req *connect.Request[surveyv1.StopContinuousCaptureRequest],
+) (*connect.Response[surveyv1.StopContinuousCaptureResponse], error) {
+	id := req.Msg.GetSurveyId()
+	if id == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+	}
+
+	h.manager.StopContinuousCapture(id)
+	return connect.NewResponse(&surveyv1.StopContinuousCaptureResponse{}), nil
 }
 
 // transition applies a state change by ID and returns the survey as it stands

@@ -86,6 +86,12 @@ const (
 	SurveyServiceListSamplesProcedure = "/trellis.survey.v1.SurveyService/ListSamples"
 	// SurveyServiceScanProcedure is the fully-qualified name of the SurveyService's Scan RPC.
 	SurveyServiceScanProcedure = "/trellis.survey.v1.SurveyService/Scan"
+	// SurveyServiceStartContinuousCaptureProcedure is the fully-qualified name of the SurveyService's
+	// StartContinuousCapture RPC.
+	SurveyServiceStartContinuousCaptureProcedure = "/trellis.survey.v1.SurveyService/StartContinuousCapture"
+	// SurveyServiceStopContinuousCaptureProcedure is the fully-qualified name of the SurveyService's
+	// StopContinuousCapture RPC.
+	SurveyServiceStopContinuousCaptureProcedure = "/trellis.survey.v1.SurveyService/StopContinuousCapture"
 )
 
 // SurveyServiceClient is a client for the trellis.survey.v1.SurveyService service.
@@ -139,6 +145,17 @@ type SurveyServiceClient interface {
 	// seconds and the radio serves its cache inside that window, so a stream
 	// would repeat itself at whatever rate a client asked for. The client polls.
 	Scan(context.Context, *connect.Request[v1.ScanRequest]) (*connect.Response[v1.ScanResponse], error)
+	// StartContinuousCapture samples repeatedly at a position until it is
+	// stopped — the walking half of a measured survey, where CapturePoint is the
+	// stop-and-go half.
+	//
+	// Calling it again on a running survey moves the capture rather than starting
+	// a second one: it is the operator saying "I am here now", which is the whole
+	// interaction in a walking survey.
+	StartContinuousCapture(context.Context, *connect.Request[v1.StartContinuousCaptureRequest]) (*connect.Response[v1.StartContinuousCaptureResponse], error)
+	// StopContinuousCapture ends a survey's capture loop. Stopping one that is not
+	// running is not an error.
+	StopContinuousCapture(context.Context, *connect.Request[v1.StopContinuousCaptureRequest]) (*connect.Response[v1.StopContinuousCaptureResponse], error)
 }
 
 // NewSurveyServiceClient constructs a client for the trellis.survey.v1.SurveyService service. By
@@ -248,27 +265,41 @@ func NewSurveyServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(surveyServiceMethods.ByName("Scan")),
 			connect.WithClientOptions(opts...),
 		),
+		startContinuousCapture: connect.NewClient[v1.StartContinuousCaptureRequest, v1.StartContinuousCaptureResponse](
+			httpClient,
+			baseURL+SurveyServiceStartContinuousCaptureProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("StartContinuousCapture")),
+			connect.WithClientOptions(opts...),
+		),
+		stopContinuousCapture: connect.NewClient[v1.StopContinuousCaptureRequest, v1.StopContinuousCaptureResponse](
+			httpClient,
+			baseURL+SurveyServiceStopContinuousCaptureProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("StopContinuousCapture")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // surveyServiceClient implements SurveyServiceClient.
 type surveyServiceClient struct {
-	importAirMapper *connect.Client[v1.ImportAirMapperRequest, v1.ImportAirMapperResponse]
-	listSurveys     *connect.Client[v1.ListSurveysRequest, v1.ListSurveysResponse]
-	getSurvey       *connect.Client[v1.GetSurveyRequest, v1.GetSurveyResponse]
-	deleteSurvey    *connect.Client[v1.DeleteSurveyRequest, v1.DeleteSurveyResponse]
-	getHeatmap      *connect.Client[v1.GetHeatmapRequest, v1.GetHeatmapResponse]
-	getCoverage     *connect.Client[v1.GetCoverageRequest, v1.GetCoverageResponse]
-	listFloors      *connect.Client[v1.ListFloorsRequest, v1.ListFloorsResponse]
-	getFloor        *connect.Client[v1.GetFloorRequest, v1.GetFloorResponse]
-	generateReport  *connect.Client[v1.GenerateReportRequest, v1.GenerateReportResponse]
-	createSurvey    *connect.Client[v1.CreateSurveyRequest, v1.CreateSurveyResponse]
-	startSurvey     *connect.Client[v1.StartSurveyRequest, v1.StartSurveyResponse]
-	pauseSurvey     *connect.Client[v1.PauseSurveyRequest, v1.PauseSurveyResponse]
-	completeSurvey  *connect.Client[v1.CompleteSurveyRequest, v1.CompleteSurveyResponse]
-	capturePoint    *connect.Client[v1.CapturePointRequest, v1.CapturePointResponse]
-	listSamples     *connect.Client[v1.ListSamplesRequest, v1.ListSamplesResponse]
-	scan            *connect.Client[v1.ScanRequest, v1.ScanResponse]
+	importAirMapper        *connect.Client[v1.ImportAirMapperRequest, v1.ImportAirMapperResponse]
+	listSurveys            *connect.Client[v1.ListSurveysRequest, v1.ListSurveysResponse]
+	getSurvey              *connect.Client[v1.GetSurveyRequest, v1.GetSurveyResponse]
+	deleteSurvey           *connect.Client[v1.DeleteSurveyRequest, v1.DeleteSurveyResponse]
+	getHeatmap             *connect.Client[v1.GetHeatmapRequest, v1.GetHeatmapResponse]
+	getCoverage            *connect.Client[v1.GetCoverageRequest, v1.GetCoverageResponse]
+	listFloors             *connect.Client[v1.ListFloorsRequest, v1.ListFloorsResponse]
+	getFloor               *connect.Client[v1.GetFloorRequest, v1.GetFloorResponse]
+	generateReport         *connect.Client[v1.GenerateReportRequest, v1.GenerateReportResponse]
+	createSurvey           *connect.Client[v1.CreateSurveyRequest, v1.CreateSurveyResponse]
+	startSurvey            *connect.Client[v1.StartSurveyRequest, v1.StartSurveyResponse]
+	pauseSurvey            *connect.Client[v1.PauseSurveyRequest, v1.PauseSurveyResponse]
+	completeSurvey         *connect.Client[v1.CompleteSurveyRequest, v1.CompleteSurveyResponse]
+	capturePoint           *connect.Client[v1.CapturePointRequest, v1.CapturePointResponse]
+	listSamples            *connect.Client[v1.ListSamplesRequest, v1.ListSamplesResponse]
+	scan                   *connect.Client[v1.ScanRequest, v1.ScanResponse]
+	startContinuousCapture *connect.Client[v1.StartContinuousCaptureRequest, v1.StartContinuousCaptureResponse]
+	stopContinuousCapture  *connect.Client[v1.StopContinuousCaptureRequest, v1.StopContinuousCaptureResponse]
 }
 
 // ImportAirMapper calls trellis.survey.v1.SurveyService.ImportAirMapper.
@@ -351,6 +382,16 @@ func (c *surveyServiceClient) Scan(ctx context.Context, req *connect.Request[v1.
 	return c.scan.CallUnary(ctx, req)
 }
 
+// StartContinuousCapture calls trellis.survey.v1.SurveyService.StartContinuousCapture.
+func (c *surveyServiceClient) StartContinuousCapture(ctx context.Context, req *connect.Request[v1.StartContinuousCaptureRequest]) (*connect.Response[v1.StartContinuousCaptureResponse], error) {
+	return c.startContinuousCapture.CallUnary(ctx, req)
+}
+
+// StopContinuousCapture calls trellis.survey.v1.SurveyService.StopContinuousCapture.
+func (c *surveyServiceClient) StopContinuousCapture(ctx context.Context, req *connect.Request[v1.StopContinuousCaptureRequest]) (*connect.Response[v1.StopContinuousCaptureResponse], error) {
+	return c.stopContinuousCapture.CallUnary(ctx, req)
+}
+
 // SurveyServiceHandler is an implementation of the trellis.survey.v1.SurveyService service.
 type SurveyServiceHandler interface {
 	// ImportAirMapper imports an AirMapper (.amp) archive into a new stored
@@ -402,6 +443,17 @@ type SurveyServiceHandler interface {
 	// seconds and the radio serves its cache inside that window, so a stream
 	// would repeat itself at whatever rate a client asked for. The client polls.
 	Scan(context.Context, *connect.Request[v1.ScanRequest]) (*connect.Response[v1.ScanResponse], error)
+	// StartContinuousCapture samples repeatedly at a position until it is
+	// stopped — the walking half of a measured survey, where CapturePoint is the
+	// stop-and-go half.
+	//
+	// Calling it again on a running survey moves the capture rather than starting
+	// a second one: it is the operator saying "I am here now", which is the whole
+	// interaction in a walking survey.
+	StartContinuousCapture(context.Context, *connect.Request[v1.StartContinuousCaptureRequest]) (*connect.Response[v1.StartContinuousCaptureResponse], error)
+	// StopContinuousCapture ends a survey's capture loop. Stopping one that is not
+	// running is not an error.
+	StopContinuousCapture(context.Context, *connect.Request[v1.StopContinuousCaptureRequest]) (*connect.Response[v1.StopContinuousCaptureResponse], error)
 }
 
 // NewSurveyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -507,6 +559,18 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(surveyServiceMethods.ByName("Scan")),
 		connect.WithHandlerOptions(opts...),
 	)
+	surveyServiceStartContinuousCaptureHandler := connect.NewUnaryHandler(
+		SurveyServiceStartContinuousCaptureProcedure,
+		svc.StartContinuousCapture,
+		connect.WithSchema(surveyServiceMethods.ByName("StartContinuousCapture")),
+		connect.WithHandlerOptions(opts...),
+	)
+	surveyServiceStopContinuousCaptureHandler := connect.NewUnaryHandler(
+		SurveyServiceStopContinuousCaptureProcedure,
+		svc.StopContinuousCapture,
+		connect.WithSchema(surveyServiceMethods.ByName("StopContinuousCapture")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/trellis.survey.v1.SurveyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case SurveyServiceImportAirMapperProcedure:
@@ -541,6 +605,10 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 			surveyServiceListSamplesHandler.ServeHTTP(w, r)
 		case SurveyServiceScanProcedure:
 			surveyServiceScanHandler.ServeHTTP(w, r)
+		case SurveyServiceStartContinuousCaptureProcedure:
+			surveyServiceStartContinuousCaptureHandler.ServeHTTP(w, r)
+		case SurveyServiceStopContinuousCaptureProcedure:
+			surveyServiceStopContinuousCaptureHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -612,4 +680,12 @@ func (UnimplementedSurveyServiceHandler) ListSamples(context.Context, *connect.R
 
 func (UnimplementedSurveyServiceHandler) Scan(context.Context, *connect.Request[v1.ScanRequest]) (*connect.Response[v1.ScanResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.Scan is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) StartContinuousCapture(context.Context, *connect.Request[v1.StartContinuousCaptureRequest]) (*connect.Response[v1.StartContinuousCaptureResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.StartContinuousCapture is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) StopContinuousCapture(context.Context, *connect.Request[v1.StopContinuousCaptureRequest]) (*connect.Response[v1.StopContinuousCaptureResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.StopContinuousCapture is not implemented"))
 }

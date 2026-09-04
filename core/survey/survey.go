@@ -302,3 +302,40 @@ func (s *Survey) GetAllSamples() []*SamplePoint {
 	samples = append(samples, s.Samples...)
 	return samples
 }
+
+// snapshot returns a survey a caller can read while a walk is writing to it.
+//
+// The manager's map holds one live *Survey per survey, and a continuous capture
+// appends to a floor's Samples every few seconds under the manager lock. Handing
+// that pointer out let a reader — GetSurvey, the heatmap, a report generated
+// mid-walk — read Floors, Samples and UpdatedAt with no lock at all while the
+// loop wrote them. The race detector caught it the moment a second writer
+// existed; before continuous capture there was only ever one.
+//
+// Floors are copied by value rather than by pointer because the fields that
+// move are on the Floor: the Samples slice header and UpdatedAt. SamplePoints
+// are shared, which is safe because a point is finished before it is appended —
+// newSamplePoint aggregates it on the way in and nothing mutates one afterwards
+// — and copying every point on every read would make a report of a large survey
+// pay for a defence it does not need.
+func (s *Survey) snapshot() *Survey {
+	if s == nil {
+		return nil
+	}
+
+	copied := *s
+	copied.Floors = make([]*Floor, len(s.Floors))
+	for i, floor := range s.Floors {
+		if floor == nil {
+			continue
+		}
+		f := *floor
+		f.Samples = slices.Clone(floor.Samples)
+		copied.Floors[i] = &f
+	}
+	copied.Samples = slices.Clone(s.Samples)
+	copied.APLocations = slices.Clone(s.APLocations)
+	copied.ClientLocations = slices.Clone(s.ClientLocations)
+	copied.PassFailCriteria = slices.Clone(s.PassFailCriteria)
+	return &copied
+}

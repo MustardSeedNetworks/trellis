@@ -19,16 +19,30 @@ import { type RollupState, StatusRollup } from '@/ui/StatusRollup';
  * them Trellis could only analyse other tools' captures. The new-survey form
  * sits above the list so a created survey appears where it will be selected.
  */
+/** How often the list refreshes while a continuous capture is running. */
+const WALK_POLL_MS = 2000;
+
 export function SurveysPage() {
   const { t } = useTranslation(['common', 'pages']);
   const [selectedId, setSelectedId] = useState<string | undefined>();
 
+  // Polled only while a walk is running. A continuous capture stores a point
+  // every few seconds, and the sample count, the capture's position and the
+  // reason it stopped all ride on this reply — an unpolled list would show a
+  // walk frozen at whatever it looked like when the page loaded.
+  const [walking, setWalking] = useState(false);
   const surveysQuery = useQuery({
     queryKey: ['surveys'],
     queryFn: () => surveyClient.listSurveys({}),
+    refetchInterval: walking ? WALK_POLL_MS : false,
   });
 
   const surveys = surveysQuery.data?.surveys ?? [];
+  const anyWalking = surveys.some((s) => s.capture?.running === true);
+  if (anyWalking !== walking) {
+    setWalking(anyWalking);
+  }
+
   const selectedSurvey = surveys.find((s) => s.id === selectedId);
 
   /* An empty list and a failed request look identical if both render as zero,

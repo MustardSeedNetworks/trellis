@@ -105,6 +105,7 @@
     "captureFailed": "No se capturó el punto: {{error}}",
     "captureHint": "Sitúese en un punto, haga clic donde está en la superficie y la radio muestrea ahí. Un clic por punto.",
     "captureHintIdle": "Los puntos almacenados en esta planta. Inicie el recorrido para capturar más.",
+    "captureHintWalking": "En recorrido. La radio muestrea donde marcaste por última vez; haz clic o pulsa Intro para indicar que te has movido.",
     "captureTitle": "Captura",
     "captured": "{{count}} redes en ({{x}}, {{y}}), la más fuerte {{signal}}",
     "capturing": "Explorando el espectro…",
@@ -141,16 +142,21 @@
     "samplesFailed": "No se cargaron los puntos almacenados: {{error}}",
     "selectPrompt": "Seleccione un estudio para ver qué almacena y qué puede producir",
     "start": "Iniciar el recorrido",
+    "startWalking": "Empezar recorrido",
     "status": {
       "completed": "Completado",
       "created": "Creado",
       "inProgress": "En recorrido",
       "paused": "Pausado"
     },
+    "stopWalking": "Detener recorrido",
     "summary": "{{status}} · {{floors}} · {{samples}}",
     "surfaceLabel": "Superficie de captura de {{name}}. Haga clic en una posición para muestrear ahí.",
     "surveyServiceSilent": "El servicio de estudios no respondió: {{error}}",
     "title": "Estudios",
-    "transitionFailed": "El estudio no cambió de estado: {{error}}"
+    "transitionFailed": "El estudio no cambió de estado: {{error}}",
+    "walkStopped": "El recorrido se detuvo: {{error}}",
+    "walkingAt_one": "En recorrido en ({{x}}, {{y}}): {{count}} punto hasta ahora.",
+    "walkingAt_other": "En recorrido en ({{x}}, {{y}}): {{count}} puntos hasta ahora."
   }
 }

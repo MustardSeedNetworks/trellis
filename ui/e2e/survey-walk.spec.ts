@@ -57,3 +57,48 @@ test('deletes a survey only after confirmation', async ({ page }) => {
   await expect(row).toHaveCount(0);
   await expect(page.getByTestId('survey-detail')).toHaveCount(0);
 });
+
+test('walks continuously and stops when told', async ({ page }) => {
+  await createSurvey(page, uniqueName('Continuous'));
+  await page.getByTestId('survey-start').click();
+  await expect(page.getByTestId('capture-surface')).toBeEnabled();
+
+  await page.getByTestId('toggle-continuous').click();
+  await expect(page.getByTestId('toggle-continuous')).toHaveText('Stop walking');
+
+  // Points accrue with nobody clicking — the whole difference from stop-and-go.
+  // Three, not one: one could be the start's own sweep.
+  await expect(page.getByTestId('capture-pin')).toHaveCount(3, { timeout: 30000 });
+  await expect(page.getByTestId('capture-status')).toContainText('Walking at');
+
+  // Moving the pin moves the walk rather than taking a one-shot point there.
+  const surface = page.getByTestId('capture-surface');
+  const box = await surface.boundingBox();
+  if (!box) {
+    throw new Error('capture surface has no layout box');
+  }
+  await surface.click({ position: { x: box.width * 0.8, y: box.height * 0.8 } });
+  // Asserted as a region, not a pixel: the click maps through the rendered box,
+  // which is a fraction of a pixel off the 800x500 surface space at any window
+  // size. Four fifths across an 800x500 surface is near (640, 400), and the
+  // walk starts at its centre — so anything past three quarters proves the
+  // capture moved with the operator rather than staying where it began.
+  await expect
+    .poll(async () => {
+      const text = (await page.getByTestId('capture-status').textContent()) ?? '';
+      const [x, y] = /\((\d+), (\d+)\)/.exec(text)?.slice(1).map(Number) ?? [0, 0];
+      return x > 600 && y > 375;
+    })
+    .toBe(true);
+
+  const walked = await page.getByTestId('capture-pin').count();
+  await page.getByTestId('toggle-continuous').click();
+  await expect(page.getByTestId('toggle-continuous')).toHaveText('Start walking');
+
+  // Stopped means stopped: the daemon must not still be holding the radio for a
+  // walk nobody is on. Completing the survey also releases it for the rest of
+  // the suite, which shares one daemon and one radio.
+  await page.waitForTimeout(6000);
+  expect(await page.getByTestId('capture-pin').count()).toBe(walked);
+  await page.getByTestId('survey-complete').click();
+});

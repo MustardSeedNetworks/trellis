@@ -370,3 +370,93 @@ func TestScanWithoutARadioIsUnimplemented(t *testing.T) {
 		t.Fatalf("Scan with no backend = %v (%s), want unimplemented", err, connect.CodeOf(err))
 	}
 }
+
+func TestContinuousCaptureRidesOnTheSurveySummary(t *testing.T) {
+	t.Parallel()
+
+	handler, id := walkedSurvey(t, scriptedScanner{networks: []wifi.ScannedNetwork{
+		{SSID: "lab", BSSID: "aa:bb:cc:00:00:01", Signal: -50, Channel: 36, Frequency: 5180},
+	}})
+
+	// Never started: absent, not a zero-valued "stopped at (0,0)".
+	got, err := handler.GetSurvey(context.Background(),
+		connect.NewRequest(&surveyv1.GetSurveyRequest{Id: id}))
+	if err != nil {
+		t.Fatalf("GetSurvey: %v", err)
+	}
+	if got.Msg.GetSurvey().Capture != nil {
+		t.Errorf("capture = %v on a survey that never had one", got.Msg.GetSurvey().GetCapture())
+	}
+
+	started, err := handler.StartContinuousCapture(context.Background(),
+		connect.NewRequest(&surveyv1.StartContinuousCaptureRequest{SurveyId: id, X: 140, Y: 260}))
+	if err != nil {
+		t.Fatalf("StartContinuousCapture: %v", err)
+	}
+	t.Cleanup(func() {
+		_, _ = handler.StopContinuousCapture(context.Background(),
+			connect.NewRequest(&surveyv1.StopContinuousCaptureRequest{SurveyId: id}))
+	})
+	if capture := started.Msg.GetCapture(); !capture.GetRunning() ||
+		capture.GetX() != 140 || capture.GetY() != 260 {
+		t.Fatalf("capture = %v, want running at (140,260)", capture)
+	}
+
+	// A client that reloads mid-walk reads it off the summary it already polls;
+	// a walk a reload cannot see is a walk the operator starts twice.
+	got, err = handler.GetSurvey(context.Background(),
+		connect.NewRequest(&surveyv1.GetSurveyRequest{Id: id}))
+	if err != nil {
+		t.Fatalf("GetSurvey: %v", err)
+	}
+	if capture := got.Msg.GetSurvey().GetCapture(); !capture.GetRunning() || capture.GetX() != 140 {
+		t.Fatalf("summary capture = %v, want the running walk", capture)
+	}
+
+	if _, err := handler.StopContinuousCapture(context.Background(),
+		connect.NewRequest(&surveyv1.StopContinuousCaptureRequest{SurveyId: id})); err != nil {
+		t.Fatalf("StopContinuousCapture: %v", err)
+	}
+	got, _ = handler.GetSurvey(context.Background(),
+		connect.NewRequest(&surveyv1.GetSurveyRequest{Id: id}))
+	if capture := got.Msg.GetSurvey().GetCapture(); capture.GetRunning() {
+		t.Errorf("capture still running after a stop: %v", capture)
+	}
+}
+
+func TestStartContinuousCaptureRefusedOnASurveyThatIsNotWalking(t *testing.T) {
+	t.Parallel()
+
+	handler := api.NewSurveyServiceHandler(mustManager(t, t.TempDir(), scriptedScanner{}, nil, nil, nil))
+	created, err := handler.CreateSurvey(context.Background(),
+		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "idle", Interface: "en0"}))
+	if err != nil {
+		t.Fatalf("CreateSurvey: %v", err)
+	}
+
+	_, err = handler.StartContinuousCapture(context.Background(),
+		connect.NewRequest(&surveyv1.StartContinuousCaptureRequest{
+			SurveyId: created.Msg.GetSurvey().GetId(),
+		}))
+	if connect.CodeOf(err) != connect.CodeFailedPrecondition {
+		t.Fatalf("start on an unstarted survey = %v (%s), want failed_precondition", err, connect.CodeOf(err))
+	}
+
+	_, err = handler.StartContinuousCapture(context.Background(),
+		connect.NewRequest(&surveyv1.StartContinuousCaptureRequest{SurveyId: "no-such-survey"}))
+	if connect.CodeOf(err) != connect.CodeNotFound {
+		t.Fatalf("start on an unknown survey = %v (%s), want not_found", err, connect.CodeOf(err))
+	}
+}
+
+func TestStoppingACaptureThatIsNotRunningIsNotAnError(t *testing.T) {
+	t.Parallel()
+
+	// Pause, complete and delete all stop the capture without knowing whether
+	// there was one. A stop that errored would make each of them noisy.
+	handler, id := walkedSurvey(t, scriptedScanner{})
+	if _, err := handler.StopContinuousCapture(context.Background(),
+		connect.NewRequest(&surveyv1.StopContinuousCaptureRequest{SurveyId: id})); err != nil {
+		t.Fatalf("StopContinuousCapture with nothing running: %v", err)
+	}
+}

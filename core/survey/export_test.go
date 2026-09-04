@@ -3,6 +3,7 @@ package survey
 import (
 	"image"
 	"image/color"
+	"time"
 )
 
 // ExportInterpolateColor exports interpolateColor for testing.
@@ -178,4 +179,11 @@ func ExportGetChannelUsage(samples []*SamplePoint) []ChannelInfo {
 // ExportGetPassiveSampleFromPoint exports getPassiveSampleFromPoint for testing.
 func ExportGetPassiveSampleFromPoint(sp *SamplePoint) *PassiveSample {
 	return getPassiveSampleFromPoint(sp)
+}
+
+// SetCaptureGap shortens the continuous-capture cadence for tests. The shipping
+// cadence leaves the radio free between sweeps; a test asserting on the loop's
+// output should not have to sleep out a real one.
+func (m *Manager) SetCaptureGap(d time.Duration) {
+	m.testCaptureGap = d
 }
