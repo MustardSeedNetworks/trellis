@@ -40,7 +40,9 @@ type ThroughputMeter interface {
 
 // Manager manages WiFi site surveys.
 type Manager struct {
-	mu              sync.RWMutex
+	mu sync.RWMutex
+	// scanMu serialises access to the one radio; see Manager.scan.
+	scanMu          sync.Mutex
 	surveys         map[string]*Survey // key is survey ID
 	storagePath     string
 	db              *sql.DB

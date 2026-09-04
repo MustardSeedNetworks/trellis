@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { bytesToDataUrl, formatCoverageScore, formatSignal, reportFilename } from '@/lib/format';
+import {
+  bandLabel,
+  bytesToDataUrl,
+  formatCoverageScore,
+  formatSignal,
+  reportFilename,
+} from '@/lib/format';
 
 describe('bytesToDataUrl', () => {
   it('encodes bytes as a base64 data URL with the given mime type', () => {
@@ -48,5 +54,25 @@ describe('reportFilename', () => {
 
   it('falls back to a generic name when nothing usable remains', () => {
     expect(reportFilename('—')).toBe('survey-survey-report.pdf');
+  });
+});
+
+describe('bandLabel', () => {
+  it('reads the band from the frequency, not the channel', () => {
+    expect(bandLabel(2412)).toBe('2.4 GHz');
+    expect(bandLabel(5180)).toBe('5 GHz');
+    // Channel 1 in both 2.4 and 6 GHz. Naming the band off the channel number
+    // would file this AP under 2.4 GHz.
+    expect(bandLabel(5955)).toBe('6 GHz');
+  });
+
+  it('reports a frequency in no allocation rather than guessing', () => {
+    expect(bandLabel(0)).toBe('—');
+    expect(bandLabel(900)).toBe('—');
+  });
+
+  it('puts the 5/6 GHz boundary at 5900 MHz', () => {
+    expect(bandLabel(5895)).toBe('5 GHz');
+    expect(bandLabel(5900)).toBe('6 GHz');
   });
 });

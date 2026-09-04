@@ -359,6 +359,11 @@ func networkFromEntry(entry *wlanBSSEntry, seen time.Time) wifi.ScannedNetwork {
 	width := widthFromElements(elements)
 	signal := int(entry.RSSI)
 
+	var utilization *int
+	if percent, ok := channelUtilizationFromElements(elements); ok {
+		utilization = &percent
+	}
+
 	return wifi.ScannedNetwork{
 		SSID:         ssid,
 		BSSID:        net.HardwareAddr(entry.BSSID[:]).String(),
@@ -376,6 +381,12 @@ func networkFromEntry(entry *wlanBSSEntry, seen time.Time) wifi.ScannedNetwork {
 		HTMode:     htModeForWidth(width),
 		IsDFS:      band == band5GHz && isDFSChannel(channel),
 		LastSeen:   seen,
+
+		// Associated stays false: Native Wifi reports the current connection
+		// through WlanQueryInterface rather than on the BSS list, and that
+		// query is not wired up yet (#294). A Windows live view therefore
+		// lists the airspace without naming the joined BSS.
+		ChannelUtilization: utilization,
 	}
 }
 

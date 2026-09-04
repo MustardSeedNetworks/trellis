@@ -70,6 +70,15 @@ service SurveyService {
   // capture order. SurveySummary carries only a count; this is what lets a
   // client draw where a walk has already been, across a reload or a restart.
   rpc ListSamples(ListSamplesRequest) returns (ListSamplesResponse);
+
+  // Scan reads the airspace and records nothing. It is what the live analysis
+  // view runs on, and it belongs to no survey: a reading taken while someone
+  // is looking at a page was taken at no position on any floor.
+  //
+  // Unary for the same reason CapturePoint is: a scan blocks in the driver for
+  // seconds and the radio serves its cache inside that window, so a stream
+  // would repeat itself at whatever rate a client asked for. The client polls.
+  rpc Scan(ScanRequest) returns (ScanResponse);
 }
 
 
@@ -320,6 +329,28 @@ message ScannedNetwork {
   string ht_mode = 10;
   // Channel requires radar detection (DFS).
   bool is_dfs = 11;
+
+  // BSS this host is currently joined to. True for at most one network in a
+  // response, and for none on an unassociated host. Never set on Windows,
+  // whose current connection is not reported on the BSS list.
+  bool associated = 12;
+
+  // Percentage of airtime the AP advertised its own channel busy, from its
+  // BSS Load element. Optional because not every AP sends that element and
+  // macOS exposes no raw elements at all: 0 is a real reading for an idle
+  // channel, so absent has to be distinguishable from it.
+  optional int32 channel_utilization_percent = 13;
+}
+
+message ScanRequest {}
+
+message ScanResponse {
+  // Every BSS observed, strongest signal first.
+  repeated ScannedNetwork networks = 1;
+
+  // When the sweep was taken, so a client can show the age of what it is
+  // displaying rather than implying the values are live to the second.
+  google.protobuf.Timestamp scanned_at = 2;
 }
 
 message ListSamplesRequest {

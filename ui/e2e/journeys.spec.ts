@@ -116,3 +116,49 @@ test('reads a measured value off the heatmap and zooms it', async ({ page }) => 
   await page.getByTestId('zoom-reset').click();
   await expect(viewport).toHaveAttribute('data-zoom', '1');
 });
+
+test('reads the live airspace and stops taking the radio when paused', async ({ page }) => {
+  await page.goto('/live');
+
+  const rollup = page.getByTestId('status-rollup');
+  // The scripted radio is joined to Trellis Lab, whose SNR fades 47 → 29 dB
+  // across the cycle and stays above the 20 dB the page calls weak.
+  await expect(rollup).toContainText('Connected to Trellis Lab');
+  await expect(rollup).toHaveAttribute('data-state', 'ok');
+
+  const rows = page.getByTestId('neighbour-row');
+  await expect(rows).toHaveCount(3);
+
+  // Identified by the association, not by position: the scripted radio fades
+  // its strongest AP from -48 to -66 dBm, so the joined BSS is the top row for
+  // three of every four scans and the second row on the fourth. An assertion on
+  // rows.first() passes or fails on which scan the page happened to be showing.
+  const associated = page.locator('[data-testid="neighbour-row"][data-associated="true"]');
+  await expect(associated).toHaveCount(1);
+  await expect(associated).toContainText('Trellis Lab');
+  await expect(associated).toContainText('18%');
+
+  // Strongest first, read off the rendered values rather than assumed from the
+  // fixture — the ordering is the server's and this is what checks it.
+  const dbm = await rows.evaluateAll((tr) =>
+    tr.map((row) => Number.parseFloat(row.querySelectorAll('td')[3]?.textContent ?? '')),
+  );
+  expect(dbm).toEqual([...dbm].sort((a, b) => b - a));
+
+  // The weakest BSS broadcasts no SSID and sits on a DFS channel. It is last
+  // under every fade step, since it never moves.
+  await expect(rows.last()).toContainText('Hidden network');
+  await expect(rows.last()).toContainText('(DFS)');
+  // An AP that sent no BSS Load element must not read as an idle channel.
+  await expect(rows.last()).toContainText('Not reported');
+
+  // Pausing has to stop the polling, not just relabel the button: the same
+  // adapter is what a walk captures with. The joined AP is the one that fades,
+  // so its reading is what would move if a poll got through.
+  const signal = associated.locator('td').nth(3);
+  const held = await signal.textContent();
+  await page.getByTestId('toggle-polling').click();
+  await expect(page.getByTestId('toggle-polling')).toHaveText('Resume scanning');
+  await page.waitForTimeout(6000);
+  await expect(signal).toHaveText(held ?? '');
+});

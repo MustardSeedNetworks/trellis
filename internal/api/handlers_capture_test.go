@@ -6,6 +6,7 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	"connectrpc.com/connect"
 
@@ -126,11 +127,12 @@ func TestCapturePointPermissionDeniedCarriesTheRemedy(t *testing.T) {
 	if got := connect.CodeOf(err); got != connect.CodeFailedPrecondition {
 		t.Errorf("code = %v, want %v", got, connect.CodeFailedPrecondition)
 	}
-	if !strings.Contains(err.Error(), "Location Services") {
-		t.Errorf("error %q does not tell the operator what to enable", err)
-	}
-	if !strings.Contains(err.Error(), "Trellis.app") {
-		t.Errorf("error %q does not mention the launch path, the other half of the fix", err)
+	// Asserted against the platform's own remedy rather than a literal: the fix
+	// for a denied scan is Location Services on macOS and CAP_NET_ADMIN on
+	// Linux, and a test pinning one of them would either pass everywhere while
+	// checking nothing or hand a Linux operator macOS directions.
+	if !strings.Contains(err.Error(), capture.PermissionRemedy) {
+		t.Errorf("error %q does not carry this platform's remedy (%q)", err, capture.PermissionRemedy)
 	}
 }
 
@@ -309,5 +311,62 @@ func TestListSamplesUnknownSurveyIsNotFound(t *testing.T) {
 		connect.NewRequest(&surveyv1.ListSamplesRequest{SurveyId: "nope"}))
 	if connect.CodeOf(err) != connect.CodeNotFound {
 		t.Fatalf("code = %v, want NotFound", connect.CodeOf(err))
+	}
+}
+
+func TestScanReturnsTheAirspaceSortedAndTranslated(t *testing.T) {
+	t.Parallel()
+
+	busy := 62
+	handler := api.NewSurveyServiceHandler(mustManager(t, t.TempDir(), scriptedScanner{
+		networks: []wifi.ScannedNetwork{
+			{SSID: "Faint", BSSID: "aa:bb:cc:00:00:01", Signal: -85, Channel: 6, Frequency: 2437,
+				Security: "WPA2", ChannelWidth: 20, NoiseFloor: -95, SNR: 10, HTMode: "HT20"},
+			{SSID: "Near", BSSID: "aa:bb:cc:00:00:02", Signal: -41, Channel: 52, Frequency: 5260,
+				Security: "WPA3", ChannelWidth: 80, NoiseFloor: -96, SNR: 55, HTMode: "VHT80",
+				IsDFS: true, Associated: true, ChannelUtilization: &busy},
+		},
+	}, nil, nil, nil))
+
+	before := time.Now().Add(-time.Second)
+	got, err := handler.Scan(context.Background(), connect.NewRequest(&surveyv1.ScanRequest{}))
+	if err != nil {
+		t.Fatalf("Scan: %v", err)
+	}
+
+	networks := got.Msg.GetNetworks()
+	if len(networks) != 2 {
+		t.Fatalf("networks = %d, want 2", len(networks))
+	}
+	// Strongest first: the live view reads top-down, and the row an operator
+	// looks at first should be the one their radio is doing best with.
+	if networks[0].GetSsid() != "Near" {
+		t.Errorf("first network = %q, want the strongest (%q)", networks[0].GetSsid(), "Near")
+	}
+	if !networks[0].GetAssociated() {
+		t.Error("the joined BSS did not reach the wire as associated")
+	}
+	if got := networks[0].GetChannelUtilizationPercent(); got != int32(busy) {
+		t.Errorf("channel utilization = %d%%, want %d%%", got, busy)
+	}
+	// Absent is not zero: an AP that sent no BSS Load element must not read as
+	// an idle channel.
+	if networks[1].ChannelUtilizationPercent != nil {
+		t.Errorf("unreported utilization reached the wire as %d%%",
+			networks[1].GetChannelUtilizationPercent())
+	}
+	if at := got.Msg.GetScannedAt().AsTime(); at.Before(before) {
+		t.Errorf("scanned_at = %s, want a stamp from this scan", at)
+	}
+}
+
+func TestScanWithoutARadioIsUnimplemented(t *testing.T) {
+	t.Parallel()
+
+	handler := api.NewSurveyServiceHandler(mustManager(t, t.TempDir(), nil, nil, nil, nil))
+
+	_, err := handler.Scan(context.Background(), connect.NewRequest(&surveyv1.ScanRequest{}))
+	if connect.CodeOf(err) != connect.CodeUnimplemented {
+		t.Fatalf("Scan with no backend = %v (%s), want unimplemented", err, connect.CodeOf(err))
 	}
 }

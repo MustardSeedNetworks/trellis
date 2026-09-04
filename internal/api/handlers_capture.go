@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"time"
 
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/proto"
@@ -37,10 +38,18 @@ func int32Of(v int) int32 {
 	}
 }
 
-// locationFix is the one remedy an operator can act on, so it travels with the
-// error rather than being logged where nobody reading the API response sees it.
-const locationFix = ": enable Trellis in System Settings > Privacy & Security > " +
-	"Location Services, and launch it as Trellis.app rather than running the binary directly"
+// permissionFix is the one remedy an operator can act on, so it travels with
+// the error rather than being logged where nobody reading the API response sees
+// it. What the remedy *is* differs per platform — a Location Services setting
+// on macOS, CAP_NET_ADMIN on Linux — and the capture package is where that is
+// known, so the text comes from there. Answering a Linux capability failure
+// with macOS System Settings directions is worse than saying nothing.
+func permissionFix() string {
+	if capture.PermissionRemedy == "" {
+		return ""
+	}
+	return ": " + capture.PermissionRemedy
+}
 
 // CreateSurvey opens a new, empty survey to walk.
 func (h *SurveyServiceHandler) CreateSurvey(
@@ -130,6 +139,26 @@ func (h *SurveyServiceHandler) CapturePoint(
 	return connect.NewResponse(reply), nil
 }
 
+// Scan reads the airspace and stores nothing. The live analysis view polls it.
+func (h *SurveyServiceHandler) Scan(
+	ctx context.Context,
+	_ *connect.Request[surveyv1.ScanRequest],
+) (*connect.Response[surveyv1.ScanResponse], error) {
+	networks, err := h.manager.Scan(ctx)
+	if err != nil {
+		return nil, captureError(err)
+	}
+
+	reply := &surveyv1.ScanResponse{
+		Networks:  make([]*surveyv1.ScannedNetwork, len(networks)),
+		ScannedAt: timestamppb.New(time.Now().UTC()),
+	}
+	for i := range networks {
+		reply.Networks[i] = scannedNetworkOf(&networks[i])
+	}
+	return connect.NewResponse(reply), nil
+}
+
 // transition applies a state change by ID and returns the survey as it stands
 // afterwards, so a caller sees the new status without a second round trip.
 func (h *SurveyServiceHandler) transition(
@@ -161,7 +190,7 @@ func captureError(err error) error {
 		// The one failure an operator fixes by doing something. Burying it in
 		// CodeInternal would hide the remedy behind "internal error".
 		return connect.NewError(connect.CodeFailedPrecondition,
-			fmt.Errorf("%w%s", err, locationFix))
+			fmt.Errorf("%w%s", err, permissionFix()))
 
 	case errors.Is(err, capture.ErrUnsupported), errors.Is(err, survey.ErrNoScanner):
 		return connect.NewError(connect.CodeUnimplemented, err)
@@ -191,7 +220,21 @@ func scannedNetworkOf(n *wifi.ScannedNetwork) *surveyv1.ScannedNetwork {
 		SnrDb:           int32Of(n.SNR),
 		HtMode:          n.HTMode,
 		IsDfs:           n.IsDFS,
+		Associated:      n.Associated,
+		// Left nil when the AP advertised no BSS Load element: 0% is a real
+		// reading for an idle channel, so a client has to be able to tell the
+		// two apart.
+		ChannelUtilizationPercent: utilizationOf(n.ChannelUtilization),
 	}
+}
+
+// utilizationOf narrows an optional utilisation reading for the wire.
+func utilizationOf(percent *int) *int32 {
+	if percent == nil {
+		return nil
+	}
+	narrowed := int32Of(*percent)
+	return &narrowed
 }
 
 // ListSamples returns the points stored on a survey's active floor, in

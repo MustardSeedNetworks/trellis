@@ -227,10 +227,24 @@ is linked into `trellisd` today rather than split out.
 ## What is honest to claim
 
 - Coverage survey (RSSI, SNR, channel, band, width, security per BSS): **yes**,
-  macOS today, Linux and Windows once their backends land.
+  on all three platforms — the Linux (nl80211) and Windows (Native Wifi)
+  backends have landed.
 - Continuous capture while walking: **yes on macOS, at ~3–4 s per sample.** Not
   a fast continuous walk.
-- Channel utilisation, retries, airtime: **no**, on any platform, until Tier 2
-  exists.
+- Channel utilisation as *the AP advertises it* (BSS Load, element 11): **yes
+  on Linux and Windows**, which hand back raw information elements; **no on
+  macOS**, where CoreWLAN decodes the beacon for us and exposes no elements.
+  It is what the AP measured on its own channel, not what this adapter
+  measured, and it is absent whenever the AP does not send the element — so
+  "not reported" is a distinct answer from 0%, everywhere it is shown.
+- Channel utilisation *measured by this radio*, retries, airtime: **no**, on
+  any platform, until Tier 2 exists. An nl80211 survey dump would measure only
+  the channel the adapter is parked on, which says nothing about the rest of a
+  walk and has no equivalent on the other two platforms.
+- Which BSS this host is joined to: **yes on macOS** (CoreWLAN reports the
+  current network) and **on Linux** (nl80211 flags it on the scan dump
+  itself); **no on Windows**, whose current connection comes from
+  `WlanQueryInterface` rather than the BSS list and is not wired up — a
+  Windows live view lists the airspace without naming the joined BSS.
 - Anything requiring the radio to leave the network: **no**, and it would need
   to be an explicit mode rather than a background capability.

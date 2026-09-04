@@ -5,7 +5,10 @@ package survey_test
 import (
 	"context"
 	"errors"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
@@ -192,4 +195,92 @@ func TestCapturePointCancelledContext(t *testing.T) {
 	if got := len(stored.GetAllSamples()); got != 0 {
 		t.Errorf("samples recorded after cancellation = %d, want 0", got)
 	}
+}
+
+func TestScanReadsTheAirspaceWithoutRecordingIt(t *testing.T) {
+	t.Parallel()
+
+	scanner := &scriptedScanner{networks: airspace()}
+	mgr, id := startedSurvey(t, scanner)
+
+	networks, err := mgr.Scan(context.Background())
+	if err != nil {
+		t.Fatalf("Scan: %v", err)
+	}
+	if len(networks) != len(airspace()) {
+		t.Fatalf("networks = %d, want %d", len(networks), len(airspace()))
+	}
+	// Same order a stored point is aggregated into. The fixture is deliberately
+	// unsorted, so a missing sort cannot pass this.
+	for i := 1; i < len(networks); i++ {
+		if networks[i-1].Signal < networks[i].Signal {
+			t.Fatalf("networks are not strongest-first: %d dBm before %d dBm",
+				networks[i-1].Signal, networks[i].Signal)
+		}
+	}
+	// A live reading belongs to no survey. If it landed on the started one,
+	// walking a floor with the live view open would fill it with points nobody
+	// stood at.
+	s, err := mgr.GetSurvey(id)
+	if err != nil {
+		t.Fatalf("GetSurvey: %v", err)
+	}
+	if got := len(s.GetAllSamples()); got != 0 {
+		t.Errorf("survey holds %d samples after a live scan, want 0", got)
+	}
+}
+
+func TestScanWithoutARadio(t *testing.T) {
+	t.Parallel()
+
+	mgr := mustManager(t, t.TempDir(), nil, nil, nil, nil)
+	if _, err := mgr.Scan(context.Background()); !errors.Is(err, survey.ErrNoScanner) {
+		t.Fatalf("Scan without a scanner = %v, want ErrNoScanner", err)
+	}
+}
+
+// TestScanSerializesAdapterAccess pins the reason the live view and a walk can
+// both be open: there is one radio, and two overlapping scans on it would race
+// for the driver rather than queue.
+func TestScanSerializesAdapterAccess(t *testing.T) {
+	t.Parallel()
+
+	scanner := &overlapDetectingScanner{}
+	mgr, id := startedSurvey(t, scanner)
+
+	var wg sync.WaitGroup
+	for range 8 {
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			_, _ = mgr.Scan(context.Background())
+		}()
+		go func() {
+			defer wg.Done()
+			_, _ = mgr.CapturePoint(context.Background(), id, 1, 1)
+		}()
+	}
+	wg.Wait()
+
+	if overlaps := scanner.overlaps.Load(); overlaps != 0 {
+		t.Errorf("%d scans overlapped on the adapter, want 0", overlaps)
+	}
+}
+
+// overlapDetectingScanner records any scan that begins while another is still
+// running.
+type overlapDetectingScanner struct {
+	inFlight atomic.Int32
+	overlaps atomic.Int32
+}
+
+func (s *overlapDetectingScanner) Scan(context.Context) ([]wifi.ScannedNetwork, error) {
+	if s.inFlight.Add(1) > 1 {
+		s.overlaps.Add(1)
+	}
+	// A real scan blocks in the driver for seconds; this is long enough for a
+	// concurrent caller to be inside the window if nothing keeps it out.
+	time.Sleep(time.Millisecond)
+	s.inFlight.Add(-1)
+	return airspace(), nil
 }

@@ -36,14 +36,15 @@
     "page": "Loading…"
   },
   "nav": {
+    "analysis": "Analysis",
     "capacity": "Capacity",
     "capture": "Capture",
-    "analysis": "Analysis",
     "coverage": "Coverage",
     "deliver": "Deliver",
     "floors": "Floors",
     "import": "Import",
     "interference": "Interference",
+    "live": "Live",
     "reports": "Reports",
     "surveys": "Surveys"
   },
