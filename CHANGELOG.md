@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.23](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.22...v0.2.23) (2026-09-05)
+
+
+### Continuous Integration
+
+* retry a failed main run once so a flake cannot hold a release ([#319](https://github.com/MustardSeedNetworks/trellis/issues/319)) ([4a4d3fa](https://github.com/MustardSeedNetworks/trellis/commit/4a4d3fabd18e7ebbb1bc9eccc3fbb001690aba4e))
+
 ## [0.2.22](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.21...v0.2.22) (2026-09-05)
 
 
