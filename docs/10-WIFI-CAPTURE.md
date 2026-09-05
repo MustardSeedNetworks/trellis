@@ -155,6 +155,20 @@ Cached-only is not a free option: the cache is stale, and stays empty if nothing
 else on the host ever scans. This backend therefore reports `ErrPermission`
 rather than quietly serving the cache.
 
+The `.deb` and `.rpm` deliberately do **not** grant the capability
+(ADR-0007): a postinstall `setcap` would hand every local user the ability to
+reconfigure the host's network interfaces as a side effect of installing a
+survey tool. It is an explicit operator step on a host where that trade is
+acceptable —
+
+```
+sudo setcap cap_net_admin+ep /usr/bin/trellisd
+```
+
+— and without it Trellis still imports, analyses and reports; it just cannot
+trigger a sweep. Running `trellisd` under `sudo` is the other way, at the cost
+of writing surveys into root's data directory.
+
 **One implementation note that cost real time.** The scan-complete notification
 must be received on a *second* netlink socket. Multicast notifications carry
 sequence number 0, so a group joined on the socket that sent the request

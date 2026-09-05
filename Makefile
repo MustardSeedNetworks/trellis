@@ -1,4 +1,4 @@
-.PHONY: generate generate-ts build build-e2e ui-build-hash lint vet test fmt-check check-stale-tests
+.PHONY: generate generate-ts ui build build-e2e ui-build-hash lint vet test fmt-check check-stale-tests packages
 
 # Universal Build Contract: every binary carries version, commit, build time
 # and the md5 of the embedded UI, injected into internal/version. The hash is
@@ -68,3 +68,26 @@ fmt-check:
 		echo "$$fmt_out"; \
 		exit 1; \
 	fi
+
+# Vite writes straight into internal/api/ui/, which Go embeds — no copy step
+# (Universal Build Contract). `packages` needs it because goreleaser's before
+# hook refuses to build a binary with an empty UI.
+ui:
+	cd ui && npm ci && npm run build
+
+# Local .deb/.rpm for validating an install on the dev servers. The published
+# packages come from release.yml through goreleaser-cross; this is the same
+# .goreleaser.yml, snapshot-versioned, with signing and SBOMs skipped because
+# both need CI's OIDC identity and syft. Artifacts land in dist/.
+# The darwin target is the only cgo one (CoreWLAN, ADR-0006). CI cross-compiles
+# it with osxcross inside goreleaser-cross; a Mac has clang already, and a Linux
+# host has neither, so there the darwin build is skipped and the deb/rpm this
+# target exists for are still produced.
+ifeq ($(shell uname -s),Darwin)
+PACKAGE_ENV = TRELLIS_DARWIN_CC=clang TRELLIS_DARWIN_CXX=clang++
+else
+PACKAGE_ENV = TRELLIS_SKIP_DARWIN=true
+endif
+
+packages: ui
+	$(PACKAGE_ENV) UI_BUILD_HASH=$(UI_BUILD_HASH) goreleaser release --snapshot --clean --skip=sign,sbom,publish

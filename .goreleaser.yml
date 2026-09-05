@@ -15,14 +15,14 @@
 #   - cosign keyless signing of every artifact
 #   - syft SBOM per archive
 #   - SHA-256 checksums
+#   - .deb/.rpm packages via nfpm — the binary, the licence and a systemd
+#     *user* unit that ships disabled. Per ADR-0007 there is no system
+#     service, no service user, no /etc config and no port: trellisd serves
+#     one operator on loopback and keeps surveys in their own XDG data
+#     directory. That is why this block looks nothing like seed/stem/niac's.
+#     SBOMs cover the packages as well as the archives.
 #
 # Deliberately NOT covered (unlike stem/seed/niac):
-#   - .deb/.rpm packages via nfpm — trellisd has no deploy/ directory: no
-#     systemd unit, no packaged config, no pre/postinstall scripts. Trellis
-#     is a loopback-only, no-auth, no-TLS daemon (see cmd/trellisd/main.go);
-#     inventing a systemd service and package metadata for it would be
-#     infrastructure the product doesn't have yet. Archives are the
-#     published artifact until that changes.
 #   - Native C dataplane — Trellis has no C dataplane.
 #   - The signed macOS .app — deploy/macos/build-app.sh builds and signs it.
 #     Only a signed, entitled bundle can read Wi-Fi network names; the archive
@@ -83,6 +83,9 @@ builds:
     main: ./cmd/trellisd
     mod_timestamp: "{{ .CommitTimestamp }}"
     binary: trellisd
+    # Set only by `make packages` on a Linux host, which has no macOS toolchain
+    # and wants the deb/rpm. The release pipeline never sets it.
+    skip: '{{ envOrDefault "TRELLIS_SKIP_DARWIN" "false" }}'
     env:
       - CGO_ENABLED=1
     goos: [darwin]
@@ -94,12 +97,15 @@ builds:
     ldflags: *ldflags
     # macOS cross-compile via osxcross (bundled in goreleaser-cross). The SDK
     # carries CoreWLAN and CoreLocation; the CC paths are stable in the image.
+    # On a Mac there is no osxcross and no need for one — the Makefile's
+    # `packages` target points these at the native clang so a developer can
+    # build the same artifacts release.yml will.
     overrides:
       - goos: darwin
         goarch: arm64
         env:
-          - CC=oa64-clang
-          - CXX=oa64-clang++
+          - 'CC={{ envOrDefault "TRELLIS_DARWIN_CC" "oa64-clang" }}'
+          - 'CXX={{ envOrDefault "TRELLIS_DARWIN_CXX" "oa64-clang++" }}'
 
   - id: trellis-windows
     main: ./cmd/trellisd
@@ -139,9 +145,66 @@ checksum:
   name_template: "checksums.txt"
   algorithm: sha256
 
+nfpms:
+  - id: linux-packages
+    ids: [trellis-linux-amd64, trellis-linux-arm64]
+    package_name: trellis
+    vendor: Mustard Seed Networks
+    homepage: https://github.com/MustardSeedNetworks/trellis
+    maintainer: Kris Armstrong <kris.armstrong@icloud.com>
+    description: |
+      Trellis - Wi-Fi survey and planning by Mustard Seed Networks
+      .
+      trellisd walks a floor with a supported adapter, imports surveys captured
+      by other tools, and renders coverage heatmaps and PDF reports. It serves
+      its UI on loopback for the operator who launched it.
+    license: BUSL-1.1
+    section: net
+    priority: optional
+    formats:
+      - deb
+      - rpm
+    file_name_template: >-
+      {{- if eq .ConventionalExtension ".deb" -}}
+        trellis_{{ .Version }}_{{ .Arch }}
+      {{- else if eq .ConventionalExtension ".rpm" -}}
+        {{- $rpmarch := .Arch -}}
+        {{- if eq .Arch "amd64" }}{{ $rpmarch = "x86_64" }}{{ end -}}
+        {{- if eq .Arch "arm64" }}{{ $rpmarch = "aarch64" }}{{ end -}}
+        trellis-{{ .Version }}-1.{{ $rpmarch }}
+      {{- end -}}
+    # No dependency on systemd: the unit below is a user unit that ships
+    # disabled, so a machine without systemd installs the binary and loses
+    # nothing it would otherwise have had.
+    contents:
+      - src: ./deploy/systemd/trellisd.user.service
+        dst: /usr/lib/systemd/user/trellisd.service
+        file_info:
+          mode: 0o644
+      - src: ./LICENSE
+        dst: /usr/share/doc/trellis/LICENSE
+        file_info:
+          mode: 0o644
+      - src: ./docs/10-WIFI-CAPTURE.md
+        dst: /usr/share/doc/trellis/WIFI-CAPTURE.md
+        file_info:
+          mode: 0o644
+    # No scripts. Nothing is enabled, started, chowned or created at install
+    # time (ADR-0007): the package owns nothing outside /usr, which is also
+    # why remove and purge are the same operation and no survey is ever
+    # deleted by one.
+    bindir: /usr/bin
+
 sboms:
   - id: archives-sbom
     artifacts: archive
+    documents:
+      - "{{ .ArtifactName }}.sbom.json"
+  # .deb/.rpm are `package` artifacts, not `archive` — without this block the
+  # native packages, the ones people actually install, would ship with no bill
+  # of materials.
+  - id: packages-sbom
+    artifacts: package
     documents:
       - "{{ .ArtifactName }}.sbom.json"
 

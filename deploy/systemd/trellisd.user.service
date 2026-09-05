@@ -1,0 +1,41 @@
+# A systemd *user* unit, per ADR-0007: trellisd serves one operator on loopback
+# and keeps their surveys in their own XDG data directory, so it runs as them
+# and dies with their session. The package ships this file but does not enable
+# it — `systemctl --user enable --now trellisd` is the operator's opt-in.
+[Unit]
+Description=Trellis Wi-Fi survey daemon (user session)
+Documentation=https://github.com/MustardSeedNetworks/trellis
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/trellisd
+Restart=on-failure
+RestartSec=5
+
+# Hardening. There is no service user to isolate the daemon from, so these
+# limit what a compromised trellisd could reach in the operator's own session.
+# ProtectHome is deliberately absent: the survey store lives under $HOME.
+#
+# ProtectKernelTunables and ProtectKernelModules are absent for a measured
+# reason, not an oversight: together they make a *user* unit fail to start with
+# 218/CAPABILITIES ("Failed to drop capabilities"), because the pair implies a
+# bounding-set drop an unprivileged user manager may not perform. Verified on
+# dev-srv-ubuntu, systemd 259 — either alone starts, both together do not. They
+# would buy nothing here anyway: a process in a user session cannot load a
+# module or write a kernel tunable to begin with.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectControlGroups=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+# AF_NETLINK is the Wi-Fi scan path: internal/capture speaks nl80211 over a
+# generic netlink socket. Without it the daemon still serves imported surveys
+# and reports, and every scan fails.
+LimitNOFILE=8192
+
+[Install]
+WantedBy=default.target
