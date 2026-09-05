@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.22](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.21...v0.2.22) (2026-09-05)
+
+
+### Continuous Integration
+
+* give release-please's gh calls a repository ([#317](https://github.com/MustardSeedNetworks/trellis/issues/317)) ([cc044a7](https://github.com/MustardSeedNetworks/trellis/commit/cc044a7b3f55e95d8c47a19726f8144ae16ab2a8)), closes [#316](https://github.com/MustardSeedNetworks/trellis/issues/316)
+
 ## [0.2.21](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.20...v0.2.21) (2026-09-05)
 
 
