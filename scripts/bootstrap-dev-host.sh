@@ -58,13 +58,14 @@ if ! goreleaser --version 2>/dev/null | grep -q "GitVersion:    ${GORELEASER_VER
   sudo install -m0755 goreleaser /usr/local/bin/goreleaser
 fi
 
-# nfpm writes both formats itself, so building needs no packaging tools — but
-# validating an install does, and each host should be able to at least inspect
-# the other's format.
+# make drives every documented build; a minimal Fedora has neither it nor dpkg.
+# nfpm writes both package formats itself, so building needs no packaging tools
+# — but validating an install does, and each host should be able to at least
+# inspect the other's format.
 if command -v dnf >/dev/null; then
-  sudo dnf install -y dpkg >/dev/null
+  sudo dnf install -y make dpkg >/dev/null
 else
-  sudo apt-get install -y rpm >/dev/null
+  sudo apt-get install -y make rpm >/dev/null
 fi
 
 echo "node $(node --version) · npm $(npm --version) · go $(go version | awk '{print $3}') · goreleaser $(goreleaser --version | awk '/GitVersion/{print $2}')"
