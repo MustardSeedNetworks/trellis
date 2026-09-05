@@ -18,6 +18,19 @@ RestartSec=5
 # limit what a compromised trellisd could reach in the operator's own session.
 # ProtectHome is deliberately absent: the survey store lives under $HOME.
 #
+# NoNewPrivileges stays despite the documented `setcap cap_net_admin+ep`
+# opt-in: measured on this unit, the daemon still comes up with CAP_NET_ADMIN
+# in CapEff (0x1000) while /proc/<pid>/status reports NoNewPrivs 1, on both
+# Ubuntu 7.0 and Fedora 7.1 kernels. Do not remove it on the theory that it
+# blocks the capability — it does not, and the check is one command:
+#   grep -E 'NoNewPrivs|CapEff' /proc/$(systemctl --user show -p MainPID --value trellisd)/status
+#
+# ProtectSystem=strict remounts / read-only and is really applied here (a probe
+# unit sees `ro` on / and cannot write /usr), but a user manager keeps the
+# operator's home writable — so the survey store needs no ReadWritePaths, which
+# was verified by creating a survey through the packaged unit and reading it
+# back after a restart.
+#
 # ProtectKernelTunables and ProtectKernelModules are absent for a measured
 # reason, not an oversight: together they make a *user* unit fail to start with
 # 218/CAPABILITIES ("Failed to drop capabilities"), because the pair implies a
