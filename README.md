@@ -38,6 +38,26 @@ React+TS UI ──Connect/gRPC + binary grids──► Go core ──shmem/Arrow
                                                └─ Reporter (Go, pure-Go PDF via fpdf; headless Chromium planned)
 ```
 
+## Install
+
+Linux packages carry the daemon and a systemd **user** unit that ships
+disabled — Trellis serves the one operator who runs it, on loopback, storing
+surveys in their own data directory, so there is no system service and no
+service user ([ADR-0007](docs/adr/ADR-0007-linux-packaging-and-service-contract.md)).
+
+```
+sudo apt install ./trellis_<version>_amd64.deb     # or: sudo dnf install ./trellis-<version>-1.x86_64.rpm
+trellisd                                            # or, to have it come back after a reboot:
+systemctl --user enable --now trellisd
+```
+
+Then open <http://127.0.0.1:8446>. Triggering a Wi-Fi scan on Linux needs one
+more opt-in step — see [docs/10-WIFI-CAPTURE.md](docs/10-WIFI-CAPTURE.md).
+
+macOS runs from the signed bundle built by `deploy/macos/build-app.sh`; only a
+signed, entitled bundle can read Wi-Fi network names. Windows ships as an
+archive.
+
 ## Docs (read in order)
 | Doc | What |
 |---|---|
