@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.21](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.20...v0.2.21) (2026-09-05)
+
+
+### Bug Fixes
+
+* **deps:** update dependency react-router to v8.3.1 ([#312](https://github.com/MustardSeedNetworks/trellis/issues/312)) ([6ae0d49](https://github.com/MustardSeedNetworks/trellis/commit/6ae0d493a8948f73fb225456e3b50a4d32f98b77))
+
+
+### Continuous Integration
+
+* tell a registry outage apart from a vulnerability in npm audit ([#315](https://github.com/MustardSeedNetworks/trellis/issues/315)) ([84b7b91](https://github.com/MustardSeedNetworks/trellis/commit/84b7b91a6ab74d51221bb9fd852e3b3035ee3a24)), closes [#314](https://github.com/MustardSeedNetworks/trellis/issues/314)
+
 ## [0.2.20](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.19...v0.2.20) (2026-09-04)
 
 
