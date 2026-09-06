@@ -60,6 +60,35 @@ func (h *SurveyServiceHandler) ImportAirMapper(
 	}), nil
 }
 
+// ImportAirMagnet imports an AirMagnet Survey (.svd) export into a new stored
+// survey.
+func (h *SurveyServiceHandler) ImportAirMagnet(
+	_ context.Context,
+	req *connect.Request[surveyv1.ImportAirMagnetRequest],
+) (*connect.Response[surveyv1.ImportAirMagnetResponse], error) {
+	name := req.Msg.GetName()
+	if name == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("name is required"))
+	}
+	data := req.Msg.GetSvdData()
+	if len(data) == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("svd_data is required"))
+	}
+
+	svy, err := h.manager.ImportAirMagnet(name, data)
+	if err != nil {
+		// Every parse failure here is a statement about the file the caller
+		// sent — the wrong format, a planner simulation, a layout with no
+		// position column — so it belongs to the request, and the message
+		// carries the reason to the operator uploading it.
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
+	return connect.NewResponse(&surveyv1.ImportAirMagnetResponse{
+		Survey: h.surveySummary(svy),
+	}), nil
+}
+
 // ListSurveys returns summaries of every stored survey.
 func (h *SurveyServiceHandler) ListSurveys(
 	_ context.Context,

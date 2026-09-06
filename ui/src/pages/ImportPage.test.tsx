@@ -1,5 +1,5 @@
 /**
- * Import — the AirMapper ingest page.
+ * Import — the AirMapper and AirMagnet ingest page.
  *
  * The capability existed before the page did: a button in the Surveys rail
  * that asked for the survey name with window.prompt. These tests pin what the
@@ -14,10 +14,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ImportPage } from './ImportPage';
 
 const importAirMapper = vi.fn();
+const importAirMagnet = vi.fn();
 
 vi.mock('@/lib/client', () => ({
   surveyClient: {
     importAirMapper: (req: unknown) => importAirMapper(req),
+    importAirMagnet: (req: unknown) => importAirMagnet(req),
   },
 }));
 
@@ -43,7 +45,7 @@ function rollup(): HTMLElement {
   return el;
 }
 
-/** A .amp file the browser will hand to the input. */
+/** A survey file the browser will hand to the input. */
 function ampFile(name = 'office-3f.amp') {
   return new File([new Uint8Array([1, 2, 3])], name, { type: 'application/octet-stream' });
 }
@@ -65,6 +67,10 @@ function clickImport() {
 
 describe('ImportPage', () => {
   beforeEach(() => {
+    importAirMagnet.mockReset();
+    importAirMagnet.mockResolvedValue({
+      survey: { id: 'svy-2', name: 'lab', status: 'ready', sampleCount: 96, floorCount: 1 },
+    });
     importAirMapper.mockReset();
     importAirMapper.mockResolvedValue({
       survey: { id: 'svy-1', name: 'office-3f', status: 'ready', sampleCount: 412, floorCount: 1 },
@@ -125,6 +131,33 @@ describe('ImportPage', () => {
     // An import that stored nothing still "succeeds"; the counts are what say
     // whether it was worth anything.
     expect(rollup()).toHaveTextContent('412');
+  });
+
+  // The two formats are one act to the operator, so the extension — which they
+  // already chose in the file dialog — picks the call rather than a second
+  // control asking which vendor wrote the file in front of them.
+  it('sends an .svd to the AirMagnet import, not the AirMapper one', async () => {
+    renderPage();
+
+    choose('vofi-walk.svd');
+    await screen.findByLabelText(/survey name/i);
+    clickImport();
+
+    await waitFor(() => expect(importAirMagnet).toHaveBeenCalledTimes(1));
+    const [req] = importAirMagnet.mock.calls[0] as [{ name: string; svdData: Uint8Array }];
+    expect(req.name).toBe('vofi-walk');
+    expect(Array.from(req.svdData)).toEqual([1, 2, 3]);
+    expect(importAirMapper).not.toHaveBeenCalled();
+  });
+
+  // An .svd holds measurements and no plan, and a survey that arrives with
+  // nothing behind its points looks broken unless the page said so first.
+  it('warns that an AirMagnet export brings no floor plan, before importing', async () => {
+    renderPage();
+
+    choose('vofi-walk.svd');
+
+    await waitFor(() => expect(rollup()).toHaveTextContent(/carries no floor plan/i));
   });
 
   // A failed import that renders as a calm empty form reads as "nothing

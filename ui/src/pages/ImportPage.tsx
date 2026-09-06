@@ -6,7 +6,7 @@ import { surveyClient } from '@/lib/client';
 import { type RollupState, StatusRollup } from '@/ui/StatusRollup';
 
 /**
- * Import — AirMapper ingest.
+ * Import — AirMapper and AirMagnet ingest.
  *
  * The capability shipped before the page did, as a button in the Surveys rail
  * that collected the survey name with window.prompt. A prompt is the wrong
@@ -17,6 +17,11 @@ import { type RollupState, StatusRollup } from '@/ui/StatusRollup';
  *
  * The rollup leads for the same reason it does on Surveys — an import that
  * fails silently and leaves a calm empty form reads as "nothing happened".
+ *
+ * The two formats share the page because they are the same act to the
+ * operator: choose the file another tool wrote, name the survey, import. The
+ * file's extension picks the service call, so nothing asks the operator which
+ * vendor wrote a file they are looking at in a file dialog.
  */
 export function ImportPage() {
   const { t } = useTranslation(['common', 'pages']);
@@ -26,8 +31,10 @@ export function ImportPage() {
   const [name, setName] = useState('');
 
   const importMutation = useMutation({
-    mutationFn: async ({ surveyName, ampData }: { surveyName: string; ampData: Uint8Array }) =>
-      surveyClient.importAirMapper({ name: surveyName, ampData }),
+    mutationFn: async ({ surveyName, data }: { surveyName: string; data: Uint8Array }) =>
+      isAirMagnet(file)
+        ? surveyClient.importAirMagnet({ name: surveyName, svdData: data })
+        : surveyClient.importAirMapper({ name: surveyName, ampData: data }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['surveys'] });
     },
@@ -42,7 +49,7 @@ export function ImportPage() {
     setFile(chosen);
     // Proposed, not imposed — the operator can rename before committing, which
     // is the whole reason this is a field and not a prompt.
-    setName(chosen.name.replace(/\.amp$/i, ''));
+    setName(chosen.name.replace(/\.(amp|svd)$/i, ''));
   }
 
   async function handleImport() {
@@ -50,7 +57,7 @@ export function ImportPage() {
       return;
     }
     const buffer = await file.arrayBuffer();
-    importMutation.mutate({ surveyName: name.trim(), ampData: new Uint8Array(buffer) });
+    importMutation.mutate({ surveyName: name.trim(), data: new Uint8Array(buffer) });
   }
 
   const rollup = describeImport(
@@ -77,7 +84,7 @@ export function ImportPage() {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".amp"
+          accept=".amp,.svd"
           onChange={handleFileChange}
           className="hidden"
           data-testid="amp-file-input"
@@ -206,5 +213,16 @@ function describeImport(
       body: t('pages:import.needsNameBody', { chosen }),
     };
   }
-  return { state: 'unknown', headline: t('pages:import.ready'), body: chosen };
+  const ready = [chosen, isAirMagnet(file) ? t('pages:import.noPlanInExport') : '']
+    .filter(Boolean)
+    .join(' ');
+  return { state: 'unknown', headline: t('pages:import.ready'), body: ready };
+}
+
+/**
+ * isAirMagnet reads the vendor off the extension. It is what the operator
+ * already chose in the file dialog, so asking them again would be asking twice.
+ */
+function isAirMagnet(file: File | undefined): boolean {
+  return file !== undefined && /\.svd$/i.test(file.name);
 }

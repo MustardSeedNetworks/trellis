@@ -44,6 +44,9 @@ const (
 	// SurveyServiceImportAirMapperProcedure is the fully-qualified name of the SurveyService's
 	// ImportAirMapper RPC.
 	SurveyServiceImportAirMapperProcedure = "/trellis.survey.v1.SurveyService/ImportAirMapper"
+	// SurveyServiceImportAirMagnetProcedure is the fully-qualified name of the SurveyService's
+	// ImportAirMagnet RPC.
+	SurveyServiceImportAirMagnetProcedure = "/trellis.survey.v1.SurveyService/ImportAirMagnet"
 	// SurveyServiceListSurveysProcedure is the fully-qualified name of the SurveyService's ListSurveys
 	// RPC.
 	SurveyServiceListSurveysProcedure = "/trellis.survey.v1.SurveyService/ListSurveys"
@@ -114,6 +117,10 @@ type SurveyServiceClient interface {
 	// ImportAirMapper imports an AirMapper (.amp) archive into a new stored
 	// survey.
 	ImportAirMapper(context.Context, *connect.Request[v1.ImportAirMapperRequest]) (*connect.Response[v1.ImportAirMapperResponse], error)
+	// ImportAirMagnet imports an AirMagnet Survey (.svd) export into a new
+	// stored survey. Unlike an AirMapper archive it carries no floor plan: the
+	// plan is a separate file in the AirMagnet project directory.
+	ImportAirMagnet(context.Context, *connect.Request[v1.ImportAirMagnetRequest]) (*connect.Response[v1.ImportAirMagnetResponse], error)
 	// ListSurveys returns summaries of every stored survey.
 	ListSurveys(context.Context, *connect.Request[v1.ListSurveysRequest]) (*connect.Response[v1.ListSurveysResponse], error)
 	// GetSurvey returns a single stored survey by ID.
@@ -217,6 +224,12 @@ func NewSurveyServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			httpClient,
 			baseURL+SurveyServiceImportAirMapperProcedure,
 			connect.WithSchema(surveyServiceMethods.ByName("ImportAirMapper")),
+			connect.WithClientOptions(opts...),
+		),
+		importAirMagnet: connect.NewClient[v1.ImportAirMagnetRequest, v1.ImportAirMagnetResponse](
+			httpClient,
+			baseURL+SurveyServiceImportAirMagnetProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("ImportAirMagnet")),
 			connect.WithClientOptions(opts...),
 		),
 		listSurveys: connect.NewClient[v1.ListSurveysRequest, v1.ListSurveysResponse](
@@ -357,6 +370,7 @@ func NewSurveyServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 // surveyServiceClient implements SurveyServiceClient.
 type surveyServiceClient struct {
 	importAirMapper        *connect.Client[v1.ImportAirMapperRequest, v1.ImportAirMapperResponse]
+	importAirMagnet        *connect.Client[v1.ImportAirMagnetRequest, v1.ImportAirMagnetResponse]
 	listSurveys            *connect.Client[v1.ListSurveysRequest, v1.ListSurveysResponse]
 	getSurvey              *connect.Client[v1.GetSurveyRequest, v1.GetSurveyResponse]
 	deleteSurvey           *connect.Client[v1.DeleteSurveyRequest, v1.DeleteSurveyResponse]
@@ -384,6 +398,11 @@ type surveyServiceClient struct {
 // ImportAirMapper calls trellis.survey.v1.SurveyService.ImportAirMapper.
 func (c *surveyServiceClient) ImportAirMapper(ctx context.Context, req *connect.Request[v1.ImportAirMapperRequest]) (*connect.Response[v1.ImportAirMapperResponse], error) {
 	return c.importAirMapper.CallUnary(ctx, req)
+}
+
+// ImportAirMagnet calls trellis.survey.v1.SurveyService.ImportAirMagnet.
+func (c *surveyServiceClient) ImportAirMagnet(ctx context.Context, req *connect.Request[v1.ImportAirMagnetRequest]) (*connect.Response[v1.ImportAirMagnetResponse], error) {
+	return c.importAirMagnet.CallUnary(ctx, req)
 }
 
 // ListSurveys calls trellis.survey.v1.SurveyService.ListSurveys.
@@ -501,6 +520,10 @@ type SurveyServiceHandler interface {
 	// ImportAirMapper imports an AirMapper (.amp) archive into a new stored
 	// survey.
 	ImportAirMapper(context.Context, *connect.Request[v1.ImportAirMapperRequest]) (*connect.Response[v1.ImportAirMapperResponse], error)
+	// ImportAirMagnet imports an AirMagnet Survey (.svd) export into a new
+	// stored survey. Unlike an AirMapper archive it carries no floor plan: the
+	// plan is a separate file in the AirMagnet project directory.
+	ImportAirMagnet(context.Context, *connect.Request[v1.ImportAirMagnetRequest]) (*connect.Response[v1.ImportAirMagnetResponse], error)
 	// ListSurveys returns summaries of every stored survey.
 	ListSurveys(context.Context, *connect.Request[v1.ListSurveysRequest]) (*connect.Response[v1.ListSurveysResponse], error)
 	// GetSurvey returns a single stored survey by ID.
@@ -600,6 +623,12 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 		SurveyServiceImportAirMapperProcedure,
 		svc.ImportAirMapper,
 		connect.WithSchema(surveyServiceMethods.ByName("ImportAirMapper")),
+		connect.WithHandlerOptions(opts...),
+	)
+	surveyServiceImportAirMagnetHandler := connect.NewUnaryHandler(
+		SurveyServiceImportAirMagnetProcedure,
+		svc.ImportAirMagnet,
+		connect.WithSchema(surveyServiceMethods.ByName("ImportAirMagnet")),
 		connect.WithHandlerOptions(opts...),
 	)
 	surveyServiceListSurveysHandler := connect.NewUnaryHandler(
@@ -738,6 +767,8 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 		switch r.URL.Path {
 		case SurveyServiceImportAirMapperProcedure:
 			surveyServiceImportAirMapperHandler.ServeHTTP(w, r)
+		case SurveyServiceImportAirMagnetProcedure:
+			surveyServiceImportAirMagnetHandler.ServeHTTP(w, r)
 		case SurveyServiceListSurveysProcedure:
 			surveyServiceListSurveysHandler.ServeHTTP(w, r)
 		case SurveyServiceGetSurveyProcedure:
@@ -793,6 +824,10 @@ type UnimplementedSurveyServiceHandler struct{}
 
 func (UnimplementedSurveyServiceHandler) ImportAirMapper(context.Context, *connect.Request[v1.ImportAirMapperRequest]) (*connect.Response[v1.ImportAirMapperResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.ImportAirMapper is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) ImportAirMagnet(context.Context, *connect.Request[v1.ImportAirMagnetRequest]) (*connect.Response[v1.ImportAirMagnetResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.ImportAirMagnet is not implemented"))
 }
 
 func (UnimplementedSurveyServiceHandler) ListSurveys(context.Context, *connect.Request[v1.ListSurveysRequest]) (*connect.Response[v1.ListSurveysResponse], error) {
