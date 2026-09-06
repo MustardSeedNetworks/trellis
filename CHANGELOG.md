@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.2.26](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.25...v0.2.26) (2026-09-06)
+
+
+### Bug Fixes
+
+* **import:** import an AirMapper archive that has no .serial member ([#335](https://github.com/MustardSeedNetworks/trellis/issues/335)) ([086d316](https://github.com/MustardSeedNetworks/trellis/commit/086d316bcde55cb978a86e6889ad59af7c3e3c9a))
+
+
+### Continuous Integration
+
+* run the pinned golangci-lint instead of whatever is on PATH ([#332](https://github.com/MustardSeedNetworks/trellis/issues/332)) ([53100c6](https://github.com/MustardSeedNetworks/trellis/commit/53100c645c430751953a4cb49913f73e56769efb))
+
+
+### Miscellaneous
+
+* **deps:** update dependency @biomejs/biome to v2.5.12 ([#334](https://github.com/MustardSeedNetworks/trellis/issues/334)) ([56f1aac](https://github.com/MustardSeedNetworks/trellis/commit/56f1aac120e8e6eba79b8273a7b722dd0bebd024))
+
 ## [0.2.25](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.24...v0.2.25) (2026-09-06)
 
 
