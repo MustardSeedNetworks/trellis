@@ -61,6 +61,37 @@ func svdCorpus(t *testing.T) (fs.FS, []string) {
 	return root, files
 }
 
+// TestParseAirMagnetReadsTheAPPlacements is separate from the survey walk
+// because it failed silently: AP rows carry a "$," prefix that shifted every
+// field by one, so every placement in the corpus parsed to nothing and the
+// importer stored an empty list without complaining.
+func TestParseAirMagnetReadsTheAPPlacements(t *testing.T) {
+	root, files := svdCorpus(t)
+	withAPs := 0
+	for _, path := range files {
+		data, err := fs.ReadFile(root, path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		file, err := survey.ParseAirMagnetSVD(data)
+		if err != nil {
+			continue // planner simulations are refused by design
+		}
+		for _, ap := range file.APs {
+			if ap.X == 0 && ap.Y == 0 {
+				t.Errorf("%s: an AP placed at the origin — the row was not read", path)
+			}
+		}
+		if len(file.APs) > 0 {
+			withAPs++
+		}
+	}
+	if withAPs == 0 {
+		t.Error("not one file in the corpus yielded an AP placement")
+	}
+	t.Logf("%d of %d files carry AP placements", withAPs, len(files))
+}
+
 func TestParseAirMagnetReadsTheVendorCorpus(t *testing.T) {
 	root, files := svdCorpus(t)
 	for _, path := range files {
@@ -107,8 +138,21 @@ func TestParseAirMagnetReadsTheVendorCorpus(t *testing.T) {
 				t.Errorf("parsed only %d observations from %d rows — too many dropped",
 					observations, want)
 			}
-			t.Logf("%s %s: %d points, %d observations, %dx%d",
-				file.Type, file.AppVersion, len(file.Points), observations, file.Width, file.Height)
+			// Every point has to be inside the survey, and a coordinate is a
+			// position in the file's own units — never a timestamp. Reading an
+			// event row as a measurement produced exactly that, and only the
+			// store's coordinate constraint caught it, on import, after the
+			// parser had reported success.
+			const absurdCoordinate = 100000
+			for _, p := range file.Points {
+				if p.X < 0 || p.Y < 0 || p.X > absurdCoordinate || p.Y > absurdCoordinate {
+					t.Fatalf("point at (%d,%d) is not a position on a floor", p.X, p.Y)
+				}
+			}
+
+			t.Logf("%s %s: %d points, %d observations, %d APs, %dx%d",
+				file.Type, file.AppVersion, len(file.Points), observations,
+				len(file.APs), file.Width, file.Height)
 		})
 	}
 }

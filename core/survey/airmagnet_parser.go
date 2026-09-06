@@ -41,6 +41,10 @@ const (
 	airMagnetMaxRows = 1 << 20
 
 	airMagnetBanner = "@AirMagnet Survey"
+
+	// Row prefixes. A measurement row carries none.
+	apRowPrefix    = "$,"
+	eventRowPrefix = "%,"
 )
 
 // AirMagnetFile is one parsed .svd.
@@ -97,12 +101,20 @@ func ParseAirMagnetSVD(data []byte) (*AirMagnetFile, error) {
 	}
 
 	file := &AirMagnetFile{}
-	// A file is a sequence of sections: the measurements first, then any number
-	// of "AP Original Configuration" sections, each introduced by its own
-	// column header. measurement holds the first header, so a later section
-	// cannot silently redefine what a measurement row means.
+	// A file is a sequence of sections: the measurements first, then whatever
+	// that survey type also recorded — a voice survey adds a roaming-event log
+	// and a phone list, and most files end with one or more "AP Original
+	// Configuration" sections. Each section has its own column header, and
+	// measurement holds the first one so a later section cannot redefine what a
+	// measurement row means.
+	//
+	// Rows say which section they belong to with a one-character prefix, which
+	// is what makes this safe to read in one pass: bare rows are measurements,
+	// "$" is an AP placement, "%" is an event. A row whose prefix this parser
+	// does not know is skipped rather than guessed at — reading an event row as
+	// a measurement put a survey point at the event's timestamp, which the
+	// store's coordinate constraint refused, taking the whole import with it.
 	var measurement, section map[string]int
-	inAPSection := false
 	rows := 0
 
 	scanner := bufio.NewScanner(strings.NewReader(text))
@@ -125,18 +137,32 @@ func ParseAirMagnetSVD(data []byte) (*AirMagnetFile, error) {
 				}
 				continue
 			}
-			inAPSection = strings.Contains(body, "AP Original Configuration")
 			file.readMetadata(body)
 
-		case section == nil:
+		case strings.HasPrefix(line, apRowPrefix):
+			// The AP header names its columns from the prefix onwards, so the
+			// prefix itself occupies no column and is dropped before the row is
+			// read. Keeping it would put "$" where Xpos should be, which is how
+			// every AP placement in the reference corpus was silently lost.
+			file.appendAP(splitAirMagnetRow(line)[1:], section)
+
+		case strings.HasPrefix(line, eventRowPrefix):
+			// A roaming event: when the client moved between APs, not where a
+			// measurement was taken. Nothing here consumes them yet.
+			continue
+
+		case measurement == nil:
 			// A merged export lists its source files as bare lines under
 			// "#Merged Source Data Files:", before any column header. They are
 			// metadata, not measurements, and a parser that treats an
 			// unexpected line as a row would place a survey point from them.
 			continue
 
-		case inAPSection:
-			file.appendAP(splitAirMagnetRow(line), section)
+		case !sameColumns(section, measurement):
+			// An unprefixed row under a later section's header — a voice
+			// survey's phone list, for instance. It is not a measurement and
+			// this parser has nothing to do with it.
+			continue
 
 		default:
 			if rows++; rows > airMagnetMaxRows {
@@ -253,6 +279,20 @@ func (f *AirMagnetFile) appendRow(fields []string, columns map[string]int) {
 	f.Points = append(f.Points, AirMagnetPoint{
 		X: x, Y: y, Observed: observed, Networks: []*wifi.ScannedNetwork{network},
 	})
+}
+
+// sameColumns says whether two section headers are the one header, which is
+// how an unprefixed row is told from the measurements it follows.
+func sameColumns(a, b map[string]int) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for name, i := range a {
+		if j, ok := b[name]; !ok || i != j {
+			return false
+		}
+	}
+	return true
 }
 
 // appendAP records one access-point placement from a configuration section.
