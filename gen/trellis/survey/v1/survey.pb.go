@@ -243,6 +243,102 @@ func (x *ImportAirMapperResponse) GetSurvey() *SurveySummary {
 	return nil
 }
 
+type ImportAirMagnetRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	SvdData       []byte                 `protobuf:"bytes,2,opt,name=svd_data,json=svdData,proto3" json:"svd_data,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ImportAirMagnetRequest) Reset() {
+	*x = ImportAirMagnetRequest{}
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ImportAirMagnetRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ImportAirMagnetRequest) ProtoMessage() {}
+
+func (x *ImportAirMagnetRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ImportAirMagnetRequest.ProtoReflect.Descriptor instead.
+func (*ImportAirMagnetRequest) Descriptor() ([]byte, []int) {
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ImportAirMagnetRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *ImportAirMagnetRequest) GetSvdData() []byte {
+	if x != nil {
+		return x.SvdData
+	}
+	return nil
+}
+
+type ImportAirMagnetResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Survey        *SurveySummary         `protobuf:"bytes,1,opt,name=survey,proto3" json:"survey,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ImportAirMagnetResponse) Reset() {
+	*x = ImportAirMagnetResponse{}
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ImportAirMagnetResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ImportAirMagnetResponse) ProtoMessage() {}
+
+func (x *ImportAirMagnetResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ImportAirMagnetResponse.ProtoReflect.Descriptor instead.
+func (*ImportAirMagnetResponse) Descriptor() ([]byte, []int) {
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ImportAirMagnetResponse) GetSurvey() *SurveySummary {
+	if x != nil {
+		return x.Survey
+	}
+	return nil
+}
+
 type ListSurveysRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -251,7 +347,7 @@ type ListSurveysRequest struct {
 
 func (x *ListSurveysRequest) Reset() {
 	*x = ListSurveysRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[3]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -263,7 +359,7 @@ func (x *ListSurveysRequest) String() string {
 func (*ListSurveysRequest) ProtoMessage() {}
 
 func (x *ListSurveysRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[3]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -276,7 +372,7 @@ func (x *ListSurveysRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSurveysRequest.ProtoReflect.Descriptor instead.
 func (*ListSurveysRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{3}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{5}
 }
 
 type ListSurveysResponse struct {
@@ -288,7 +384,7 @@ type ListSurveysResponse struct {
 
 func (x *ListSurveysResponse) Reset() {
 	*x = ListSurveysResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[4]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -300,7 +396,7 @@ func (x *ListSurveysResponse) String() string {
 func (*ListSurveysResponse) ProtoMessage() {}
 
 func (x *ListSurveysResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[4]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -313,7 +409,7 @@ func (x *ListSurveysResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSurveysResponse.ProtoReflect.Descriptor instead.
 func (*ListSurveysResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{4}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ListSurveysResponse) GetSurveys() []*SurveySummary {
@@ -332,7 +428,7 @@ type GetSurveyRequest struct {
 
 func (x *GetSurveyRequest) Reset() {
 	*x = GetSurveyRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[5]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -344,7 +440,7 @@ func (x *GetSurveyRequest) String() string {
 func (*GetSurveyRequest) ProtoMessage() {}
 
 func (x *GetSurveyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[5]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -357,7 +453,7 @@ func (x *GetSurveyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSurveyRequest.ProtoReflect.Descriptor instead.
 func (*GetSurveyRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{5}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetSurveyRequest) GetId() string {
@@ -376,7 +472,7 @@ type GetSurveyResponse struct {
 
 func (x *GetSurveyResponse) Reset() {
 	*x = GetSurveyResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[6]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -388,7 +484,7 @@ func (x *GetSurveyResponse) String() string {
 func (*GetSurveyResponse) ProtoMessage() {}
 
 func (x *GetSurveyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[6]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -401,7 +497,7 @@ func (x *GetSurveyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSurveyResponse.ProtoReflect.Descriptor instead.
 func (*GetSurveyResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{6}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetSurveyResponse) GetSurvey() *SurveySummary {
@@ -420,7 +516,7 @@ type DeleteSurveyRequest struct {
 
 func (x *DeleteSurveyRequest) Reset() {
 	*x = DeleteSurveyRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[7]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -432,7 +528,7 @@ func (x *DeleteSurveyRequest) String() string {
 func (*DeleteSurveyRequest) ProtoMessage() {}
 
 func (x *DeleteSurveyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[7]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -445,7 +541,7 @@ func (x *DeleteSurveyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteSurveyRequest.ProtoReflect.Descriptor instead.
 func (*DeleteSurveyRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{7}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *DeleteSurveyRequest) GetId() string {
@@ -463,7 +559,7 @@ type DeleteSurveyResponse struct {
 
 func (x *DeleteSurveyResponse) Reset() {
 	*x = DeleteSurveyResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[8]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -475,7 +571,7 @@ func (x *DeleteSurveyResponse) String() string {
 func (*DeleteSurveyResponse) ProtoMessage() {}
 
 func (x *DeleteSurveyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[8]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -488,7 +584,7 @@ func (x *DeleteSurveyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteSurveyResponse.ProtoReflect.Descriptor instead.
 func (*DeleteSurveyResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{8}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{10}
 }
 
 // Floor is one storey of a surveyed building, with the counts a caller needs
@@ -517,7 +613,7 @@ type Floor struct {
 
 func (x *Floor) Reset() {
 	*x = Floor{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[9]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -529,7 +625,7 @@ func (x *Floor) String() string {
 func (*Floor) ProtoMessage() {}
 
 func (x *Floor) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[9]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -542,7 +638,7 @@ func (x *Floor) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Floor.ProtoReflect.Descriptor instead.
 func (*Floor) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{9}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *Floor) GetId() string {
@@ -617,7 +713,7 @@ type ListFloorsRequest struct {
 
 func (x *ListFloorsRequest) Reset() {
 	*x = ListFloorsRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[10]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -629,7 +725,7 @@ func (x *ListFloorsRequest) String() string {
 func (*ListFloorsRequest) ProtoMessage() {}
 
 func (x *ListFloorsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[10]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -642,7 +738,7 @@ func (x *ListFloorsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListFloorsRequest.ProtoReflect.Descriptor instead.
 func (*ListFloorsRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{10}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ListFloorsRequest) GetSurveyId() string {
@@ -661,7 +757,7 @@ type ListFloorsResponse struct {
 
 func (x *ListFloorsResponse) Reset() {
 	*x = ListFloorsResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[11]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -673,7 +769,7 @@ func (x *ListFloorsResponse) String() string {
 func (*ListFloorsResponse) ProtoMessage() {}
 
 func (x *ListFloorsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[11]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -686,7 +782,7 @@ func (x *ListFloorsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListFloorsResponse.ProtoReflect.Descriptor instead.
 func (*ListFloorsResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{11}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ListFloorsResponse) GetFloors() []*Floor {
@@ -706,7 +802,7 @@ type GetFloorRequest struct {
 
 func (x *GetFloorRequest) Reset() {
 	*x = GetFloorRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[12]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -718,7 +814,7 @@ func (x *GetFloorRequest) String() string {
 func (*GetFloorRequest) ProtoMessage() {}
 
 func (x *GetFloorRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[12]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -731,7 +827,7 @@ func (x *GetFloorRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFloorRequest.ProtoReflect.Descriptor instead.
 func (*GetFloorRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{12}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *GetFloorRequest) GetSurveyId() string {
@@ -757,7 +853,7 @@ type GetFloorResponse struct {
 
 func (x *GetFloorResponse) Reset() {
 	*x = GetFloorResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[13]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -769,7 +865,7 @@ func (x *GetFloorResponse) String() string {
 func (*GetFloorResponse) ProtoMessage() {}
 
 func (x *GetFloorResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[13]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -782,7 +878,7 @@ func (x *GetFloorResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFloorResponse.ProtoReflect.Descriptor instead.
 func (*GetFloorResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{13}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *GetFloorResponse) GetFloor() *Floor {
@@ -810,7 +906,7 @@ type GetHeatmapRequest struct {
 
 func (x *GetHeatmapRequest) Reset() {
 	*x = GetHeatmapRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[14]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -822,7 +918,7 @@ func (x *GetHeatmapRequest) String() string {
 func (*GetHeatmapRequest) ProtoMessage() {}
 
 func (x *GetHeatmapRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[14]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -835,7 +931,7 @@ func (x *GetHeatmapRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetHeatmapRequest.ProtoReflect.Descriptor instead.
 func (*GetHeatmapRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{14}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *GetHeatmapRequest) GetSurveyId() string {
@@ -894,7 +990,7 @@ type GetHeatmapResponse struct {
 
 func (x *GetHeatmapResponse) Reset() {
 	*x = GetHeatmapResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[15]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -906,7 +1002,7 @@ func (x *GetHeatmapResponse) String() string {
 func (*GetHeatmapResponse) ProtoMessage() {}
 
 func (x *GetHeatmapResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[15]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -919,7 +1015,7 @@ func (x *GetHeatmapResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetHeatmapResponse.ProtoReflect.Descriptor instead.
 func (*GetHeatmapResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{15}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *GetHeatmapResponse) GetPng() []byte {
@@ -1021,7 +1117,7 @@ type LegendStop struct {
 
 func (x *LegendStop) Reset() {
 	*x = LegendStop{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[16]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1033,7 +1129,7 @@ func (x *LegendStop) String() string {
 func (*LegendStop) ProtoMessage() {}
 
 func (x *LegendStop) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[16]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1046,7 +1142,7 @@ func (x *LegendStop) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LegendStop.ProtoReflect.Descriptor instead.
 func (*LegendStop) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{16}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *LegendStop) GetValue() float64 {
@@ -1077,7 +1173,7 @@ type GetCoverageRequest struct {
 
 func (x *GetCoverageRequest) Reset() {
 	*x = GetCoverageRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[17]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1089,7 +1185,7 @@ func (x *GetCoverageRequest) String() string {
 func (*GetCoverageRequest) ProtoMessage() {}
 
 func (x *GetCoverageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[17]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1102,7 +1198,7 @@ func (x *GetCoverageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCoverageRequest.ProtoReflect.Descriptor instead.
 func (*GetCoverageRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{17}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GetCoverageRequest) GetSurveyId() string {
@@ -1137,7 +1233,7 @@ type GetCoverageResponse struct {
 
 func (x *GetCoverageResponse) Reset() {
 	*x = GetCoverageResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[18]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1149,7 +1245,7 @@ func (x *GetCoverageResponse) String() string {
 func (*GetCoverageResponse) ProtoMessage() {}
 
 func (x *GetCoverageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[18]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1162,7 +1258,7 @@ func (x *GetCoverageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCoverageResponse.ProtoReflect.Descriptor instead.
 func (*GetCoverageResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{18}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GetCoverageResponse) GetCoverageScore() float64 {
@@ -1198,7 +1294,7 @@ type GenerateReportRequest struct {
 
 func (x *GenerateReportRequest) Reset() {
 	*x = GenerateReportRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[19]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1210,7 +1306,7 @@ func (x *GenerateReportRequest) String() string {
 func (*GenerateReportRequest) ProtoMessage() {}
 
 func (x *GenerateReportRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[19]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1223,7 +1319,7 @@ func (x *GenerateReportRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateReportRequest.ProtoReflect.Descriptor instead.
 func (*GenerateReportRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{19}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *GenerateReportRequest) GetSurveyId() string {
@@ -1262,7 +1358,7 @@ type ReportOptions struct {
 
 func (x *ReportOptions) Reset() {
 	*x = ReportOptions{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[20]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1274,7 +1370,7 @@ func (x *ReportOptions) String() string {
 func (*ReportOptions) ProtoMessage() {}
 
 func (x *ReportOptions) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[20]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1287,7 +1383,7 @@ func (x *ReportOptions) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportOptions.ProtoReflect.Descriptor instead.
 func (*ReportOptions) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{20}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *ReportOptions) GetIncludeHeatmaps() bool {
@@ -1334,7 +1430,7 @@ type GenerateReportResponse struct {
 
 func (x *GenerateReportResponse) Reset() {
 	*x = GenerateReportResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[21]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1346,7 +1442,7 @@ func (x *GenerateReportResponse) String() string {
 func (*GenerateReportResponse) ProtoMessage() {}
 
 func (x *GenerateReportResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[21]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1359,7 +1455,7 @@ func (x *GenerateReportResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateReportResponse.ProtoReflect.Descriptor instead.
 func (*GenerateReportResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{21}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *GenerateReportResponse) GetPdf() []byte {
@@ -1381,7 +1477,7 @@ type CreateSurveyRequest struct {
 
 func (x *CreateSurveyRequest) Reset() {
 	*x = CreateSurveyRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[22]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1393,7 +1489,7 @@ func (x *CreateSurveyRequest) String() string {
 func (*CreateSurveyRequest) ProtoMessage() {}
 
 func (x *CreateSurveyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[22]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1406,7 +1502,7 @@ func (x *CreateSurveyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateSurveyRequest.ProtoReflect.Descriptor instead.
 func (*CreateSurveyRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{22}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *CreateSurveyRequest) GetName() string {
@@ -1439,7 +1535,7 @@ type CreateSurveyResponse struct {
 
 func (x *CreateSurveyResponse) Reset() {
 	*x = CreateSurveyResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[23]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1451,7 +1547,7 @@ func (x *CreateSurveyResponse) String() string {
 func (*CreateSurveyResponse) ProtoMessage() {}
 
 func (x *CreateSurveyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[23]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1464,7 +1560,7 @@ func (x *CreateSurveyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateSurveyResponse.ProtoReflect.Descriptor instead.
 func (*CreateSurveyResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{23}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *CreateSurveyResponse) GetSurvey() *SurveySummary {
@@ -1483,7 +1579,7 @@ type StartSurveyRequest struct {
 
 func (x *StartSurveyRequest) Reset() {
 	*x = StartSurveyRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[24]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1495,7 +1591,7 @@ func (x *StartSurveyRequest) String() string {
 func (*StartSurveyRequest) ProtoMessage() {}
 
 func (x *StartSurveyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[24]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1508,7 +1604,7 @@ func (x *StartSurveyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartSurveyRequest.ProtoReflect.Descriptor instead.
 func (*StartSurveyRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{24}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *StartSurveyRequest) GetId() string {
@@ -1527,7 +1623,7 @@ type StartSurveyResponse struct {
 
 func (x *StartSurveyResponse) Reset() {
 	*x = StartSurveyResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[25]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1539,7 +1635,7 @@ func (x *StartSurveyResponse) String() string {
 func (*StartSurveyResponse) ProtoMessage() {}
 
 func (x *StartSurveyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[25]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1552,7 +1648,7 @@ func (x *StartSurveyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartSurveyResponse.ProtoReflect.Descriptor instead.
 func (*StartSurveyResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{25}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *StartSurveyResponse) GetSurvey() *SurveySummary {
@@ -1571,7 +1667,7 @@ type PauseSurveyRequest struct {
 
 func (x *PauseSurveyRequest) Reset() {
 	*x = PauseSurveyRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[26]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1583,7 +1679,7 @@ func (x *PauseSurveyRequest) String() string {
 func (*PauseSurveyRequest) ProtoMessage() {}
 
 func (x *PauseSurveyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[26]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1596,7 +1692,7 @@ func (x *PauseSurveyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PauseSurveyRequest.ProtoReflect.Descriptor instead.
 func (*PauseSurveyRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{26}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *PauseSurveyRequest) GetId() string {
@@ -1615,7 +1711,7 @@ type PauseSurveyResponse struct {
 
 func (x *PauseSurveyResponse) Reset() {
 	*x = PauseSurveyResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[27]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1627,7 +1723,7 @@ func (x *PauseSurveyResponse) String() string {
 func (*PauseSurveyResponse) ProtoMessage() {}
 
 func (x *PauseSurveyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[27]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1640,7 +1736,7 @@ func (x *PauseSurveyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PauseSurveyResponse.ProtoReflect.Descriptor instead.
 func (*PauseSurveyResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{27}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *PauseSurveyResponse) GetSurvey() *SurveySummary {
@@ -1659,7 +1755,7 @@ type CompleteSurveyRequest struct {
 
 func (x *CompleteSurveyRequest) Reset() {
 	*x = CompleteSurveyRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[28]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1671,7 +1767,7 @@ func (x *CompleteSurveyRequest) String() string {
 func (*CompleteSurveyRequest) ProtoMessage() {}
 
 func (x *CompleteSurveyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[28]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1684,7 +1780,7 @@ func (x *CompleteSurveyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CompleteSurveyRequest.ProtoReflect.Descriptor instead.
 func (*CompleteSurveyRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{28}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *CompleteSurveyRequest) GetId() string {
@@ -1703,7 +1799,7 @@ type CompleteSurveyResponse struct {
 
 func (x *CompleteSurveyResponse) Reset() {
 	*x = CompleteSurveyResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[29]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1715,7 +1811,7 @@ func (x *CompleteSurveyResponse) String() string {
 func (*CompleteSurveyResponse) ProtoMessage() {}
 
 func (x *CompleteSurveyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[29]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1728,7 +1824,7 @@ func (x *CompleteSurveyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CompleteSurveyResponse.ProtoReflect.Descriptor instead.
 func (*CompleteSurveyResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{29}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *CompleteSurveyResponse) GetSurvey() *SurveySummary {
@@ -1751,7 +1847,7 @@ type CapturePointRequest struct {
 
 func (x *CapturePointRequest) Reset() {
 	*x = CapturePointRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[30]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1763,7 +1859,7 @@ func (x *CapturePointRequest) String() string {
 func (*CapturePointRequest) ProtoMessage() {}
 
 func (x *CapturePointRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[30]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1776,7 +1872,7 @@ func (x *CapturePointRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CapturePointRequest.ProtoReflect.Descriptor instead.
 func (*CapturePointRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{30}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *CapturePointRequest) GetSurveyId() string {
@@ -1819,7 +1915,7 @@ type CapturePointResponse struct {
 
 func (x *CapturePointResponse) Reset() {
 	*x = CapturePointResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[31]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1831,7 +1927,7 @@ func (x *CapturePointResponse) String() string {
 func (*CapturePointResponse) ProtoMessage() {}
 
 func (x *CapturePointResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[31]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1844,7 +1940,7 @@ func (x *CapturePointResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CapturePointResponse.ProtoReflect.Descriptor instead.
 func (*CapturePointResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{31}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *CapturePointResponse) GetNetworks() []*ScannedNetwork {
@@ -1935,7 +2031,7 @@ type ScannedNetwork struct {
 
 func (x *ScannedNetwork) Reset() {
 	*x = ScannedNetwork{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[32]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1947,7 +2043,7 @@ func (x *ScannedNetwork) String() string {
 func (*ScannedNetwork) ProtoMessage() {}
 
 func (x *ScannedNetwork) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[32]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1960,7 +2056,7 @@ func (x *ScannedNetwork) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScannedNetwork.ProtoReflect.Descriptor instead.
 func (*ScannedNetwork) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{32}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *ScannedNetwork) GetSsid() string {
@@ -2064,7 +2160,7 @@ type GetFloorPlanImageRequest struct {
 
 func (x *GetFloorPlanImageRequest) Reset() {
 	*x = GetFloorPlanImageRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[33]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2076,7 +2172,7 @@ func (x *GetFloorPlanImageRequest) String() string {
 func (*GetFloorPlanImageRequest) ProtoMessage() {}
 
 func (x *GetFloorPlanImageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[33]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2089,7 +2185,7 @@ func (x *GetFloorPlanImageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFloorPlanImageRequest.ProtoReflect.Descriptor instead.
 func (*GetFloorPlanImageRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{33}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *GetFloorPlanImageRequest) GetSurveyId() string {
@@ -2118,7 +2214,7 @@ type GetFloorPlanImageResponse struct {
 
 func (x *GetFloorPlanImageResponse) Reset() {
 	*x = GetFloorPlanImageResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[34]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2130,7 +2226,7 @@ func (x *GetFloorPlanImageResponse) String() string {
 func (*GetFloorPlanImageResponse) ProtoMessage() {}
 
 func (x *GetFloorPlanImageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[34]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2143,7 +2239,7 @@ func (x *GetFloorPlanImageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFloorPlanImageResponse.ProtoReflect.Descriptor instead.
 func (*GetFloorPlanImageResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{34}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *GetFloorPlanImageResponse) GetImage() []byte {
@@ -2182,7 +2278,7 @@ type SetFloorPlanRequest struct {
 
 func (x *SetFloorPlanRequest) Reset() {
 	*x = SetFloorPlanRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[35]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2194,7 +2290,7 @@ func (x *SetFloorPlanRequest) String() string {
 func (*SetFloorPlanRequest) ProtoMessage() {}
 
 func (x *SetFloorPlanRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[35]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2207,7 +2303,7 @@ func (x *SetFloorPlanRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetFloorPlanRequest.ProtoReflect.Descriptor instead.
 func (*SetFloorPlanRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{35}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *SetFloorPlanRequest) GetSurveyId() string {
@@ -2240,7 +2336,7 @@ type SetFloorPlanResponse struct {
 
 func (x *SetFloorPlanResponse) Reset() {
 	*x = SetFloorPlanResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[36]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2252,7 +2348,7 @@ func (x *SetFloorPlanResponse) String() string {
 func (*SetFloorPlanResponse) ProtoMessage() {}
 
 func (x *SetFloorPlanResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[36]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2265,7 +2361,7 @@ func (x *SetFloorPlanResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetFloorPlanResponse.ProtoReflect.Descriptor instead.
 func (*SetFloorPlanResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{36}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *SetFloorPlanResponse) GetFloor() *Floor {
@@ -2292,7 +2388,7 @@ type CalibrateFloorPlanRequest struct {
 
 func (x *CalibrateFloorPlanRequest) Reset() {
 	*x = CalibrateFloorPlanRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[37]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2304,7 +2400,7 @@ func (x *CalibrateFloorPlanRequest) String() string {
 func (*CalibrateFloorPlanRequest) ProtoMessage() {}
 
 func (x *CalibrateFloorPlanRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[37]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2317,7 +2413,7 @@ func (x *CalibrateFloorPlanRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CalibrateFloorPlanRequest.ProtoReflect.Descriptor instead.
 func (*CalibrateFloorPlanRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{37}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *CalibrateFloorPlanRequest) GetSurveyId() string {
@@ -2378,7 +2474,7 @@ type CalibrateFloorPlanResponse struct {
 
 func (x *CalibrateFloorPlanResponse) Reset() {
 	*x = CalibrateFloorPlanResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[38]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2390,7 +2486,7 @@ func (x *CalibrateFloorPlanResponse) String() string {
 func (*CalibrateFloorPlanResponse) ProtoMessage() {}
 
 func (x *CalibrateFloorPlanResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[38]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2403,7 +2499,7 @@ func (x *CalibrateFloorPlanResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CalibrateFloorPlanResponse.ProtoReflect.Descriptor instead.
 func (*CalibrateFloorPlanResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{38}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *CalibrateFloorPlanResponse) GetFloor() *Floor {
@@ -2425,7 +2521,7 @@ type MeasureThroughputRequest struct {
 
 func (x *MeasureThroughputRequest) Reset() {
 	*x = MeasureThroughputRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[39]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2437,7 +2533,7 @@ func (x *MeasureThroughputRequest) String() string {
 func (*MeasureThroughputRequest) ProtoMessage() {}
 
 func (x *MeasureThroughputRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[39]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2450,7 +2546,7 @@ func (x *MeasureThroughputRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MeasureThroughputRequest.ProtoReflect.Descriptor instead.
 func (*MeasureThroughputRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{39}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *MeasureThroughputRequest) GetSurveyId() string {
@@ -2483,7 +2579,7 @@ type MeasureThroughputResponse struct {
 
 func (x *MeasureThroughputResponse) Reset() {
 	*x = MeasureThroughputResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[40]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2495,7 +2591,7 @@ func (x *MeasureThroughputResponse) String() string {
 func (*MeasureThroughputResponse) ProtoMessage() {}
 
 func (x *MeasureThroughputResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[40]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2508,7 +2604,7 @@ func (x *MeasureThroughputResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MeasureThroughputResponse.ProtoReflect.Descriptor instead.
 func (*MeasureThroughputResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{40}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *MeasureThroughputResponse) GetReading() *ThroughputReading {
@@ -2535,7 +2631,7 @@ type ThroughputReading struct {
 
 func (x *ThroughputReading) Reset() {
 	*x = ThroughputReading{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[41]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2547,7 +2643,7 @@ func (x *ThroughputReading) String() string {
 func (*ThroughputReading) ProtoMessage() {}
 
 func (x *ThroughputReading) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[41]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2560,7 +2656,7 @@ func (x *ThroughputReading) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ThroughputReading.ProtoReflect.Descriptor instead.
 func (*ThroughputReading) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{41}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *ThroughputReading) GetDownloadMbps() float64 {
@@ -2611,7 +2707,7 @@ type SetThroughputTargetRequest struct {
 
 func (x *SetThroughputTargetRequest) Reset() {
 	*x = SetThroughputTargetRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[42]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2623,7 +2719,7 @@ func (x *SetThroughputTargetRequest) String() string {
 func (*SetThroughputTargetRequest) ProtoMessage() {}
 
 func (x *SetThroughputTargetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[42]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2636,7 +2732,7 @@ func (x *SetThroughputTargetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetThroughputTargetRequest.ProtoReflect.Descriptor instead.
 func (*SetThroughputTargetRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{42}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *SetThroughputTargetRequest) GetSurveyId() string {
@@ -2669,7 +2765,7 @@ type SetThroughputTargetResponse struct {
 
 func (x *SetThroughputTargetResponse) Reset() {
 	*x = SetThroughputTargetResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[43]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2681,7 +2777,7 @@ func (x *SetThroughputTargetResponse) String() string {
 func (*SetThroughputTargetResponse) ProtoMessage() {}
 
 func (x *SetThroughputTargetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[43]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2694,7 +2790,7 @@ func (x *SetThroughputTargetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetThroughputTargetResponse.ProtoReflect.Descriptor instead.
 func (*SetThroughputTargetResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{43}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *SetThroughputTargetResponse) GetSurvey() *SurveySummary {
@@ -2717,7 +2813,7 @@ type StartContinuousCaptureRequest struct {
 
 func (x *StartContinuousCaptureRequest) Reset() {
 	*x = StartContinuousCaptureRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[44]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2729,7 +2825,7 @@ func (x *StartContinuousCaptureRequest) String() string {
 func (*StartContinuousCaptureRequest) ProtoMessage() {}
 
 func (x *StartContinuousCaptureRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[44]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2742,7 +2838,7 @@ func (x *StartContinuousCaptureRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartContinuousCaptureRequest.ProtoReflect.Descriptor instead.
 func (*StartContinuousCaptureRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{44}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *StartContinuousCaptureRequest) GetSurveyId() string {
@@ -2775,7 +2871,7 @@ type StartContinuousCaptureResponse struct {
 
 func (x *StartContinuousCaptureResponse) Reset() {
 	*x = StartContinuousCaptureResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[45]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2787,7 +2883,7 @@ func (x *StartContinuousCaptureResponse) String() string {
 func (*StartContinuousCaptureResponse) ProtoMessage() {}
 
 func (x *StartContinuousCaptureResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[45]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2800,7 +2896,7 @@ func (x *StartContinuousCaptureResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartContinuousCaptureResponse.ProtoReflect.Descriptor instead.
 func (*StartContinuousCaptureResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{45}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *StartContinuousCaptureResponse) GetCapture() *CaptureStatus {
@@ -2819,7 +2915,7 @@ type StopContinuousCaptureRequest struct {
 
 func (x *StopContinuousCaptureRequest) Reset() {
 	*x = StopContinuousCaptureRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[46]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2831,7 +2927,7 @@ func (x *StopContinuousCaptureRequest) String() string {
 func (*StopContinuousCaptureRequest) ProtoMessage() {}
 
 func (x *StopContinuousCaptureRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[46]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2844,7 +2940,7 @@ func (x *StopContinuousCaptureRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StopContinuousCaptureRequest.ProtoReflect.Descriptor instead.
 func (*StopContinuousCaptureRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{46}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *StopContinuousCaptureRequest) GetSurveyId() string {
@@ -2862,7 +2958,7 @@ type StopContinuousCaptureResponse struct {
 
 func (x *StopContinuousCaptureResponse) Reset() {
 	*x = StopContinuousCaptureResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[47]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2874,7 +2970,7 @@ func (x *StopContinuousCaptureResponse) String() string {
 func (*StopContinuousCaptureResponse) ProtoMessage() {}
 
 func (x *StopContinuousCaptureResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[47]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2887,7 +2983,7 @@ func (x *StopContinuousCaptureResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StopContinuousCaptureResponse.ProtoReflect.Descriptor instead.
 func (*StopContinuousCaptureResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{47}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{49}
 }
 
 // CaptureStatus is a survey's continuous capture as it stands, so a client that
@@ -2907,7 +3003,7 @@ type CaptureStatus struct {
 
 func (x *CaptureStatus) Reset() {
 	*x = CaptureStatus{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[48]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2919,7 +3015,7 @@ func (x *CaptureStatus) String() string {
 func (*CaptureStatus) ProtoMessage() {}
 
 func (x *CaptureStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[48]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2932,7 +3028,7 @@ func (x *CaptureStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CaptureStatus.ProtoReflect.Descriptor instead.
 func (*CaptureStatus) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{48}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *CaptureStatus) GetRunning() bool {
@@ -2971,7 +3067,7 @@ type ScanRequest struct {
 
 func (x *ScanRequest) Reset() {
 	*x = ScanRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[49]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2983,7 +3079,7 @@ func (x *ScanRequest) String() string {
 func (*ScanRequest) ProtoMessage() {}
 
 func (x *ScanRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[49]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2996,7 +3092,7 @@ func (x *ScanRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScanRequest.ProtoReflect.Descriptor instead.
 func (*ScanRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{49}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{51}
 }
 
 type ScanResponse struct {
@@ -3012,7 +3108,7 @@ type ScanResponse struct {
 
 func (x *ScanResponse) Reset() {
 	*x = ScanResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[50]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3024,7 +3120,7 @@ func (x *ScanResponse) String() string {
 func (*ScanResponse) ProtoMessage() {}
 
 func (x *ScanResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[50]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3037,7 +3133,7 @@ func (x *ScanResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScanResponse.ProtoReflect.Descriptor instead.
 func (*ScanResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{50}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *ScanResponse) GetNetworks() []*ScannedNetwork {
@@ -3063,7 +3159,7 @@ type ListSamplesRequest struct {
 
 func (x *ListSamplesRequest) Reset() {
 	*x = ListSamplesRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[51]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3075,7 +3171,7 @@ func (x *ListSamplesRequest) String() string {
 func (*ListSamplesRequest) ProtoMessage() {}
 
 func (x *ListSamplesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[51]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3088,7 +3184,7 @@ func (x *ListSamplesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSamplesRequest.ProtoReflect.Descriptor instead.
 func (*ListSamplesRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{51}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *ListSamplesRequest) GetSurveyId() string {
@@ -3107,7 +3203,7 @@ type ListSamplesResponse struct {
 
 func (x *ListSamplesResponse) Reset() {
 	*x = ListSamplesResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[52]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3119,7 +3215,7 @@ func (x *ListSamplesResponse) String() string {
 func (*ListSamplesResponse) ProtoMessage() {}
 
 func (x *ListSamplesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[52]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3132,7 +3228,7 @@ func (x *ListSamplesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSamplesResponse.ProtoReflect.Descriptor instead.
 func (*ListSamplesResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{52}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *ListSamplesResponse) GetSamples() []*SurveySample {
@@ -3172,7 +3268,7 @@ type SurveySample struct {
 
 func (x *SurveySample) Reset() {
 	*x = SurveySample{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[53]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3184,7 +3280,7 @@ func (x *SurveySample) String() string {
 func (*SurveySample) ProtoMessage() {}
 
 func (x *SurveySample) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[53]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3197,7 +3293,7 @@ func (x *SurveySample) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SurveySample.ProtoReflect.Descriptor instead.
 func (*SurveySample) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{53}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *SurveySample) GetX() int32 {
@@ -3271,6 +3367,11 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x19\n" +
 	"\bamp_data\x18\x02 \x01(\fR\aampData\"S\n" +
 	"\x17ImportAirMapperResponse\x128\n" +
+	"\x06survey\x18\x01 \x01(\v2 .trellis.survey.v1.SurveySummaryR\x06survey\"G\n" +
+	"\x16ImportAirMagnetRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x19\n" +
+	"\bsvd_data\x18\x02 \x01(\fR\asvdData\"S\n" +
+	"\x17ImportAirMagnetResponse\x128\n" +
 	"\x06survey\x18\x01 \x01(\v2 .trellis.survey.v1.SurveySummaryR\x06survey\"\x14\n" +
 	"\x12ListSurveysRequest\"Q\n" +
 	"\x13ListSurveysResponse\x12:\n" +
@@ -3471,9 +3572,10 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\rdownload_mbps\x18\a \x01(\x01H\x01R\fdownloadMbps\x88\x01\x01\x12\"\n" +
 	"\finterpolated\x18\x06 \x01(\bR\finterpolatedB\x10\n" +
 	"\x0e_strongest_dbmB\x10\n" +
-	"\x0e_download_mbps2\x91\x12\n" +
+	"\x0e_download_mbps2\xfb\x12\n" +
 	"\rSurveyService\x12h\n" +
-	"\x0fImportAirMapper\x12).trellis.survey.v1.ImportAirMapperRequest\x1a*.trellis.survey.v1.ImportAirMapperResponse\x12\\\n" +
+	"\x0fImportAirMapper\x12).trellis.survey.v1.ImportAirMapperRequest\x1a*.trellis.survey.v1.ImportAirMapperResponse\x12h\n" +
+	"\x0fImportAirMagnet\x12).trellis.survey.v1.ImportAirMagnetRequest\x1a*.trellis.survey.v1.ImportAirMagnetResponse\x12\\\n" +
 	"\vListSurveys\x12%.trellis.survey.v1.ListSurveysRequest\x1a&.trellis.survey.v1.ListSurveysResponse\x12V\n" +
 	"\tGetSurvey\x12#.trellis.survey.v1.GetSurveyRequest\x1a$.trellis.survey.v1.GetSurveyResponse\x12_\n" +
 	"\fDeleteSurvey\x12&.trellis.survey.v1.DeleteSurveyRequest\x1a'.trellis.survey.v1.DeleteSurveyResponse\x12Y\n" +
@@ -3511,138 +3613,143 @@ func file_trellis_survey_v1_survey_proto_rawDescGZIP() []byte {
 	return file_trellis_survey_v1_survey_proto_rawDescData
 }
 
-var file_trellis_survey_v1_survey_proto_msgTypes = make([]protoimpl.MessageInfo, 54)
+var file_trellis_survey_v1_survey_proto_msgTypes = make([]protoimpl.MessageInfo, 56)
 var file_trellis_survey_v1_survey_proto_goTypes = []any{
 	(*SurveySummary)(nil),                  // 0: trellis.survey.v1.SurveySummary
 	(*ImportAirMapperRequest)(nil),         // 1: trellis.survey.v1.ImportAirMapperRequest
 	(*ImportAirMapperResponse)(nil),        // 2: trellis.survey.v1.ImportAirMapperResponse
-	(*ListSurveysRequest)(nil),             // 3: trellis.survey.v1.ListSurveysRequest
-	(*ListSurveysResponse)(nil),            // 4: trellis.survey.v1.ListSurveysResponse
-	(*GetSurveyRequest)(nil),               // 5: trellis.survey.v1.GetSurveyRequest
-	(*GetSurveyResponse)(nil),              // 6: trellis.survey.v1.GetSurveyResponse
-	(*DeleteSurveyRequest)(nil),            // 7: trellis.survey.v1.DeleteSurveyRequest
-	(*DeleteSurveyResponse)(nil),           // 8: trellis.survey.v1.DeleteSurveyResponse
-	(*Floor)(nil),                          // 9: trellis.survey.v1.Floor
-	(*ListFloorsRequest)(nil),              // 10: trellis.survey.v1.ListFloorsRequest
-	(*ListFloorsResponse)(nil),             // 11: trellis.survey.v1.ListFloorsResponse
-	(*GetFloorRequest)(nil),                // 12: trellis.survey.v1.GetFloorRequest
-	(*GetFloorResponse)(nil),               // 13: trellis.survey.v1.GetFloorResponse
-	(*GetHeatmapRequest)(nil),              // 14: trellis.survey.v1.GetHeatmapRequest
-	(*GetHeatmapResponse)(nil),             // 15: trellis.survey.v1.GetHeatmapResponse
-	(*LegendStop)(nil),                     // 16: trellis.survey.v1.LegendStop
-	(*GetCoverageRequest)(nil),             // 17: trellis.survey.v1.GetCoverageRequest
-	(*GetCoverageResponse)(nil),            // 18: trellis.survey.v1.GetCoverageResponse
-	(*GenerateReportRequest)(nil),          // 19: trellis.survey.v1.GenerateReportRequest
-	(*ReportOptions)(nil),                  // 20: trellis.survey.v1.ReportOptions
-	(*GenerateReportResponse)(nil),         // 21: trellis.survey.v1.GenerateReportResponse
-	(*CreateSurveyRequest)(nil),            // 22: trellis.survey.v1.CreateSurveyRequest
-	(*CreateSurveyResponse)(nil),           // 23: trellis.survey.v1.CreateSurveyResponse
-	(*StartSurveyRequest)(nil),             // 24: trellis.survey.v1.StartSurveyRequest
-	(*StartSurveyResponse)(nil),            // 25: trellis.survey.v1.StartSurveyResponse
-	(*PauseSurveyRequest)(nil),             // 26: trellis.survey.v1.PauseSurveyRequest
-	(*PauseSurveyResponse)(nil),            // 27: trellis.survey.v1.PauseSurveyResponse
-	(*CompleteSurveyRequest)(nil),          // 28: trellis.survey.v1.CompleteSurveyRequest
-	(*CompleteSurveyResponse)(nil),         // 29: trellis.survey.v1.CompleteSurveyResponse
-	(*CapturePointRequest)(nil),            // 30: trellis.survey.v1.CapturePointRequest
-	(*CapturePointResponse)(nil),           // 31: trellis.survey.v1.CapturePointResponse
-	(*ScannedNetwork)(nil),                 // 32: trellis.survey.v1.ScannedNetwork
-	(*GetFloorPlanImageRequest)(nil),       // 33: trellis.survey.v1.GetFloorPlanImageRequest
-	(*GetFloorPlanImageResponse)(nil),      // 34: trellis.survey.v1.GetFloorPlanImageResponse
-	(*SetFloorPlanRequest)(nil),            // 35: trellis.survey.v1.SetFloorPlanRequest
-	(*SetFloorPlanResponse)(nil),           // 36: trellis.survey.v1.SetFloorPlanResponse
-	(*CalibrateFloorPlanRequest)(nil),      // 37: trellis.survey.v1.CalibrateFloorPlanRequest
-	(*CalibrateFloorPlanResponse)(nil),     // 38: trellis.survey.v1.CalibrateFloorPlanResponse
-	(*MeasureThroughputRequest)(nil),       // 39: trellis.survey.v1.MeasureThroughputRequest
-	(*MeasureThroughputResponse)(nil),      // 40: trellis.survey.v1.MeasureThroughputResponse
-	(*ThroughputReading)(nil),              // 41: trellis.survey.v1.ThroughputReading
-	(*SetThroughputTargetRequest)(nil),     // 42: trellis.survey.v1.SetThroughputTargetRequest
-	(*SetThroughputTargetResponse)(nil),    // 43: trellis.survey.v1.SetThroughputTargetResponse
-	(*StartContinuousCaptureRequest)(nil),  // 44: trellis.survey.v1.StartContinuousCaptureRequest
-	(*StartContinuousCaptureResponse)(nil), // 45: trellis.survey.v1.StartContinuousCaptureResponse
-	(*StopContinuousCaptureRequest)(nil),   // 46: trellis.survey.v1.StopContinuousCaptureRequest
-	(*StopContinuousCaptureResponse)(nil),  // 47: trellis.survey.v1.StopContinuousCaptureResponse
-	(*CaptureStatus)(nil),                  // 48: trellis.survey.v1.CaptureStatus
-	(*ScanRequest)(nil),                    // 49: trellis.survey.v1.ScanRequest
-	(*ScanResponse)(nil),                   // 50: trellis.survey.v1.ScanResponse
-	(*ListSamplesRequest)(nil),             // 51: trellis.survey.v1.ListSamplesRequest
-	(*ListSamplesResponse)(nil),            // 52: trellis.survey.v1.ListSamplesResponse
-	(*SurveySample)(nil),                   // 53: trellis.survey.v1.SurveySample
-	(*timestamppb.Timestamp)(nil),          // 54: google.protobuf.Timestamp
+	(*ImportAirMagnetRequest)(nil),         // 3: trellis.survey.v1.ImportAirMagnetRequest
+	(*ImportAirMagnetResponse)(nil),        // 4: trellis.survey.v1.ImportAirMagnetResponse
+	(*ListSurveysRequest)(nil),             // 5: trellis.survey.v1.ListSurveysRequest
+	(*ListSurveysResponse)(nil),            // 6: trellis.survey.v1.ListSurveysResponse
+	(*GetSurveyRequest)(nil),               // 7: trellis.survey.v1.GetSurveyRequest
+	(*GetSurveyResponse)(nil),              // 8: trellis.survey.v1.GetSurveyResponse
+	(*DeleteSurveyRequest)(nil),            // 9: trellis.survey.v1.DeleteSurveyRequest
+	(*DeleteSurveyResponse)(nil),           // 10: trellis.survey.v1.DeleteSurveyResponse
+	(*Floor)(nil),                          // 11: trellis.survey.v1.Floor
+	(*ListFloorsRequest)(nil),              // 12: trellis.survey.v1.ListFloorsRequest
+	(*ListFloorsResponse)(nil),             // 13: trellis.survey.v1.ListFloorsResponse
+	(*GetFloorRequest)(nil),                // 14: trellis.survey.v1.GetFloorRequest
+	(*GetFloorResponse)(nil),               // 15: trellis.survey.v1.GetFloorResponse
+	(*GetHeatmapRequest)(nil),              // 16: trellis.survey.v1.GetHeatmapRequest
+	(*GetHeatmapResponse)(nil),             // 17: trellis.survey.v1.GetHeatmapResponse
+	(*LegendStop)(nil),                     // 18: trellis.survey.v1.LegendStop
+	(*GetCoverageRequest)(nil),             // 19: trellis.survey.v1.GetCoverageRequest
+	(*GetCoverageResponse)(nil),            // 20: trellis.survey.v1.GetCoverageResponse
+	(*GenerateReportRequest)(nil),          // 21: trellis.survey.v1.GenerateReportRequest
+	(*ReportOptions)(nil),                  // 22: trellis.survey.v1.ReportOptions
+	(*GenerateReportResponse)(nil),         // 23: trellis.survey.v1.GenerateReportResponse
+	(*CreateSurveyRequest)(nil),            // 24: trellis.survey.v1.CreateSurveyRequest
+	(*CreateSurveyResponse)(nil),           // 25: trellis.survey.v1.CreateSurveyResponse
+	(*StartSurveyRequest)(nil),             // 26: trellis.survey.v1.StartSurveyRequest
+	(*StartSurveyResponse)(nil),            // 27: trellis.survey.v1.StartSurveyResponse
+	(*PauseSurveyRequest)(nil),             // 28: trellis.survey.v1.PauseSurveyRequest
+	(*PauseSurveyResponse)(nil),            // 29: trellis.survey.v1.PauseSurveyResponse
+	(*CompleteSurveyRequest)(nil),          // 30: trellis.survey.v1.CompleteSurveyRequest
+	(*CompleteSurveyResponse)(nil),         // 31: trellis.survey.v1.CompleteSurveyResponse
+	(*CapturePointRequest)(nil),            // 32: trellis.survey.v1.CapturePointRequest
+	(*CapturePointResponse)(nil),           // 33: trellis.survey.v1.CapturePointResponse
+	(*ScannedNetwork)(nil),                 // 34: trellis.survey.v1.ScannedNetwork
+	(*GetFloorPlanImageRequest)(nil),       // 35: trellis.survey.v1.GetFloorPlanImageRequest
+	(*GetFloorPlanImageResponse)(nil),      // 36: trellis.survey.v1.GetFloorPlanImageResponse
+	(*SetFloorPlanRequest)(nil),            // 37: trellis.survey.v1.SetFloorPlanRequest
+	(*SetFloorPlanResponse)(nil),           // 38: trellis.survey.v1.SetFloorPlanResponse
+	(*CalibrateFloorPlanRequest)(nil),      // 39: trellis.survey.v1.CalibrateFloorPlanRequest
+	(*CalibrateFloorPlanResponse)(nil),     // 40: trellis.survey.v1.CalibrateFloorPlanResponse
+	(*MeasureThroughputRequest)(nil),       // 41: trellis.survey.v1.MeasureThroughputRequest
+	(*MeasureThroughputResponse)(nil),      // 42: trellis.survey.v1.MeasureThroughputResponse
+	(*ThroughputReading)(nil),              // 43: trellis.survey.v1.ThroughputReading
+	(*SetThroughputTargetRequest)(nil),     // 44: trellis.survey.v1.SetThroughputTargetRequest
+	(*SetThroughputTargetResponse)(nil),    // 45: trellis.survey.v1.SetThroughputTargetResponse
+	(*StartContinuousCaptureRequest)(nil),  // 46: trellis.survey.v1.StartContinuousCaptureRequest
+	(*StartContinuousCaptureResponse)(nil), // 47: trellis.survey.v1.StartContinuousCaptureResponse
+	(*StopContinuousCaptureRequest)(nil),   // 48: trellis.survey.v1.StopContinuousCaptureRequest
+	(*StopContinuousCaptureResponse)(nil),  // 49: trellis.survey.v1.StopContinuousCaptureResponse
+	(*CaptureStatus)(nil),                  // 50: trellis.survey.v1.CaptureStatus
+	(*ScanRequest)(nil),                    // 51: trellis.survey.v1.ScanRequest
+	(*ScanResponse)(nil),                   // 52: trellis.survey.v1.ScanResponse
+	(*ListSamplesRequest)(nil),             // 53: trellis.survey.v1.ListSamplesRequest
+	(*ListSamplesResponse)(nil),            // 54: trellis.survey.v1.ListSamplesResponse
+	(*SurveySample)(nil),                   // 55: trellis.survey.v1.SurveySample
+	(*timestamppb.Timestamp)(nil),          // 56: google.protobuf.Timestamp
 }
 var file_trellis_survey_v1_survey_proto_depIdxs = []int32{
-	48, // 0: trellis.survey.v1.SurveySummary.capture:type_name -> trellis.survey.v1.CaptureStatus
+	50, // 0: trellis.survey.v1.SurveySummary.capture:type_name -> trellis.survey.v1.CaptureStatus
 	0,  // 1: trellis.survey.v1.ImportAirMapperResponse.survey:type_name -> trellis.survey.v1.SurveySummary
-	0,  // 2: trellis.survey.v1.ListSurveysResponse.surveys:type_name -> trellis.survey.v1.SurveySummary
-	0,  // 3: trellis.survey.v1.GetSurveyResponse.survey:type_name -> trellis.survey.v1.SurveySummary
-	9,  // 4: trellis.survey.v1.ListFloorsResponse.floors:type_name -> trellis.survey.v1.Floor
-	9,  // 5: trellis.survey.v1.GetFloorResponse.floor:type_name -> trellis.survey.v1.Floor
-	16, // 6: trellis.survey.v1.GetHeatmapResponse.legend:type_name -> trellis.survey.v1.LegendStop
-	20, // 7: trellis.survey.v1.GenerateReportRequest.options:type_name -> trellis.survey.v1.ReportOptions
-	0,  // 8: trellis.survey.v1.CreateSurveyResponse.survey:type_name -> trellis.survey.v1.SurveySummary
-	0,  // 9: trellis.survey.v1.StartSurveyResponse.survey:type_name -> trellis.survey.v1.SurveySummary
-	0,  // 10: trellis.survey.v1.PauseSurveyResponse.survey:type_name -> trellis.survey.v1.SurveySummary
-	0,  // 11: trellis.survey.v1.CompleteSurveyResponse.survey:type_name -> trellis.survey.v1.SurveySummary
-	32, // 12: trellis.survey.v1.CapturePointResponse.networks:type_name -> trellis.survey.v1.ScannedNetwork
-	9,  // 13: trellis.survey.v1.SetFloorPlanResponse.floor:type_name -> trellis.survey.v1.Floor
-	9,  // 14: trellis.survey.v1.CalibrateFloorPlanResponse.floor:type_name -> trellis.survey.v1.Floor
-	41, // 15: trellis.survey.v1.MeasureThroughputResponse.reading:type_name -> trellis.survey.v1.ThroughputReading
-	0,  // 16: trellis.survey.v1.SetThroughputTargetResponse.survey:type_name -> trellis.survey.v1.SurveySummary
-	48, // 17: trellis.survey.v1.StartContinuousCaptureResponse.capture:type_name -> trellis.survey.v1.CaptureStatus
-	32, // 18: trellis.survey.v1.ScanResponse.networks:type_name -> trellis.survey.v1.ScannedNetwork
-	54, // 19: trellis.survey.v1.ScanResponse.scanned_at:type_name -> google.protobuf.Timestamp
-	53, // 20: trellis.survey.v1.ListSamplesResponse.samples:type_name -> trellis.survey.v1.SurveySample
-	54, // 21: trellis.survey.v1.SurveySample.captured_at:type_name -> google.protobuf.Timestamp
-	1,  // 22: trellis.survey.v1.SurveyService.ImportAirMapper:input_type -> trellis.survey.v1.ImportAirMapperRequest
-	3,  // 23: trellis.survey.v1.SurveyService.ListSurveys:input_type -> trellis.survey.v1.ListSurveysRequest
-	5,  // 24: trellis.survey.v1.SurveyService.GetSurvey:input_type -> trellis.survey.v1.GetSurveyRequest
-	7,  // 25: trellis.survey.v1.SurveyService.DeleteSurvey:input_type -> trellis.survey.v1.DeleteSurveyRequest
-	14, // 26: trellis.survey.v1.SurveyService.GetHeatmap:input_type -> trellis.survey.v1.GetHeatmapRequest
-	17, // 27: trellis.survey.v1.SurveyService.GetCoverage:input_type -> trellis.survey.v1.GetCoverageRequest
-	10, // 28: trellis.survey.v1.SurveyService.ListFloors:input_type -> trellis.survey.v1.ListFloorsRequest
-	12, // 29: trellis.survey.v1.SurveyService.GetFloor:input_type -> trellis.survey.v1.GetFloorRequest
-	19, // 30: trellis.survey.v1.SurveyService.GenerateReport:input_type -> trellis.survey.v1.GenerateReportRequest
-	22, // 31: trellis.survey.v1.SurveyService.CreateSurvey:input_type -> trellis.survey.v1.CreateSurveyRequest
-	24, // 32: trellis.survey.v1.SurveyService.StartSurvey:input_type -> trellis.survey.v1.StartSurveyRequest
-	26, // 33: trellis.survey.v1.SurveyService.PauseSurvey:input_type -> trellis.survey.v1.PauseSurveyRequest
-	28, // 34: trellis.survey.v1.SurveyService.CompleteSurvey:input_type -> trellis.survey.v1.CompleteSurveyRequest
-	30, // 35: trellis.survey.v1.SurveyService.CapturePoint:input_type -> trellis.survey.v1.CapturePointRequest
-	51, // 36: trellis.survey.v1.SurveyService.ListSamples:input_type -> trellis.survey.v1.ListSamplesRequest
-	49, // 37: trellis.survey.v1.SurveyService.Scan:input_type -> trellis.survey.v1.ScanRequest
-	44, // 38: trellis.survey.v1.SurveyService.StartContinuousCapture:input_type -> trellis.survey.v1.StartContinuousCaptureRequest
-	46, // 39: trellis.survey.v1.SurveyService.StopContinuousCapture:input_type -> trellis.survey.v1.StopContinuousCaptureRequest
-	39, // 40: trellis.survey.v1.SurveyService.MeasureThroughput:input_type -> trellis.survey.v1.MeasureThroughputRequest
-	42, // 41: trellis.survey.v1.SurveyService.SetThroughputTarget:input_type -> trellis.survey.v1.SetThroughputTargetRequest
-	35, // 42: trellis.survey.v1.SurveyService.SetFloorPlan:input_type -> trellis.survey.v1.SetFloorPlanRequest
-	37, // 43: trellis.survey.v1.SurveyService.CalibrateFloorPlan:input_type -> trellis.survey.v1.CalibrateFloorPlanRequest
-	33, // 44: trellis.survey.v1.SurveyService.GetFloorPlanImage:input_type -> trellis.survey.v1.GetFloorPlanImageRequest
-	2,  // 45: trellis.survey.v1.SurveyService.ImportAirMapper:output_type -> trellis.survey.v1.ImportAirMapperResponse
-	4,  // 46: trellis.survey.v1.SurveyService.ListSurveys:output_type -> trellis.survey.v1.ListSurveysResponse
-	6,  // 47: trellis.survey.v1.SurveyService.GetSurvey:output_type -> trellis.survey.v1.GetSurveyResponse
-	8,  // 48: trellis.survey.v1.SurveyService.DeleteSurvey:output_type -> trellis.survey.v1.DeleteSurveyResponse
-	15, // 49: trellis.survey.v1.SurveyService.GetHeatmap:output_type -> trellis.survey.v1.GetHeatmapResponse
-	18, // 50: trellis.survey.v1.SurveyService.GetCoverage:output_type -> trellis.survey.v1.GetCoverageResponse
-	11, // 51: trellis.survey.v1.SurveyService.ListFloors:output_type -> trellis.survey.v1.ListFloorsResponse
-	13, // 52: trellis.survey.v1.SurveyService.GetFloor:output_type -> trellis.survey.v1.GetFloorResponse
-	21, // 53: trellis.survey.v1.SurveyService.GenerateReport:output_type -> trellis.survey.v1.GenerateReportResponse
-	23, // 54: trellis.survey.v1.SurveyService.CreateSurvey:output_type -> trellis.survey.v1.CreateSurveyResponse
-	25, // 55: trellis.survey.v1.SurveyService.StartSurvey:output_type -> trellis.survey.v1.StartSurveyResponse
-	27, // 56: trellis.survey.v1.SurveyService.PauseSurvey:output_type -> trellis.survey.v1.PauseSurveyResponse
-	29, // 57: trellis.survey.v1.SurveyService.CompleteSurvey:output_type -> trellis.survey.v1.CompleteSurveyResponse
-	31, // 58: trellis.survey.v1.SurveyService.CapturePoint:output_type -> trellis.survey.v1.CapturePointResponse
-	52, // 59: trellis.survey.v1.SurveyService.ListSamples:output_type -> trellis.survey.v1.ListSamplesResponse
-	50, // 60: trellis.survey.v1.SurveyService.Scan:output_type -> trellis.survey.v1.ScanResponse
-	45, // 61: trellis.survey.v1.SurveyService.StartContinuousCapture:output_type -> trellis.survey.v1.StartContinuousCaptureResponse
-	47, // 62: trellis.survey.v1.SurveyService.StopContinuousCapture:output_type -> trellis.survey.v1.StopContinuousCaptureResponse
-	40, // 63: trellis.survey.v1.SurveyService.MeasureThroughput:output_type -> trellis.survey.v1.MeasureThroughputResponse
-	43, // 64: trellis.survey.v1.SurveyService.SetThroughputTarget:output_type -> trellis.survey.v1.SetThroughputTargetResponse
-	36, // 65: trellis.survey.v1.SurveyService.SetFloorPlan:output_type -> trellis.survey.v1.SetFloorPlanResponse
-	38, // 66: trellis.survey.v1.SurveyService.CalibrateFloorPlan:output_type -> trellis.survey.v1.CalibrateFloorPlanResponse
-	34, // 67: trellis.survey.v1.SurveyService.GetFloorPlanImage:output_type -> trellis.survey.v1.GetFloorPlanImageResponse
-	45, // [45:68] is the sub-list for method output_type
-	22, // [22:45] is the sub-list for method input_type
-	22, // [22:22] is the sub-list for extension type_name
-	22, // [22:22] is the sub-list for extension extendee
-	0,  // [0:22] is the sub-list for field type_name
+	0,  // 2: trellis.survey.v1.ImportAirMagnetResponse.survey:type_name -> trellis.survey.v1.SurveySummary
+	0,  // 3: trellis.survey.v1.ListSurveysResponse.surveys:type_name -> trellis.survey.v1.SurveySummary
+	0,  // 4: trellis.survey.v1.GetSurveyResponse.survey:type_name -> trellis.survey.v1.SurveySummary
+	11, // 5: trellis.survey.v1.ListFloorsResponse.floors:type_name -> trellis.survey.v1.Floor
+	11, // 6: trellis.survey.v1.GetFloorResponse.floor:type_name -> trellis.survey.v1.Floor
+	18, // 7: trellis.survey.v1.GetHeatmapResponse.legend:type_name -> trellis.survey.v1.LegendStop
+	22, // 8: trellis.survey.v1.GenerateReportRequest.options:type_name -> trellis.survey.v1.ReportOptions
+	0,  // 9: trellis.survey.v1.CreateSurveyResponse.survey:type_name -> trellis.survey.v1.SurveySummary
+	0,  // 10: trellis.survey.v1.StartSurveyResponse.survey:type_name -> trellis.survey.v1.SurveySummary
+	0,  // 11: trellis.survey.v1.PauseSurveyResponse.survey:type_name -> trellis.survey.v1.SurveySummary
+	0,  // 12: trellis.survey.v1.CompleteSurveyResponse.survey:type_name -> trellis.survey.v1.SurveySummary
+	34, // 13: trellis.survey.v1.CapturePointResponse.networks:type_name -> trellis.survey.v1.ScannedNetwork
+	11, // 14: trellis.survey.v1.SetFloorPlanResponse.floor:type_name -> trellis.survey.v1.Floor
+	11, // 15: trellis.survey.v1.CalibrateFloorPlanResponse.floor:type_name -> trellis.survey.v1.Floor
+	43, // 16: trellis.survey.v1.MeasureThroughputResponse.reading:type_name -> trellis.survey.v1.ThroughputReading
+	0,  // 17: trellis.survey.v1.SetThroughputTargetResponse.survey:type_name -> trellis.survey.v1.SurveySummary
+	50, // 18: trellis.survey.v1.StartContinuousCaptureResponse.capture:type_name -> trellis.survey.v1.CaptureStatus
+	34, // 19: trellis.survey.v1.ScanResponse.networks:type_name -> trellis.survey.v1.ScannedNetwork
+	56, // 20: trellis.survey.v1.ScanResponse.scanned_at:type_name -> google.protobuf.Timestamp
+	55, // 21: trellis.survey.v1.ListSamplesResponse.samples:type_name -> trellis.survey.v1.SurveySample
+	56, // 22: trellis.survey.v1.SurveySample.captured_at:type_name -> google.protobuf.Timestamp
+	1,  // 23: trellis.survey.v1.SurveyService.ImportAirMapper:input_type -> trellis.survey.v1.ImportAirMapperRequest
+	3,  // 24: trellis.survey.v1.SurveyService.ImportAirMagnet:input_type -> trellis.survey.v1.ImportAirMagnetRequest
+	5,  // 25: trellis.survey.v1.SurveyService.ListSurveys:input_type -> trellis.survey.v1.ListSurveysRequest
+	7,  // 26: trellis.survey.v1.SurveyService.GetSurvey:input_type -> trellis.survey.v1.GetSurveyRequest
+	9,  // 27: trellis.survey.v1.SurveyService.DeleteSurvey:input_type -> trellis.survey.v1.DeleteSurveyRequest
+	16, // 28: trellis.survey.v1.SurveyService.GetHeatmap:input_type -> trellis.survey.v1.GetHeatmapRequest
+	19, // 29: trellis.survey.v1.SurveyService.GetCoverage:input_type -> trellis.survey.v1.GetCoverageRequest
+	12, // 30: trellis.survey.v1.SurveyService.ListFloors:input_type -> trellis.survey.v1.ListFloorsRequest
+	14, // 31: trellis.survey.v1.SurveyService.GetFloor:input_type -> trellis.survey.v1.GetFloorRequest
+	21, // 32: trellis.survey.v1.SurveyService.GenerateReport:input_type -> trellis.survey.v1.GenerateReportRequest
+	24, // 33: trellis.survey.v1.SurveyService.CreateSurvey:input_type -> trellis.survey.v1.CreateSurveyRequest
+	26, // 34: trellis.survey.v1.SurveyService.StartSurvey:input_type -> trellis.survey.v1.StartSurveyRequest
+	28, // 35: trellis.survey.v1.SurveyService.PauseSurvey:input_type -> trellis.survey.v1.PauseSurveyRequest
+	30, // 36: trellis.survey.v1.SurveyService.CompleteSurvey:input_type -> trellis.survey.v1.CompleteSurveyRequest
+	32, // 37: trellis.survey.v1.SurveyService.CapturePoint:input_type -> trellis.survey.v1.CapturePointRequest
+	53, // 38: trellis.survey.v1.SurveyService.ListSamples:input_type -> trellis.survey.v1.ListSamplesRequest
+	51, // 39: trellis.survey.v1.SurveyService.Scan:input_type -> trellis.survey.v1.ScanRequest
+	46, // 40: trellis.survey.v1.SurveyService.StartContinuousCapture:input_type -> trellis.survey.v1.StartContinuousCaptureRequest
+	48, // 41: trellis.survey.v1.SurveyService.StopContinuousCapture:input_type -> trellis.survey.v1.StopContinuousCaptureRequest
+	41, // 42: trellis.survey.v1.SurveyService.MeasureThroughput:input_type -> trellis.survey.v1.MeasureThroughputRequest
+	44, // 43: trellis.survey.v1.SurveyService.SetThroughputTarget:input_type -> trellis.survey.v1.SetThroughputTargetRequest
+	37, // 44: trellis.survey.v1.SurveyService.SetFloorPlan:input_type -> trellis.survey.v1.SetFloorPlanRequest
+	39, // 45: trellis.survey.v1.SurveyService.CalibrateFloorPlan:input_type -> trellis.survey.v1.CalibrateFloorPlanRequest
+	35, // 46: trellis.survey.v1.SurveyService.GetFloorPlanImage:input_type -> trellis.survey.v1.GetFloorPlanImageRequest
+	2,  // 47: trellis.survey.v1.SurveyService.ImportAirMapper:output_type -> trellis.survey.v1.ImportAirMapperResponse
+	4,  // 48: trellis.survey.v1.SurveyService.ImportAirMagnet:output_type -> trellis.survey.v1.ImportAirMagnetResponse
+	6,  // 49: trellis.survey.v1.SurveyService.ListSurveys:output_type -> trellis.survey.v1.ListSurveysResponse
+	8,  // 50: trellis.survey.v1.SurveyService.GetSurvey:output_type -> trellis.survey.v1.GetSurveyResponse
+	10, // 51: trellis.survey.v1.SurveyService.DeleteSurvey:output_type -> trellis.survey.v1.DeleteSurveyResponse
+	17, // 52: trellis.survey.v1.SurveyService.GetHeatmap:output_type -> trellis.survey.v1.GetHeatmapResponse
+	20, // 53: trellis.survey.v1.SurveyService.GetCoverage:output_type -> trellis.survey.v1.GetCoverageResponse
+	13, // 54: trellis.survey.v1.SurveyService.ListFloors:output_type -> trellis.survey.v1.ListFloorsResponse
+	15, // 55: trellis.survey.v1.SurveyService.GetFloor:output_type -> trellis.survey.v1.GetFloorResponse
+	23, // 56: trellis.survey.v1.SurveyService.GenerateReport:output_type -> trellis.survey.v1.GenerateReportResponse
+	25, // 57: trellis.survey.v1.SurveyService.CreateSurvey:output_type -> trellis.survey.v1.CreateSurveyResponse
+	27, // 58: trellis.survey.v1.SurveyService.StartSurvey:output_type -> trellis.survey.v1.StartSurveyResponse
+	29, // 59: trellis.survey.v1.SurveyService.PauseSurvey:output_type -> trellis.survey.v1.PauseSurveyResponse
+	31, // 60: trellis.survey.v1.SurveyService.CompleteSurvey:output_type -> trellis.survey.v1.CompleteSurveyResponse
+	33, // 61: trellis.survey.v1.SurveyService.CapturePoint:output_type -> trellis.survey.v1.CapturePointResponse
+	54, // 62: trellis.survey.v1.SurveyService.ListSamples:output_type -> trellis.survey.v1.ListSamplesResponse
+	52, // 63: trellis.survey.v1.SurveyService.Scan:output_type -> trellis.survey.v1.ScanResponse
+	47, // 64: trellis.survey.v1.SurveyService.StartContinuousCapture:output_type -> trellis.survey.v1.StartContinuousCaptureResponse
+	49, // 65: trellis.survey.v1.SurveyService.StopContinuousCapture:output_type -> trellis.survey.v1.StopContinuousCaptureResponse
+	42, // 66: trellis.survey.v1.SurveyService.MeasureThroughput:output_type -> trellis.survey.v1.MeasureThroughputResponse
+	45, // 67: trellis.survey.v1.SurveyService.SetThroughputTarget:output_type -> trellis.survey.v1.SetThroughputTargetResponse
+	38, // 68: trellis.survey.v1.SurveyService.SetFloorPlan:output_type -> trellis.survey.v1.SetFloorPlanResponse
+	40, // 69: trellis.survey.v1.SurveyService.CalibrateFloorPlan:output_type -> trellis.survey.v1.CalibrateFloorPlanResponse
+	36, // 70: trellis.survey.v1.SurveyService.GetFloorPlanImage:output_type -> trellis.survey.v1.GetFloorPlanImageResponse
+	47, // [47:71] is the sub-list for method output_type
+	23, // [23:47] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
 func init() { file_trellis_survey_v1_survey_proto_init() }
@@ -3651,15 +3758,15 @@ func file_trellis_survey_v1_survey_proto_init() {
 		return
 	}
 	file_trellis_survey_v1_survey_proto_msgTypes[0].OneofWrappers = []any{}
-	file_trellis_survey_v1_survey_proto_msgTypes[32].OneofWrappers = []any{}
-	file_trellis_survey_v1_survey_proto_msgTypes[53].OneofWrappers = []any{}
+	file_trellis_survey_v1_survey_proto_msgTypes[34].OneofWrappers = []any{}
+	file_trellis_survey_v1_survey_proto_msgTypes[55].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_trellis_survey_v1_survey_proto_rawDesc), len(file_trellis_survey_v1_survey_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   54,
+			NumMessages:   56,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

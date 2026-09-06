@@ -1,0 +1,11 @@
+@AirMagnet Survey Data
+#Type: passive
+#App Version: 8.0 	 Build: 23503
+#Created on: 10:37:30 10/07/2010
+#Antenna Angle: 0.000000, Antenna Type: 
+#dim_X, dim_Y, GPS Map
+&,292.428009,268.321014, 0
+#Time,Xpos,Ypos,Channel,SSID,AP,SignalDBM,Signal,NoiseDBM,Noise,MediaType,NodeName,Speed,ByteCount(throughput),PacketCount,PacketLost,LostRate,RetryCount,RetryRate,Longitude,Latitude,Click,APFlags,MCSRx-Tx,IPerfSpeed,Heading, AntennaDirection, iPerf_Throughput
+1286473050,246.391479,43.112244,1,'cisco-3500','00:14:F1:AF:1B:96',-48,56,-90,6,'802.11g','AP0015.62f8.3bf','0','-1','-1','-1','-1','-1','-1',0, 0,*,1,0,0,0.000000, 0.000000
+1286473050,246.391479,43.112244,36,'dlink-1522','00:26:5A:78:4F:78',-50,54,-90,6,'802.11gn','D-Link:78:4F:78','0','-1','-1','-1','-1','-1','-1',0, 0,*,131,3855,0,0.000000, 0.000000
+1286473061,120.500000,80.250000,11,'guest, wifi','00:26:5A:78:4F:79',-72,30,-91,5,'802.11g','D-Link:78:4F:79','0','-1','-1','-1','-1','-1','-1',0, 0,*,1,0,0,0.000000, 0.000000

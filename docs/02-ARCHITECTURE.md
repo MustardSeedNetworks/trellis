@@ -64,8 +64,10 @@ Everything that isn't *predictive* math or pixels.
   requirements/surveys. SQLite (relational) via `sqlc`; Parquet (measurement clouds).
   Pure-Go `modernc.org/sqlite` to keep the core cgo-free.
 - **Measured survey (migrated from Seed, `09-SEED-MIGRATION.md`):** AirMapper `.amp`
-  import, interpolation, heatmap/colorscale, analysis, multi-floor, reports — proven Go,
-  reused. Produces **measured** grids in the *same* `GridDescriptor` format as the
+  and AirMagnet `.svd` import, interpolation, heatmap/colorscale, analysis, multi-floor,
+  reports — proven Go, reused. An AirMagnet export is UTF-16 text and carries
+  measurements only: its floor plan is a separate file in the AirMagnet project, so an
+  imported `.svd` survey has points and no plan behind them. Produces **measured** grids in the *same* `GridDescriptor` format as the
   engine's **predicted** grids, so UI/reports treat them identically.
 - **Orchestration:** AP move → assemble scene *delta* → request compute (shmem) →
   cache grid → notify UI. **Incremental** (only the changed AP/region).
