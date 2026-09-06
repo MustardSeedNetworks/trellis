@@ -1,0 +1,18 @@
+@AirMagnet Survey Data
+#Type: vofi
+#App Version: 6.0 	 Build: 14823
+#Created on: 17:46:29 05/06/2009
+#dim_X, dim_Y, GPS Map
+&,293.192993,269.023010, 0
+#Time, Xpos, Ypos, Channel, SSID, MediaType, AP, NodeName, SignalDBM, RSSI
+1241656678,219.894745,60.690948,149,'QACiscoVoice','802.11a','00:0F:34:A7:78:1F','QA_VoFi_2',-60,0
+1241656679,219.173247,61.629977,149,'QACiscoVoice','802.11a','00:0F:34:A7:78:1F','QA_VoFi_2',-61,0
+#EventTime, ID, Value, SamplingTime, Signal, From AP, To AP
+%,1241656745,32,1,1241656745,-73,'QA_VoFi_2','',149,0
+%,1241656746,33,1,1241656746,-78,'QA_VoFi_2','QA_VoFi_3',149,157
+#Phone, MacAddress,CodecName
+Phone,'00:1A:A1:92:76:58','G.722'
+#AP Original Configuration
+#'Xpos','Ypos','Name','AP','Channel','SSID','Power','Reserved'
+$,151.58,103.71,'','00:13:80:43:15:2F',149,'QACiscoVoice',100,1
+$,146.60,135.62,'ap-two','00:0F:34:A7:78:1F',157,'QACiscoVoice',100,1

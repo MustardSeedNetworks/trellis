@@ -132,3 +132,51 @@ func TestParseAirMagnetBoundsTheInput(t *testing.T) {
 		t.Fatalf("oversized input error = %v, want a size refusal", err)
 	}
 }
+
+// svdWithSections is a voice survey: measurements, then a roaming-event log,
+// then a phone list, then the AP placements. It is trimmed from a real export
+// and exists because the sections are what a one-section reading gets wrong.
+func svdWithSections(t *testing.T) string {
+	t.Helper()
+	body, err := os.ReadFile(filepath.Join("testdata", "airmagnet-sections.svd.txt"))
+	if err != nil {
+		t.Fatalf("read fixture: %v", err)
+	}
+	return string(body)
+}
+
+// TestParseAirMagnetReadsSectionsByRowPrefix pins the rule that tells a
+// measurement from everything else in the file.
+//
+// Rows carry a one-character prefix: none for a measurement, "$" for an AP
+// placement, "%" for a roaming event. Reading them positionally instead put an
+// event's timestamp in the X column — the store's coordinate constraint refused
+// it and took the whole import down — and shifted every AP row by one field, so
+// every placement in the reference corpus parsed to nothing and was stored as
+// an empty list without complaint.
+func TestParseAirMagnetReadsSectionsByRowPrefix(t *testing.T) {
+	file, err := survey.ParseAirMagnetSVD(utf16le(t, svdWithSections(t)))
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+
+	if len(file.Points) != 2 {
+		t.Fatalf("points = %d, want 2 — the event and phone rows are not measurements", len(file.Points))
+	}
+	for _, p := range file.Points {
+		if p.X > 1000 {
+			t.Errorf("point at (%d,%d): a timestamp was read as a position", p.X, p.Y)
+		}
+	}
+
+	if len(file.APs) != 2 {
+		t.Fatalf("AP placements = %d, want 2", len(file.APs))
+	}
+	first := file.APs[0]
+	if first.X != 151 || first.Y != 103 {
+		t.Errorf("first AP at (%d,%d), want (151,103) — the row prefix took a column", first.X, first.Y)
+	}
+	if second := file.APs[1]; second.Name != "ap-two" || second.BSSID != "00:0F:34:A7:78:1F" {
+		t.Errorf("second AP = %+v", second)
+	}
+}
