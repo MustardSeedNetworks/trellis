@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.25](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.24...v0.2.25) (2026-09-06)
+
+
+### Features
+
+* **report:** map every layer a floor measured, plan or not ([#325](https://github.com/MustardSeedNetworks/trellis/issues/325)) ([4b1a29e](https://github.com/MustardSeedNetworks/trellis/commit/4b1a29e883d80c348afa1a1574cbd9e88197e3c9))
+
+
+### Bug Fixes
+
+* **import:** read an AirMagnet file's row prefixes ([#329](https://github.com/MustardSeedNetworks/trellis/issues/329)) ([41393e6](https://github.com/MustardSeedNetworks/trellis/commit/41393e610aff2fe8f576278fc001511cee8fa8b2))
+
 ## [0.2.24](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.23...v0.2.24) (2026-09-06)
 
 
