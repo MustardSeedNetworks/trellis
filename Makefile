@@ -1,4 +1,4 @@
-.PHONY: generate generate-ts ui build build-e2e ui-build-hash lint vet test fmt-check check-stale-tests packages
+.PHONY: generate generate-ts ui build build-e2e ui-build-hash lint golangci-lint vet test fmt-check check-stale-tests packages
 
 # Universal Build Contract: every binary carries version, commit, build time
 # and the md5 of the embedded UI, injected into internal/version. The hash is
@@ -17,6 +17,12 @@ LDFLAGS = -s -w \
 	-X $(VERSION_PKG).BuildTime=$(BUILD_TIME) \
 	-X $(VERSION_PKG).UIBuildHash=$(UI_BUILD_HASH)
 GOFLAGS = -trimpath -buildvcs=false -ldflags "$(LDFLAGS)"
+
+# Must match the golangci-lint pin in .github/workflows/ci.yml. A copy on PATH
+# of any other version is a false clear: it passes what CI rejects or rejects
+# what CI passes.
+GOLANGCI_LINT_VERSION := v2.13.2
+GOLANGCI_LINT := $(shell go env GOPATH)/bin/golangci-lint
 
 generate:
 	buf generate
@@ -42,11 +48,11 @@ ui-build-hash:
 # gosec findings reached CI that way. GOOS is enough to fix it for the pure-Go
 # backends and for the daemon's per-platform bind-error check; the darwin
 # backend needs cgo and so only lints on a Mac.
-lint:
-	golangci-lint run ./core/... ./internal/... ./cmd/...
-	GOOS=linux golangci-lint run ./internal/capture/... ./cmd/trellisd/...
-	GOOS=windows golangci-lint run ./internal/capture/... ./cmd/trellisd/...
-	golangci-lint run --build-tags e2e ./cmd/trellisd/...
+lint: golangci-lint
+	$(GOLANGCI_LINT) run ./core/... ./internal/... ./cmd/...
+	GOOS=linux $(GOLANGCI_LINT) run ./internal/capture/... ./cmd/trellisd/...
+	GOOS=windows $(GOLANGCI_LINT) run ./internal/capture/... ./cmd/trellisd/...
+	$(GOLANGCI_LINT) run --build-tags e2e ./cmd/trellisd/...
 	buf lint
 
 vet:
@@ -91,3 +97,9 @@ endif
 
 packages: ui
 	$(PACKAGE_ENV) UI_BUILD_HASH=$(UI_BUILD_HASH) goreleaser release --snapshot --clean --skip=sign,sbom,publish
+
+# Reinstall whenever the installed version does not match the pin.
+golangci-lint:
+	@if ! "$(GOLANGCI_LINT)" version 2>/dev/null | grep -q "$(GOLANGCI_LINT_VERSION:v%=%)"; then \
+		go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); \
+	fi
