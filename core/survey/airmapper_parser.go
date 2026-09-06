@@ -19,9 +19,6 @@ const (
 	// feetToMeters is the conversion factor from feet to meters (1 foot = 0.3048 meters).
 	feetToMeters = 0.3048
 
-	// defaultScaleMeters is the default floor plan scale when calibration data is unavailable (10cm per pixel).
-	defaultScaleMeters = 0.1
-
 	// defaultPropagationMeters is the default signal propagation radius in meters when not specified.
 	defaultPropagationMeters = 10
 )
@@ -118,7 +115,7 @@ func ParseAirMapperFile(data []byte) (*AirMapperFile, error) {
 	}
 
 	result := &AirMapperFile{}
-	var serialFound, floorPlanFound bool
+	var floorPlanFound bool
 
 	for _, file := range reader.File {
 		name := file.Name
@@ -131,7 +128,6 @@ func ParseAirMapperFile(data []byte) (*AirMapperFile, error) {
 				return nil, fmt.Errorf("failed to parse .serial file: %w", parseErr)
 			}
 			result.Serial = serial
-			serialFound = true
 
 		case ext == ".jpg" || ext == ".jpeg" || ext == ".png":
 			imgData, readErr := readZipFile(file)
@@ -153,9 +149,13 @@ func ParseAirMapperFile(data []byte) (*AirMapperFile, error) {
 		}
 	}
 
-	if !serialFound {
-		return nil, errors.New("no .serial file found in archive")
-	}
+	// .serial is optional. It carries the extras — AP and client placements,
+	// the pixels-per-foot calibration, the pass/fail criteria — and an archive
+	// exported from Link-Live, which is how most surveys leave an AirCheck or
+	// an EtherScope, has none. The survey itself is in .SurveyResult and the
+	// plan is the image, both of which those archives do carry; refusing them
+	// for a missing extra turned away eight of the 58 archives in the reference
+	// corpus.
 
 	if !floorPlanFound {
 		return nil, errors.New("no floor plan image found in archive")
@@ -210,10 +210,6 @@ func readZipFile(file *zip.File) ([]byte, error) {
 
 // ToImportResult converts an AirMapperFile to an AirMapperImportResult.
 func (a *AirMapperFile) ToImportResult() (*AirMapperImportResult, error) {
-	if a.Serial == nil {
-		return nil, errors.New("no serial metadata available")
-	}
-
 	result := &AirMapperImportResult{
 		Warnings: make([]string, 0),
 	}
@@ -233,6 +229,18 @@ func (a *AirMapperFile) ToImportResult() (*AirMapperImportResult, error) {
 		result.Warnings = append(result.Warnings, "No floor plan image found")
 	}
 
+	if a.Serial == nil {
+		// Everything below reads .serial. Without it the archive states no
+		// scale, and the scale stays unknown rather than defaulted: a made-up
+		// metres-per-pixel would put invented distances on every dead-zone
+		// radius in the report. The two-point calibration is how an operator
+		// supplies it.
+		result.Warnings = append(result.Warnings,
+			"This archive carries no calibration, placements or pass/fail criteria. "+
+				"Calibrate the floor plan to measure distances.")
+		return result, nil
+	}
+
 	// Convert scale from pixels per foot to meters per pixel
 	if a.Serial.FloorPlanScalePpf > 0 {
 		// ppf = pixels per foot
@@ -240,8 +248,9 @@ func (a *AirMapperFile) ToImportResult() (*AirMapperImportResult, error) {
 		feetPerPixel := 1.0 / a.Serial.FloorPlanScalePpf
 		result.Calibration.ScaleM = feetPerPixel * feetToMeters
 	} else {
-		result.Calibration.ScaleM = defaultScaleMeters
-		result.Warnings = append(result.Warnings, "No scale calibration found, using default")
+		// Unknown, not defaulted — see the nil-Serial branch above.
+		result.Warnings = append(result.Warnings,
+			"No scale calibration in this archive. Calibrate the floor plan to measure distances.")
 	}
 
 	// Convert propagation from feet to meters
@@ -279,33 +288,4 @@ func (a *AirMapperFile) ToImportResult() (*AirMapperImportResult, error) {
 	result.SurveyItemsCount = a.Serial.SurveyItemsCount
 
 	return result, nil
-}
-
-// GetCalibration extracts calibration data from an AirMapper file.
-func (a *AirMapperFile) GetCalibration() AirMapperCalibration {
-	cal := AirMapperCalibration{
-		ScaleM:       defaultScaleMeters,
-		PropagationM: defaultPropagationMeters,
-	}
-
-	if a.Serial == nil {
-		return cal
-	}
-
-	// Convert scale
-	if a.Serial.FloorPlanScalePpf > 0 {
-		feetPerPixel := 1.0 / a.Serial.FloorPlanScalePpf
-		cal.ScaleM = feetPerPixel * feetToMeters
-	}
-
-	// Convert propagation
-	if a.Serial.Propagation > 0 {
-		if a.Serial.PropagationUnit == "m" {
-			cal.PropagationM = a.Serial.Propagation
-		} else {
-			cal.PropagationM = a.Serial.Propagation * feetToMeters
-		}
-	}
-
-	return cal
 }
