@@ -89,6 +89,9 @@ const (
 	SurveyServiceListSamplesProcedure = "/trellis.survey.v1.SurveyService/ListSamples"
 	// SurveyServiceScanProcedure is the fully-qualified name of the SurveyService's Scan RPC.
 	SurveyServiceScanProcedure = "/trellis.survey.v1.SurveyService/Scan"
+	// SurveyServiceGetCaptureCapabilityProcedure is the fully-qualified name of the SurveyService's
+	// GetCaptureCapability RPC.
+	SurveyServiceGetCaptureCapabilityProcedure = "/trellis.survey.v1.SurveyService/GetCaptureCapability"
 	// SurveyServiceStartContinuousCaptureProcedure is the fully-qualified name of the SurveyService's
 	// StartContinuousCapture RPC.
 	SurveyServiceStartContinuousCaptureProcedure = "/trellis.survey.v1.SurveyService/StartContinuousCapture"
@@ -167,6 +170,10 @@ type SurveyServiceClient interface {
 	// seconds and the radio serves its cache inside that window, so a stream
 	// would repeat itself at whatever rate a client asked for. The client polls.
 	Scan(context.Context, *connect.Request[v1.ScanRequest]) (*connect.Response[v1.ScanResponse], error)
+	// GetCaptureCapability says whether this host can measure at all, so a
+	// client can explain that before an operator sets out rather than after a
+	// walk fails. A host with no radio still browses and reports.
+	GetCaptureCapability(context.Context, *connect.Request[v1.GetCaptureCapabilityRequest]) (*connect.Response[v1.GetCaptureCapabilityResponse], error)
 	// StartContinuousCapture samples repeatedly at a position until it is
 	// stopped — the walking half of a measured survey, where CapturePoint is the
 	// stop-and-go half.
@@ -322,6 +329,12 @@ func NewSurveyServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(surveyServiceMethods.ByName("Scan")),
 			connect.WithClientOptions(opts...),
 		),
+		getCaptureCapability: connect.NewClient[v1.GetCaptureCapabilityRequest, v1.GetCaptureCapabilityResponse](
+			httpClient,
+			baseURL+SurveyServiceGetCaptureCapabilityProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("GetCaptureCapability")),
+			connect.WithClientOptions(opts...),
+		),
 		startContinuousCapture: connect.NewClient[v1.StartContinuousCaptureRequest, v1.StartContinuousCaptureResponse](
 			httpClient,
 			baseURL+SurveyServiceStartContinuousCaptureProcedure,
@@ -386,6 +399,7 @@ type surveyServiceClient struct {
 	capturePoint           *connect.Client[v1.CapturePointRequest, v1.CapturePointResponse]
 	listSamples            *connect.Client[v1.ListSamplesRequest, v1.ListSamplesResponse]
 	scan                   *connect.Client[v1.ScanRequest, v1.ScanResponse]
+	getCaptureCapability   *connect.Client[v1.GetCaptureCapabilityRequest, v1.GetCaptureCapabilityResponse]
 	startContinuousCapture *connect.Client[v1.StartContinuousCaptureRequest, v1.StartContinuousCaptureResponse]
 	stopContinuousCapture  *connect.Client[v1.StopContinuousCaptureRequest, v1.StopContinuousCaptureResponse]
 	measureThroughput      *connect.Client[v1.MeasureThroughputRequest, v1.MeasureThroughputResponse]
@@ -480,6 +494,11 @@ func (c *surveyServiceClient) Scan(ctx context.Context, req *connect.Request[v1.
 	return c.scan.CallUnary(ctx, req)
 }
 
+// GetCaptureCapability calls trellis.survey.v1.SurveyService.GetCaptureCapability.
+func (c *surveyServiceClient) GetCaptureCapability(ctx context.Context, req *connect.Request[v1.GetCaptureCapabilityRequest]) (*connect.Response[v1.GetCaptureCapabilityResponse], error) {
+	return c.getCaptureCapability.CallUnary(ctx, req)
+}
+
 // StartContinuousCapture calls trellis.survey.v1.SurveyService.StartContinuousCapture.
 func (c *surveyServiceClient) StartContinuousCapture(ctx context.Context, req *connect.Request[v1.StartContinuousCaptureRequest]) (*connect.Response[v1.StartContinuousCaptureResponse], error) {
 	return c.startContinuousCapture.CallUnary(ctx, req)
@@ -570,6 +589,10 @@ type SurveyServiceHandler interface {
 	// seconds and the radio serves its cache inside that window, so a stream
 	// would repeat itself at whatever rate a client asked for. The client polls.
 	Scan(context.Context, *connect.Request[v1.ScanRequest]) (*connect.Response[v1.ScanResponse], error)
+	// GetCaptureCapability says whether this host can measure at all, so a
+	// client can explain that before an operator sets out rather than after a
+	// walk fails. A host with no radio still browses and reports.
+	GetCaptureCapability(context.Context, *connect.Request[v1.GetCaptureCapabilityRequest]) (*connect.Response[v1.GetCaptureCapabilityResponse], error)
 	// StartContinuousCapture samples repeatedly at a position until it is
 	// stopped — the walking half of a measured survey, where CapturePoint is the
 	// stop-and-go half.
@@ -721,6 +744,12 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(surveyServiceMethods.ByName("Scan")),
 		connect.WithHandlerOptions(opts...),
 	)
+	surveyServiceGetCaptureCapabilityHandler := connect.NewUnaryHandler(
+		SurveyServiceGetCaptureCapabilityProcedure,
+		svc.GetCaptureCapability,
+		connect.WithSchema(surveyServiceMethods.ByName("GetCaptureCapability")),
+		connect.WithHandlerOptions(opts...),
+	)
 	surveyServiceStartContinuousCaptureHandler := connect.NewUnaryHandler(
 		SurveyServiceStartContinuousCaptureProcedure,
 		svc.StartContinuousCapture,
@@ -799,6 +828,8 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 			surveyServiceListSamplesHandler.ServeHTTP(w, r)
 		case SurveyServiceScanProcedure:
 			surveyServiceScanHandler.ServeHTTP(w, r)
+		case SurveyServiceGetCaptureCapabilityProcedure:
+			surveyServiceGetCaptureCapabilityHandler.ServeHTTP(w, r)
 		case SurveyServiceStartContinuousCaptureProcedure:
 			surveyServiceStartContinuousCaptureHandler.ServeHTTP(w, r)
 		case SurveyServiceStopContinuousCaptureProcedure:
@@ -888,6 +919,10 @@ func (UnimplementedSurveyServiceHandler) ListSamples(context.Context, *connect.R
 
 func (UnimplementedSurveyServiceHandler) Scan(context.Context, *connect.Request[v1.ScanRequest]) (*connect.Response[v1.ScanResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.Scan is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) GetCaptureCapability(context.Context, *connect.Request[v1.GetCaptureCapabilityRequest]) (*connect.Response[v1.GetCaptureCapabilityResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.GetCaptureCapability is not implemented"))
 }
 
 func (UnimplementedSurveyServiceHandler) StartContinuousCapture(context.Context, *connect.Request[v1.StartContinuousCaptureRequest]) (*connect.Response[v1.StartContinuousCaptureResponse], error) {

@@ -262,9 +262,52 @@ func (g *ReportGenerator) addFloorSection(floor *Floor) {
 		g.pdf.CellFormat(0, pdfSpacingLarge, "No samples collected for this floor", "", 1, "L", false, 0, "")
 	}
 
-	// Add heatmap if requested and floor has data
-	if g.options.IncludeHeatmaps && len(floor.Samples) > 0 && floor.FloorPlan != nil {
-		g.addFloorHeatmap(floor)
+	// The maps. A plan is not required: a floor with no plan uploaded — and
+	// every AirMagnet import, since an .svd carries none — still has positions,
+	// and the heatmap is bounded by the measurements themselves. Requiring one
+	// here meant a walk done before anyone drew a plan, and every floor after
+	// the first in a multi-floor survey, got statistics and no map.
+	if g.options.IncludeHeatmaps && len(floor.Samples) > 0 {
+		g.addFloorLayers(floor)
+	}
+}
+
+// reportLayers are the maps a floor can carry, in the order a report is read.
+// Signal is the baseline every passive walk has; the rest exist only if that
+// walk measured them, which is why a missing one is silence rather than a note.
+var reportLayers = []struct {
+	kind     HeatmapType
+	title    string
+	unit     string
+	baseline bool
+}{
+	{HeatmapRSSI, "Coverage Map", "dBm", true},
+	{HeatmapSNR, "Signal to Noise", "dB", false},
+	{HeatmapDownload, "Download Throughput", "Mbps", false},
+	{HeatmapUpload, "Upload Throughput", "Mbps", false},
+}
+
+// addFloorLayers draws every layer this floor actually measured.
+//
+// The Coverage page has offered signal, noise ratio and both throughput
+// directions since the active survey landed; the report drew only signal, so a
+// walk whose whole point was "what does a client actually get here" produced a
+// PDF that never said. A layer with no readings of its kind is skipped without
+// comment — an operator who did not run iperf3 does not need a page telling
+// them so — while the signal layer says why it is missing, because a passive
+// walk that produced no map at all is a fault worth naming.
+func (g *ReportGenerator) addFloorLayers(floor *Floor) {
+	for _, layer := range reportLayers {
+		config := DefaultHeatmapConfig()
+		config.Type = layer.kind
+		result, err := GenerateFloorHeatmap(floor, config)
+		if err != nil {
+			if layer.baseline {
+				g.addFloorHeatmapUnavailable(err)
+			}
+			continue
+		}
+		g.addFloorHeatmapPage(floor, layer.title, layer.unit, result)
 	}
 }
 
@@ -277,19 +320,17 @@ func (g *ReportGenerator) addFloorSection(floor *Floor) {
 // A floor whose map will not render keeps its measurements: the section says
 // so and moves on, because a page of correct statistics is worth more than a
 // failed report.
-func (g *ReportGenerator) addFloorHeatmap(floor *Floor) {
-	result, err := GenerateFloorHeatmap(floor, DefaultHeatmapConfig())
-	if err != nil {
-		g.addFloorHeatmapUnavailable(err)
-		return
-	}
-
+func (g *ReportGenerator) addFloorHeatmapPage(
+	floor *Floor, title, unit string, result *HeatmapResult,
+) {
 	g.pdf.AddPage()
-	g.addSectionHeader(fmt.Sprintf("Coverage Map: %s", floor.Name))
+	g.addSectionHeader(fmt.Sprintf("%s: %s", title, floor.Name))
 
-	// fpdf keys registered images by name and reuses them, so the floor id
-	// keeps two floors from collapsing onto whichever was registered first.
-	name := "heatmap-" + floor.ID
+	// fpdf keys registered images by name and reuses them, so the floor id and
+	// the layer keep two maps from collapsing onto whichever was registered
+	// first — the bug this naming already prevented between floors, which
+	// every extra layer per floor would otherwise have reintroduced.
+	name := "heatmap-" + floor.ID + "-" + title
 	g.pdf.RegisterImageOptionsReader(
 		name,
 		fpdf.ImageOptions{ImageType: "PNG", ReadDpi: false},
@@ -318,8 +359,8 @@ func (g *ReportGenerator) addFloorHeatmap(floor *Floor) {
 	g.pdf.CellFormat(
 		0, pdfSpacingMedium,
 		fmt.Sprintf(
-			"Signal strength across %d measured points, %.0f to %.0f dBm.",
-			result.SampleCount, result.Stats.Min, result.Stats.Max,
+			"%s across %d measured points, %.0f to %.0f %s.",
+			title, result.SampleCount, result.Stats.Min, result.Stats.Max, unit,
 		),
 		"", 1, "L", false, 0, "",
 	)

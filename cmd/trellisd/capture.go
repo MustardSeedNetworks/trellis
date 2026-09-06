@@ -8,6 +8,7 @@ import (
 	"log/slog"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
+	"github.com/MustardSeedNetworks/trellis/internal/api"
 	"github.com/MustardSeedNetworks/trellis/internal/capture"
 )
 
@@ -24,7 +25,11 @@ import (
 //
 // It runs in its own goroutine: an active scan takes three to four seconds and
 // nothing else should wait on it.
-func reportCaptureReadiness(ctx context.Context, scanner survey.Scanner) {
+// It also reports the outcome to the API handler, so a client can say what
+// this host can do before an operator walks a building. The log line alone was
+// only ever visible to whoever started the daemon, which on a packaged install
+// is nobody.
+func reportCaptureReadiness(ctx context.Context, scanner survey.Scanner, h *api.SurveyServiceHandler) {
 	if err := capture.Authorize(); err != nil {
 		slog.Warn("capture permission incomplete", "error", err)
 	}
@@ -35,9 +40,15 @@ func reportCaptureReadiness(ctx context.Context, scanner survey.Scanner) {
 		slog.Error("capture cannot read network names; a survey would record nameless BSSIDs",
 			"error", err,
 			"fix", capture.PermissionRemedy)
+		h.SetCaptureCapability(api.CaptureCapability{
+			Reason: err.Error(),
+			Remedy: capture.PermissionRemedy,
+		})
 	case err != nil:
 		slog.Error("capture scan failed", "error", err)
+		h.SetCaptureCapability(api.CaptureCapability{Reason: err.Error()})
 	default:
 		slog.Info("capture ready", "networks", len(networks))
+		h.SetCaptureCapability(api.CaptureCapability{Available: true})
 	}
 }

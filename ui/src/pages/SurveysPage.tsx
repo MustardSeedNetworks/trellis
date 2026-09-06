@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { SurveyCreateForm } from '@/components/SurveyCreateForm';
 import { SurveyDetail } from '@/components/SurveyDetail';
 import { SurveyList } from '@/components/SurveyList';
+import { CaptureCapabilityNotice } from '@/components/CaptureCapabilityNotice';
 import { surveyClient } from '@/lib/client';
 import { type RollupState, StatusRollup } from '@/ui/StatusRollup';
 
@@ -75,6 +76,8 @@ export function SurveysPage() {
         body={body}
         figures={[{ label: t('common:labels.surveys'), value: String(surveys.length) }]}
       />
+
+      <CaptureCapabilityNotice />
 
       <div className="flex flex-1 gap-6 overflow-hidden">
         <aside className="panel flex w-72 shrink-0 flex-col overflow-hidden">

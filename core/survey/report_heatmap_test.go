@@ -106,8 +106,11 @@ func TestReportEmbedsTheCoverageMap(t *testing.T) {
 }
 
 func TestReportSurvivesAFloorItCannotMap(t *testing.T) {
-	// No plan means no canvas to draw on. The measurements are still worth
-	// reporting, so this must produce a PDF rather than an error.
+	// This test was written when a floor with no plan had no canvas to draw
+	// on. That is no longer true — the map is now bounded by the measurements
+	// themselves, and TestReportMapsAFloorWithNoPlan pins that. What it still
+	// proves is the part that has not changed: whatever the map does, the
+	// measurements are reported and a PDF comes out rather than an error.
 	mgr := mustManager(t, t.TempDir(), nil, nil, nil, nil)
 	svy, err := mgr.CreateSurvey("Planless", "no floor plan", "wlan0", survey.TypePassive)
 	if err != nil {
@@ -126,5 +129,119 @@ func TestReportSurvivesAFloorItCannotMap(t *testing.T) {
 	}
 	if !bytes.HasPrefix(pdf, []byte("%PDF-")) {
 		t.Fatal("not a PDF")
+	}
+}
+
+// TestReportMapsAFloorWithNoPlan is the other half of the case above. A survey
+// walked before anyone uploaded a plan — and every AirMagnet import, since an
+// .svd carries no plan at all — still has measurements with positions, and the
+// heatmap renders those on a canvas bounded by the points themselves. The
+// report used to require a plan before it drew anything, so those surveys got
+// statistics and no map: the one thing the report is read for.
+func TestReportMapsAFloorWithNoPlan(t *testing.T) {
+	mgr := mustManager(t, t.TempDir(), nil, nil, nil, nil)
+	svy, err := mgr.CreateSurvey("Planless walk", "no floor plan", "wlan0", survey.TypePassive)
+	if err != nil {
+		t.Fatalf("CreateSurvey: %v", err)
+	}
+	if err := mgr.StartSurvey(svy.ID); err != nil {
+		t.Fatalf("StartSurvey: %v", err)
+	}
+	now := time.Now().UTC()
+	for i, pt := range [][2]int{{20, 20}, {80, 40}, {140, 90}} {
+		nets := []*wifi.ScannedNetwork{{
+			SSID: "ap", BSSID: "00:00:00:00:00:01",
+			Signal: -45 - i*10, Channel: 36, Frequency: 5180, LastSeen: now,
+		}}
+		if err := mgr.AddSample(svy.ID, pt[0], pt[1], &survey.PassiveSample{Networks: nets}); err != nil {
+			t.Fatalf("AddSample %d: %v", i, err)
+		}
+	}
+
+	pdf, err := mgr.GenerateReport(svy.ID, survey.DefaultReportOptions())
+	if err != nil {
+		t.Fatalf("GenerateReport: %v", err)
+	}
+	if !imageXObject.Match(pdf) {
+		t.Error("a floor with measurements and no plan got no coverage map")
+	}
+}
+
+// TestReportDrawsEveryLayerTheFloorMeasured pins "the layers that exist". A
+// walk that measured throughput as well as signal carries two more readings per
+// point, and a report that maps only RSSI silently drops the numbers the
+// customer asked for — the throughput layer exists on the Coverage page and did
+// not exist in the PDF.
+func TestReportDrawsEveryLayerTheFloorMeasured(t *testing.T) {
+	mgr := surveyWithPlan(t, "Layered")
+	id := onlySurveyID(t, mgr)
+
+	signalOnly, err := mgr.GenerateReport(id, survey.DefaultReportOptions())
+	if err != nil {
+		t.Fatalf("GenerateReport: %v", err)
+	}
+	before := len(imageXObject.FindAll(signalOnly, -1))
+	if before == 0 {
+		t.Fatal("no map at all for a signal-only survey")
+	}
+
+	// The same walk, with throughput measured at two of its points.
+	for _, pt := range [][2]int{{15, 15}, {100, 70}} {
+		sample := &survey.ThroughputSample{
+			SSID: "ap", BSSID: "00:00:00:00:00:01", RSSI: -50,
+			DownloadMbps: 240, UploadMbps: 90,
+		}
+		if err := mgr.AddSample(id, pt[0], pt[1], sample); err != nil {
+			t.Fatalf("AddSample throughput: %v", err)
+		}
+	}
+
+	layered, err := mgr.GenerateReport(id, survey.DefaultReportOptions())
+	if err != nil {
+		t.Fatalf("GenerateReport after throughput: %v", err)
+	}
+	after := len(imageXObject.FindAll(layered, -1))
+	if after <= before {
+		t.Errorf("maps in the report = %d after measuring throughput, %d before — "+
+			"the download and upload layers are missing", after, before)
+	}
+}
+
+// TestReportMapsEachFloorOfAMultiFloorSurvey is the multi-floor half of the
+// row: two floors, each with its own measurements, must each get their own map
+// rather than one floor's map standing in for the building.
+func TestReportMapsEachFloorOfAMultiFloorSurvey(t *testing.T) {
+	mgr := surveyWithPlan(t, "Two floors")
+	id := onlySurveyID(t, mgr)
+	oneFloor, err := mgr.GenerateReport(id, survey.DefaultReportOptions())
+	if err != nil {
+		t.Fatalf("GenerateReport: %v", err)
+	}
+	before := len(imageXObject.FindAll(oneFloor, -1))
+
+	second, err := mgr.AddFloor(id, "Level 2", 2)
+	if err != nil {
+		t.Fatalf("AddFloor: %v", err)
+	}
+	if err := mgr.SetActiveFloor(id, second.ID); err != nil {
+		t.Fatalf("SetActiveFloor: %v", err)
+	}
+	now := time.Now().UTC()
+	for i, pt := range [][2]int{{10, 10}, {50, 50}, {90, 80}} {
+		nets := []*wifi.ScannedNetwork{{
+			SSID: "ap2", BSSID: "00:00:00:00:00:02",
+			Signal: -55 - i*8, Channel: 44, Frequency: 5220, LastSeen: now,
+		}}
+		if err := mgr.AddSample(id, pt[0], pt[1], &survey.PassiveSample{Networks: nets}); err != nil {
+			t.Fatalf("AddSample floor 2 %d: %v", i, err)
+		}
+	}
+
+	twoFloors, err := mgr.GenerateReport(id, survey.DefaultReportOptions())
+	if err != nil {
+		t.Fatalf("GenerateReport two floors: %v", err)
+	}
+	if after := len(imageXObject.FindAll(twoFloors, -1)); after <= before {
+		t.Errorf("maps = %d with two measured floors, %d with one", after, before)
 	}
 }
