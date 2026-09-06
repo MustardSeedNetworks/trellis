@@ -19,13 +19,13 @@ import (
 	"github.com/MustardSeedNetworks/trellis/internal/capture"
 )
 
-// scriptedScanner answers one way, forever. The readiness probe scans once.
-type scriptedScanner struct {
+// fixedScanner answers one way, forever. The readiness probe scans once.
+type fixedScanner struct {
 	networks []wifi.ScannedNetwork
 	err      error
 }
 
-func (s scriptedScanner) Scan(context.Context) ([]wifi.ScannedNetwork, error) {
+func (s fixedScanner) Scan(context.Context) ([]wifi.ScannedNetwork, error) {
 	return s.networks, s.err
 }
 
@@ -50,7 +50,7 @@ func handlerForTest(t *testing.T, scanner survey.Scanner) *api.SurveyServiceHand
 }
 
 func TestReadinessReportsAWorkingRadio(t *testing.T) {
-	scanner := scriptedScanner{networks: []wifi.ScannedNetwork{{SSID: "ap", BSSID: "00:00:00:00:00:01"}}}
+	scanner := fixedScanner{networks: []wifi.ScannedNetwork{{SSID: "ap", BSSID: "00:00:00:00:00:01"}}}
 	h := handlerForTest(t, scanner)
 
 	reportCaptureReadiness(context.Background(), scanner, h)
@@ -65,7 +65,7 @@ func TestReadinessReportsAWorkingRadio(t *testing.T) {
 // backend reports as ErrPermission. An operator can fix that, so the remedy
 // has to reach them.
 func TestReadinessCarriesThePermissionRemedy(t *testing.T) {
-	scanner := scriptedScanner{err: capture.ErrPermission}
+	scanner := fixedScanner{err: capture.ErrPermission}
 	h := handlerForTest(t, scanner)
 
 	reportCaptureReadiness(context.Background(), scanner, h)
@@ -83,7 +83,7 @@ func TestReadinessCarriesThePermissionRemedy(t *testing.T) {
 }
 
 func TestReadinessReportsAFailedScanWithoutARemedy(t *testing.T) {
-	scanner := scriptedScanner{err: errors.New("radio is busy")}
+	scanner := fixedScanner{err: errors.New("radio is busy")}
 	h := handlerForTest(t, scanner)
 
 	reportCaptureReadiness(context.Background(), scanner, h)
