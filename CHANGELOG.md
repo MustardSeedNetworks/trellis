@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.24](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.23...v0.2.24) (2026-09-06)
+
+
+### Features
+
+* **import:** read AirMagnet Survey .svd exports ([#324](https://github.com/MustardSeedNetworks/trellis/issues/324)) ([29d9365](https://github.com/MustardSeedNetworks/trellis/commit/29d9365ea061eade77ef9a5c80e1416827243ee3))
+
 ## [0.2.23](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.22...v0.2.23) (2026-09-05)
 
 
