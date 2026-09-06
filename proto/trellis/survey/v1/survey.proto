@@ -85,6 +85,11 @@ service SurveyService {
   // would repeat itself at whatever rate a client asked for. The client polls.
   rpc Scan(ScanRequest) returns (ScanResponse);
 
+  // GetCaptureCapability says whether this host can measure at all, so a
+  // client can explain that before an operator sets out rather than after a
+  // walk fails. A host with no radio still browses and reports.
+  rpc GetCaptureCapability(GetCaptureCapabilityRequest) returns (GetCaptureCapabilityResponse);
+
   // StartContinuousCapture samples repeatedly at a position until it is
   // stopped — the walking half of a measured survey, where CapturePoint is the
   // stop-and-go half.
@@ -531,6 +536,23 @@ message CaptureStatus {
   // when it was stopped deliberately. A walk whose points simply cease, with
   // nothing saying why, is worse than either.
   string last_error = 4;
+}
+
+message GetCaptureCapabilityRequest {}
+
+message GetCaptureCapabilityResponse {
+  // available is true when the daemon holds a radio it can scan with. False
+  // does not mean the survey is unusable: imports, analysis and reports work
+  // on a host with no Wi-Fi at all.
+  bool available = 1;
+
+  // reason says what is missing, in the words the capture backend used.
+  string reason = 2;
+
+  // remedy is the operator's next step when there is one — granting a
+  // permission, for instance. Empty when nothing they can do would help,
+  // which is itself worth saying rather than implying.
+  string remedy = 3;
 }
 
 message ScanRequest {}

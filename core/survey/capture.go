@@ -15,6 +15,16 @@ import (
 // serve imported surveys but cannot take one.
 var ErrNoScanner = errors.New("survey: no Wi-Fi capture backend configured")
 
+// HasScanner says whether this manager holds a capture backend. A survey store
+// with none serves imports, analysis and reports and cannot take a new
+// measurement, which is a difference a client should be able to state before an
+// operator walks a building rather than after.
+func (m *Manager) HasScanner() bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.scanner != nil
+}
+
 // CapturePoint scans the airspace and records what it sees as a passive sample
 // at (x, y) on the survey's active floor. It is the live equivalent of one
 // point in an imported walk.

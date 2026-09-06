@@ -1,4 +1,8 @@
 {
+  "capture": {
+    "unavailable": "Este equipo no puede medir el Wi-Fi",
+    "stillUsable": "Los estudios se abren, importan, analizan y se informan igual: solo un recorrido nuevo necesita una radio."
+  },
   "coverage": {
     "analysing": "Analizando la cobertura",
     "deadZoneBody": "Cada una es una región medida donde la señal quedó por debajo del umbral.",

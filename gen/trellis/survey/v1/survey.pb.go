@@ -3059,6 +3059,109 @@ func (x *CaptureStatus) GetLastError() string {
 	return ""
 }
 
+type GetCaptureCapabilityRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCaptureCapabilityRequest) Reset() {
+	*x = GetCaptureCapabilityRequest{}
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[51]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCaptureCapabilityRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCaptureCapabilityRequest) ProtoMessage() {}
+
+func (x *GetCaptureCapabilityRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[51]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCaptureCapabilityRequest.ProtoReflect.Descriptor instead.
+func (*GetCaptureCapabilityRequest) Descriptor() ([]byte, []int) {
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{51}
+}
+
+type GetCaptureCapabilityResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// available is true when the daemon holds a radio it can scan with. False
+	// does not mean the survey is unusable: imports, analysis and reports work
+	// on a host with no Wi-Fi at all.
+	Available bool `protobuf:"varint,1,opt,name=available,proto3" json:"available,omitempty"`
+	// reason says what is missing, in the words the capture backend used.
+	Reason string `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
+	// remedy is the operator's next step when there is one — granting a
+	// permission, for instance. Empty when nothing they can do would help,
+	// which is itself worth saying rather than implying.
+	Remedy        string `protobuf:"bytes,3,opt,name=remedy,proto3" json:"remedy,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCaptureCapabilityResponse) Reset() {
+	*x = GetCaptureCapabilityResponse{}
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[52]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCaptureCapabilityResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCaptureCapabilityResponse) ProtoMessage() {}
+
+func (x *GetCaptureCapabilityResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[52]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCaptureCapabilityResponse.ProtoReflect.Descriptor instead.
+func (*GetCaptureCapabilityResponse) Descriptor() ([]byte, []int) {
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{52}
+}
+
+func (x *GetCaptureCapabilityResponse) GetAvailable() bool {
+	if x != nil {
+		return x.Available
+	}
+	return false
+}
+
+func (x *GetCaptureCapabilityResponse) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+func (x *GetCaptureCapabilityResponse) GetRemedy() string {
+	if x != nil {
+		return x.Remedy
+	}
+	return ""
+}
+
 type ScanRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -3067,7 +3170,7 @@ type ScanRequest struct {
 
 func (x *ScanRequest) Reset() {
 	*x = ScanRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[51]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3079,7 +3182,7 @@ func (x *ScanRequest) String() string {
 func (*ScanRequest) ProtoMessage() {}
 
 func (x *ScanRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[51]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3092,7 +3195,7 @@ func (x *ScanRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScanRequest.ProtoReflect.Descriptor instead.
 func (*ScanRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{51}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{53}
 }
 
 type ScanResponse struct {
@@ -3108,7 +3211,7 @@ type ScanResponse struct {
 
 func (x *ScanResponse) Reset() {
 	*x = ScanResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[52]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3120,7 +3223,7 @@ func (x *ScanResponse) String() string {
 func (*ScanResponse) ProtoMessage() {}
 
 func (x *ScanResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[52]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3133,7 +3236,7 @@ func (x *ScanResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScanResponse.ProtoReflect.Descriptor instead.
 func (*ScanResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{52}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *ScanResponse) GetNetworks() []*ScannedNetwork {
@@ -3159,7 +3262,7 @@ type ListSamplesRequest struct {
 
 func (x *ListSamplesRequest) Reset() {
 	*x = ListSamplesRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[53]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3171,7 +3274,7 @@ func (x *ListSamplesRequest) String() string {
 func (*ListSamplesRequest) ProtoMessage() {}
 
 func (x *ListSamplesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[53]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3184,7 +3287,7 @@ func (x *ListSamplesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSamplesRequest.ProtoReflect.Descriptor instead.
 func (*ListSamplesRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{53}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *ListSamplesRequest) GetSurveyId() string {
@@ -3203,7 +3306,7 @@ type ListSamplesResponse struct {
 
 func (x *ListSamplesResponse) Reset() {
 	*x = ListSamplesResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[54]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3215,7 +3318,7 @@ func (x *ListSamplesResponse) String() string {
 func (*ListSamplesResponse) ProtoMessage() {}
 
 func (x *ListSamplesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[54]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3228,7 +3331,7 @@ func (x *ListSamplesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSamplesResponse.ProtoReflect.Descriptor instead.
 func (*ListSamplesResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{54}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *ListSamplesResponse) GetSamples() []*SurveySample {
@@ -3268,7 +3371,7 @@ type SurveySample struct {
 
 func (x *SurveySample) Reset() {
 	*x = SurveySample{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[55]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3280,7 +3383,7 @@ func (x *SurveySample) String() string {
 func (*SurveySample) ProtoMessage() {}
 
 func (x *SurveySample) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[55]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3293,7 +3396,7 @@ func (x *SurveySample) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SurveySample.ProtoReflect.Descriptor instead.
 func (*SurveySample) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{55}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *SurveySample) GetX() int32 {
@@ -3552,7 +3655,12 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\x01x\x18\x02 \x01(\x05R\x01x\x12\f\n" +
 	"\x01y\x18\x03 \x01(\x05R\x01y\x12\x1d\n" +
 	"\n" +
-	"last_error\x18\x04 \x01(\tR\tlastError\"\r\n" +
+	"last_error\x18\x04 \x01(\tR\tlastError\"\x1d\n" +
+	"\x1bGetCaptureCapabilityRequest\"l\n" +
+	"\x1cGetCaptureCapabilityResponse\x12\x1c\n" +
+	"\tavailable\x18\x01 \x01(\bR\tavailable\x12\x16\n" +
+	"\x06reason\x18\x02 \x01(\tR\x06reason\x12\x16\n" +
+	"\x06remedy\x18\x03 \x01(\tR\x06remedy\"\r\n" +
 	"\vScanRequest\"\x88\x01\n" +
 	"\fScanResponse\x12=\n" +
 	"\bnetworks\x18\x01 \x03(\v2!.trellis.survey.v1.ScannedNetworkR\bnetworks\x129\n" +
@@ -3572,7 +3680,7 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\rdownload_mbps\x18\a \x01(\x01H\x01R\fdownloadMbps\x88\x01\x01\x12\"\n" +
 	"\finterpolated\x18\x06 \x01(\bR\finterpolatedB\x10\n" +
 	"\x0e_strongest_dbmB\x10\n" +
-	"\x0e_download_mbps2\xfb\x12\n" +
+	"\x0e_download_mbps2\xf4\x13\n" +
 	"\rSurveyService\x12h\n" +
 	"\x0fImportAirMapper\x12).trellis.survey.v1.ImportAirMapperRequest\x1a*.trellis.survey.v1.ImportAirMapperResponse\x12h\n" +
 	"\x0fImportAirMagnet\x12).trellis.survey.v1.ImportAirMagnetRequest\x1a*.trellis.survey.v1.ImportAirMagnetResponse\x12\\\n" +
@@ -3592,7 +3700,8 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\x0eCompleteSurvey\x12(.trellis.survey.v1.CompleteSurveyRequest\x1a).trellis.survey.v1.CompleteSurveyResponse\x12_\n" +
 	"\fCapturePoint\x12&.trellis.survey.v1.CapturePointRequest\x1a'.trellis.survey.v1.CapturePointResponse\x12\\\n" +
 	"\vListSamples\x12%.trellis.survey.v1.ListSamplesRequest\x1a&.trellis.survey.v1.ListSamplesResponse\x12G\n" +
-	"\x04Scan\x12\x1e.trellis.survey.v1.ScanRequest\x1a\x1f.trellis.survey.v1.ScanResponse\x12}\n" +
+	"\x04Scan\x12\x1e.trellis.survey.v1.ScanRequest\x1a\x1f.trellis.survey.v1.ScanResponse\x12w\n" +
+	"\x14GetCaptureCapability\x12..trellis.survey.v1.GetCaptureCapabilityRequest\x1a/.trellis.survey.v1.GetCaptureCapabilityResponse\x12}\n" +
 	"\x16StartContinuousCapture\x120.trellis.survey.v1.StartContinuousCaptureRequest\x1a1.trellis.survey.v1.StartContinuousCaptureResponse\x12z\n" +
 	"\x15StopContinuousCapture\x12/.trellis.survey.v1.StopContinuousCaptureRequest\x1a0.trellis.survey.v1.StopContinuousCaptureResponse\x12n\n" +
 	"\x11MeasureThroughput\x12+.trellis.survey.v1.MeasureThroughputRequest\x1a,.trellis.survey.v1.MeasureThroughputResponse\x12t\n" +
@@ -3613,7 +3722,7 @@ func file_trellis_survey_v1_survey_proto_rawDescGZIP() []byte {
 	return file_trellis_survey_v1_survey_proto_rawDescData
 }
 
-var file_trellis_survey_v1_survey_proto_msgTypes = make([]protoimpl.MessageInfo, 56)
+var file_trellis_survey_v1_survey_proto_msgTypes = make([]protoimpl.MessageInfo, 58)
 var file_trellis_survey_v1_survey_proto_goTypes = []any{
 	(*SurveySummary)(nil),                  // 0: trellis.survey.v1.SurveySummary
 	(*ImportAirMapperRequest)(nil),         // 1: trellis.survey.v1.ImportAirMapperRequest
@@ -3666,12 +3775,14 @@ var file_trellis_survey_v1_survey_proto_goTypes = []any{
 	(*StopContinuousCaptureRequest)(nil),   // 48: trellis.survey.v1.StopContinuousCaptureRequest
 	(*StopContinuousCaptureResponse)(nil),  // 49: trellis.survey.v1.StopContinuousCaptureResponse
 	(*CaptureStatus)(nil),                  // 50: trellis.survey.v1.CaptureStatus
-	(*ScanRequest)(nil),                    // 51: trellis.survey.v1.ScanRequest
-	(*ScanResponse)(nil),                   // 52: trellis.survey.v1.ScanResponse
-	(*ListSamplesRequest)(nil),             // 53: trellis.survey.v1.ListSamplesRequest
-	(*ListSamplesResponse)(nil),            // 54: trellis.survey.v1.ListSamplesResponse
-	(*SurveySample)(nil),                   // 55: trellis.survey.v1.SurveySample
-	(*timestamppb.Timestamp)(nil),          // 56: google.protobuf.Timestamp
+	(*GetCaptureCapabilityRequest)(nil),    // 51: trellis.survey.v1.GetCaptureCapabilityRequest
+	(*GetCaptureCapabilityResponse)(nil),   // 52: trellis.survey.v1.GetCaptureCapabilityResponse
+	(*ScanRequest)(nil),                    // 53: trellis.survey.v1.ScanRequest
+	(*ScanResponse)(nil),                   // 54: trellis.survey.v1.ScanResponse
+	(*ListSamplesRequest)(nil),             // 55: trellis.survey.v1.ListSamplesRequest
+	(*ListSamplesResponse)(nil),            // 56: trellis.survey.v1.ListSamplesResponse
+	(*SurveySample)(nil),                   // 57: trellis.survey.v1.SurveySample
+	(*timestamppb.Timestamp)(nil),          // 58: google.protobuf.Timestamp
 }
 var file_trellis_survey_v1_survey_proto_depIdxs = []int32{
 	50, // 0: trellis.survey.v1.SurveySummary.capture:type_name -> trellis.survey.v1.CaptureStatus
@@ -3694,9 +3805,9 @@ var file_trellis_survey_v1_survey_proto_depIdxs = []int32{
 	0,  // 17: trellis.survey.v1.SetThroughputTargetResponse.survey:type_name -> trellis.survey.v1.SurveySummary
 	50, // 18: trellis.survey.v1.StartContinuousCaptureResponse.capture:type_name -> trellis.survey.v1.CaptureStatus
 	34, // 19: trellis.survey.v1.ScanResponse.networks:type_name -> trellis.survey.v1.ScannedNetwork
-	56, // 20: trellis.survey.v1.ScanResponse.scanned_at:type_name -> google.protobuf.Timestamp
-	55, // 21: trellis.survey.v1.ListSamplesResponse.samples:type_name -> trellis.survey.v1.SurveySample
-	56, // 22: trellis.survey.v1.SurveySample.captured_at:type_name -> google.protobuf.Timestamp
+	58, // 20: trellis.survey.v1.ScanResponse.scanned_at:type_name -> google.protobuf.Timestamp
+	57, // 21: trellis.survey.v1.ListSamplesResponse.samples:type_name -> trellis.survey.v1.SurveySample
+	58, // 22: trellis.survey.v1.SurveySample.captured_at:type_name -> google.protobuf.Timestamp
 	1,  // 23: trellis.survey.v1.SurveyService.ImportAirMapper:input_type -> trellis.survey.v1.ImportAirMapperRequest
 	3,  // 24: trellis.survey.v1.SurveyService.ImportAirMagnet:input_type -> trellis.survey.v1.ImportAirMagnetRequest
 	5,  // 25: trellis.survey.v1.SurveyService.ListSurveys:input_type -> trellis.survey.v1.ListSurveysRequest
@@ -3712,41 +3823,43 @@ var file_trellis_survey_v1_survey_proto_depIdxs = []int32{
 	28, // 35: trellis.survey.v1.SurveyService.PauseSurvey:input_type -> trellis.survey.v1.PauseSurveyRequest
 	30, // 36: trellis.survey.v1.SurveyService.CompleteSurvey:input_type -> trellis.survey.v1.CompleteSurveyRequest
 	32, // 37: trellis.survey.v1.SurveyService.CapturePoint:input_type -> trellis.survey.v1.CapturePointRequest
-	53, // 38: trellis.survey.v1.SurveyService.ListSamples:input_type -> trellis.survey.v1.ListSamplesRequest
-	51, // 39: trellis.survey.v1.SurveyService.Scan:input_type -> trellis.survey.v1.ScanRequest
-	46, // 40: trellis.survey.v1.SurveyService.StartContinuousCapture:input_type -> trellis.survey.v1.StartContinuousCaptureRequest
-	48, // 41: trellis.survey.v1.SurveyService.StopContinuousCapture:input_type -> trellis.survey.v1.StopContinuousCaptureRequest
-	41, // 42: trellis.survey.v1.SurveyService.MeasureThroughput:input_type -> trellis.survey.v1.MeasureThroughputRequest
-	44, // 43: trellis.survey.v1.SurveyService.SetThroughputTarget:input_type -> trellis.survey.v1.SetThroughputTargetRequest
-	37, // 44: trellis.survey.v1.SurveyService.SetFloorPlan:input_type -> trellis.survey.v1.SetFloorPlanRequest
-	39, // 45: trellis.survey.v1.SurveyService.CalibrateFloorPlan:input_type -> trellis.survey.v1.CalibrateFloorPlanRequest
-	35, // 46: trellis.survey.v1.SurveyService.GetFloorPlanImage:input_type -> trellis.survey.v1.GetFloorPlanImageRequest
-	2,  // 47: trellis.survey.v1.SurveyService.ImportAirMapper:output_type -> trellis.survey.v1.ImportAirMapperResponse
-	4,  // 48: trellis.survey.v1.SurveyService.ImportAirMagnet:output_type -> trellis.survey.v1.ImportAirMagnetResponse
-	6,  // 49: trellis.survey.v1.SurveyService.ListSurveys:output_type -> trellis.survey.v1.ListSurveysResponse
-	8,  // 50: trellis.survey.v1.SurveyService.GetSurvey:output_type -> trellis.survey.v1.GetSurveyResponse
-	10, // 51: trellis.survey.v1.SurveyService.DeleteSurvey:output_type -> trellis.survey.v1.DeleteSurveyResponse
-	17, // 52: trellis.survey.v1.SurveyService.GetHeatmap:output_type -> trellis.survey.v1.GetHeatmapResponse
-	20, // 53: trellis.survey.v1.SurveyService.GetCoverage:output_type -> trellis.survey.v1.GetCoverageResponse
-	13, // 54: trellis.survey.v1.SurveyService.ListFloors:output_type -> trellis.survey.v1.ListFloorsResponse
-	15, // 55: trellis.survey.v1.SurveyService.GetFloor:output_type -> trellis.survey.v1.GetFloorResponse
-	23, // 56: trellis.survey.v1.SurveyService.GenerateReport:output_type -> trellis.survey.v1.GenerateReportResponse
-	25, // 57: trellis.survey.v1.SurveyService.CreateSurvey:output_type -> trellis.survey.v1.CreateSurveyResponse
-	27, // 58: trellis.survey.v1.SurveyService.StartSurvey:output_type -> trellis.survey.v1.StartSurveyResponse
-	29, // 59: trellis.survey.v1.SurveyService.PauseSurvey:output_type -> trellis.survey.v1.PauseSurveyResponse
-	31, // 60: trellis.survey.v1.SurveyService.CompleteSurvey:output_type -> trellis.survey.v1.CompleteSurveyResponse
-	33, // 61: trellis.survey.v1.SurveyService.CapturePoint:output_type -> trellis.survey.v1.CapturePointResponse
-	54, // 62: trellis.survey.v1.SurveyService.ListSamples:output_type -> trellis.survey.v1.ListSamplesResponse
-	52, // 63: trellis.survey.v1.SurveyService.Scan:output_type -> trellis.survey.v1.ScanResponse
-	47, // 64: trellis.survey.v1.SurveyService.StartContinuousCapture:output_type -> trellis.survey.v1.StartContinuousCaptureResponse
-	49, // 65: trellis.survey.v1.SurveyService.StopContinuousCapture:output_type -> trellis.survey.v1.StopContinuousCaptureResponse
-	42, // 66: trellis.survey.v1.SurveyService.MeasureThroughput:output_type -> trellis.survey.v1.MeasureThroughputResponse
-	45, // 67: trellis.survey.v1.SurveyService.SetThroughputTarget:output_type -> trellis.survey.v1.SetThroughputTargetResponse
-	38, // 68: trellis.survey.v1.SurveyService.SetFloorPlan:output_type -> trellis.survey.v1.SetFloorPlanResponse
-	40, // 69: trellis.survey.v1.SurveyService.CalibrateFloorPlan:output_type -> trellis.survey.v1.CalibrateFloorPlanResponse
-	36, // 70: trellis.survey.v1.SurveyService.GetFloorPlanImage:output_type -> trellis.survey.v1.GetFloorPlanImageResponse
-	47, // [47:71] is the sub-list for method output_type
-	23, // [23:47] is the sub-list for method input_type
+	55, // 38: trellis.survey.v1.SurveyService.ListSamples:input_type -> trellis.survey.v1.ListSamplesRequest
+	53, // 39: trellis.survey.v1.SurveyService.Scan:input_type -> trellis.survey.v1.ScanRequest
+	51, // 40: trellis.survey.v1.SurveyService.GetCaptureCapability:input_type -> trellis.survey.v1.GetCaptureCapabilityRequest
+	46, // 41: trellis.survey.v1.SurveyService.StartContinuousCapture:input_type -> trellis.survey.v1.StartContinuousCaptureRequest
+	48, // 42: trellis.survey.v1.SurveyService.StopContinuousCapture:input_type -> trellis.survey.v1.StopContinuousCaptureRequest
+	41, // 43: trellis.survey.v1.SurveyService.MeasureThroughput:input_type -> trellis.survey.v1.MeasureThroughputRequest
+	44, // 44: trellis.survey.v1.SurveyService.SetThroughputTarget:input_type -> trellis.survey.v1.SetThroughputTargetRequest
+	37, // 45: trellis.survey.v1.SurveyService.SetFloorPlan:input_type -> trellis.survey.v1.SetFloorPlanRequest
+	39, // 46: trellis.survey.v1.SurveyService.CalibrateFloorPlan:input_type -> trellis.survey.v1.CalibrateFloorPlanRequest
+	35, // 47: trellis.survey.v1.SurveyService.GetFloorPlanImage:input_type -> trellis.survey.v1.GetFloorPlanImageRequest
+	2,  // 48: trellis.survey.v1.SurveyService.ImportAirMapper:output_type -> trellis.survey.v1.ImportAirMapperResponse
+	4,  // 49: trellis.survey.v1.SurveyService.ImportAirMagnet:output_type -> trellis.survey.v1.ImportAirMagnetResponse
+	6,  // 50: trellis.survey.v1.SurveyService.ListSurveys:output_type -> trellis.survey.v1.ListSurveysResponse
+	8,  // 51: trellis.survey.v1.SurveyService.GetSurvey:output_type -> trellis.survey.v1.GetSurveyResponse
+	10, // 52: trellis.survey.v1.SurveyService.DeleteSurvey:output_type -> trellis.survey.v1.DeleteSurveyResponse
+	17, // 53: trellis.survey.v1.SurveyService.GetHeatmap:output_type -> trellis.survey.v1.GetHeatmapResponse
+	20, // 54: trellis.survey.v1.SurveyService.GetCoverage:output_type -> trellis.survey.v1.GetCoverageResponse
+	13, // 55: trellis.survey.v1.SurveyService.ListFloors:output_type -> trellis.survey.v1.ListFloorsResponse
+	15, // 56: trellis.survey.v1.SurveyService.GetFloor:output_type -> trellis.survey.v1.GetFloorResponse
+	23, // 57: trellis.survey.v1.SurveyService.GenerateReport:output_type -> trellis.survey.v1.GenerateReportResponse
+	25, // 58: trellis.survey.v1.SurveyService.CreateSurvey:output_type -> trellis.survey.v1.CreateSurveyResponse
+	27, // 59: trellis.survey.v1.SurveyService.StartSurvey:output_type -> trellis.survey.v1.StartSurveyResponse
+	29, // 60: trellis.survey.v1.SurveyService.PauseSurvey:output_type -> trellis.survey.v1.PauseSurveyResponse
+	31, // 61: trellis.survey.v1.SurveyService.CompleteSurvey:output_type -> trellis.survey.v1.CompleteSurveyResponse
+	33, // 62: trellis.survey.v1.SurveyService.CapturePoint:output_type -> trellis.survey.v1.CapturePointResponse
+	56, // 63: trellis.survey.v1.SurveyService.ListSamples:output_type -> trellis.survey.v1.ListSamplesResponse
+	54, // 64: trellis.survey.v1.SurveyService.Scan:output_type -> trellis.survey.v1.ScanResponse
+	52, // 65: trellis.survey.v1.SurveyService.GetCaptureCapability:output_type -> trellis.survey.v1.GetCaptureCapabilityResponse
+	47, // 66: trellis.survey.v1.SurveyService.StartContinuousCapture:output_type -> trellis.survey.v1.StartContinuousCaptureResponse
+	49, // 67: trellis.survey.v1.SurveyService.StopContinuousCapture:output_type -> trellis.survey.v1.StopContinuousCaptureResponse
+	42, // 68: trellis.survey.v1.SurveyService.MeasureThroughput:output_type -> trellis.survey.v1.MeasureThroughputResponse
+	45, // 69: trellis.survey.v1.SurveyService.SetThroughputTarget:output_type -> trellis.survey.v1.SetThroughputTargetResponse
+	38, // 70: trellis.survey.v1.SurveyService.SetFloorPlan:output_type -> trellis.survey.v1.SetFloorPlanResponse
+	40, // 71: trellis.survey.v1.SurveyService.CalibrateFloorPlan:output_type -> trellis.survey.v1.CalibrateFloorPlanResponse
+	36, // 72: trellis.survey.v1.SurveyService.GetFloorPlanImage:output_type -> trellis.survey.v1.GetFloorPlanImageResponse
+	48, // [48:73] is the sub-list for method output_type
+	23, // [23:48] is the sub-list for method input_type
 	23, // [23:23] is the sub-list for extension type_name
 	23, // [23:23] is the sub-list for extension extendee
 	0,  // [0:23] is the sub-list for field type_name
@@ -3759,14 +3872,14 @@ func file_trellis_survey_v1_survey_proto_init() {
 	}
 	file_trellis_survey_v1_survey_proto_msgTypes[0].OneofWrappers = []any{}
 	file_trellis_survey_v1_survey_proto_msgTypes[34].OneofWrappers = []any{}
-	file_trellis_survey_v1_survey_proto_msgTypes[55].OneofWrappers = []any{}
+	file_trellis_survey_v1_survey_proto_msgTypes[57].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_trellis_survey_v1_survey_proto_rawDesc), len(file_trellis_survey_v1_survey_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   56,
+			NumMessages:   58,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

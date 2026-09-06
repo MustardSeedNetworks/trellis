@@ -1,4 +1,8 @@
 {
+  "capture": {
+    "unavailable": "This host cannot measure Wi-Fi",
+    "stillUsable": "Surveys still open, import, analyse and report here — only a new walk needs a radio."
+  },
   "coverage": {
     "analysing": "Analysing coverage",
     "deadZoneBody": "Each is a measured region where signal fell under the threshold.",

@@ -80,11 +80,9 @@ func run() error {
 	// capture.Scanner and survey.Scanner are deliberately the same shape. A
 	// host with no backend still serves imported surveys, so a missing backend
 	// is reported and not fatal.
-	scanner, err := newScanner()
-	if err != nil {
-		slog.Warn("no Wi-Fi capture backend on this host; imported surveys only", "error", err)
-	} else {
-		go reportCaptureReadiness(ctx, scanner)
+	scanner, scannerErr := newScanner()
+	if scannerErr != nil {
+		slog.Warn("no Wi-Fi capture backend on this host; imported surveys only", "error", scannerErr)
 	}
 
 	manager, err := survey.NewManager(dataDir, scanner, nil, newThroughputMeter(), nil)
@@ -97,9 +95,20 @@ func run() error {
 	}
 	slog.Info("loaded surveys", "count", len(manager.ListSurveys()), "data_dir", dataDir)
 
+	// What this host can measure, said once here from what building the
+	// scanner reported, and again by the readiness scan below when it learns
+	// something the constructor could not — a permission the OS has not
+	// granted, for instance.
+	surveyHandler := api.NewSurveyServiceHandler(manager)
+	if scannerErr != nil {
+		surveyHandler.SetCaptureCapability(api.CaptureCapability{Reason: scannerErr.Error()})
+	} else {
+		go reportCaptureReadiness(ctx, scanner, surveyHandler)
+	}
+
 	mux := http.NewServeMux()
 	path, handler := surveyv1connect.NewSurveyServiceHandler(
-		api.NewSurveyServiceHandler(manager),
+		surveyHandler,
 		connect.WithReadMaxBytes(maxUploadBytes),
 	)
 	mux.Handle(path, handler)

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CaptureCapabilityNotice } from '@/components/CaptureCapabilityNotice';
 import { NeighbourTable } from '@/components/NeighbourTable';
 import type { ScannedNetwork } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
@@ -77,6 +78,8 @@ export function LivePage() {
           </button>
         }
       />
+
+      <CaptureCapabilityNotice />
 
       <NeighbourTable networks={networks} />
     </div>

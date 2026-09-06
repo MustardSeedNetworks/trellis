@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	"connectrpc.com/connect"
 
@@ -23,9 +24,15 @@ import (
 const defaultDeadZoneThresholdDBm = -75
 
 // SurveyServiceHandler implements surveyv1connect.SurveyServiceHandler by
-// wrapping a *survey.Manager. It holds no state of its own.
+// wrapping a *survey.Manager.
 type SurveyServiceHandler struct {
 	manager *survey.Manager
+
+	// capability is what the daemon learned about this host's radio, set once
+	// at startup and again when the readiness scan reports, and read by every
+	// client asking whether a walk is possible here.
+	captureMu  sync.RWMutex
+	capability *CaptureCapability
 }
 
 var _ surveyv1connect.SurveyServiceHandler = (*SurveyServiceHandler)(nil)
@@ -33,6 +40,26 @@ var _ surveyv1connect.SurveyServiceHandler = (*SurveyServiceHandler)(nil)
 // NewSurveyServiceHandler builds a handler over the given survey manager.
 func NewSurveyServiceHandler(manager *survey.Manager) *SurveyServiceHandler {
 	return &SurveyServiceHandler{manager: manager}
+}
+
+// CaptureCapability is what this host can measure, and why not when it cannot.
+type CaptureCapability struct {
+	Available bool
+	Reason    string
+	Remedy    string
+}
+
+// SetCaptureCapability records what the daemon learned about the radio.
+//
+// The daemon owns this rather than the API because only it knows why a backend
+// failed to build and what a first scan reported — the difference between "this
+// machine has no Wi-Fi", "the driver refused" and "the OS has not granted
+// permission yet", each of which is a different sentence to an operator. Left
+// unset, the handler falls back to what the store alone can say.
+func (h *SurveyServiceHandler) SetCaptureCapability(c CaptureCapability) {
+	h.captureMu.Lock()
+	defer h.captureMu.Unlock()
+	h.capability = &c
 }
 
 // ImportAirMapper imports an AirMapper (.amp) archive into a new stored
@@ -87,6 +114,35 @@ func (h *SurveyServiceHandler) ImportAirMagnet(
 	return connect.NewResponse(&surveyv1.ImportAirMagnetResponse{
 		Survey: h.surveySummary(svy),
 	}), nil
+}
+
+// GetCaptureCapability says whether this host can take a measurement.
+func (h *SurveyServiceHandler) GetCaptureCapability(
+	_ context.Context,
+	_ *connect.Request[surveyv1.GetCaptureCapabilityRequest],
+) (*connect.Response[surveyv1.GetCaptureCapabilityResponse], error) {
+	c := h.captureCapability()
+	return connect.NewResponse(&surveyv1.GetCaptureCapabilityResponse{
+		Available: c.Available,
+		Reason:    c.Reason,
+		Remedy:    c.Remedy,
+	}), nil
+}
+
+// captureCapability returns what the daemon reported, or what the store alone
+// can say when nothing has reported yet — a manager with no scanner cannot
+// measure whatever the reason turns out to be, and saying so is better than
+// claiming a capability that will fail at the first walk.
+func (h *SurveyServiceHandler) captureCapability() CaptureCapability {
+	h.captureMu.RLock()
+	defer h.captureMu.RUnlock()
+	if h.capability != nil {
+		return *h.capability
+	}
+	if h.manager.HasScanner() {
+		return CaptureCapability{Available: true}
+	}
+	return CaptureCapability{Reason: survey.ErrNoScanner.Error()}
 }
 
 // ListSurveys returns summaries of every stored survey.

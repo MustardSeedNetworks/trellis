@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CaptureCapabilityNotice } from '@/components/CaptureCapabilityNotice';
 import { SurveyCreateForm } from '@/components/SurveyCreateForm';
 import { SurveyDetail } from '@/components/SurveyDetail';
 import { SurveyList } from '@/components/SurveyList';
@@ -75,6 +76,8 @@ export function SurveysPage() {
         body={body}
         figures={[{ label: t('common:labels.surveys'), value: String(surveys.length) }]}
       />
+
+      <CaptureCapabilityNotice />
 
       <div className="flex flex-1 gap-6 overflow-hidden">
         <aside className="panel flex w-72 shrink-0 flex-col overflow-hidden">
