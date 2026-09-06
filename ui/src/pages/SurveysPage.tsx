@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CaptureCapabilityNotice } from '@/components/CaptureCapabilityNotice';
 import { SurveyCreateForm } from '@/components/SurveyCreateForm';
 import { SurveyDetail } from '@/components/SurveyDetail';
 import { SurveyList } from '@/components/SurveyList';
-import { CaptureCapabilityNotice } from '@/components/CaptureCapabilityNotice';
 import { surveyClient } from '@/lib/client';
 import { type RollupState, StatusRollup } from '@/ui/StatusRollup';
 
