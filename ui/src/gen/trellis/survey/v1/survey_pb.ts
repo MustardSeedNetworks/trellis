@@ -20,7 +20,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file trellis/survey/v1/survey.proto.
  */
 export const file_trellis_survey_v1_survey: GenFile = /*@__PURE__*/
-  fileDesc("Ch50cmVsbGlzL3N1cnZleS92MS9zdXJ2ZXkucHJvdG8SEXRyZWxsaXMuc3VydmV5LnYxIvEBCg1TdXJ2ZXlTdW1tYXJ5EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDgoGc3RhdHVzGAMgASgJEhMKC2Zsb29yX2NvdW50GAQgASgFEhQKDHNhbXBsZV9jb3VudBgFIAEoBRIWCg5oYXNfZmxvb3JfcGxhbhgGIAEoCBI2CgdjYXB0dXJlGAcgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuQ2FwdHVyZVN0YXR1c0gAiAEBEhQKDGlwZXJmX3NlcnZlchgIIAEoCRIZChF0ZXN0X2R1cmF0aW9uX3NlYxgJIAEoBUIKCghfY2FwdHVyZSI4ChZJbXBvcnRBaXJNYXBwZXJSZXF1ZXN0EgwKBG5hbWUYASABKAkSEAoIYW1wX2RhdGEYAiABKAwiSwoXSW1wb3J0QWlyTWFwcGVyUmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSI4ChZJbXBvcnRBaXJNYWduZXRSZXF1ZXN0EgwKBG5hbWUYASABKAkSEAoIc3ZkX2RhdGEYAiABKAwiSwoXSW1wb3J0QWlyTWFnbmV0UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIUChJMaXN0U3VydmV5c1JlcXVlc3QiSAoTTGlzdFN1cnZleXNSZXNwb25zZRIxCgdzdXJ2ZXlzGAEgAygLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIeChBHZXRTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIkUKEUdldFN1cnZleVJlc3BvbnNlEjAKBnN1cnZleRgBIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLlN1cnZleVN1bW1hcnkiIQoTRGVsZXRlU3VydmV5UmVxdWVzdBIKCgJpZBgBIAEoCSIWChREZWxldGVTdXJ2ZXlSZXNwb25zZSKrAQoFRmxvb3ISCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRINCgVsZXZlbBgDIAEoBRIUCgxzYW1wbGVfY291bnQYBCABKAUSFgoOaGFzX2Zsb29yX3BsYW4YBSABKAgSEQoJaXNfYWN0aXZlGAYgASgIEhIKCnBsYW5fd2lkdGgYByABKAUSEwoLcGxhbl9oZWlnaHQYCCABKAUSDwoHc2NhbGVfbRgJIAEoASImChFMaXN0Rmxvb3JzUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkiPgoSTGlzdEZsb29yc1Jlc3BvbnNlEigKBmZsb29ycxgBIAMoCzIYLnRyZWxsaXMuc3VydmV5LnYxLkZsb29yIjYKD0dldEZsb29yUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSEAoIZmxvb3JfaWQYAiABKAkiOwoQR2V0Rmxvb3JSZXNwb25zZRInCgVmbG9vchgBIAEoCzIYLnRyZWxsaXMuc3VydmV5LnYxLkZsb29yIkgKEUdldEhlYXRtYXBSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIOCgZtZXRyaWMYAiABKAkSEAoIZmxvb3JfaWQYAyABKAki9gEKEkdldEhlYXRtYXBSZXNwb25zZRILCgNwbmcYASABKAwSDQoFd2lkdGgYAiABKAUSDgoGaGVpZ2h0GAMgASgFEgsKA21pbhgEIAEoARILCgNtYXgYBSABKAESFAoMc2FtcGxlX2NvdW50GAYgASgFEg4KBm1ldHJpYxgHIAEoCRItCgZsZWdlbmQYCCADKAsyHS50cmVsbGlzLnN1cnZleS52MS5MZWdlbmRTdG9wEgwKBGdyaWQYCSADKAISEQoJZ3JpZF9jb2xzGAogASgFEhEKCWdyaWRfcm93cxgLIAEoBRIRCgljZWxsX3NpemUYDCABKAUiKgoKTGVnZW5kU3RvcBINCgV2YWx1ZRgBIAEoARINCgVjb2xvchgCIAEoCSJQChJHZXRDb3ZlcmFnZVJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEhUKDXRocmVzaG9sZF9kYm0YAiABKAUSEAoIZmxvb3JfaWQYAyABKAkiXwoTR2V0Q292ZXJhZ2VSZXNwb25zZRIWCg5jb3ZlcmFnZV9zY29yZRgBIAEoARIXCg9kZWFkX3pvbmVfY291bnQYAiABKAUSFwoPcmVjb21tZW5kYXRpb25zGAMgAygJIl0KFUdlbmVyYXRlUmVwb3J0UmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSMQoHb3B0aW9ucxgCIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLlJlcG9ydE9wdGlvbnMinQEKDVJlcG9ydE9wdGlvbnMSGAoQaW5jbHVkZV9oZWF0bWFwcxgBIAEoCBIYChBpbmNsdWRlX3Jhd19kYXRhGAIgASgIEh8KF2luY2x1ZGVfcmVjb21tZW5kYXRpb25zGAMgASgIEiEKGWluY2x1ZGVfZXhlY3V0aXZlX3N1bW1hcnkYBCABKAgSFAoMY29tcGFueV9uYW1lGAUgASgJIiUKFkdlbmVyYXRlUmVwb3J0UmVzcG9uc2USCwoDcGRmGAEgASgMIksKE0NyZWF0ZVN1cnZleVJlcXVlc3QSDAoEbmFtZRgBIAEoCRITCgtkZXNjcmlwdGlvbhgCIAEoCRIRCglpbnRlcmZhY2UYAyABKAkiSAoUQ3JlYXRlU3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIgChJTdGFydFN1cnZleVJlcXVlc3QSCgoCaWQYASABKAkiRwoTU3RhcnRTdXJ2ZXlSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5IiAKElBhdXNlU3VydmV5UmVxdWVzdBIKCgJpZBgBIAEoCSJHChNQYXVzZVN1cnZleVJlc3BvbnNlEjAKBnN1cnZleRgBIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLlN1cnZleVN1bW1hcnkiIwoVQ29tcGxldGVTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIkoKFkNvbXBsZXRlU3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSI+ChNDYXB0dXJlUG9pbnRSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIJCgF4GAIgASgFEgkKAXkYAyABKAUi8AEKFENhcHR1cmVQb2ludFJlc3BvbnNlEjMKCG5ldHdvcmtzGAEgAygLMiEudHJlbGxpcy5zdXJ2ZXkudjEuU2Nhbm5lZE5ldHdvcmsSFAoMdW5pcXVlX3NzaWRzGAIgASgFEhUKDXVuaXF1ZV9ic3NpZHMYAyABKAUSFwoPYXBfY291bnRfMl80Z2h6GAQgASgFEhUKDWFwX2NvdW50XzVnaHoYBSABKAUSFQoNYXBfY291bnRfNmdoehgGIAEoBRIWCg5jb19jaGFubmVsX2FwcxgHIAEoBRIXCg9hZGpfY2hhbm5lbF9hcHMYCCABKAUivgIKDlNjYW5uZWROZXR3b3JrEgwKBHNzaWQYASABKAkSDQoFYnNzaWQYAiABKAkSEgoKc2lnbmFsX2RibRgDIAEoBRIPCgdjaGFubmVsGAQgASgFEhUKDWZyZXF1ZW5jeV9taHoYBSABKAUSEAoIc2VjdXJpdHkYBiABKAkSGQoRY2hhbm5lbF93aWR0aF9taHoYByABKAUSFwoPbm9pc2VfZmxvb3JfZGJtGAggASgFEg4KBnNucl9kYhgJIAEoBRIPCgdodF9tb2RlGAogASgJEg4KBmlzX2RmcxgLIAEoCBISCgphc3NvY2lhdGVkGAwgASgIEigKG2NoYW5uZWxfdXRpbGl6YXRpb25fcGVyY2VudBgNIAEoBUgAiAEBQh4KHF9jaGFubmVsX3V0aWxpemF0aW9uX3BlcmNlbnQiPwoYR2V0Rmxvb3JQbGFuSW1hZ2VSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIQCghmbG9vcl9pZBgCIAEoCSJJChlHZXRGbG9vclBsYW5JbWFnZVJlc3BvbnNlEg0KBWltYWdlGAEgASgMEg0KBXdpZHRoGAIgASgFEg4KBmhlaWdodBgDIAEoBSJJChNTZXRGbG9vclBsYW5SZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIQCghmbG9vcl9pZBgCIAEoCRINCgVpbWFnZRgDIAEoDCI/ChRTZXRGbG9vclBsYW5SZXNwb25zZRInCgVmbG9vchgBIAEoCzIYLnRyZWxsaXMuc3VydmV5LnYxLkZsb29yIoABChlDYWxpYnJhdGVGbG9vclBsYW5SZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIQCghmbG9vcl9pZBgCIAEoCRIKCgJ4MRgDIAEoBRIKCgJ5MRgEIAEoBRIKCgJ4MhgFIAEoBRIKCgJ5MhgGIAEoBRIOCgZtZXRyZXMYByABKAEiRQoaQ2FsaWJyYXRlRmxvb3JQbGFuUmVzcG9uc2USJwoFZmxvb3IYASABKAsyGC50cmVsbGlzLnN1cnZleS52MS5GbG9vciJDChhNZWFzdXJlVGhyb3VnaHB1dFJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEgkKAXgYAiABKAUSCQoBeRgDIAEoBSJSChlNZWFzdXJlVGhyb3VnaHB1dFJlc3BvbnNlEjUKB3JlYWRpbmcYASABKAsyJC50cmVsbGlzLnN1cnZleS52MS5UaHJvdWdocHV0UmVhZGluZyJwChFUaHJvdWdocHV0UmVhZGluZxIVCg1kb3dubG9hZF9tYnBzGAEgASgBEhMKC3VwbG9hZF9tYnBzGAIgASgBEgwKBHNzaWQYAyABKAkSDQoFYnNzaWQYBCABKAkSEgoKc2lnbmFsX2RibRgFIAEoBSJVChpTZXRUaHJvdWdocHV0VGFyZ2V0UmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSDgoGc2VydmVyGAIgASgJEhQKDGR1cmF0aW9uX3NlYxgDIAEoBSJPChtTZXRUaHJvdWdocHV0VGFyZ2V0UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSJICh1TdGFydENvbnRpbnVvdXNDYXB0dXJlUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSCQoBeBgCIAEoBRIJCgF5GAMgASgFIlMKHlN0YXJ0Q29udGludW91c0NhcHR1cmVSZXNwb25zZRIxCgdjYXB0dXJlGAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuQ2FwdHVyZVN0YXR1cyIxChxTdG9wQ29udGludW91c0NhcHR1cmVSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCSIfCh1TdG9wQ29udGludW91c0NhcHR1cmVSZXNwb25zZSJKCg1DYXB0dXJlU3RhdHVzEg8KB3J1bm5pbmcYASABKAgSCQoBeBgCIAEoBRIJCgF5GAMgASgFEhIKCmxhc3RfZXJyb3IYBCABKAkiHQobR2V0Q2FwdHVyZUNhcGFiaWxpdHlSZXF1ZXN0IlEKHEdldENhcHR1cmVDYXBhYmlsaXR5UmVzcG9uc2USEQoJYXZhaWxhYmxlGAEgASgIEg4KBnJlYXNvbhgCIAEoCRIOCgZyZW1lZHkYAyABKAkiDQoLU2NhblJlcXVlc3QicwoMU2NhblJlc3BvbnNlEjMKCG5ldHdvcmtzGAEgAygLMiEudHJlbGxpcy5zdXJ2ZXkudjEuU2Nhbm5lZE5ldHdvcmsSLgoKc2Nhbm5lZF9hdBgCIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiJwoSTGlzdFNhbXBsZXNSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCSJHChNMaXN0U2FtcGxlc1Jlc3BvbnNlEjAKB3NhbXBsZXMYASADKAsyHy50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTYW1wbGUi3gEKDFN1cnZleVNhbXBsZRIJCgF4GAEgASgFEgkKAXkYAiABKAUSLwoLY2FwdHVyZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhUKDW5ldHdvcmtfY291bnQYBCABKAUSGgoNc3Ryb25nZXN0X2RibRgFIAEoBUgAiAEBEhoKDWRvd25sb2FkX21icHMYByABKAFIAYgBARIUCgxpbnRlcnBvbGF0ZWQYBiABKAhCEAoOX3N0cm9uZ2VzdF9kYm1CEAoOX2Rvd25sb2FkX21icHMy9BMKDVN1cnZleVNlcnZpY2USaAoPSW1wb3J0QWlyTWFwcGVyEikudHJlbGxpcy5zdXJ2ZXkudjEuSW1wb3J0QWlyTWFwcGVyUmVxdWVzdBoqLnRyZWxsaXMuc3VydmV5LnYxLkltcG9ydEFpck1hcHBlclJlc3BvbnNlEmgKD0ltcG9ydEFpck1hZ25ldBIpLnRyZWxsaXMuc3VydmV5LnYxLkltcG9ydEFpck1hZ25ldFJlcXVlc3QaKi50cmVsbGlzLnN1cnZleS52MS5JbXBvcnRBaXJNYWduZXRSZXNwb25zZRJcCgtMaXN0U3VydmV5cxIlLnRyZWxsaXMuc3VydmV5LnYxLkxpc3RTdXJ2ZXlzUmVxdWVzdBomLnRyZWxsaXMuc3VydmV5LnYxLkxpc3RTdXJ2ZXlzUmVzcG9uc2USVgoJR2V0U3VydmV5EiMudHJlbGxpcy5zdXJ2ZXkudjEuR2V0U3VydmV5UmVxdWVzdBokLnRyZWxsaXMuc3VydmV5LnYxLkdldFN1cnZleVJlc3BvbnNlEl8KDERlbGV0ZVN1cnZleRImLnRyZWxsaXMuc3VydmV5LnYxLkRlbGV0ZVN1cnZleVJlcXVlc3QaJy50cmVsbGlzLnN1cnZleS52MS5EZWxldGVTdXJ2ZXlSZXNwb25zZRJZCgpHZXRIZWF0bWFwEiQudHJlbGxpcy5zdXJ2ZXkudjEuR2V0SGVhdG1hcFJlcXVlc3QaJS50cmVsbGlzLnN1cnZleS52MS5HZXRIZWF0bWFwUmVzcG9uc2USXAoLR2V0Q292ZXJhZ2USJS50cmVsbGlzLnN1cnZleS52MS5HZXRDb3ZlcmFnZVJlcXVlc3QaJi50cmVsbGlzLnN1cnZleS52MS5HZXRDb3ZlcmFnZVJlc3BvbnNlElkKCkxpc3RGbG9vcnMSJC50cmVsbGlzLnN1cnZleS52MS5MaXN0Rmxvb3JzUmVxdWVzdBolLnRyZWxsaXMuc3VydmV5LnYxLkxpc3RGbG9vcnNSZXNwb25zZRJTCghHZXRGbG9vchIiLnRyZWxsaXMuc3VydmV5LnYxLkdldEZsb29yUmVxdWVzdBojLnRyZWxsaXMuc3VydmV5LnYxLkdldEZsb29yUmVzcG9uc2USZQoOR2VuZXJhdGVSZXBvcnQSKC50cmVsbGlzLnN1cnZleS52MS5HZW5lcmF0ZVJlcG9ydFJlcXVlc3QaKS50cmVsbGlzLnN1cnZleS52MS5HZW5lcmF0ZVJlcG9ydFJlc3BvbnNlEl8KDENyZWF0ZVN1cnZleRImLnRyZWxsaXMuc3VydmV5LnYxLkNyZWF0ZVN1cnZleVJlcXVlc3QaJy50cmVsbGlzLnN1cnZleS52MS5DcmVhdGVTdXJ2ZXlSZXNwb25zZRJcCgtTdGFydFN1cnZleRIlLnRyZWxsaXMuc3VydmV5LnYxLlN0YXJ0U3VydmV5UmVxdWVzdBomLnRyZWxsaXMuc3VydmV5LnYxLlN0YXJ0U3VydmV5UmVzcG9uc2USXAoLUGF1c2VTdXJ2ZXkSJS50cmVsbGlzLnN1cnZleS52MS5QYXVzZVN1cnZleVJlcXVlc3QaJi50cmVsbGlzLnN1cnZleS52MS5QYXVzZVN1cnZleVJlc3BvbnNlEmUKDkNvbXBsZXRlU3VydmV5EigudHJlbGxpcy5zdXJ2ZXkudjEuQ29tcGxldGVTdXJ2ZXlSZXF1ZXN0GikudHJlbGxpcy5zdXJ2ZXkudjEuQ29tcGxldGVTdXJ2ZXlSZXNwb25zZRJfCgxDYXB0dXJlUG9pbnQSJi50cmVsbGlzLnN1cnZleS52MS5DYXB0dXJlUG9pbnRSZXF1ZXN0GicudHJlbGxpcy5zdXJ2ZXkudjEuQ2FwdHVyZVBvaW50UmVzcG9uc2USXAoLTGlzdFNhbXBsZXMSJS50cmVsbGlzLnN1cnZleS52MS5MaXN0U2FtcGxlc1JlcXVlc3QaJi50cmVsbGlzLnN1cnZleS52MS5MaXN0U2FtcGxlc1Jlc3BvbnNlEkcKBFNjYW4SHi50cmVsbGlzLnN1cnZleS52MS5TY2FuUmVxdWVzdBofLnRyZWxsaXMuc3VydmV5LnYxLlNjYW5SZXNwb25zZRJ3ChRHZXRDYXB0dXJlQ2FwYWJpbGl0eRIuLnRyZWxsaXMuc3VydmV5LnYxLkdldENhcHR1cmVDYXBhYmlsaXR5UmVxdWVzdBovLnRyZWxsaXMuc3VydmV5LnYxLkdldENhcHR1cmVDYXBhYmlsaXR5UmVzcG9uc2USfQoWU3RhcnRDb250aW51b3VzQ2FwdHVyZRIwLnRyZWxsaXMuc3VydmV5LnYxLlN0YXJ0Q29udGludW91c0NhcHR1cmVSZXF1ZXN0GjEudHJlbGxpcy5zdXJ2ZXkudjEuU3RhcnRDb250aW51b3VzQ2FwdHVyZVJlc3BvbnNlEnoKFVN0b3BDb250aW51b3VzQ2FwdHVyZRIvLnRyZWxsaXMuc3VydmV5LnYxLlN0b3BDb250aW51b3VzQ2FwdHVyZVJlcXVlc3QaMC50cmVsbGlzLnN1cnZleS52MS5TdG9wQ29udGludW91c0NhcHR1cmVSZXNwb25zZRJuChFNZWFzdXJlVGhyb3VnaHB1dBIrLnRyZWxsaXMuc3VydmV5LnYxLk1lYXN1cmVUaHJvdWdocHV0UmVxdWVzdBosLnRyZWxsaXMuc3VydmV5LnYxLk1lYXN1cmVUaHJvdWdocHV0UmVzcG9uc2USdAoTU2V0VGhyb3VnaHB1dFRhcmdldBItLnRyZWxsaXMuc3VydmV5LnYxLlNldFRocm91Z2hwdXRUYXJnZXRSZXF1ZXN0Gi4udHJlbGxpcy5zdXJ2ZXkudjEuU2V0VGhyb3VnaHB1dFRhcmdldFJlc3BvbnNlEl8KDFNldEZsb29yUGxhbhImLnRyZWxsaXMuc3VydmV5LnYxLlNldEZsb29yUGxhblJlcXVlc3QaJy50cmVsbGlzLnN1cnZleS52MS5TZXRGbG9vclBsYW5SZXNwb25zZRJxChJDYWxpYnJhdGVGbG9vclBsYW4SLC50cmVsbGlzLnN1cnZleS52MS5DYWxpYnJhdGVGbG9vclBsYW5SZXF1ZXN0Gi0udHJlbGxpcy5zdXJ2ZXkudjEuQ2FsaWJyYXRlRmxvb3JQbGFuUmVzcG9uc2USbgoRR2V0Rmxvb3JQbGFuSW1hZ2USKy50cmVsbGlzLnN1cnZleS52MS5HZXRGbG9vclBsYW5JbWFnZVJlcXVlc3QaLC50cmVsbGlzLnN1cnZleS52MS5HZXRGbG9vclBsYW5JbWFnZVJlc3BvbnNlQkdaRWdpdGh1Yi5jb20vTXVzdGFyZFNlZWROZXR3b3Jrcy90cmVsbGlzL2dlbi90cmVsbGlzL3N1cnZleS92MTtzdXJ2ZXl2MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("Ch50cmVsbGlzL3N1cnZleS92MS9zdXJ2ZXkucHJvdG8SEXRyZWxsaXMuc3VydmV5LnYxIvEBCg1TdXJ2ZXlTdW1tYXJ5EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDgoGc3RhdHVzGAMgASgJEhMKC2Zsb29yX2NvdW50GAQgASgFEhQKDHNhbXBsZV9jb3VudBgFIAEoBRIWCg5oYXNfZmxvb3JfcGxhbhgGIAEoCBI2CgdjYXB0dXJlGAcgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuQ2FwdHVyZVN0YXR1c0gAiAEBEhQKDGlwZXJmX3NlcnZlchgIIAEoCRIZChF0ZXN0X2R1cmF0aW9uX3NlYxgJIAEoBUIKCghfY2FwdHVyZSI4ChZJbXBvcnRBaXJNYXBwZXJSZXF1ZXN0EgwKBG5hbWUYASABKAkSEAoIYW1wX2RhdGEYAiABKAwiSwoXSW1wb3J0QWlyTWFwcGVyUmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSI4ChZJbXBvcnRBaXJNYWduZXRSZXF1ZXN0EgwKBG5hbWUYASABKAkSEAoIc3ZkX2RhdGEYAiABKAwiSwoXSW1wb3J0QWlyTWFnbmV0UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIUChJMaXN0U3VydmV5c1JlcXVlc3QiSAoTTGlzdFN1cnZleXNSZXNwb25zZRIxCgdzdXJ2ZXlzGAEgAygLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIeChBHZXRTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIkUKEUdldFN1cnZleVJlc3BvbnNlEjAKBnN1cnZleRgBIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLlN1cnZleVN1bW1hcnkiIQoTRGVsZXRlU3VydmV5UmVxdWVzdBIKCgJpZBgBIAEoCSIWChREZWxldGVTdXJ2ZXlSZXNwb25zZSKrAQoFRmxvb3ISCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRINCgVsZXZlbBgDIAEoBRIUCgxzYW1wbGVfY291bnQYBCABKAUSFgoOaGFzX2Zsb29yX3BsYW4YBSABKAgSEQoJaXNfYWN0aXZlGAYgASgIEhIKCnBsYW5fd2lkdGgYByABKAUSEwoLcGxhbl9oZWlnaHQYCCABKAUSDwoHc2NhbGVfbRgJIAEoASImChFMaXN0Rmxvb3JzUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkiPgoSTGlzdEZsb29yc1Jlc3BvbnNlEigKBmZsb29ycxgBIAMoCzIYLnRyZWxsaXMuc3VydmV5LnYxLkZsb29yIjYKD0dldEZsb29yUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSEAoIZmxvb3JfaWQYAiABKAkiOwoQR2V0Rmxvb3JSZXNwb25zZRInCgVmbG9vchgBIAEoCzIYLnRyZWxsaXMuc3VydmV5LnYxLkZsb29yIkQKEkNyZWF0ZUZsb29yUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSDAoEbmFtZRgCIAEoCRINCgVsZXZlbBgDIAEoBSI+ChNDcmVhdGVGbG9vclJlc3BvbnNlEicKBWZsb29yGAEgASgLMhgudHJlbGxpcy5zdXJ2ZXkudjEuRmxvb3IiPAoVU2V0QWN0aXZlRmxvb3JSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIQCghmbG9vcl9pZBgCIAEoCSJBChZTZXRBY3RpdmVGbG9vclJlc3BvbnNlEicKBWZsb29yGAEgASgLMhgudHJlbGxpcy5zdXJ2ZXkudjEuRmxvb3IiSAoRR2V0SGVhdG1hcFJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEg4KBm1ldHJpYxgCIAEoCRIQCghmbG9vcl9pZBgDIAEoCSL2AQoSR2V0SGVhdG1hcFJlc3BvbnNlEgsKA3BuZxgBIAEoDBINCgV3aWR0aBgCIAEoBRIOCgZoZWlnaHQYAyABKAUSCwoDbWluGAQgASgBEgsKA21heBgFIAEoARIUCgxzYW1wbGVfY291bnQYBiABKAUSDgoGbWV0cmljGAcgASgJEi0KBmxlZ2VuZBgIIAMoCzIdLnRyZWxsaXMuc3VydmV5LnYxLkxlZ2VuZFN0b3ASDAoEZ3JpZBgJIAMoAhIRCglncmlkX2NvbHMYCiABKAUSEQoJZ3JpZF9yb3dzGAsgASgFEhEKCWNlbGxfc2l6ZRgMIAEoBSIqCgpMZWdlbmRTdG9wEg0KBXZhbHVlGAEgASgBEg0KBWNvbG9yGAIgASgJIlAKEkdldENvdmVyYWdlUmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSFQoNdGhyZXNob2xkX2RibRgCIAEoBRIQCghmbG9vcl9pZBgDIAEoCSJfChNHZXRDb3ZlcmFnZVJlc3BvbnNlEhYKDmNvdmVyYWdlX3Njb3JlGAEgASgBEhcKD2RlYWRfem9uZV9jb3VudBgCIAEoBRIXCg9yZWNvbW1lbmRhdGlvbnMYAyADKAkiXQoVR2VuZXJhdGVSZXBvcnRSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIxCgdvcHRpb25zGAIgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuUmVwb3J0T3B0aW9ucyKdAQoNUmVwb3J0T3B0aW9ucxIYChBpbmNsdWRlX2hlYXRtYXBzGAEgASgIEhgKEGluY2x1ZGVfcmF3X2RhdGEYAiABKAgSHwoXaW5jbHVkZV9yZWNvbW1lbmRhdGlvbnMYAyABKAgSIQoZaW5jbHVkZV9leGVjdXRpdmVfc3VtbWFyeRgEIAEoCBIUCgxjb21wYW55X25hbWUYBSABKAkiJQoWR2VuZXJhdGVSZXBvcnRSZXNwb25zZRILCgNwZGYYASABKAwiSwoTQ3JlYXRlU3VydmV5UmVxdWVzdBIMCgRuYW1lGAEgASgJEhMKC2Rlc2NyaXB0aW9uGAIgASgJEhEKCWludGVyZmFjZRgDIAEoCSJIChRDcmVhdGVTdXJ2ZXlSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5IiAKElN0YXJ0U3VydmV5UmVxdWVzdBIKCgJpZBgBIAEoCSJHChNTdGFydFN1cnZleVJlc3BvbnNlEjAKBnN1cnZleRgBIAEoCzIgLnRyZWxsaXMuc3VydmV5LnYxLlN1cnZleVN1bW1hcnkiIAoSUGF1c2VTdXJ2ZXlSZXF1ZXN0EgoKAmlkGAEgASgJIkcKE1BhdXNlU3VydmV5UmVzcG9uc2USMAoGc3VydmV5GAEgASgLMiAudHJlbGxpcy5zdXJ2ZXkudjEuU3VydmV5U3VtbWFyeSIjChVDb21wbGV0ZVN1cnZleVJlcXVlc3QSCgoCaWQYASABKAkiSgoWQ29tcGxldGVTdXJ2ZXlSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5Ij4KE0NhcHR1cmVQb2ludFJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEgkKAXgYAiABKAUSCQoBeRgDIAEoBSLwAQoUQ2FwdHVyZVBvaW50UmVzcG9uc2USMwoIbmV0d29ya3MYASADKAsyIS50cmVsbGlzLnN1cnZleS52MS5TY2FubmVkTmV0d29yaxIUCgx1bmlxdWVfc3NpZHMYAiABKAUSFQoNdW5pcXVlX2Jzc2lkcxgDIAEoBRIXCg9hcF9jb3VudF8yXzRnaHoYBCABKAUSFQoNYXBfY291bnRfNWdoehgFIAEoBRIVCg1hcF9jb3VudF82Z2h6GAYgASgFEhYKDmNvX2NoYW5uZWxfYXBzGAcgASgFEhcKD2Fkal9jaGFubmVsX2FwcxgIIAEoBSK+AgoOU2Nhbm5lZE5ldHdvcmsSDAoEc3NpZBgBIAEoCRINCgVic3NpZBgCIAEoCRISCgpzaWduYWxfZGJtGAMgASgFEg8KB2NoYW5uZWwYBCABKAUSFQoNZnJlcXVlbmN5X21oehgFIAEoBRIQCghzZWN1cml0eRgGIAEoCRIZChFjaGFubmVsX3dpZHRoX21oehgHIAEoBRIXCg9ub2lzZV9mbG9vcl9kYm0YCCABKAUSDgoGc25yX2RiGAkgASgFEg8KB2h0X21vZGUYCiABKAkSDgoGaXNfZGZzGAsgASgIEhIKCmFzc29jaWF0ZWQYDCABKAgSKAobY2hhbm5lbF91dGlsaXphdGlvbl9wZXJjZW50GA0gASgFSACIAQFCHgocX2NoYW5uZWxfdXRpbGl6YXRpb25fcGVyY2VudCI/ChhHZXRGbG9vclBsYW5JbWFnZVJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEhAKCGZsb29yX2lkGAIgASgJIkkKGUdldEZsb29yUGxhbkltYWdlUmVzcG9uc2USDQoFaW1hZ2UYASABKAwSDQoFd2lkdGgYAiABKAUSDgoGaGVpZ2h0GAMgASgFIkkKE1NldEZsb29yUGxhblJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEhAKCGZsb29yX2lkGAIgASgJEg0KBWltYWdlGAMgASgMIj8KFFNldEZsb29yUGxhblJlc3BvbnNlEicKBWZsb29yGAEgASgLMhgudHJlbGxpcy5zdXJ2ZXkudjEuRmxvb3IigAEKGUNhbGlicmF0ZUZsb29yUGxhblJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJEhAKCGZsb29yX2lkGAIgASgJEgoKAngxGAMgASgFEgoKAnkxGAQgASgFEgoKAngyGAUgASgFEgoKAnkyGAYgASgFEg4KBm1ldHJlcxgHIAEoASJFChpDYWxpYnJhdGVGbG9vclBsYW5SZXNwb25zZRInCgVmbG9vchgBIAEoCzIYLnRyZWxsaXMuc3VydmV5LnYxLkZsb29yIkMKGE1lYXN1cmVUaHJvdWdocHV0UmVxdWVzdBIRCglzdXJ2ZXlfaWQYASABKAkSCQoBeBgCIAEoBRIJCgF5GAMgASgFIlIKGU1lYXN1cmVUaHJvdWdocHV0UmVzcG9uc2USNQoHcmVhZGluZxgBIAEoCzIkLnRyZWxsaXMuc3VydmV5LnYxLlRocm91Z2hwdXRSZWFkaW5nInAKEVRocm91Z2hwdXRSZWFkaW5nEhUKDWRvd25sb2FkX21icHMYASABKAESEwoLdXBsb2FkX21icHMYAiABKAESDAoEc3NpZBgDIAEoCRINCgVic3NpZBgEIAEoCRISCgpzaWduYWxfZGJtGAUgASgFIlUKGlNldFRocm91Z2hwdXRUYXJnZXRSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIOCgZzZXJ2ZXIYAiABKAkSFAoMZHVyYXRpb25fc2VjGAMgASgFIk8KG1NldFRocm91Z2hwdXRUYXJnZXRSZXNwb25zZRIwCgZzdXJ2ZXkYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5TdXJ2ZXlTdW1tYXJ5IkgKHVN0YXJ0Q29udGludW91c0NhcHR1cmVSZXF1ZXN0EhEKCXN1cnZleV9pZBgBIAEoCRIJCgF4GAIgASgFEgkKAXkYAyABKAUiUwoeU3RhcnRDb250aW51b3VzQ2FwdHVyZVJlc3BvbnNlEjEKB2NhcHR1cmUYASABKAsyIC50cmVsbGlzLnN1cnZleS52MS5DYXB0dXJlU3RhdHVzIjEKHFN0b3BDb250aW51b3VzQ2FwdHVyZVJlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJIh8KHVN0b3BDb250aW51b3VzQ2FwdHVyZVJlc3BvbnNlIkoKDUNhcHR1cmVTdGF0dXMSDwoHcnVubmluZxgBIAEoCBIJCgF4GAIgASgFEgkKAXkYAyABKAUSEgoKbGFzdF9lcnJvchgEIAEoCSIdChtHZXRDYXB0dXJlQ2FwYWJpbGl0eVJlcXVlc3QiUQocR2V0Q2FwdHVyZUNhcGFiaWxpdHlSZXNwb25zZRIRCglhdmFpbGFibGUYASABKAgSDgoGcmVhc29uGAIgASgJEg4KBnJlbWVkeRgDIAEoCSINCgtTY2FuUmVxdWVzdCJzCgxTY2FuUmVzcG9uc2USMwoIbmV0d29ya3MYASADKAsyIS50cmVsbGlzLnN1cnZleS52MS5TY2FubmVkTmV0d29yaxIuCgpzY2FubmVkX2F0GAIgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCInChJMaXN0U2FtcGxlc1JlcXVlc3QSEQoJc3VydmV5X2lkGAEgASgJIkcKE0xpc3RTYW1wbGVzUmVzcG9uc2USMAoHc2FtcGxlcxgBIAMoCzIfLnRyZWxsaXMuc3VydmV5LnYxLlN1cnZleVNhbXBsZSLeAQoMU3VydmV5U2FtcGxlEgkKAXgYASABKAUSCQoBeRgCIAEoBRIvCgtjYXB0dXJlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASFQoNbmV0d29ya19jb3VudBgEIAEoBRIaCg1zdHJvbmdlc3RfZGJtGAUgASgFSACIAQESGgoNZG93bmxvYWRfbWJwcxgHIAEoAUgBiAEBEhQKDGludGVycG9sYXRlZBgGIAEoCEIQCg5fc3Ryb25nZXN0X2RibUIQCg5fZG93bmxvYWRfbWJwczK5FQoNU3VydmV5U2VydmljZRJoCg9JbXBvcnRBaXJNYXBwZXISKS50cmVsbGlzLnN1cnZleS52MS5JbXBvcnRBaXJNYXBwZXJSZXF1ZXN0GioudHJlbGxpcy5zdXJ2ZXkudjEuSW1wb3J0QWlyTWFwcGVyUmVzcG9uc2USaAoPSW1wb3J0QWlyTWFnbmV0EikudHJlbGxpcy5zdXJ2ZXkudjEuSW1wb3J0QWlyTWFnbmV0UmVxdWVzdBoqLnRyZWxsaXMuc3VydmV5LnYxLkltcG9ydEFpck1hZ25ldFJlc3BvbnNlElwKC0xpc3RTdXJ2ZXlzEiUudHJlbGxpcy5zdXJ2ZXkudjEuTGlzdFN1cnZleXNSZXF1ZXN0GiYudHJlbGxpcy5zdXJ2ZXkudjEuTGlzdFN1cnZleXNSZXNwb25zZRJWCglHZXRTdXJ2ZXkSIy50cmVsbGlzLnN1cnZleS52MS5HZXRTdXJ2ZXlSZXF1ZXN0GiQudHJlbGxpcy5zdXJ2ZXkudjEuR2V0U3VydmV5UmVzcG9uc2USXwoMRGVsZXRlU3VydmV5EiYudHJlbGxpcy5zdXJ2ZXkudjEuRGVsZXRlU3VydmV5UmVxdWVzdBonLnRyZWxsaXMuc3VydmV5LnYxLkRlbGV0ZVN1cnZleVJlc3BvbnNlElkKCkdldEhlYXRtYXASJC50cmVsbGlzLnN1cnZleS52MS5HZXRIZWF0bWFwUmVxdWVzdBolLnRyZWxsaXMuc3VydmV5LnYxLkdldEhlYXRtYXBSZXNwb25zZRJcCgtHZXRDb3ZlcmFnZRIlLnRyZWxsaXMuc3VydmV5LnYxLkdldENvdmVyYWdlUmVxdWVzdBomLnRyZWxsaXMuc3VydmV5LnYxLkdldENvdmVyYWdlUmVzcG9uc2USWQoKTGlzdEZsb29ycxIkLnRyZWxsaXMuc3VydmV5LnYxLkxpc3RGbG9vcnNSZXF1ZXN0GiUudHJlbGxpcy5zdXJ2ZXkudjEuTGlzdEZsb29yc1Jlc3BvbnNlElMKCEdldEZsb29yEiIudHJlbGxpcy5zdXJ2ZXkudjEuR2V0Rmxvb3JSZXF1ZXN0GiMudHJlbGxpcy5zdXJ2ZXkudjEuR2V0Rmxvb3JSZXNwb25zZRJcCgtDcmVhdGVGbG9vchIlLnRyZWxsaXMuc3VydmV5LnYxLkNyZWF0ZUZsb29yUmVxdWVzdBomLnRyZWxsaXMuc3VydmV5LnYxLkNyZWF0ZUZsb29yUmVzcG9uc2USZQoOU2V0QWN0aXZlRmxvb3ISKC50cmVsbGlzLnN1cnZleS52MS5TZXRBY3RpdmVGbG9vclJlcXVlc3QaKS50cmVsbGlzLnN1cnZleS52MS5TZXRBY3RpdmVGbG9vclJlc3BvbnNlEmUKDkdlbmVyYXRlUmVwb3J0EigudHJlbGxpcy5zdXJ2ZXkudjEuR2VuZXJhdGVSZXBvcnRSZXF1ZXN0GikudHJlbGxpcy5zdXJ2ZXkudjEuR2VuZXJhdGVSZXBvcnRSZXNwb25zZRJfCgxDcmVhdGVTdXJ2ZXkSJi50cmVsbGlzLnN1cnZleS52MS5DcmVhdGVTdXJ2ZXlSZXF1ZXN0GicudHJlbGxpcy5zdXJ2ZXkudjEuQ3JlYXRlU3VydmV5UmVzcG9uc2USXAoLU3RhcnRTdXJ2ZXkSJS50cmVsbGlzLnN1cnZleS52MS5TdGFydFN1cnZleVJlcXVlc3QaJi50cmVsbGlzLnN1cnZleS52MS5TdGFydFN1cnZleVJlc3BvbnNlElwKC1BhdXNlU3VydmV5EiUudHJlbGxpcy5zdXJ2ZXkudjEuUGF1c2VTdXJ2ZXlSZXF1ZXN0GiYudHJlbGxpcy5zdXJ2ZXkudjEuUGF1c2VTdXJ2ZXlSZXNwb25zZRJlCg5Db21wbGV0ZVN1cnZleRIoLnRyZWxsaXMuc3VydmV5LnYxLkNvbXBsZXRlU3VydmV5UmVxdWVzdBopLnRyZWxsaXMuc3VydmV5LnYxLkNvbXBsZXRlU3VydmV5UmVzcG9uc2USXwoMQ2FwdHVyZVBvaW50EiYudHJlbGxpcy5zdXJ2ZXkudjEuQ2FwdHVyZVBvaW50UmVxdWVzdBonLnRyZWxsaXMuc3VydmV5LnYxLkNhcHR1cmVQb2ludFJlc3BvbnNlElwKC0xpc3RTYW1wbGVzEiUudHJlbGxpcy5zdXJ2ZXkudjEuTGlzdFNhbXBsZXNSZXF1ZXN0GiYudHJlbGxpcy5zdXJ2ZXkudjEuTGlzdFNhbXBsZXNSZXNwb25zZRJHCgRTY2FuEh4udHJlbGxpcy5zdXJ2ZXkudjEuU2NhblJlcXVlc3QaHy50cmVsbGlzLnN1cnZleS52MS5TY2FuUmVzcG9uc2USdwoUR2V0Q2FwdHVyZUNhcGFiaWxpdHkSLi50cmVsbGlzLnN1cnZleS52MS5HZXRDYXB0dXJlQ2FwYWJpbGl0eVJlcXVlc3QaLy50cmVsbGlzLnN1cnZleS52MS5HZXRDYXB0dXJlQ2FwYWJpbGl0eVJlc3BvbnNlEn0KFlN0YXJ0Q29udGludW91c0NhcHR1cmUSMC50cmVsbGlzLnN1cnZleS52MS5TdGFydENvbnRpbnVvdXNDYXB0dXJlUmVxdWVzdBoxLnRyZWxsaXMuc3VydmV5LnYxLlN0YXJ0Q29udGludW91c0NhcHR1cmVSZXNwb25zZRJ6ChVTdG9wQ29udGludW91c0NhcHR1cmUSLy50cmVsbGlzLnN1cnZleS52MS5TdG9wQ29udGludW91c0NhcHR1cmVSZXF1ZXN0GjAudHJlbGxpcy5zdXJ2ZXkudjEuU3RvcENvbnRpbnVvdXNDYXB0dXJlUmVzcG9uc2USbgoRTWVhc3VyZVRocm91Z2hwdXQSKy50cmVsbGlzLnN1cnZleS52MS5NZWFzdXJlVGhyb3VnaHB1dFJlcXVlc3QaLC50cmVsbGlzLnN1cnZleS52MS5NZWFzdXJlVGhyb3VnaHB1dFJlc3BvbnNlEnQKE1NldFRocm91Z2hwdXRUYXJnZXQSLS50cmVsbGlzLnN1cnZleS52MS5TZXRUaHJvdWdocHV0VGFyZ2V0UmVxdWVzdBouLnRyZWxsaXMuc3VydmV5LnYxLlNldFRocm91Z2hwdXRUYXJnZXRSZXNwb25zZRJfCgxTZXRGbG9vclBsYW4SJi50cmVsbGlzLnN1cnZleS52MS5TZXRGbG9vclBsYW5SZXF1ZXN0GicudHJlbGxpcy5zdXJ2ZXkudjEuU2V0Rmxvb3JQbGFuUmVzcG9uc2UScQoSQ2FsaWJyYXRlRmxvb3JQbGFuEiwudHJlbGxpcy5zdXJ2ZXkudjEuQ2FsaWJyYXRlRmxvb3JQbGFuUmVxdWVzdBotLnRyZWxsaXMuc3VydmV5LnYxLkNhbGlicmF0ZUZsb29yUGxhblJlc3BvbnNlEm4KEUdldEZsb29yUGxhbkltYWdlEisudHJlbGxpcy5zdXJ2ZXkudjEuR2V0Rmxvb3JQbGFuSW1hZ2VSZXF1ZXN0GiwudHJlbGxpcy5zdXJ2ZXkudjEuR2V0Rmxvb3JQbGFuSW1hZ2VSZXNwb25zZUJHWkVnaXRodWIuY29tL011c3RhcmRTZWVkTmV0d29ya3MvdHJlbGxpcy9nZW4vdHJlbGxpcy9zdXJ2ZXkvdjE7c3VydmV5djFiBnByb3RvMw", [file_google_protobuf_timestamp]);
 
 /**
  * SurveySummary is the lightweight survey representation used in list and
@@ -408,6 +408,95 @@ export const GetFloorResponseSchema: GenMessage<GetFloorResponse> = /*@__PURE__*
   messageDesc(file_trellis_survey_v1_survey, 15);
 
 /**
+ * @generated from message trellis.survey.v1.CreateFloorRequest
+ */
+export type CreateFloorRequest = Message<"trellis.survey.v1.CreateFloorRequest"> & {
+  /**
+   * @generated from field: string survey_id = 1;
+   */
+  surveyId: string;
+
+  /**
+   * Operator-facing name; required, since a floor with no name cannot be
+   * picked out of a rail.
+   *
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * Storey number, which may be negative. Two floors may share a level: the
+   * domain orders by it and does not key on it.
+   *
+   * @generated from field: int32 level = 3;
+   */
+  level: number;
+};
+
+/**
+ * Describes the message trellis.survey.v1.CreateFloorRequest.
+ * Use `create(CreateFloorRequestSchema)` to create a new message.
+ */
+export const CreateFloorRequestSchema: GenMessage<CreateFloorRequest> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 16);
+
+/**
+ * @generated from message trellis.survey.v1.CreateFloorResponse
+ */
+export type CreateFloorResponse = Message<"trellis.survey.v1.CreateFloorResponse"> & {
+  /**
+   * @generated from field: trellis.survey.v1.Floor floor = 1;
+   */
+  floor?: Floor | undefined;
+};
+
+/**
+ * Describes the message trellis.survey.v1.CreateFloorResponse.
+ * Use `create(CreateFloorResponseSchema)` to create a new message.
+ */
+export const CreateFloorResponseSchema: GenMessage<CreateFloorResponse> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 17);
+
+/**
+ * @generated from message trellis.survey.v1.SetActiveFloorRequest
+ */
+export type SetActiveFloorRequest = Message<"trellis.survey.v1.SetActiveFloorRequest"> & {
+  /**
+   * @generated from field: string survey_id = 1;
+   */
+  surveyId: string;
+
+  /**
+   * @generated from field: string floor_id = 2;
+   */
+  floorId: string;
+};
+
+/**
+ * Describes the message trellis.survey.v1.SetActiveFloorRequest.
+ * Use `create(SetActiveFloorRequestSchema)` to create a new message.
+ */
+export const SetActiveFloorRequestSchema: GenMessage<SetActiveFloorRequest> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 18);
+
+/**
+ * @generated from message trellis.survey.v1.SetActiveFloorResponse
+ */
+export type SetActiveFloorResponse = Message<"trellis.survey.v1.SetActiveFloorResponse"> & {
+  /**
+   * @generated from field: trellis.survey.v1.Floor floor = 1;
+   */
+  floor?: Floor | undefined;
+};
+
+/**
+ * Describes the message trellis.survey.v1.SetActiveFloorResponse.
+ * Use `create(SetActiveFloorResponseSchema)` to create a new message.
+ */
+export const SetActiveFloorResponseSchema: GenMessage<SetActiveFloorResponse> = /*@__PURE__*/
+  messageDesc(file_trellis_survey_v1_survey, 19);
+
+/**
  * @generated from message trellis.survey.v1.GetHeatmapRequest
  */
 export type GetHeatmapRequest = Message<"trellis.survey.v1.GetHeatmapRequest"> & {
@@ -441,7 +530,7 @@ export type GetHeatmapRequest = Message<"trellis.survey.v1.GetHeatmapRequest"> &
  * Use `create(GetHeatmapRequestSchema)` to create a new message.
  */
 export const GetHeatmapRequestSchema: GenMessage<GetHeatmapRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 16);
+  messageDesc(file_trellis_survey_v1_survey, 20);
 
 /**
  * @generated from message trellis.survey.v1.GetHeatmapResponse
@@ -532,7 +621,7 @@ export type GetHeatmapResponse = Message<"trellis.survey.v1.GetHeatmapResponse">
  * Use `create(GetHeatmapResponseSchema)` to create a new message.
  */
 export const GetHeatmapResponseSchema: GenMessage<GetHeatmapResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 17);
+  messageDesc(file_trellis_survey_v1_survey, 21);
 
 /**
  * LegendStop is one stop of a heatmap's colour scale: the metric value and
@@ -562,7 +651,7 @@ export type LegendStop = Message<"trellis.survey.v1.LegendStop"> & {
  * Use `create(LegendStopSchema)` to create a new message.
  */
 export const LegendStopSchema: GenMessage<LegendStop> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 18);
+  messageDesc(file_trellis_survey_v1_survey, 22);
 
 /**
  * @generated from message trellis.survey.v1.GetCoverageRequest
@@ -594,7 +683,7 @@ export type GetCoverageRequest = Message<"trellis.survey.v1.GetCoverageRequest">
  * Use `create(GetCoverageRequestSchema)` to create a new message.
  */
 export const GetCoverageRequestSchema: GenMessage<GetCoverageRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 19);
+  messageDesc(file_trellis_survey_v1_survey, 23);
 
 /**
  * @generated from message trellis.survey.v1.GetCoverageResponse
@@ -621,7 +710,7 @@ export type GetCoverageResponse = Message<"trellis.survey.v1.GetCoverageResponse
  * Use `create(GetCoverageResponseSchema)` to create a new message.
  */
 export const GetCoverageResponseSchema: GenMessage<GetCoverageResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 20);
+  messageDesc(file_trellis_survey_v1_survey, 24);
 
 /**
  * @generated from message trellis.survey.v1.GenerateReportRequest
@@ -646,7 +735,7 @@ export type GenerateReportRequest = Message<"trellis.survey.v1.GenerateReportReq
  * Use `create(GenerateReportRequestSchema)` to create a new message.
  */
 export const GenerateReportRequestSchema: GenMessage<GenerateReportRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 21);
+  messageDesc(file_trellis_survey_v1_survey, 25);
 
 /**
  * ReportOptions selects the report's sections and its cover-page branding.
@@ -696,7 +785,7 @@ export type ReportOptions = Message<"trellis.survey.v1.ReportOptions"> & {
  * Use `create(ReportOptionsSchema)` to create a new message.
  */
 export const ReportOptionsSchema: GenMessage<ReportOptions> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 22);
+  messageDesc(file_trellis_survey_v1_survey, 26);
 
 /**
  * @generated from message trellis.survey.v1.GenerateReportResponse
@@ -713,7 +802,7 @@ export type GenerateReportResponse = Message<"trellis.survey.v1.GenerateReportRe
  * Use `create(GenerateReportResponseSchema)` to create a new message.
  */
 export const GenerateReportResponseSchema: GenMessage<GenerateReportResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 23);
+  messageDesc(file_trellis_survey_v1_survey, 27);
 
 /**
  * @generated from message trellis.survey.v1.CreateSurveyRequest
@@ -747,7 +836,7 @@ export type CreateSurveyRequest = Message<"trellis.survey.v1.CreateSurveyRequest
  * Use `create(CreateSurveyRequestSchema)` to create a new message.
  */
 export const CreateSurveyRequestSchema: GenMessage<CreateSurveyRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 24);
+  messageDesc(file_trellis_survey_v1_survey, 28);
 
 /**
  * @generated from message trellis.survey.v1.CreateSurveyResponse
@@ -764,7 +853,7 @@ export type CreateSurveyResponse = Message<"trellis.survey.v1.CreateSurveyRespon
  * Use `create(CreateSurveyResponseSchema)` to create a new message.
  */
 export const CreateSurveyResponseSchema: GenMessage<CreateSurveyResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 25);
+  messageDesc(file_trellis_survey_v1_survey, 29);
 
 /**
  * @generated from message trellis.survey.v1.StartSurveyRequest
@@ -781,7 +870,7 @@ export type StartSurveyRequest = Message<"trellis.survey.v1.StartSurveyRequest">
  * Use `create(StartSurveyRequestSchema)` to create a new message.
  */
 export const StartSurveyRequestSchema: GenMessage<StartSurveyRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 26);
+  messageDesc(file_trellis_survey_v1_survey, 30);
 
 /**
  * @generated from message trellis.survey.v1.StartSurveyResponse
@@ -798,7 +887,7 @@ export type StartSurveyResponse = Message<"trellis.survey.v1.StartSurveyResponse
  * Use `create(StartSurveyResponseSchema)` to create a new message.
  */
 export const StartSurveyResponseSchema: GenMessage<StartSurveyResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 27);
+  messageDesc(file_trellis_survey_v1_survey, 31);
 
 /**
  * @generated from message trellis.survey.v1.PauseSurveyRequest
@@ -815,7 +904,7 @@ export type PauseSurveyRequest = Message<"trellis.survey.v1.PauseSurveyRequest">
  * Use `create(PauseSurveyRequestSchema)` to create a new message.
  */
 export const PauseSurveyRequestSchema: GenMessage<PauseSurveyRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 28);
+  messageDesc(file_trellis_survey_v1_survey, 32);
 
 /**
  * @generated from message trellis.survey.v1.PauseSurveyResponse
@@ -832,7 +921,7 @@ export type PauseSurveyResponse = Message<"trellis.survey.v1.PauseSurveyResponse
  * Use `create(PauseSurveyResponseSchema)` to create a new message.
  */
 export const PauseSurveyResponseSchema: GenMessage<PauseSurveyResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 29);
+  messageDesc(file_trellis_survey_v1_survey, 33);
 
 /**
  * @generated from message trellis.survey.v1.CompleteSurveyRequest
@@ -849,7 +938,7 @@ export type CompleteSurveyRequest = Message<"trellis.survey.v1.CompleteSurveyReq
  * Use `create(CompleteSurveyRequestSchema)` to create a new message.
  */
 export const CompleteSurveyRequestSchema: GenMessage<CompleteSurveyRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 30);
+  messageDesc(file_trellis_survey_v1_survey, 34);
 
 /**
  * @generated from message trellis.survey.v1.CompleteSurveyResponse
@@ -866,7 +955,7 @@ export type CompleteSurveyResponse = Message<"trellis.survey.v1.CompleteSurveyRe
  * Use `create(CompleteSurveyResponseSchema)` to create a new message.
  */
 export const CompleteSurveyResponseSchema: GenMessage<CompleteSurveyResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 31);
+  messageDesc(file_trellis_survey_v1_survey, 35);
 
 /**
  * @generated from message trellis.survey.v1.CapturePointRequest
@@ -896,7 +985,7 @@ export type CapturePointRequest = Message<"trellis.survey.v1.CapturePointRequest
  * Use `create(CapturePointRequestSchema)` to create a new message.
  */
 export const CapturePointRequestSchema: GenMessage<CapturePointRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 32);
+  messageDesc(file_trellis_survey_v1_survey, 36);
 
 /**
  * @generated from message trellis.survey.v1.CapturePointResponse
@@ -953,7 +1042,7 @@ export type CapturePointResponse = Message<"trellis.survey.v1.CapturePointRespon
  * Use `create(CapturePointResponseSchema)` to create a new message.
  */
 export const CapturePointResponseSchema: GenMessage<CapturePointResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 33);
+  messageDesc(file_trellis_survey_v1_survey, 37);
 
 /**
  * ScannedNetwork is one observed BSS at one moment, mirroring
@@ -1046,7 +1135,7 @@ export type ScannedNetwork = Message<"trellis.survey.v1.ScannedNetwork"> & {
  * Use `create(ScannedNetworkSchema)` to create a new message.
  */
 export const ScannedNetworkSchema: GenMessage<ScannedNetwork> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 34);
+  messageDesc(file_trellis_survey_v1_survey, 38);
 
 /**
  * @generated from message trellis.survey.v1.GetFloorPlanImageRequest
@@ -1068,7 +1157,7 @@ export type GetFloorPlanImageRequest = Message<"trellis.survey.v1.GetFloorPlanIm
  * Use `create(GetFloorPlanImageRequestSchema)` to create a new message.
  */
 export const GetFloorPlanImageRequestSchema: GenMessage<GetFloorPlanImageRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 35);
+  messageDesc(file_trellis_survey_v1_survey, 39);
 
 /**
  * @generated from message trellis.survey.v1.GetFloorPlanImageResponse
@@ -1097,7 +1186,7 @@ export type GetFloorPlanImageResponse = Message<"trellis.survey.v1.GetFloorPlanI
  * Use `create(GetFloorPlanImageResponseSchema)` to create a new message.
  */
 export const GetFloorPlanImageResponseSchema: GenMessage<GetFloorPlanImageResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 36);
+  messageDesc(file_trellis_survey_v1_survey, 40);
 
 /**
  * @generated from message trellis.survey.v1.SetFloorPlanRequest
@@ -1130,7 +1219,7 @@ export type SetFloorPlanRequest = Message<"trellis.survey.v1.SetFloorPlanRequest
  * Use `create(SetFloorPlanRequestSchema)` to create a new message.
  */
 export const SetFloorPlanRequestSchema: GenMessage<SetFloorPlanRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 37);
+  messageDesc(file_trellis_survey_v1_survey, 41);
 
 /**
  * @generated from message trellis.survey.v1.SetFloorPlanResponse
@@ -1147,7 +1236,7 @@ export type SetFloorPlanResponse = Message<"trellis.survey.v1.SetFloorPlanRespon
  * Use `create(SetFloorPlanResponseSchema)` to create a new message.
  */
 export const SetFloorPlanResponseSchema: GenMessage<SetFloorPlanResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 38);
+  messageDesc(file_trellis_survey_v1_survey, 42);
 
 /**
  * @generated from message trellis.survey.v1.CalibrateFloorPlanRequest
@@ -1198,7 +1287,7 @@ export type CalibrateFloorPlanRequest = Message<"trellis.survey.v1.CalibrateFloo
  * Use `create(CalibrateFloorPlanRequestSchema)` to create a new message.
  */
 export const CalibrateFloorPlanRequestSchema: GenMessage<CalibrateFloorPlanRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 39);
+  messageDesc(file_trellis_survey_v1_survey, 43);
 
 /**
  * @generated from message trellis.survey.v1.CalibrateFloorPlanResponse
@@ -1215,7 +1304,7 @@ export type CalibrateFloorPlanResponse = Message<"trellis.survey.v1.CalibrateFlo
  * Use `create(CalibrateFloorPlanResponseSchema)` to create a new message.
  */
 export const CalibrateFloorPlanResponseSchema: GenMessage<CalibrateFloorPlanResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 40);
+  messageDesc(file_trellis_survey_v1_survey, 44);
 
 /**
  * @generated from message trellis.survey.v1.MeasureThroughputRequest
@@ -1244,7 +1333,7 @@ export type MeasureThroughputRequest = Message<"trellis.survey.v1.MeasureThrough
  * Use `create(MeasureThroughputRequestSchema)` to create a new message.
  */
 export const MeasureThroughputRequestSchema: GenMessage<MeasureThroughputRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 41);
+  messageDesc(file_trellis_survey_v1_survey, 45);
 
 /**
  * @generated from message trellis.survey.v1.MeasureThroughputResponse
@@ -1261,7 +1350,7 @@ export type MeasureThroughputResponse = Message<"trellis.survey.v1.MeasureThroug
  * Use `create(MeasureThroughputResponseSchema)` to create a new message.
  */
 export const MeasureThroughputResponseSchema: GenMessage<MeasureThroughputResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 42);
+  messageDesc(file_trellis_survey_v1_survey, 46);
 
 /**
  * ThroughputReading is what one active measurement found.
@@ -1304,7 +1393,7 @@ export type ThroughputReading = Message<"trellis.survey.v1.ThroughputReading"> &
  * Use `create(ThroughputReadingSchema)` to create a new message.
  */
 export const ThroughputReadingSchema: GenMessage<ThroughputReading> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 43);
+  messageDesc(file_trellis_survey_v1_survey, 47);
 
 /**
  * @generated from message trellis.survey.v1.SetThroughputTargetRequest
@@ -1335,7 +1424,7 @@ export type SetThroughputTargetRequest = Message<"trellis.survey.v1.SetThroughpu
  * Use `create(SetThroughputTargetRequestSchema)` to create a new message.
  */
 export const SetThroughputTargetRequestSchema: GenMessage<SetThroughputTargetRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 44);
+  messageDesc(file_trellis_survey_v1_survey, 48);
 
 /**
  * @generated from message trellis.survey.v1.SetThroughputTargetResponse
@@ -1352,7 +1441,7 @@ export type SetThroughputTargetResponse = Message<"trellis.survey.v1.SetThroughp
  * Use `create(SetThroughputTargetResponseSchema)` to create a new message.
  */
 export const SetThroughputTargetResponseSchema: GenMessage<SetThroughputTargetResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 45);
+  messageDesc(file_trellis_survey_v1_survey, 49);
 
 /**
  * @generated from message trellis.survey.v1.StartContinuousCaptureRequest
@@ -1382,7 +1471,7 @@ export type StartContinuousCaptureRequest = Message<"trellis.survey.v1.StartCont
  * Use `create(StartContinuousCaptureRequestSchema)` to create a new message.
  */
 export const StartContinuousCaptureRequestSchema: GenMessage<StartContinuousCaptureRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 46);
+  messageDesc(file_trellis_survey_v1_survey, 50);
 
 /**
  * @generated from message trellis.survey.v1.StartContinuousCaptureResponse
@@ -1399,7 +1488,7 @@ export type StartContinuousCaptureResponse = Message<"trellis.survey.v1.StartCon
  * Use `create(StartContinuousCaptureResponseSchema)` to create a new message.
  */
 export const StartContinuousCaptureResponseSchema: GenMessage<StartContinuousCaptureResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 47);
+  messageDesc(file_trellis_survey_v1_survey, 51);
 
 /**
  * @generated from message trellis.survey.v1.StopContinuousCaptureRequest
@@ -1416,7 +1505,7 @@ export type StopContinuousCaptureRequest = Message<"trellis.survey.v1.StopContin
  * Use `create(StopContinuousCaptureRequestSchema)` to create a new message.
  */
 export const StopContinuousCaptureRequestSchema: GenMessage<StopContinuousCaptureRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 48);
+  messageDesc(file_trellis_survey_v1_survey, 52);
 
 /**
  * @generated from message trellis.survey.v1.StopContinuousCaptureResponse
@@ -1429,7 +1518,7 @@ export type StopContinuousCaptureResponse = Message<"trellis.survey.v1.StopConti
  * Use `create(StopContinuousCaptureResponseSchema)` to create a new message.
  */
 export const StopContinuousCaptureResponseSchema: GenMessage<StopContinuousCaptureResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 49);
+  messageDesc(file_trellis_survey_v1_survey, 53);
 
 /**
  * CaptureStatus is a survey's continuous capture as it stands, so a client that
@@ -1468,7 +1557,7 @@ export type CaptureStatus = Message<"trellis.survey.v1.CaptureStatus"> & {
  * Use `create(CaptureStatusSchema)` to create a new message.
  */
 export const CaptureStatusSchema: GenMessage<CaptureStatus> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 50);
+  messageDesc(file_trellis_survey_v1_survey, 54);
 
 /**
  * @generated from message trellis.survey.v1.GetCaptureCapabilityRequest
@@ -1481,7 +1570,7 @@ export type GetCaptureCapabilityRequest = Message<"trellis.survey.v1.GetCaptureC
  * Use `create(GetCaptureCapabilityRequestSchema)` to create a new message.
  */
 export const GetCaptureCapabilityRequestSchema: GenMessage<GetCaptureCapabilityRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 51);
+  messageDesc(file_trellis_survey_v1_survey, 55);
 
 /**
  * @generated from message trellis.survey.v1.GetCaptureCapabilityResponse
@@ -1518,7 +1607,7 @@ export type GetCaptureCapabilityResponse = Message<"trellis.survey.v1.GetCapture
  * Use `create(GetCaptureCapabilityResponseSchema)` to create a new message.
  */
 export const GetCaptureCapabilityResponseSchema: GenMessage<GetCaptureCapabilityResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 52);
+  messageDesc(file_trellis_survey_v1_survey, 56);
 
 /**
  * @generated from message trellis.survey.v1.ScanRequest
@@ -1531,7 +1620,7 @@ export type ScanRequest = Message<"trellis.survey.v1.ScanRequest"> & {
  * Use `create(ScanRequestSchema)` to create a new message.
  */
 export const ScanRequestSchema: GenMessage<ScanRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 53);
+  messageDesc(file_trellis_survey_v1_survey, 57);
 
 /**
  * @generated from message trellis.survey.v1.ScanResponse
@@ -1558,7 +1647,7 @@ export type ScanResponse = Message<"trellis.survey.v1.ScanResponse"> & {
  * Use `create(ScanResponseSchema)` to create a new message.
  */
 export const ScanResponseSchema: GenMessage<ScanResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 54);
+  messageDesc(file_trellis_survey_v1_survey, 58);
 
 /**
  * @generated from message trellis.survey.v1.ListSamplesRequest
@@ -1575,7 +1664,7 @@ export type ListSamplesRequest = Message<"trellis.survey.v1.ListSamplesRequest">
  * Use `create(ListSamplesRequestSchema)` to create a new message.
  */
 export const ListSamplesRequestSchema: GenMessage<ListSamplesRequest> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 55);
+  messageDesc(file_trellis_survey_v1_survey, 59);
 
 /**
  * @generated from message trellis.survey.v1.ListSamplesResponse
@@ -1592,7 +1681,7 @@ export type ListSamplesResponse = Message<"trellis.survey.v1.ListSamplesResponse
  * Use `create(ListSamplesResponseSchema)` to create a new message.
  */
 export const ListSamplesResponseSchema: GenMessage<ListSamplesResponse> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 56);
+  messageDesc(file_trellis_survey_v1_survey, 60);
 
 /**
  * SurveySample is one stored measurement point, reduced to what a client
@@ -1660,7 +1749,7 @@ export type SurveySample = Message<"trellis.survey.v1.SurveySample"> & {
  * Use `create(SurveySampleSchema)` to create a new message.
  */
 export const SurveySampleSchema: GenMessage<SurveySample> = /*@__PURE__*/
-  messageDesc(file_trellis_survey_v1_survey, 57);
+  messageDesc(file_trellis_survey_v1_survey, 61);
 
 /**
  * SurveyService serves measured Wi-Fi site surveys backed by core/survey.
@@ -1760,6 +1849,30 @@ export const SurveyService: GenService<{
     methodKind: "unary";
     input: typeof GetFloorRequestSchema;
     output: typeof GetFloorResponseSchema;
+  },
+  /**
+   * CreateFloor adds a storey to an existing survey. A survey opened to be
+   * walked has one floor; a building has more, and until this RPC the extra
+   * ones could only arrive from an import.
+   *
+   * @generated from rpc trellis.survey.v1.SurveyService.CreateFloor
+   */
+  createFloor: {
+    methodKind: "unary";
+    input: typeof CreateFloorRequestSchema;
+    output: typeof CreateFloorResponseSchema;
+  },
+  /**
+   * SetActiveFloor chooses the floor a walk collects onto. Creating a floor
+   * does not switch to it: an operator adds the floors of a building up front
+   * and then walks them one at a time.
+   *
+   * @generated from rpc trellis.survey.v1.SurveyService.SetActiveFloor
+   */
+  setActiveFloor: {
+    methodKind: "unary";
+    input: typeof SetActiveFloorRequestSchema;
+    output: typeof SetActiveFloorResponseSchema;
   },
   /**
    * GenerateReport renders a PDF report for a survey.
@@ -1967,3 +2080,4 @@ export const SurveyService: GenService<{
   },
 }> = /*@__PURE__*/
   serviceDesc(file_trellis_survey_v1_survey, 0);
+

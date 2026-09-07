@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { CaptureSurface } from '@/components/CaptureSurface';
 import { FloorPlanPanel } from '@/components/FloorPlanPanel';
+import { FloorRail } from '@/components/FloorRail';
 import { SurveyLifecycle } from '@/components/SurveyLifecycle';
 import { ThroughputTarget } from '@/components/ThroughputTarget';
 import type { SurveySummary } from '@/gen/trellis/survey/v1/survey_pb';
@@ -92,6 +93,10 @@ export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
 
       <div className="mt-6 border-t border-hairline pt-6">
         <SurveyLifecycle survey={survey} onDeleted={onDeleted} />
+      </div>
+
+      <div className="mt-6 border-t border-hairline pt-6">
+        <FloorRail surveyId={survey.id} floors={floorsQuery.data?.floors ?? []} />
       </div>
 
       <div className="mt-6 border-t border-hairline pt-6">

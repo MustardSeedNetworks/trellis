@@ -108,6 +108,7 @@
     "title": "Informes"
   },
   "surveys": {
+    "addFloor": "Añadir planta",
     "available_one": "{{count}} estudio disponible",
     "available_other": "{{count}} estudios disponibles",
     "calibrate": "Calibrar",
@@ -137,7 +138,14 @@
     "emptyBody": "Cree un estudio para recorrer una planta, o importe un archivo de AirMapper para analizarlo.",
     "floorCount_one": "{{count}} planta",
     "floorCount_other": "{{count}} plantas",
+    "floorLevel": "Nivel {{level}}",
+    "floorLevelField": "Nivel",
+    "floorName": "Nombre de la planta",
     "floorPlanTitle": "Plano de planta",
+    "floorSamples_one": "{{count}} muestra",
+    "floorSamples_other": "{{count}} muestras",
+    "floorWalking": "En recorrido",
+    "floorsTitle": "Plantas",
     "interface": "Interfaz Wi-Fi",
     "interfaceHint": "Opcional. Tal como la nombra el equipo, por ejemplo en0 o wlan0. En blanco, se usa la radio del equipo.",
     "keepIt": "Conservarlo",
@@ -187,6 +195,7 @@
     "walkStartFailed": "El recorrido no se inició: {{error}}",
     "walkStopFailed": "El recorrido no se detuvo: {{error}}",
     "walkStopped": "El recorrido se detuvo: {{error}}",
+    "walkThisFloor": "Recorrer esta planta",
     "walkingAt_one": "En recorrido en ({{x}}, {{y}}): {{count}} punto hasta ahora.",
     "walkingAt_other": "En recorrido en ({{x}}, {{y}}): {{count}} puntos hasta ahora."
   }

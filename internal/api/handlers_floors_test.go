@@ -342,3 +342,141 @@ func TestCalibratingAFloorWithNoPlan(t *testing.T) {
 		t.Fatalf("calibrating with no plan = %v (%s), want failed_precondition", err, connect.CodeOf(err))
 	}
 }
+
+func TestCreateFloorAddsAStoreyWithoutSwitchingToIt(t *testing.T) {
+	t.Parallel()
+
+	handler, _, surveyID, ground, _ := twoFloorSurvey(t)
+
+	resp, err := handler.CreateFloor(context.Background(),
+		connect.NewRequest(&surveyv1.CreateFloorRequest{
+			SurveyId: surveyID, Name: "Mezzanine", Level: 2,
+		}))
+	if err != nil {
+		t.Fatalf("CreateFloor: %v", err)
+	}
+
+	created := resp.Msg.GetFloor()
+	if created.GetName() != "Mezzanine" || created.GetLevel() != 2 {
+		t.Errorf("created floor = %q level %d, want Mezzanine level 2",
+			created.GetName(), created.GetLevel())
+	}
+	if created.GetSampleCount() != 0 || created.GetHasFloorPlan() {
+		t.Errorf("new floor carries %d samples and hasPlan=%v, want an empty floor",
+			created.GetSampleCount(), created.GetHasFloorPlan())
+	}
+	// Adding a storey must not move the walk onto it: an operator lays out the
+	// floors of a building up front and walks them one at a time.
+	if created.GetIsActive() {
+		t.Error("created floor is active; creating a floor must not switch the walk onto it")
+	}
+
+	listed, err := handler.ListFloors(context.Background(),
+		connect.NewRequest(&surveyv1.ListFloorsRequest{SurveyId: surveyID}))
+	if err != nil {
+		t.Fatalf("ListFloors: %v", err)
+	}
+	floors := listed.Msg.GetFloors()
+	if len(floors) != 3 {
+		t.Fatalf("floors after create = %d, want 3", len(floors))
+	}
+	// Level 2 sorts last, and the ground floor is still the one being walked.
+	if floors[2].GetId() != created.GetId() {
+		t.Errorf("floors[2] = %q, want the new level-2 floor last", floors[2].GetName())
+	}
+	for _, floor := range floors {
+		if floor.GetIsActive() && floor.GetId() != ground {
+			t.Errorf("active floor = %q, want the ground floor unchanged", floor.GetName())
+		}
+	}
+}
+
+func TestCreateFloorRejectsAnEmptyName(t *testing.T) {
+	t.Parallel()
+
+	handler, _, surveyID, _, _ := twoFloorSurvey(t)
+
+	// AddFloor stores whatever it is given, so an unnamed floor would land in
+	// the rail as a blank row nothing can pick out. The refusal is here.
+	_, err := handler.CreateFloor(context.Background(),
+		connect.NewRequest(&surveyv1.CreateFloorRequest{SurveyId: surveyID, Level: 2}))
+	if connect.CodeOf(err) != connect.CodeInvalidArgument {
+		t.Fatalf("CreateFloor with no name = %v, want InvalidArgument", err)
+	}
+}
+
+func TestCreateFloorOnAnUnknownSurveyIsNotFound(t *testing.T) {
+	t.Parallel()
+
+	handler, _, _, _, _ := twoFloorSurvey(t)
+
+	_, err := handler.CreateFloor(context.Background(),
+		connect.NewRequest(&surveyv1.CreateFloorRequest{SurveyId: "nope", Name: "Mezzanine"}))
+	if connect.CodeOf(err) != connect.CodeNotFound {
+		t.Fatalf("CreateFloor on an unknown survey = %v, want NotFound", err)
+	}
+}
+
+func TestSetActiveFloorMovesTheWalkAndIsVisibleInTheList(t *testing.T) {
+	t.Parallel()
+
+	handler, mgr, surveyID, ground, basement := twoFloorSurvey(t)
+
+	resp, err := handler.SetActiveFloor(context.Background(),
+		connect.NewRequest(&surveyv1.SetActiveFloorRequest{
+			SurveyId: surveyID, FloorId: basement,
+		}))
+	if err != nil {
+		t.Fatalf("SetActiveFloor: %v", err)
+	}
+	if resp.Msg.GetFloor().GetId() != basement || !resp.Msg.GetFloor().GetIsActive() {
+		t.Errorf("reply floor = %q active=%v, want the basement marked active",
+			resp.Msg.GetFloor().GetName(), resp.Msg.GetFloor().GetIsActive())
+	}
+
+	listed, err := handler.ListFloors(context.Background(),
+		connect.NewRequest(&surveyv1.ListFloorsRequest{SurveyId: surveyID}))
+	if err != nil {
+		t.Fatalf("ListFloors: %v", err)
+	}
+	for _, floor := range listed.Msg.GetFloors() {
+		if floor.GetIsActive() != (floor.GetId() == basement) {
+			t.Errorf("floor %q active=%v, want only the basement active",
+				floor.GetName(), floor.GetIsActive())
+		}
+	}
+
+	// A capture must land on the floor that was switched to, which is the whole
+	// point of the RPC: the store, not just the reply, has to have moved.
+	if err := mgr.AddSample(surveyID, 20, 20, &survey.PassiveSample{}); err != nil {
+		t.Fatalf("AddSample after switching floors: %v", err)
+	}
+	after, err := mgr.GetFloor(surveyID, basement)
+	if err != nil {
+		t.Fatalf("GetFloor(basement): %v", err)
+	}
+	if len(after.Samples) != 4 {
+		t.Errorf("basement samples = %d, want 4; the capture landed elsewhere", len(after.Samples))
+	}
+	groundFloor, err := mgr.GetFloor(surveyID, ground)
+	if err != nil {
+		t.Fatalf("GetFloor(ground): %v", err)
+	}
+	if len(groundFloor.Samples) != 2 {
+		t.Errorf("ground samples = %d, want 2 unchanged", len(groundFloor.Samples))
+	}
+}
+
+func TestSetActiveFloorOnAnUnknownFloorIsNotFound(t *testing.T) {
+	t.Parallel()
+
+	handler, _, surveyID, _, _ := twoFloorSurvey(t)
+
+	_, err := handler.SetActiveFloor(context.Background(),
+		connect.NewRequest(&surveyv1.SetActiveFloorRequest{
+			SurveyId: surveyID, FloorId: "nope",
+		}))
+	if connect.CodeOf(err) != connect.CodeNotFound {
+		t.Fatalf("SetActiveFloor on an unknown floor = %v, want NotFound", err)
+	}
+}

@@ -109,6 +109,9 @@ export function CaptureSurface({
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['samples', surveyId] }),
         queryClient.invalidateQueries({ queryKey: ['surveys'] }),
+        // The floor rail counts this survey's samples per floor, so a stored
+        // point ages that list too.
+        queryClient.invalidateQueries({ queryKey: ['floors', surveyId] }),
       ]);
     },
   });
@@ -117,7 +120,10 @@ export function CaptureSurface({
     mutationFn: (point: Point) =>
       surveyClient.startContinuousCapture({ surveyId, x: point.x, y: point.y }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['surveys'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['surveys'] }),
+        queryClient.invalidateQueries({ queryKey: ['floors', surveyId] }),
+      ]);
     },
   });
 
@@ -133,6 +139,9 @@ export function CaptureSurface({
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['samples', surveyId] }),
         queryClient.invalidateQueries({ queryKey: ['surveys'] }),
+        // The floor rail counts this survey's samples per floor, so a stored
+        // point ages that list too.
+        queryClient.invalidateQueries({ queryKey: ['floors', surveyId] }),
       ]);
     },
   });
@@ -143,6 +152,9 @@ export function CaptureSurface({
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['samples', surveyId] }),
         queryClient.invalidateQueries({ queryKey: ['surveys'] }),
+        // The floor rail counts this survey's samples per floor, so a stored
+        // point ages that list too.
+        queryClient.invalidateQueries({ queryKey: ['floors', surveyId] }),
       ]);
     },
   });

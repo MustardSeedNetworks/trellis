@@ -66,6 +66,12 @@ const (
 	SurveyServiceListFloorsProcedure = "/trellis.survey.v1.SurveyService/ListFloors"
 	// SurveyServiceGetFloorProcedure is the fully-qualified name of the SurveyService's GetFloor RPC.
 	SurveyServiceGetFloorProcedure = "/trellis.survey.v1.SurveyService/GetFloor"
+	// SurveyServiceCreateFloorProcedure is the fully-qualified name of the SurveyService's CreateFloor
+	// RPC.
+	SurveyServiceCreateFloorProcedure = "/trellis.survey.v1.SurveyService/CreateFloor"
+	// SurveyServiceSetActiveFloorProcedure is the fully-qualified name of the SurveyService's
+	// SetActiveFloor RPC.
+	SurveyServiceSetActiveFloorProcedure = "/trellis.survey.v1.SurveyService/SetActiveFloor"
 	// SurveyServiceGenerateReportProcedure is the fully-qualified name of the SurveyService's
 	// GenerateReport RPC.
 	SurveyServiceGenerateReportProcedure = "/trellis.survey.v1.SurveyService/GenerateReport"
@@ -138,6 +144,14 @@ type SurveyServiceClient interface {
 	ListFloors(context.Context, *connect.Request[v1.ListFloorsRequest]) (*connect.Response[v1.ListFloorsResponse], error)
 	// GetFloor returns one floor of a survey by ID.
 	GetFloor(context.Context, *connect.Request[v1.GetFloorRequest]) (*connect.Response[v1.GetFloorResponse], error)
+	// CreateFloor adds a storey to an existing survey. A survey opened to be
+	// walked has one floor; a building has more, and until this RPC the extra
+	// ones could only arrive from an import.
+	CreateFloor(context.Context, *connect.Request[v1.CreateFloorRequest]) (*connect.Response[v1.CreateFloorResponse], error)
+	// SetActiveFloor chooses the floor a walk collects onto. Creating a floor
+	// does not switch to it: an operator adds the floors of a building up front
+	// and then walks them one at a time.
+	SetActiveFloor(context.Context, *connect.Request[v1.SetActiveFloorRequest]) (*connect.Response[v1.SetActiveFloorResponse], error)
 	// GenerateReport renders a PDF report for a survey.
 	GenerateReport(context.Context, *connect.Request[v1.GenerateReportRequest]) (*connect.Response[v1.GenerateReportResponse], error)
 	// CreateSurvey opens a new, empty survey to walk. The measured counterpart
@@ -281,6 +295,18 @@ func NewSurveyServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(surveyServiceMethods.ByName("GetFloor")),
 			connect.WithClientOptions(opts...),
 		),
+		createFloor: connect.NewClient[v1.CreateFloorRequest, v1.CreateFloorResponse](
+			httpClient,
+			baseURL+SurveyServiceCreateFloorProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("CreateFloor")),
+			connect.WithClientOptions(opts...),
+		),
+		setActiveFloor: connect.NewClient[v1.SetActiveFloorRequest, v1.SetActiveFloorResponse](
+			httpClient,
+			baseURL+SurveyServiceSetActiveFloorProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("SetActiveFloor")),
+			connect.WithClientOptions(opts...),
+		),
 		generateReport: connect.NewClient[v1.GenerateReportRequest, v1.GenerateReportResponse](
 			httpClient,
 			baseURL+SurveyServiceGenerateReportProcedure,
@@ -391,6 +417,8 @@ type surveyServiceClient struct {
 	getCoverage            *connect.Client[v1.GetCoverageRequest, v1.GetCoverageResponse]
 	listFloors             *connect.Client[v1.ListFloorsRequest, v1.ListFloorsResponse]
 	getFloor               *connect.Client[v1.GetFloorRequest, v1.GetFloorResponse]
+	createFloor            *connect.Client[v1.CreateFloorRequest, v1.CreateFloorResponse]
+	setActiveFloor         *connect.Client[v1.SetActiveFloorRequest, v1.SetActiveFloorResponse]
 	generateReport         *connect.Client[v1.GenerateReportRequest, v1.GenerateReportResponse]
 	createSurvey           *connect.Client[v1.CreateSurveyRequest, v1.CreateSurveyResponse]
 	startSurvey            *connect.Client[v1.StartSurveyRequest, v1.StartSurveyResponse]
@@ -452,6 +480,16 @@ func (c *surveyServiceClient) ListFloors(ctx context.Context, req *connect.Reque
 // GetFloor calls trellis.survey.v1.SurveyService.GetFloor.
 func (c *surveyServiceClient) GetFloor(ctx context.Context, req *connect.Request[v1.GetFloorRequest]) (*connect.Response[v1.GetFloorResponse], error) {
 	return c.getFloor.CallUnary(ctx, req)
+}
+
+// CreateFloor calls trellis.survey.v1.SurveyService.CreateFloor.
+func (c *surveyServiceClient) CreateFloor(ctx context.Context, req *connect.Request[v1.CreateFloorRequest]) (*connect.Response[v1.CreateFloorResponse], error) {
+	return c.createFloor.CallUnary(ctx, req)
+}
+
+// SetActiveFloor calls trellis.survey.v1.SurveyService.SetActiveFloor.
+func (c *surveyServiceClient) SetActiveFloor(ctx context.Context, req *connect.Request[v1.SetActiveFloorRequest]) (*connect.Response[v1.SetActiveFloorResponse], error) {
+	return c.setActiveFloor.CallUnary(ctx, req)
 }
 
 // GenerateReport calls trellis.survey.v1.SurveyService.GenerateReport.
@@ -557,6 +595,14 @@ type SurveyServiceHandler interface {
 	ListFloors(context.Context, *connect.Request[v1.ListFloorsRequest]) (*connect.Response[v1.ListFloorsResponse], error)
 	// GetFloor returns one floor of a survey by ID.
 	GetFloor(context.Context, *connect.Request[v1.GetFloorRequest]) (*connect.Response[v1.GetFloorResponse], error)
+	// CreateFloor adds a storey to an existing survey. A survey opened to be
+	// walked has one floor; a building has more, and until this RPC the extra
+	// ones could only arrive from an import.
+	CreateFloor(context.Context, *connect.Request[v1.CreateFloorRequest]) (*connect.Response[v1.CreateFloorResponse], error)
+	// SetActiveFloor chooses the floor a walk collects onto. Creating a floor
+	// does not switch to it: an operator adds the floors of a building up front
+	// and then walks them one at a time.
+	SetActiveFloor(context.Context, *connect.Request[v1.SetActiveFloorRequest]) (*connect.Response[v1.SetActiveFloorResponse], error)
 	// GenerateReport renders a PDF report for a survey.
 	GenerateReport(context.Context, *connect.Request[v1.GenerateReportRequest]) (*connect.Response[v1.GenerateReportResponse], error)
 	// CreateSurvey opens a new, empty survey to walk. The measured counterpart
@@ -696,6 +742,18 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(surveyServiceMethods.ByName("GetFloor")),
 		connect.WithHandlerOptions(opts...),
 	)
+	surveyServiceCreateFloorHandler := connect.NewUnaryHandler(
+		SurveyServiceCreateFloorProcedure,
+		svc.CreateFloor,
+		connect.WithSchema(surveyServiceMethods.ByName("CreateFloor")),
+		connect.WithHandlerOptions(opts...),
+	)
+	surveyServiceSetActiveFloorHandler := connect.NewUnaryHandler(
+		SurveyServiceSetActiveFloorProcedure,
+		svc.SetActiveFloor,
+		connect.WithSchema(surveyServiceMethods.ByName("SetActiveFloor")),
+		connect.WithHandlerOptions(opts...),
+	)
 	surveyServiceGenerateReportHandler := connect.NewUnaryHandler(
 		SurveyServiceGenerateReportProcedure,
 		svc.GenerateReport,
@@ -812,6 +870,10 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 			surveyServiceListFloorsHandler.ServeHTTP(w, r)
 		case SurveyServiceGetFloorProcedure:
 			surveyServiceGetFloorHandler.ServeHTTP(w, r)
+		case SurveyServiceCreateFloorProcedure:
+			surveyServiceCreateFloorHandler.ServeHTTP(w, r)
+		case SurveyServiceSetActiveFloorProcedure:
+			surveyServiceSetActiveFloorHandler.ServeHTTP(w, r)
 		case SurveyServiceGenerateReportProcedure:
 			surveyServiceGenerateReportHandler.ServeHTTP(w, r)
 		case SurveyServiceCreateSurveyProcedure:
@@ -887,6 +949,14 @@ func (UnimplementedSurveyServiceHandler) ListFloors(context.Context, *connect.Re
 
 func (UnimplementedSurveyServiceHandler) GetFloor(context.Context, *connect.Request[v1.GetFloorRequest]) (*connect.Response[v1.GetFloorResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.GetFloor is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) CreateFloor(context.Context, *connect.Request[v1.CreateFloorRequest]) (*connect.Response[v1.CreateFloorResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.CreateFloor is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) SetActiveFloor(context.Context, *connect.Request[v1.SetActiveFloorRequest]) (*connect.Response[v1.SetActiveFloorResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.SetActiveFloor is not implemented"))
 }
 
 func (UnimplementedSurveyServiceHandler) GenerateReport(context.Context, *connect.Request[v1.GenerateReportRequest]) (*connect.Response[v1.GenerateReportResponse], error) {
