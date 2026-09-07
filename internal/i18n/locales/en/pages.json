@@ -178,6 +178,8 @@
     "transitionFailed": "The survey did not change state: {{error}}",
     "uncalibrated": "The plan has no scale yet. Distances derived from it — a dead zone's radius most of all — are in pixels until it has one.",
     "uploadPlan": "Upload a plan",
+    "walkStartFailed": "The walk did not start: {{error}}",
+    "walkStopFailed": "The walk did not stop: {{error}}",
     "walkStopped": "The walk stopped: {{error}}",
     "walkingAt_one": "Walking at ({{x}}, {{y}}) — {{count}} point so far.",
     "walkingAt_other": "Walking at ({{x}}, {{y}}) — {{count}} points so far."
