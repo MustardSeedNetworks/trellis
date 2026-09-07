@@ -10,6 +10,8 @@ import (
 	"image/draw"
 	_ "image/jpeg" // AirMapper stores floor plans as JPEG; registered for image.Decode.
 	"image/png"
+	"math"
+	"slices"
 	"strings"
 	"time"
 )
@@ -64,6 +66,18 @@ const (
 
 	// markerCenterPixels is the radius of the center dot in sample markers.
 	markerCenterPixels = 1
+
+	// markerMinRadiusPixels is the smallest marker still visible as a point.
+	markerMinRadiusPixels = 1
+
+	// markerGapPixels is the background left between two markers so they read
+	// as two readings rather than one stroke.
+	markerGapPixels = 2
+
+	// markerSpacingProbes bounds the cost of measuring how close the readings
+	// lie: the median is estimated from this many evenly strided probes rather
+	// than from every pair, which would be quadratic on an imported walk.
+	markerSpacingProbes = 512
 )
 
 // HeatmapConfig contains configuration for heatmap generation.
@@ -464,22 +478,124 @@ func drawFilledCircle(img *image.RGBA, centerX, centerY, radius int, c color.Col
 }
 
 // renderSamplePoints draws markers at sample locations.
+//
+// The marker is sized against how close the readings actually lie. At the
+// three to thirty points a stop-and-go walk produces it is the full circle it
+// has always been; a continuous walk or an import puts hundreds of readings a
+// pixel or two apart, and at that spacing one marker per reading merges into a
+// solid stroke over the values it measured — the map is least readable exactly
+// where it is most trustworthy. Below the spacing even the smallest marker
+// needs, the run is thinned so what is drawn stays countable.
 func renderSamplePoints(img *image.RGBA, samples []SampleValue) {
 	markerColor := color.RGBA{R: 0, G: 0, B: 0, A: colorChannelOpaque}
 	centerColor := color.RGBA{R: colorChannelFull, G: colorChannelFull, B: colorChannelFull, A: colorChannelOpaque}
-	markerSize := markerSizePixels
-	centerSize := markerCenterPixels
 
-	for _, sample := range samples {
+	spacing := medianNeighbourSpacing(samples)
+	radius := markerRadiusForSpacing(spacing)
+	drawn := samples
+	if radius <= markerMinRadiusPixels {
+		drawn = thinToSpacing(samples, float64(2*radius+markerGapPixels))
+	}
+
+	for _, sample := range drawn {
 		x := int(sample.Point.X)
 		y := int(sample.Point.Y)
 
-		// Draw outer marker circle (black)
-		drawFilledCircle(img, x, y, markerSize, markerColor)
+		drawFilledCircle(img, x, y, radius, markerColor)
 
-		// Draw center dot (white)
-		drawFilledCircle(img, x, y, centerSize, centerColor)
+		// The white centre is what makes a full marker read as a ring. Inside
+		// a shrunken one it would consume the marker instead of punctuating
+		// it, so a dense walk is drawn as plain dots.
+		if radius > markerCenterPixels {
+			drawFilledCircle(img, x, y, markerCenterPixels, centerColor)
+		}
 	}
+}
+
+// markerRadiusForSpacing sizes the marker so two neighbours keep a background
+// gap between them, never larger than the marker a sparse walk gets and never
+// smaller than a single visible dot.
+func markerRadiusForSpacing(spacing float64) int {
+	radius := int((spacing - markerGapPixels) / 2)
+	if radius > markerSizePixels {
+		return markerSizePixels
+	}
+	if radius < markerMinRadiusPixels {
+		return markerMinRadiusPixels
+	}
+	return radius
+}
+
+// medianNeighbourSpacing is the median distance from a reading to its nearest
+// other reading, in image pixels. Points are not in walked order — an import
+// arrives in whatever order its archive held — so the neighbour is found by
+// distance rather than by position in the slice.
+func medianNeighbourSpacing(samples []SampleValue) float64 {
+	if len(samples) < 2 {
+		return math.Inf(1)
+	}
+
+	stride := 1
+	if len(samples) > markerSpacingProbes {
+		stride = len(samples) / markerSpacingProbes
+	}
+
+	distances := make([]float64, 0, len(samples)/stride+1)
+	for i := 0; i < len(samples); i += stride {
+		nearest := math.Inf(1)
+		for j, other := range samples {
+			if j == i {
+				continue
+			}
+			dx := samples[i].Point.X - other.Point.X
+			dy := samples[i].Point.Y - other.Point.Y
+			if d := dx*dx + dy*dy; d < nearest {
+				nearest = d
+			}
+		}
+		distances = append(distances, math.Sqrt(nearest))
+	}
+
+	slices.Sort(distances)
+	return distances[len(distances)/2]
+}
+
+// thinToSpacing keeps the readings that can be drawn as separate markers and
+// drops the ones that would land on top of one already drawn. The heat itself
+// is interpolated from every reading; this governs only the markers over it,
+// so nothing measured is lost from the map.
+func thinToSpacing(samples []SampleValue, spacing float64) []SampleValue {
+	if spacing <= 0 {
+		return samples
+	}
+
+	type cell struct{ col, row int }
+	occupied := make(map[cell][]Point2D, len(samples))
+	kept := make([]SampleValue, 0, len(samples))
+
+	for _, sample := range samples {
+		at := cell{col: int(sample.Point.X / spacing), row: int(sample.Point.Y / spacing)}
+		crowded := false
+		for dCol := -1; dCol <= 1 && !crowded; dCol++ {
+			for dRow := -1; dRow <= 1 && !crowded; dRow++ {
+				for _, p := range occupied[cell{col: at.col + dCol, row: at.row + dRow}] {
+					dx := sample.Point.X - p.X
+					dy := sample.Point.Y - p.Y
+					if dx*dx+dy*dy < spacing*spacing {
+						crowded = true
+						break
+					}
+				}
+			}
+		}
+		if crowded {
+			continue
+		}
+		occupied[at] = append(occupied[at], sample.Point)
+		kept = append(kept, sample)
+	}
+
+	return kept
 }
 
 // renderGrid draws grid lines on the image.
