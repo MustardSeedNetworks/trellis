@@ -39,3 +39,15 @@ describe('App routing', () => {
     expect(within(panel).getByRole('link', { name: /surveys/i })).toHaveAttribute('href', '/');
   });
 });
+
+describe('App shell', () => {
+  it('wears the header the registry gives the route, above the page body', async () => {
+    renderAt('/');
+
+    // The header strip is rendered by the shell from the registry entry, not
+    // by the page, so a page that never rendered its own title still gets one.
+    expect(await screen.findByTestId('page-header-title')).toHaveTextContent(/surveys/i);
+    expect(screen.getByTestId('page-header-eyebrow')).toHaveTextContent(/capture/i);
+    expect(await screen.findByRole('heading', { name: /surveys/i })).toBeInTheDocument();
+  });
+});
