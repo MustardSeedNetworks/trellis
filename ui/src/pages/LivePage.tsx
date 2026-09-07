@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CaptureCapabilityNotice } from '@/components/CaptureCapabilityNotice';
 import { NeighbourTable } from '@/components/NeighbourTable';
 import type { ScannedNetwork } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
 import { bandLabel, formatSignal } from '@/lib/format';
+import { scanAge } from '@/lib/scanAge';
 import { type RollupState, StatusRollup } from '@/ui/StatusRollup';
 
 /**
@@ -37,6 +38,18 @@ const busyChannelPercent = 60;
 export function LivePage() {
   const { t } = useTranslation(['common', 'pages']);
   const [polling, setPolling] = useState(true);
+  // A second hand, running only while the page is paused. Paused, nothing else
+  // re-renders — which is exactly when the reading on screen is ageing and the
+  // page would otherwise go on presenting it as the airspace right now.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (polling) {
+      return;
+    }
+    setNow(Date.now());
+    const tick = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(tick);
+  }, [polling]);
 
   const scanQuery = useQuery({
     queryKey: ['scan'],
@@ -48,6 +61,7 @@ export function LivePage() {
     retry: false,
   });
 
+  const age = polling ? undefined : scanAge(scanQuery.data?.scannedAt, now, pollMs);
   const networks = scanQuery.data?.networks ?? [];
   const connected = networks.find((network) => network.associated);
   const rollup = describeAirspace(
@@ -78,6 +92,16 @@ export function LivePage() {
           </button>
         }
       />
+
+      {age ? (
+        <p
+          className={`text-sm ${age.stale ? 'text-status-warning' : 'text-text-secondary'}`}
+          data-testid="scan-age"
+          data-stale={age.stale}
+        >
+          {t('pages:live.pausedAge', { time: age.takenAt, count: age.seconds })}
+        </p>
+      ) : null}
 
       <CaptureCapabilityNotice />
 
