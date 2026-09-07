@@ -2,7 +2,7 @@
 #Type: passive
 #App Version: 8.0 	 Build: 23503
 #Created on: 10:37:30 10/07/2010
-#Antenna Angle: 0.000000, Antenna Type: 
+#Antenna Angle: 0.000000, Antenna Type:
 #dim_X, dim_Y, GPS Map
 &,292.428009,268.321014, 0
 #Time,Xpos,Ypos,Channel,SSID,AP,SignalDBM,Signal,NoiseDBM,Noise,MediaType,NodeName,Speed,ByteCount(throughput),PacketCount,PacketLost,LostRate,RetryCount,RetryRate,Longitude,Latitude,Click,APFlags,MCSRx-Tx,IPerfSpeed,Heading, AntennaDirection, iPerf_Throughput

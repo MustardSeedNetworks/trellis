@@ -5,7 +5,7 @@ Status: draft for review · Owner: Kris Armstrong / MSN
 ## 1. The keystone decision: process-isolated, local-first, transport-agnostic core
 
 Trellis is **not** a monolith. It is three cooperating OS processes, with the Go core
-written so the **same binary** runs embedded in the desktop app *or* as a cloud
+written so the **same binary** runs embedded in the desktop app _or_ as a cloud
 server. This one choice buys us:
 
 - **Fault isolation** — a C++/GPU crash or a hung GPU driver can't take down the app.
@@ -14,19 +14,19 @@ server. This one choice buys us:
   builds are cgo-free static binaries; darwin links system frameworks.
 - **Fast big-buffer path** — heatmap grids move between Go and the engine by
   **shared memory**, never JSON.
-- **One codebase, desktop *and* cloud** — the core's API is transport-agnostic.
+- **One codebase, desktop _and_ cloud** — the core's API is transport-agnostic.
 
 **Capture is not one of the processes** (ADR-0006). It was, on a privilege-isolation
 argument that does not hold where it was applied: on macOS the gate is TCC, which
-grants to a *signed bundle*, so the process reading the radio has to be the one that
-is bundled, and a privileged daemon gets strictly less. (Linux *does* need
+grants to a _signed bundle_, so the process reading the radio has to be the one that
+is bundled, and a privileged daemon gets strictly less. (Linux _does_ need
 `CAP_NET_ADMIN` to trigger a scan — measured — which argues for one small
 platform-specific helper behind the same interface, not a fleet-wide split.) `internal/capture` is
 therefore linked into the core, and **trellisd itself ships as the signed
 `Trellis.app`**. The `capture.Scanner` interface still hides host-NIC from external
 hardware; only the process boundary is gone.
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────────┐
 │ UI process            React + TypeScript  (WebGL/WebGPU canvas)      │
 │   ▲ control: Connect/gRPC            ▲ bulk: binary grids / tiles     │
@@ -47,10 +47,12 @@ hardware; only the process boundary is gone.
 ## 2. Components
 
 ### 2.1 Predictive RF Engine — C++20 + GPU (the only greenfield heavy-math component)
+
 A **pure function**: `compute(scene, params) → predicted grids`. No I/O, no DB, no app
-logic ⇒ deterministic ⇒ golden-file testable. Holds a scene handle for *incremental*
+logic ⇒ deterministic ⇒ golden-file testable. Holds a scene handle for _incremental_
 recompute. **Measured-survey interpolation is NOT here** — it's reused Go in the core
-(see 2.2 + `09-SEED-MIGRATION.md`); the engine only does *prediction*.
+(see 2.2 + `09-SEED-MIGRATION.md`); the engine only does _prediction_.
+
 - Geometry, tiered propagation (fast MWF/ITU for interactivity; ray-trace for final),
   derived layers (SNR, data-rate, interference, coverage, roaming), and **calibration**
   (fit the predictive model to measured points). Detail in [04-RF-ENGINE.md](04-RF-ENGINE.md).
@@ -59,7 +61,9 @@ recompute. **Measured-survey interpolation is NOT here** — it's reused Go in t
   **CPU/SIMD fallback** for headless CI and no-GPU hosts.
 
 ### 2.2 Core Service — Go (the majority)
-Everything that isn't *predictive* math or pixels.
+
+Everything that isn't _predictive_ math or pixels.
+
 - **Domain + persistence:** buildings/floors/scenes/APs/antennas/materials/
   requirements/surveys. SQLite (relational) via `sqlc`; Parquet (measurement clouds).
   Pure-Go `modernc.org/sqlite` to keep the core cgo-free.
@@ -67,9 +71,10 @@ Everything that isn't *predictive* math or pixels.
   and AirMagnet `.svd` import, interpolation, heatmap/colorscale, analysis, multi-floor,
   reports — proven Go, reused. An AirMagnet export is UTF-16 text and carries
   measurements only: its floor plan is a separate file in the AirMagnet project, so an
-  imported `.svd` survey has points and no plan behind them. Produces **measured** grids in the *same* `GridDescriptor` format as the
+  imported `.svd` survey has points and no plan behind them. Produces **measured**
+  grids in the _same_ `GridDescriptor` format as the
   engine's **predicted** grids, so UI/reports treat them identically.
-- **Orchestration:** AP move → assemble scene *delta* → request compute (shmem) →
+- **Orchestration:** AP move → assemble scene _delta_ → request compute (shmem) →
   cache grid → notify UI. **Incremental** (only the changed AP/region).
 - **Capture:** `internal/capture` reads the host radio in-process (ADR-0006);
   the core attaches position, persists, and triggers interpolation. External
@@ -79,7 +84,9 @@ Everything that isn't *predictive* math or pixels.
 - **Also:** import/export, report-model assembly, **Ed25519** license verification.
 
 ### 2.3 UI — TypeScript + React (presentation only)
+
 No domain logic, no math.
+
 - **Canvas:** WebGL/WebGPU floorplan + heatmap overlay. The engine grid arrives as a
   **binary blob**; UI uploads to a texture and shades client-side (instant recolor/
   threshold, no round-trip). Tiled for huge grids.
@@ -87,14 +94,16 @@ No domain logic, no math.
 - **Transport:** Connect/gRPC control + binary channel (Wails or WebSocket) for grids.
 
 ### 2.4 Capture — `internal/capture`, linked into the core (ADR-0006)
+
 Turns radios into `wifi.ScannedNetwork` values behind one `Scanner` interface.
+
 - Backends (build tags), all implemented: macOS CoreWLAN (cgo), Linux `nl80211`
   over generic netlink (pure Go), Windows Native Wifi via `wlanapi.dll` (pure
   Go). Monitor mode is dead on modern macOS.
 - **Tier 1 privilege is per-platform** — see
   [10-WIFI-CAPTURE.md](10-WIFI-CAPTURE.md). macOS needs none but requires a
   signed, entitled, LaunchServices-launched bundle, which is why trellisd ships
-  as `Trellis.app`. Linux needs `CAP_NET_ADMIN` to *trigger* a scan (not to read
+  as `Trellis.app`. Linux needs `CAP_NET_ADMIN` to _trigger_ a scan (not to read
   the cache). Windows 11 gates scanning on Location Services the same way macOS
   does — granted per user in an interactive session, and not substitutable by
   elevation. Tier 2 (monitor mode) needs privilege on every platform and is
@@ -104,16 +113,20 @@ Turns radios into `wifi.ScannedNetwork` values behind one `Scanner` interface.
 - **The one place cgo is allowed**, enforced by `scripts/check-cgo-confinement.py`.
 
 ### 2.5 Reporter — Go + headless renderer
+
 Go builds a report model → Typst or HTML template → headless Chromium → PDF.
 Templates versioned; heatmap images rendered offscreen by the engine.
 
 ### 2.6 Licensing — Go, Ed25519, offline
+
 Signed tokens, optional node-lock, feature flags, offline-verifiable with an embedded
 public key. (Spec reuse from MSN Ed25519 license work. No MD5/rotor/pinned-key.)
 
 ## 3. The seams (schema-first; this is the real engineering)
+
 All three contracts defined in **protobuf**, codegen for Go/TS/C++ → one source of
 truth. See [contracts/](contracts/).
+
 - **Go ↔ Engine** — control: length-prefixed protobuf over UDS; bulk: shared-memory
   ring (Arrow/flatbuffer scene + grids). Contract = "give scene/delta, get grids."
 - **Go ↔ UI** — Connect/gRPC control + binary grid channel.
@@ -121,14 +134,16 @@ truth. See [contracts/](contracts/).
   abstraction hides host-NIC vs external HW.
 
 ## 4. Two hot loops (design to these budgets)
-- **Plan loop (< 100 ms):** AP drag → delta to Go → engine recomputes *only the
-  affected region* on GPU → grid via shmem → binary to UI → texture + shader.
+
+- **Plan loop (< 100 ms):** AP drag → delta to Go → engine recomputes _only the
+  affected region_ on GPU → grid via shmem → binary to UI → texture + shader.
   Incremental + GPU + binary end-to-end. (Invalidation scope, not GPU FLOPS, is the
   make-or-break.)
 - **Survey loop (streaming, backpressured):** daemon → measurements → Go geotags →
   Parquet → periodic interpolation → measured heatmap → UI.
 
 ## 5. Deployment modes (same Go core)
+
 - **Desktop:** Wails binary = Go core + React UI, with capture linked in; bundles
   the engine as a helper process. Per-OS installers + code signing/notarization —
   on macOS the signed bundle is not optional packaging, it is what makes Wi-Fi
@@ -138,6 +153,7 @@ truth. See [contracts/](contracts/).
 - **CI/headless:** engine CPU fallback so tests run without a GPU.
 
 ## 6. Cross-cutting
+
 - **Testing:** engine = golden-file + property tests (more walls ⇒ less signal); Go =
   unit/integration + protobuf contract tests; UI = Playwright. Cross-language contract
   tests on the seams.

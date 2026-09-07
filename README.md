@@ -19,10 +19,12 @@ Wi-Fi analysis; Trellis owns survey/planning** (decided 2026-09-03, superseding 
 > a phase-by-phase status table.
 
 ## Why "Trellis"
+
 A trellis is a structure you **deliberately design before growth** — the right
 metaphor for site design and AP layout. Fits the MSN botanical fleet (Seed, Stem).
 
 ## The shape (one breath)
+
 The target shape: a pure-function **C++/GPU RF engine** (scene → grids, golden-tested)
 behind a **Go** core that owns domain/DB/orchestration/capture/licensing and serves one
 protobuf API to a **React/TypeScript** WebGL UI — four isolated processes, schema-first
@@ -30,7 +32,7 @@ seams, shared-memory for big buffers, same Go core running desktop (Wails) or cl
 Today it is one binary (`trellisd`): Go core + linked-in capture + embedded UI, no
 engine process, no shared memory, no Wails.
 
-```
+```text
 React+TS UI ──Connect/gRPC + binary grids──► Go core ──shmem/Arrow──► C++/GPU RF engine (planned)
                                                │
                                                ├─ SQLite (project) — Parquet (planned)
@@ -45,7 +47,7 @@ disabled — Trellis serves the one operator who runs it, on loopback, storing
 surveys in their own data directory, so there is no system service and no
 service user ([ADR-0007](docs/adr/ADR-0007-linux-packaging-and-service-contract.md)).
 
-```
+```bash
 sudo apt install ./trellis_<version>_amd64.deb     # or: sudo dnf install ./trellis-<version>-1.x86_64.rpm
 trellisd                                            # or, to have it come back after a reboot:
 systemctl --user enable --now trellisd
@@ -59,8 +61,9 @@ signed, entitled bundle can read Wi-Fi network names. Windows ships as an
 archive.
 
 ## Docs (read in order)
+
 | Doc | What |
-|---|---|
+| --- | --- |
 | [docs/00-VISION.md](docs/00-VISION.md) | Problem, positioning, what it is / isn't |
 | [docs/01-PRD.md](docs/01-PRD.md) | Functional + non-functional requirements, MVP scope |
 | [docs/02-ARCHITECTURE.md](docs/02-ARCHITECTURE.md) | System architecture — processes, components, seams, data flows |
@@ -75,7 +78,8 @@ archive.
 | [docs/contracts/](docs/contracts/) | Protobuf seam definitions (the keystone) |
 
 ## Repo layout (as of 2026-09-03)
-```
+
+```text
 cmd/trellisd     Go. Single binary entrypoint.
 core/            Go. Domain: core/survey (measured-survey engine), core/wifi (scan model).
 internal/api     Go. Connect/gRPC handlers for the survey API.
@@ -86,6 +90,7 @@ ui/              TypeScript + React. Four pages: Surveys, Import, Coverage, Repo
 docs/            this.
 deploy/          Packaging (macOS app bundle, etc.).
 ```
+
 `/engine` (C++/GPU RF engine) and `/reporter` (headless-Chromium reporter) from the
 target architecture are not started — the reporter that exists today is pure-Go
 (`core/survey/report.go`, fpdf).

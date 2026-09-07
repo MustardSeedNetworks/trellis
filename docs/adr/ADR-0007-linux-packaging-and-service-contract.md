@@ -17,7 +17,7 @@ Everything that makes that decision easy is already written down:
 - `trellisd` binds `127.0.0.1:8446` and, since #270, **refuses to start on a
   non-loopback address**. There is no authentication, no TLS, no CSRF; the bind
   gate is what keeps that honest rather than a comment.
-- Its data lives in the *user's* directory — `$XDG_DATA_HOME/trellis`,
+- Its data lives in the _user's_ directory — `$XDG_DATA_HOME/trellis`,
   `~/Library/Application Support/Trellis`, `%AppData%\Trellis`
   (`internal/apppaths`). There is no `/etc/trellis`, no `/var/lib/trellis`, and
   nothing on the machine that a second user would share.
@@ -36,7 +36,7 @@ daemon that by design serves exactly one person on exactly one host.
 
 ## Decision
 
-**The `.deb` and `.rpm` install the binary and a *user* unit. They install no
+**The `.deb` and `.rpm` install the binary and a _user_ unit. They install no
 system service, no service user, no `/etc` config, and open no port.**
 
 Concretely:
@@ -59,7 +59,7 @@ Concretely:
 5. **No firewall rule and no port to open**, following the 2026-05-29 fleet
    change that dropped the HTTP redirectors. The bind gate already refuses any
    address that a firewall rule would be needed for.
-6. **The package does not `setcap`.** On Linux, *triggering* a scan needs
+6. **The package does not `setcap`.** On Linux, _triggering_ a scan needs
    `CAP_NET_ADMIN` (ADR-0006 measured it: unprivileged trigger is EPERM, reading
    the cache is not). `setcap cap_net_admin+ep /usr/bin/trellisd` in a
    postinstall would hand every local user the ability to reconfigure the host's
@@ -76,7 +76,7 @@ Concretely:
 - `dnf install` then `trellisd` works for a single user immediately; the user
   unit is for people who want it back after a reboot.
 - If #160's tablet workflow is ever built — auth, TLS, CSRF, then a routable
-  bind — that feature brings a *system* unit with it, and supersedes this ADR.
+  bind — that feature brings a _system_ unit with it, and supersedes this ADR.
   The shape above is deliberately the one that has to be replaced wholesale
   rather than loosened field by field.
 - The macOS `.app` bundle (`deploy/macos/build-app.sh`) and the Windows archive

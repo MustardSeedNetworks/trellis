@@ -33,7 +33,7 @@ go run ./tools/linklive-oracle \
 ## Result after the two defects below were fixed
 
 | Link-Live analysis | Unit | Mode | Points LL/TR | Placements LL/TR | Positions agree | BSSIDs common/disjoint | Signal agree | Noise agree | Channel agree |
-|---|---|---|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `60957e0fadf95e0035140a35` | EtherScopeXG | passive | 73/73 | 40/0 | 73/73 | 116/0 | 4789/4789 | 4789/4789 | 4789/4789 |
 | `60957e5eadf95e0035140a3f` | EtherScopeXG | active | 76/76 | 0/0 | 76/76 | 0/0 | 0/0 | 0/0 | 0/0 |
 | `60957f54adf95e0035140a55` | EtherScopeXG | passive | 107/107 | 90/0 | 107/107 | 282/0 | 14810/14810 | 14810/14810 | 14810/14810 |
@@ -45,7 +45,7 @@ go run ./tools/linklive-oracle \
 | `628da3f38d578e0036aeaf0d` | EtherScopeXG | passive | 87/87 | 40/40 | 87/87 | 111/0 | 5297/5297 | 5297/5297 | 5297/5297 |
 | `628da4238d578e0036aeb3f3` | EtherScopeXG | passive | 74/74 | 53/53 | 74/74 | 262/0 | 10240/10240 | 10240/10240 | 10240/10240 |
 | `628da44e8d578e0036aeb89d` | EtherScopeXG | passive | 132/132 | 65/65 | 132/132 | 288/0 | 16680/16680 | 16680/16680 | 16680/16680 |
-| **11 surveys** |  |  | 776/776 | 439/158 | 776/776 | 2682/0 | 85690/85690 | 85690/85690 | 85690/85690 |
+| **11 surveys** | | | 776/776 | 439/158 | 776/776 | 2682/0 | 85690/85690 | 85690/85690 | 85690/85690 |
 
 Every walk position, every BSSID, every signal, noise and channel reading
 agrees. The totals row is the tool's own arithmetic, not a hand sum. The
@@ -67,7 +67,7 @@ Link-Live's 39 grouped ones.
 ## The same comparison before the fixes
 
 | Link-Live analysis | Unit | Mode | Points LL/TR | Placements LL/TR | Positions agree | BSSIDs common/disjoint | Signal agree | Noise agree | Channel agree |
-|---|---|---|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `60957e0fadf95e0035140a35` | EtherScopeXG | passive | 73/73 | 40/0 | 73/73 | 116/0 | 4789/4789 | 4789/4789 | 0/4789 |
 | `60957e5eadf95e0035140a3f` | EtherScopeXG | active | 76/76 | 0/0 | 76/76 | 0/0 | 0/0 | 0/0 | 0/0 |
 | `60957f54adf95e0035140a55` | EtherScopeXG | passive | 107/107 | 90/0 | 107/107 | 282/0 | 14810/14810 | 14810/14810 | 0/14810 |
@@ -79,7 +79,7 @@ Link-Live's 39 grouped ones.
 | `628da3f38d578e0036aeaf0d` | EtherScopeXG | passive | 87/87 | 40/0 | 87/87 | 111/0 | 5297/5297 | 5297/5297 | 0/5297 |
 | `628da4238d578e0036aeb3f3` | EtherScopeXG | passive | 74/74 | 53/0 | 74/74 | 262/0 | 10240/10240 | 10240/10240 | 0/10240 |
 | `628da44e8d578e0036aeb89d` | EtherScopeXG | passive | 132/132 | 65/0 | 132/132 | 288/0 | 16680/16680 | 16680/16680 | 0/16680 |
-| **11 surveys** |  |  | 776/776 | 439/0 | 776/776 | 2682/0 | 85690/85690 | 85690/85690 | 0/85690 |
+| **11 surveys** | | | 776/776 | 439/0 | 776/776 | 2682/0 | 85690/85690 | 85690/85690 | 0/85690 |
 
 ### Defect 1 — every channel was a band code
 

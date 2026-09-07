@@ -179,4 +179,3 @@ jobs:
         run: |
           echo "Release created: ${TAG_NAME}"
           echo "Version: ${VERSION}"
-

@@ -45,6 +45,13 @@ stale_rows=()
 
 # `read pid etime command` rather than parameter expansion: ps pads its pid
 # column with leading spaces, which %% would otherwise read as an empty field.
+#
+# SC2009 is disabled for the whole loop: pgrep cannot report elapsed time,
+# which is the whole signal here, so ps is the only source for it. The
+# directive has to sit in front of the compound command — it was previously
+# just above `done`, where shellcheck rejects it (SC1123) and then fails to
+# parse the loop at all (SC1072/SC1073), so the file was never really checked.
+# shellcheck disable=SC2009
 while read -r pid etime command; do
 	[ -n "$pid" ] || continue
 	seconds="$(elapsed_seconds "$etime")" || continue
@@ -52,8 +59,6 @@ while read -r pid etime command; do
 		stale_pids+=("$pid")
 		stale_rows+=("  $pid  $etime  ${command##*/}")
 	fi
-# shellcheck disable=SC2009  # pgrep cannot report elapsed time, which is the
-# whole signal here; ps is the only source for it.
 done < <(ps -axo pid=,etime=,command= | grep -E '/[a-z0-9_.-]+\.test( |$)' | grep -v grep || true)
 
 if [ "${#stale_pids[@]}" -eq 0 ]; then

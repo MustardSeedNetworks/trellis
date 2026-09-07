@@ -3,10 +3,12 @@
 Status: Accepted · Date: 2026-06-20
 
 ## Context
+
 Process isolation (ADR-0001) means three cross-language seams: UI↔Go, Go↔Engine,
 Go↔Capture. These are the integration surface and the most likely source of pain.
 
 ## Decision
+
 - Define **every seam in protobuf**, in `/contracts`, as the single source of truth;
   generate Go / TS / C++ with **`buf`**. No hand-written wire types.
 - **Control messages** travel as protobuf (gRPC/Connect, or length-prefixed over UDS).
@@ -15,6 +17,7 @@ Go↔Capture. These are the integration surface and the most likely source of pa
 - Freeze the contracts in **Phase 0**, before component code.
 
 ## Why
+
 - Schema-first catches breaking changes (`buf breaking`) and keeps three languages in
   sync mechanically.
 - A 2M-cell float grid as JSON would dominate the latency budget; shared memory makes
@@ -23,6 +26,7 @@ Go↔Capture. These are the integration surface and the most likely source of pa
   mock the API from the `.proto`).
 
 ## Consequences
+
 - Up-front contract design effort (the keystone `engine.proto` exists in draft).
 - Shared-memory lifecycle (allocation, handles, cleanup) must be designed carefully;
   use Arrow/flatbuffer layouts for self-describing buffers.

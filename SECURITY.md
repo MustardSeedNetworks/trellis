@@ -6,11 +6,11 @@ Until Trellis reaches 1.0, only the **latest released version** receives
 security fixes. Older 0.x versions stay on the repo for reference but are not
 patched — upgrade to the current minor.
 
-| Version         | Supported          |
+| Version | Supported |
 | --------------- | ------------------ |
 | Latest (`main`) | :white_check_mark: |
-| Older 0.x       | :x:                |
-| Future 1.x      | :white_check_mark: |
+| Older 0.x | :x: |
+| Future 1.x | :white_check_mark: |
 
 ## Read this first: `trellisd` has no authentication and no TLS
 
@@ -67,12 +67,12 @@ Include in your report:
 
 ### Severity levels
 
-| Level    | Description                         | Target Resolution |
+| Level | Description | Target Resolution |
 | -------- | ----------------------------------- | ----------------- |
-| Critical | Remote code execution, auth bypass  | 24-48 hours       |
-| High     | Data exposure, privilege escalation | 7 days            |
-| Medium   | Limited impact vulnerabilities      | 30 days           |
-| Low      | Minor issues, hardening             | Next release      |
+| Critical | Remote code execution, auth bypass | 24-48 hours |
+| High | Data exposure, privilege escalation | 7 days |
+| Medium | Limited impact vulnerabilities | 30 days |
+| Low | Minor issues, hardening | Next release |
 
 ## Scope
 

@@ -16,7 +16,7 @@ first reason does not apply to what Trellis actually does, and that the split
 carries a specific cost.
 
 **On macOS, privilege is not the gate and cannot be.** The gate is TCC, and it
-is *stricter* than root: macOS gives Wi-Fi network names only to a signed,
+is _stricter_ than root: macOS gives Wi-Fi network names only to a signed,
 entitled bundle that LaunchServices attributes to that bundle identity. A root
 daemon gets nothing a user-session bundle does not — it gets less. No amount of
 privilege separation buys a single named BSSID.
@@ -25,19 +25,19 @@ privilege separation buys a single named BSSID.
 Measured on an RTL8723BU adapter:
 
 | | |
-|---|---|
+| --- | --- |
 | root, trigger scan | 11 BSSes |
 | unprivileged, trigger scan | `Operation not permitted` (EPERM) |
 | unprivileged, read cached results | 11 BSSes |
 
-So *triggering* a scan needs `CAP_NET_ADMIN`; *reading* the cache does not. That
+So _triggering_ a scan needs `CAP_NET_ADMIN`; _reading_ the cache does not. That
 is a genuine argument for a privileged helper — **on Linux**. It is not an
 argument for a process split on macOS, where the same split actively costs a
 working permission model.
 
 **On Windows the gate turned out to be the macOS one.** Measured on Windows 11
 build 26200 while implementing the Native Wifi backend: a process running as
-`nt authority\system` *with administrator rights* still gets
+`nt authority\system` _with administrator rights_ still gets
 `ERROR_ACCESS_DENIED` from `WlanScan` while Location Services consent is denied,
 and `netsh` says why in as many words. Elevation is not the missing piece — the
 consent is granted per user in an interactive session.
@@ -76,13 +76,13 @@ Confine cgo to `internal/capture`, behind `//go:build darwin && cgo`, and
 enforce that with `scripts/check-cgo-confinement.py` in CI rather than by
 convention.
 
-This changes R5's *mechanism* (a process boundary → a package boundary plus a
-CI check) and keeps its *goal* (cgo does not spread through the Go core).
+This changes R5's _mechanism_ (a process boundary → a package boundary plus a
+CI check) and keeps its _goal_ (cgo does not spread through the Go core).
 
 ## Why
 
 - **The privilege argument does not hold where it was being applied.** It is
-  false on macOS and on Windows, and where it *is* true — Linux scan triggering —
+  false on macOS and on Windows, and where it _is_ true — Linux scan triggering —
   it argues for one small platform-specific helper, not for every platform paying
   an IPC seam. Splitting all three because one might need it is the wrong default.
 - **One process, one bundle, one grant.** The permission model becomes a
@@ -93,7 +93,7 @@ CI check) and keeps its *goal* (cgo does not spread through the Go core).
   actually checked.
 - **The seam that mattered stays.** `capture.Scanner` is the abstraction the
   survey engine consumes; host-NIC and external hardware sit behind it either
-  way. What is removed is a *process* boundary, not a *contract* boundary.
+  way. What is removed is a _process_ boundary, not a _contract_ boundary.
 
 ## Consequences
 
@@ -121,7 +121,7 @@ CI check) and keeps its *goal* (cgo does not spread through the Go core).
   time once.
 - **Keep the split, drop the bundle; run capture as root.** Does not work. Root
   is not what macOS checks; an unbundled root daemon sees nameless BSSIDs.
-- **Wait for Tier 2 and split then.** Tier 2 needs privilege *and* takes the
+- **Wait for Tier 2 and split then.** Tier 2 needs privilege _and_ takes the
   radio off the network, so it will want its own process with its own lifecycle
   regardless. Carrying an unused split until then is not a down payment on it.
 
@@ -132,5 +132,5 @@ small capability-bearing helper that only triggers scans, or accepting
 cached-only results — which are stale, and empty if nothing else on the host
 ever scans. That choice belongs to the Linux backend's own ADR, decided against
 a working implementation rather than in advance. `capture.Scanner` is the same
-interface either way, which is the point: this ADR removes a *process* boundary,
-not the *contract* boundary that would let Linux reintroduce a helper behind it.
+interface either way, which is the point: this ADR removes a _process_ boundary,
+not the _contract_ boundary that would let Linux reintroduce a helper behind it.

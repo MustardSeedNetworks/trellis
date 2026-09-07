@@ -1,4 +1,6 @@
-.PHONY: generate generate-ts ui build build-e2e ui-build-hash lint golangci-lint vet test fmt-check check-stale-tests packages
+.PHONY: generate generate-ts ui build build-e2e ui-build-hash lint lint-md golangci-lint vet test fmt-check check-stale-tests packages
+
+include mk/lint.mk
 
 # Universal Build Contract: every binary carries version, commit, build time
 # and the md5 of the embedded UI, injected into internal/version. The hash is

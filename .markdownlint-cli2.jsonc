@@ -1,0 +1,25 @@
+{
+  // No "globs" here on purpose. markdownlint-cli2 UNIONS a "globs" property
+  // with any globs passed on the command line — it does not replace them, so a
+  // "globs" entry here would silently widen every caller's scope. Callers pass
+  // their own: `make lint-md` and the CI docs gate both pass "**/*.md" because
+  // this repo's tree is clean (T-C1 cleared 494 violations); the pre-commit
+  // hook passes the staged files.
+
+  // Globs to ignore. Deliberately only the build outputs this repo actually
+  // produces (see .gitignore) plus the generated changelog — this is NOT a
+  // copy of niac-go's list. An ignore for a directory that does not exist is
+  // dead configuration, and one of them named the local agent directory, which
+  // the banned-vocabulary gate then flagged.
+  "ignores": [
+    "**/node_modules/**",
+    "ui/playwright-report/**",
+    "ui/test-results/**",
+    "ui/storybook-static/**",
+    "ui/coverage/**",
+    "**/CHANGELOG.md"
+  ],
+
+  // Use the .markdownlint.json config
+  "config": ".markdownlint.json"
+}
