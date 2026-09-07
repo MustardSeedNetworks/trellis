@@ -219,10 +219,28 @@ test('uploads a floor plan, calibrates it, and walks on it', async ({ page }) =>
   await page.getByTestId('floor-plan-input').setInputFiles('e2e/fixtures/ninth-floor.png');
   await expect(page.getByTestId('floor-plan-status')).toContainText('no scale yet');
 
-  // 20 metres across an 800-pixel plan is 0.025 m per pixel. The reading is
-  // stated as a distance a person can check against the building, not as a
-  // metres-per-pixel figure nobody can.
-  await page.getByTestId('plan-width-metres').fill('20');
+  // Two marks 400 px apart on the plan, called 10 metres, is 0.025 m per pixel.
+  // The reading is stated as a distance a person can check against the
+  // building, not as a metres-per-pixel figure nobody can.
+  const calibration = page.getByTestId('calibration-surface');
+  await expect(calibration).toBeVisible();
+  const calibrationBox = await calibration.boundingBox();
+  if (calibrationBox === null) {
+    throw new Error('the calibration surface is not laid out');
+  }
+  // Clicked through the locator rather than at page coordinates: the panel sits
+  // below the fold, and page.mouse.click takes viewport coordinates, so the
+  // same arithmetic lands on whatever happens to be at that height instead.
+  // A quarter and three quarters across the surface is 400 px of an 800 px
+  // plan, whatever width the panel gives it.
+  await calibration.click({
+    position: { x: calibrationBox.width * 0.25, y: calibrationBox.height / 2 },
+  });
+  await calibration.click({
+    position: { x: calibrationBox.width * 0.75, y: calibrationBox.height / 2 },
+  });
+  await expect(page.getByTestId('calibration-prompt')).toContainText('400 px');
+  await page.getByTestId('calibration-metres').fill('10');
   await page.getByTestId('calibrate-floor-plan').click();
   await expect(page.getByTestId('floor-plan-status')).toContainText(
     '0.025 m per pixel — the plan is 20.0 m across',
