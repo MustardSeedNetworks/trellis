@@ -62,6 +62,11 @@ type AirMagnetFile struct {
 	Width, Height int
 	Points        []AirMagnetPoint
 
+	// Merged is true when this export is AirMagnet's union of several walks
+	// rather than one walk. Its measurements are the other files' measurements
+	// over again, so counting a merge alongside its parts counts them twice.
+	Merged bool
+
 	// APs are the access points the file lists after the measurements, under
 	// its "AP Original Configuration" sections. AirMagnet writes the placement
 	// an operator drew on the plan, which is the same thing Trellis stores as
@@ -72,11 +77,18 @@ type AirMagnetFile struct {
 // AirMagnetAP is one access point placement from the trailing configuration
 // section. Older builds omit the BSSID column, so it can be empty.
 type AirMagnetAP struct {
-	X, Y    int
-	Name    string
-	BSSID   string
+	X, Y  int
+	Name  string
+	BSSID string
+	// Media is the PHY the placement was recorded for — "802.11a", "802.11g".
+	// AirMagnet writes it into the BSSID column with no separator, so it comes
+	// out of the same field.
+	Media   string
 	SSID    string
 	Channel int
+	// PowerMW is the transmit power the project recorded for this radio, in
+	// milliwatts. Zero when the build's layout omits the column.
+	PowerMW int
 }
 
 // AirMagnetPoint is one position with everything heard from it.
@@ -100,7 +112,7 @@ func ParseAirMagnetSVD(data []byte) (*AirMagnetFile, error) {
 		return nil, errors.New("not an AirMagnet survey export: the file does not open with " + airMagnetBanner)
 	}
 
-	file := &AirMagnetFile{}
+	file := &AirMagnetFile{Merged: strings.HasPrefix(text, airMagnetBanner+" Merged")}
 	// A file is a sequence of sections: the measurements first, then whatever
 	// that survey type also recorded — a voice survey adds a roaming-event log
 	// and a phone list, and most files end with one or more "AP Original
@@ -304,13 +316,33 @@ func (f *AirMagnetFile) appendAP(fields []string, columns map[string]int) {
 		return
 	}
 	channel, _ := airMagnetInt(value("Channel"))
+	power, _ := airMagnetInt(value("Power"))
+	bssid, media := splitAPColumn(value("AP"))
 	f.APs = append(f.APs, AirMagnetAP{
 		X: x, Y: y,
 		Name:    value("Name"),
-		BSSID:   value("AP"),
+		BSSID:   bssid,
+		Media:   media,
 		SSID:    value("SSID"),
 		Channel: channel,
+		PowerMW: power,
 	})
+}
+
+// splitAPColumn separates the BSSID from the media type an AP-placement row
+// runs together in one column: "00:13:80:43:15:2F802.11a". Builds that write
+// the address alone return it unchanged with no media.
+func splitAPColumn(value string) (bssid, media string) {
+	const macLen = len("00:11:22:33:44:55")
+	if len(value) < macLen {
+		return value, ""
+	}
+	for i := 2; i < macLen; i += 3 {
+		if value[i] != ':' {
+			return value, ""
+		}
+	}
+	return value[:macLen], strings.TrimSpace(value[macLen:])
 }
 
 // decodeAirMagnetText returns the file as UTF-8. Every export in the corpus is

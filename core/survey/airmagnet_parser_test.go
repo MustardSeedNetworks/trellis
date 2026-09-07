@@ -180,3 +180,58 @@ func TestParseAirMagnetReadsSectionsByRowPrefix(t *testing.T) {
 		t.Errorf("second AP = %+v", second)
 	}
 }
+
+// TestParseAirMagnetSplitsTheAPColumn pins the shape of the AP-placement
+// "AP" column: AirMagnet writes the BSSID and the media type into it with no
+// separator, so reading the column whole stored "00:13:80:43:15:2F802.11a" as
+// a BSSID. Nothing then joined a placement to the measurements that name the
+// same radio — every placement in the reference corpus was unjoinable, and the
+// UI showed the run-together string as the AP's address.
+func TestParseAirMagnetSplitsTheAPColumn(t *testing.T) {
+	file, err := survey.ParseAirMagnetSVD(utf16le(t, svdWithSections(t)))
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if len(file.APs) != 2 {
+		t.Fatalf("AP placements = %d, want 2", len(file.APs))
+	}
+	if got := file.APs[0].BSSID; got != "00:13:80:43:15:2F" {
+		t.Errorf("BSSID = %q, want the address alone", got)
+	}
+	if got := file.APs[0].Media; got != "802.11a" {
+		t.Errorf("media = %q, want 802.11a", got)
+	}
+	// A build that writes the address alone keeps working.
+	if got := file.APs[1].BSSID; got != "00:0F:34:A7:78:1F" {
+		t.Errorf("plain BSSID = %q", got)
+	}
+	if got := file.APs[1].Media; got != "" {
+		t.Errorf("media = %q, want empty when the column carries none", got)
+	}
+}
+
+// TestParseAirMagnetMarksAMergedExport pins the difference between a walk and
+// AirMagnet's union of several walks. The union repeats its parts' rows, so a
+// reader that averages over a directory counts them twice without this.
+func TestParseAirMagnetMarksAMergedExport(t *testing.T) {
+	walk := svdWithSections(t)
+	file, err := survey.ParseAirMagnetSVD(utf16le(t, walk))
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if file.Merged {
+		t.Errorf("a single walk was read as a merge")
+	}
+
+	merged := strings.Replace(walk, "@AirMagnet Survey Data", "@AirMagnet Survey Merged Data", 1)
+	file, err = survey.ParseAirMagnetSVD(utf16le(t, merged))
+	if err != nil {
+		t.Fatalf("parse merged: %v", err)
+	}
+	if !file.Merged {
+		t.Errorf("a merged export was read as a single walk")
+	}
+	if len(file.Points) != 2 {
+		t.Errorf("points = %d: the merged banner changed how rows are read", len(file.Points))
+	}
+}

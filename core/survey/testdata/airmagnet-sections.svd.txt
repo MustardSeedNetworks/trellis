@@ -14,5 +14,5 @@
 Phone,'00:1A:A1:92:76:58','G.722'
 #AP Original Configuration
 #'Xpos','Ypos','Name','AP','Channel','SSID','Power','Reserved'
-$,151.58,103.71,'','00:13:80:43:15:2F',149,'QACiscoVoice',100,1
+$,151.58,103.71,'','00:13:80:43:15:2F802.11a',149,'QACiscoVoice',100,1
 $,146.60,135.62,'ap-two','00:0F:34:A7:78:1F',157,'QACiscoVoice',100,1

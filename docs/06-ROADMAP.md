@@ -10,7 +10,7 @@ feature-driven.
 | Phase 0 — Plan freeze | Done | `docs/` reviewed; contracts drafted (`proto/trellis/survey/v1` implemented; `docs/contracts/api.proto` and `engine.proto` still draft/unimplemented). |
 | Phase 1 — Migrate measured-survey | Done | `core/survey` in tree, ~92% covered, corpus tests assert values; survey API real; UI wired to the live measured-survey workflow (#268). |
 | Phase 2 — Predictive engine MVP | Not started | Zero lines of C++/Rust/GPU code in the tree; no `/engine`. |
-| Gate G1 — Engine credibility | Not run | Depends on Phase 2; no predictive output exists to diff against ground truth. |
+| Gate G1 — Engine credibility | Run 2026-09-07 — **failed** | CPU log-distance model measured against surveyor-placed APs: 10.42 dB mean error uncalibrated, 4.34 dB calibrated, against thresholds of 6 and 3–4 dB. `docs/11-GATE-G1-RESULT.md`, `core/rf`. |
 | Phase 3 — Planning UX + Wails | Not started | No Wails; UI is a browser page served over loopback HTTP. |
 | Phase 4 — GPU + full predictive layers | Not started | Depends on Phase 2. |
 | Phase 5 — Capture + survey loop | Partially done | Host-NIC capture backends real on macOS (CoreWLAN), Linux (nl80211), Windows (Native WiFi), linked into `trellisd` (ADR-0006). External HW, calibration not started. |
@@ -54,6 +54,11 @@ The only greenfield, research-grade component. Build it small and prove it.
 - **Exit:** `engine compute scene.pb → grid` matches goldens; runs headless in CI.
 
 ## 🚦 Gate G1 — Engine credibility (make-or-break; do NOT skip)
+
+**Ran 2026-09-07 and failed — see `docs/11-GATE-G1-RESULT.md`.** The section
+below is the gate as it was specified; the result doc records what was actually
+available to measure and what it measured.
+
 We now have **real ground truth in hand** (Everett: 73 measured points + AP layout +
 floorplan, decoded by the migrated pipeline).
 - Feed the engine the Everett floorplan + AP layout + a wall model; predict RX power at
