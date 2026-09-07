@@ -203,7 +203,8 @@ Against the roadmap thresholds (≤6 dB pre-cal, ≤3–4 dB post-cal): **both f
   3–4 dB band the roadmap allows after calibration.
 - **The uncalibrated column is dominated by the assumed transmit power**, as it
   must be when the file records none. Scoring the same data at 10, 15, 20 and
-  23 dBm gives pre-calibration means of 10.99, 13.45, 16.75 and 19.05 dB. The
+  23 dBm — `defaultTxPowerDBm` in `core/rf/g1_corpus_test.go` — gives
+  pre-calibration means of 10.99, 13.45, 16.75 and 19.05 dB. The
   calibrated mean is 4.02 dB at every one of them, because the fit absorbs the
   intercept. **Even the most favourable assumption fails the ≤6 dB
   threshold by 5 dB.**
