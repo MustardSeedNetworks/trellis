@@ -12,3 +12,4 @@ ADR that references the old one — don't edit history.
 | [0005](ADR-0005-ed25519-offline-licensing.md) | Ed25519 offline-verifiable licensing | Accepted |
 | [0006](ADR-0006-capture-linked-into-core.md) | Wi-Fi capture linked into trellisd, not a separate daemon (amends 0001, 0002) | Accepted |
 | [0007](ADR-0007-linux-packaging-and-service-contract.md) | Linux packages install a user-session daemon, not a system service | Accepted |
+| [0008](ADR-0008-sample-markers-scale-with-density.md) | Sample markers are sized by how close the readings lie | Accepted |
