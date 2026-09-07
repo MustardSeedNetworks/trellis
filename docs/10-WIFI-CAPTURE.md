@@ -21,7 +21,7 @@ utilisation, retry rates, airtime, and per-frame rather than per-scan RSSI. It
 requires elevated privilege everywhere and takes the interface off the network
 while it runs.
 
-Tier 1 is *mostly* unprivileged, with one measured exception — Linux needs
+Tier 1 is _mostly_ unprivileged, with one measured exception — Linux needs
 `CAP_NET_ADMIN` to trigger a scan, though not to read the cache. That is why the
 privilege claim below is stated per platform rather than as a blanket.
 
@@ -38,7 +38,7 @@ directly into trellisd (ADR-0006).
 **Cadence is the binding constraint.** Measured on macOS 27.0, Apple Silicon:
 
 | | |
-|---|---|
+| --- | --- |
 | Active scan (`scanForNetworks`) | 3–4 s |
 | Repeat call inside the cache window | 0.04 s, **returns the same values** |
 | Interval between genuinely fresh samples | ~2–6 s |
@@ -68,7 +68,7 @@ emptied. Three conditions must all hold:
    Without it, `locationd` registers the client and then declines to show the
    prompt at all, which is indistinguishable from macOS refusing to prompt.
 3. The process is launched through LaunchServices. A directly executed inner
-   binary registers as `com.apple.locationd.executable-<path>` — a *different*
+   binary registers as `com.apple.locationd.executable-<path>` — a _different_
    client from its bundle, holding no grant. Notarization does not change this;
    a notarized, stapled, authorized bundle still returned 0 of 11 networks with
    a BSSID under direct execution.
@@ -85,7 +85,7 @@ Check a bundle's grant with `deploy/macos/location-status.py` (exit 0 authorized
 handled in `internal/apppaths`:
 
 | | |
-|---|---|
+| --- | --- |
 | Working directory | `/` — a relative data directory would resolve under the filesystem root |
 | stdout and stderr | `/dev/null` — a bundled daemon logging to stdout is silent |
 
@@ -105,13 +105,13 @@ authentication or TLS, so a routable address is refused at startup with a
 message pointing at #160, where serving another device is tracked as a feature
 gated on both.
 
-Environment variables *do* reach the app when it is launched with `open` from a
+Environment variables _do_ reach the app when it is launched with `open` from a
 shell (`TRELLIS_ADDR=… open -a Trellis.app` works), but not when it is started
 from the Finder or the Dock, which inherit launchd's environment instead.
 
 **Building and running it:**
 
-```
+```bash
 npm --prefix ui ci && npm --prefix ui run build
 ./deploy/macos/build-app.sh 0.2.0
 ./deploy/macos/notarize-app.sh          # for distribution; see below
@@ -142,7 +142,7 @@ mode support of the three platforms, so it is the natural first host for Tier 2.
 **Privilege, measured** (RTL8723BU USB adapter):
 
 | | |
-|---|---|
+| --- | --- |
 | root, trigger scan | 11 BSSes |
 | unprivileged, trigger scan | `Operation not permitted` (EPERM) |
 | unprivileged, `scan dump` (cached) | 11 BSSes |
@@ -161,7 +161,7 @@ reconfigure the host's network interfaces as a side effect of installing a
 survey tool. It is an explicit operator step on a host where that trade is
 acceptable —
 
-```
+```bash
 sudo setcap cap_net_admin+ep /usr/bin/trellisd
 ```
 
@@ -170,7 +170,7 @@ trigger a sweep. Running `trellisd` under `sudo` is the other way, at the cost
 of writing surveys into root's data directory.
 
 **One implementation note that cost real time.** The scan-complete notification
-must be received on a *second* netlink socket. Multicast notifications carry
+must be received on a _second_ netlink socket. Multicast notifications carry
 sequence number 0, so a group joined on the socket that sent the request
 interleaves them with its own reply and netlink rejects the exchange with
 `mismatched sequence in netlink reply`.
@@ -194,7 +194,7 @@ capability. Measured on Windows 11 build 26200, in a process running as
 `nt authority\system` **holding administrator rights**:
 
 | | |
-|---|---|
+| --- | --- |
 | Location consent `Deny` | `WlanScan` → `ERROR_ACCESS_DENIED` |
 | `netsh wlan show networks` | "Network shell commands need location permission to access WLAN information." |
 | Machine consent set to `Allow`, `lfsvc` running, rebooted | still denied |
@@ -231,7 +231,7 @@ Tier 1 API on any platform. They require monitor mode.
 
 Note the architectural consequence, which is the whole of ADR-0006. On macOS
 Tier 1 needs **no** privilege — the gate is TCC, not root, and a root daemon gets
-*less* than a user-session bundle, because TCC grants to a signed bundle
+_less_ than a user-session bundle, because TCC grants to a signed bundle
 identity. Tier 2 needs privilege on every platform, and Linux needs it for Tier 1
 scan triggering too. A separate, privileged capture process is therefore
 justified by Tier 2, and arguably by Linux Tier 1 — but not by macOS Tier 1,
@@ -252,13 +252,13 @@ is linked into `trellisd` today rather than split out.
   from the last, so the stored points are measurements rather than repeats — an
   earlier version stored 94 points holding two distinct readings. Not a fast
   continuous walk on either platform, and slower on macOS than on Linux.
-- Channel utilisation as *the AP advertises it* (BSS Load, element 11): **yes
+- Channel utilisation as _the AP advertises it_ (BSS Load, element 11): **yes
   on Linux and Windows**, which hand back raw information elements; **no on
   macOS**, where CoreWLAN decodes the beacon for us and exposes no elements.
   It is what the AP measured on its own channel, not what this adapter
   measured, and it is absent whenever the AP does not send the element — so
   "not reported" is a distinct answer from 0%, everywhere it is shown.
-- Channel utilisation *measured by this radio*, retries, airtime: **no**, on
+- Channel utilisation _measured by this radio_, retries, airtime: **no**, on
   any platform, until Tier 2 exists. An nl80211 survey dump would measure only
   the channel the adapter is parked on, which says nothing about the rest of a
   walk and has no equivalent on the other two platforms.

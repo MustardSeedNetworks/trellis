@@ -38,8 +38,8 @@ from and would weight that floor twice.
 
 ## The dataset, and why it is not the one the roadmap named
 
-The roadmap says the Everett AirMapper walk hands the engine "73 measured points
-+ AP layout + floorplan". At the time this gate ran, no archive in the AirMapper
+The roadmap says the Everett AirMapper walk hands the engine "73 measured
+points + AP layout + floorplan". At the time this gate ran, no archive in the AirMapper
 reference corpus appeared to carry a single AP placement — 48 archives, 0
 placements — so the tripwire left behind here would say so if one ever did,
 since an AirMapper archive brings a real metres-per-pixel scale with it and
@@ -80,7 +80,7 @@ Limits of this dataset, stated plainly:
 `TRELLIS_SVD_CORPUS=… go test ./core/rf/ -run G1 -v`, error in dB:
 
 | Walk / placed AP | pairs | pre-MAE | pre-bias | pre-p95 | cal-MAE | cal-p95 | n | med d (m) |
-|---|---|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | PLANNER/PassiveSurvey2 | 40 | 10.22 | −10.22 | 15.13 | 3.24 | 4.97 | 2.82 | 22.8 |
 | PLANNER/PassiveSurvey3 | 304 | 4.78 | 4.40 | 8.79 | 2.24 | 5.69 | 3.92 | 16.7 |
 | PLANNER/PassiveSurvey4 | 84 | 3.84 | 2.67 | 10.38 | 2.89 | 7.37 | 3.54 | 10.4 |

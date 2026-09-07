@@ -5,7 +5,9 @@ Status: draft. Requirements are tagged **[MVP]** (v0.1) or **[Later]**.
 ## Functional
 
 ### Live mode (troubleshooting/visibility — migrated from Seed's ex-`canopy`)
+
 Thin, instant, project-free. Runs on the same shared capture core as survey.
+
 - **[MVP]** Connected-SSID signal / SNR / link rate, live.
 - **[MVP]** Neighbor-AP scan (BSSID/SSID/band/channel/RSSI), live list.
 - **[MVP]** Channel utilization indicator per band.
@@ -13,12 +15,14 @@ Thin, instant, project-free. Runs on the same shared capture core as survey.
 - **[Later]** Spectrum view (when a spectrum-capable source is present).
 
 ### Floorplan & project
+
 - **[MVP]** Import floorplan as image (PNG/JPG) or PDF; **[Later]** CAD (DXF/DWG).
 - **[MVP]** Scale calibration (draw a known distance).
 - **[MVP]** Multi-floor buildings (stacked floors, elevation, ceiling height).
 - **[MVP]** Project = open, documented bundle; save/load; **[Later]** versioning.
 
 ### Modeling
+
 - **[MVP]** Draw walls; assign materials from a library with per-band attenuation.
 - **[MVP]** Material library (editable); sensible defaults (drywall/concrete/glass/...).
 - **[MVP]** Place APs; per-radio band/channel/width/tx-power/PHY; antenna pattern +
@@ -26,6 +30,7 @@ Thin, instant, project-free. Runs on the same shared capture core as survey.
 - **[Later]** Zones/areas with coverage requirements; auto-AP-placement optimization.
 
 ### Predictive heatmaps
+
 - **[MVP]** RX power, SNR, data-rate, coverage-vs-threshold — per band, per floor.
 - **[MVP]** Interactive recompute on AP move (**< 100 ms** incremental, see NFR).
 - **[MVP]** Multi-Wall fast model; **[Later]** ray-trace "final" model.
@@ -33,22 +38,26 @@ Thin, instant, project-free. Runs on the same shared capture core as survey.
 - **[Later]** Inter-floor leakage in 3D.
 
 ### Survey (measured)
+
 - **[MVP]** Active/passive capture via a supported radio (external HW first).
 - **[MVP]** Position tagging: manual pin-drop on the floorplan; **[Later]** continuous/GPS.
 - **[MVP]** Measured heatmaps (interpolated from points).
 - **[Later]** Spectrum integration; calibration (fit prediction to measurement) —
-  *calibration may land MVP if Phase 5 allows.*
+  _calibration may land MVP if Phase 5 allows._
 
 ### Analysis & reporting
+
 - **[MVP]** Layer toggles, thresholds, legends, per-AP inspection.
 - **[MVP]** PDF report from a template (coverage maps + AP table + summary).
 - **[Later]** AirWISE-style advisories; measured-vs-predicted diff report.
 
 ### Automation
+
 - **[MVP]** Headless engine + CLI (scriptable plan/compute/export) — falls out of the
   architecture for free and is a differentiator.
 
 ## Non-functional (NFR)
+
 - **Cross-platform:** Windows, macOS, Linux for the **planner**; capture is HW-gated
   (host-NIC best-effort, external HW primary). Web planner [Later].
 - **Performance budgets:**
@@ -65,6 +74,7 @@ Thin, instant, project-free. Runs on the same shared capture core as survey.
 - **Footprint:** desktop install < 300 MB; cold start < 3 s.
 
 ## Explicit non-goals (v0.1)
+
 - Real-time troubleshooting / packet decode (Seed's lane).
 - Network simulation (NIAC/Greenhouse).
 - Cloud collaboration (Phase 7).

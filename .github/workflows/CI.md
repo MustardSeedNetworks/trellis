@@ -8,7 +8,8 @@ The CI pipeline runs on every push and PR. **All checks must pass.**
 
 | Job | Description | Checks |
 | --- | --- | --- |
-| `backend` | Go checks | build, vet, test -race, gofmt |
+| `changes` | Changed-path filter | `dorny/paths-filter`; every expensive job keys its `if:` off this |
+| `backend` | Go checks | build, vet, test -race, gofmt, golangci-lint, buf lint |
 | `backend-darwin` | Go checks (macOS) | Builds and tests on `macos-latest`; only compiler for `*_darwin.go` |
 | `backend-windows` | Go checks (Windows) | Builds and tests on `windows-latest` |
 | `govulncheck` | Go vulnerability scan | `govulncheck` (hard gate) |
@@ -16,16 +17,31 @@ The CI pipeline runs on every push and PR. **All checks must pass.**
 | `e2e` | Browser tests | Playwright, chromium + webkit |
 | `i18n` | Internationalization | Fleet-shared i18n validator |
 | `quality` | Code quality gates | banned vocabulary, file-size ratchet, theme contract |
+| `storybook` | Component interactions and a11y | Storybook test runner, axe |
+| `docs-quality` | Markdown gate | `markdownlint-cli2` over the **whole** tree |
+| `build` | Build verification | `make build`, then asserts `uiBuildHash` is embedded |
 | `security` | Security scans | npm audit, gitleaks, Trivy |
 | `semgrep` | SAST | Fleet-shared Semgrep rules (`MustardSeedNetworks/.github`) |
 | `ci-conformance` | Fleet CI conformance | Reusable, from `MustardSeedNetworks/.github` |
 | `codeql-alert-gate` | CodeQL alert gate | Fails on open High/Critical alerts |
 | `ci-complete` | Aggregate gate | The required status check |
 
-Trellis has no C dataplane and no Storybook, so it carries no `c-lint` or
-Storybook job. It does have E2E, i18n and a `ci-complete` aggregate — this
-section previously said it had none of those, which stopped being true as the
-jobs were added and nobody updated the page.
+Trellis has no C dataplane, so it carries no `c-lint` job. It has everything
+else the fleet runs: E2E, Storybook, i18n, the markdown gate, build
+verification and a `ci-complete` aggregate.
+
+Every job except `quality`, `semgrep`, `dependency-review`, `ci-conformance`
+and `codeql-alert-gate` is gated on `changes`. `quality` stays ungated because
+it is the job that reads `.md` content (the banned-vocabulary policy), so a
+docs-only PR still has to satisfy it. On a `merge_group` event every filter
+reports true and the full suite runs — the queue exists to test the merged
+result, and there is no PR base there to diff against.
+
+The markdown gate lints the **whole tree**, not just the changed files as
+seed's and niac-go's do. Those repos scope to changed files because they carry
+hundreds of pre-existing violations to ratchet down; this tree was cleared
+outright, so a changed-files scope would only let new debt in through an
+untouched file.
 
 ### Other Workflows
 
@@ -37,7 +53,7 @@ jobs were added and nobody updated the page.
 | `label-sync.yml` | Sync label definitions |
 | `labeler.yml` | Auto-label PRs and issues |
 | `license-check.yml` | Verify dependency licenses |
-| `main-retry.yml`      | Retry a failed main run once (see the file header)  |
+| `main-retry.yml` | Retry a failed main run once (see the file header) |
 | `pr-body-lint.yml` | Enforce the PR body template |
 | `release-please.yml` | Automated version management and release PRs |
 | `release.yml` | goreleaser release builds, signing, provenance |

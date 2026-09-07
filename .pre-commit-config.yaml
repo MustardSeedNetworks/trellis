@@ -1,0 +1,152 @@
+# =============================================================================
+# Pre-commit Hooks Configuration - Trellis
+# =============================================================================
+#
+# Install: pip install pre-commit && pre-commit install
+# Manual run: pre-commit run --all-files
+# Skip hooks: git commit --no-verify (NOT RECOMMENDED)
+#
+# Deliberately lighter than niac-go's: the whole Go suite runs under -race in
+# ~2 minutes there and blocks every commit. Here `go test` is a pre-push hook,
+# so a commit stays cheap and the suite still gates the push.
+#
+# =============================================================================
+
+repos:
+  # ===========================================================================
+  # General Checks
+  # ===========================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(internal/api/ui/|gen/)
+      - id: end-of-file-fixer
+        exclude: ^(internal/api/ui/|gen/)
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-json
+      - id: check-toml
+      - id: check-added-large-files
+        # Nothing tracked exceeds 1 MB today (verified). The AirMapper and
+        # AirMagnet corpora stay out of the tree entirely — they are the
+        # vendors' files and this repo is public (TRELLIS_AMP_CORPUS,
+        # TRELLIS_SVD_CORPUS).
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-case-conflict
+
+  # ===========================================================================
+  # Secret Scanning
+  # ===========================================================================
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  # ===========================================================================
+  # Go Checks
+  # ===========================================================================
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.1
+    hooks:
+      - id: go-fmt
+      # go-vet from this repo is deliberately NOT used: it invokes `go vet` per
+      # directory including the repo root, which holds no .go files, so it
+      # fails with "no Go files in ..." on every run here. The local hook below
+      # vets the module the way CI does.
+      - id: go-mod-tidy
+
+  - repo: local
+    hooks:
+      - id: go-vet
+        name: go vet
+        entry: bash -c 'go vet ./...'
+        language: system
+        types: [go]
+        pass_filenames: false
+
+      # `make lint` rather than a bare `golangci-lint run`: the linux and
+      # windows GOOS passes are what CI runs, and a host-tag-only run never
+      # inspects capture_linux.go or capture_windows.go. It also installs the
+      # pinned version, so a stale copy on PATH cannot false-clear.
+      - id: golangci-lint
+        name: golangci-lint (all GOOS passes)
+        entry: make lint
+        language: system
+        types: [go]
+        pass_filenames: false
+
+  # ===========================================================================
+  # Frontend Checks (Biome for linting and formatting)
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: frontend-biome
+        name: Biome lint and format
+        entry: bash -c 'cd ui && npm run lint'
+        language: system
+        files: ^ui/.*\.(ts|tsx|js|jsx|json)$
+        pass_filenames: false
+
+      - id: frontend-typecheck
+        name: TypeScript check
+        entry: bash -c 'cd ui && npm run typecheck'
+        language: system
+        files: ^ui/.*\.(ts|tsx)$
+        pass_filenames: false
+
+  # ===========================================================================
+  # Shell Script Checks
+  # ===========================================================================
+  # shellcheck-py, not koalaman/shellcheck-precommit: that hook runs shellcheck
+  # in Docker, and with no Docker on the machine it aborts the entire
+  # pre-commit run ("Executable `docker` not found") instead of checking
+  # anything. This one ships the binary through pip.
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        # --severity=warning: catches real bugs; info-level style suggestions
+        # (SC2086 in known-safe contexts, etc.) stay advisory.
+        args: [--severity=warning]
+        files: \.(sh|bash)$
+
+  # ===========================================================================
+  # Markdown Checks
+  # ===========================================================================
+  # Same tool and the same version as the CI docs gate and mk/lint.mk's
+  # MARKDOWNLINT_CLI2_VERSION. All three move together or the local run becomes
+  # a false clear: MD060 landed in 0.23 and an older copy reports a clean tree
+  # that CI rejects. Check-only, never --fix: the fixer rewrote two wrapped
+  # prose lines beginning with "+" into list items while this gate was being
+  # added.
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.23.2
+    hooks:
+      - id: markdownlint-cli2
+
+  # ===========================================================================
+  # Push-time Verification
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: go-test
+        name: go test (race)
+        entry: bash -c 'go test -race -short ./...'
+        language: system
+        types: [go]
+        pass_filenames: false
+        stages: [pre-push]
+
+      - id: build-check
+        name: Build verification
+        entry: bash -c 'make build'
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+
+default_stages: [pre-commit]
+fail_fast: false
+minimum_pre_commit_version: "3.0.0"

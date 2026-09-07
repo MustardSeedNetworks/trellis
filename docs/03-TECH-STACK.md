@@ -4,21 +4,22 @@ Language per component is deliberate: **Go is the spine, C/C++ is a tight math/G
 it calls, React/TS is the face.** Each is used where it's strongest and nowhere else.
 
 | Component | Language | Key libs / tools | Why this language |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **RF engine** | **C++20** (+ C ABI) | Eigen (linalg), CGAL/`parry`-style geometry, **wgpu-native or Dawn** (portable GPU), ISPC/SIMD (CPU fallback) | Mature numerics + geometry, SIMD, GPU interop, decades of portable RF code to draw on. Fenced behind a flat C ABI. |
 | **Heatmap compute** | C++ + **WGSL/SPIR-V** compute shaders | wgpu-native/Dawn | Grid propagation, ray-trace, interpolation are massively parallel → GPU. |
-| **Core service** | **Go 1.2x** | `connectrpc` (API), `sqlc` + `modernc.org/sqlite` (pure-Go, cgo-free), Apache Arrow Go, `protobuf` | Productive, great concurrency for the capture/stream pipeline, simple deploys, one binary serves desktop *and* cloud. |
+| **Core service** | **Go 1.2x** | `connectrpc` (API), `sqlc` + `modernc.org/sqlite` (pure-Go, cgo-free), Apache Arrow Go, `protobuf` | Productive, great concurrency for the capture/stream pipeline, simple deploys, one binary serves desktop _and_ cloud. |
 | **Desktop shell** | Go + **Wails v2/v3** | webview2/WKWebView/webkitgtk | The Go-native Tauri analog: Go host + web UI in one binary, no Electron bloat. |
 | **UI** | **TypeScript + React** | WebGL/WebGPU (custom or regl/deck.gl), TanStack Query, Zustand, Vite | Best UI ecosystem; one codebase serves desktop (Wails) and web (cloud planner). |
-| **Capture** (`internal/capture`, linked into the core — ADR-0006) | **Go** (+ contained cgo) | `nl80211` (Linux), Native Wifi (Windows), CoreWLAN (macOS); `AF_PACKET`/Npcap/libpcap at Tier 2 | Per-OS build tags behind one `Scanner` interface. Tier 1 scanning needs no privilege, so it needs no separate process; cgo is acceptable *here* because CI proves it goes no further. |
+| **Capture** (`internal/capture`, linked into the core — ADR-0006) | **Go** (+ contained cgo) | `nl80211` (Linux), Native Wifi (Windows), CoreWLAN (macOS); `AF_PACKET`/Npcap/libpcap at Tier 2 | Per-OS build tags behind one `Scanner` interface. Tier 1 scanning needs no privilege, so it needs no separate process; cgo is acceptable _here_ because CI proves it goes no further. |
 | **Reporter** | Go | Typst **or** HTML + headless Chromium | Versionable templates; kills Crystal Reports. |
 | **Contracts** | **protobuf** | `buf` (lint/breaking/codegen) → Go, TS (`connect-es`), C++ | Single source of truth for all three seams. |
 | **Licensing** | Go | Ed25519 (`crypto/ed25519`) | Offline-verifiable signed tokens; reuse MSN spec. |
 | **Project store** | — | **SQLite** (relational) + **Parquet/Arrow** (measurement clouds) | Right tool per data shape; millions of points belong in columnar, not SQLite. |
 
 ## Hard rules (the seams that keep this clean)
-1. **cgo goes no further than `internal/capture`.** The engine is a *separate
-   process* (shmem + UDS), not linked in. Capture *is* linked in (ADR-0006), so
+
+1. **cgo goes no further than `internal/capture`.** The engine is a _separate
+   process_ (shmem + UDS), not linked in. Capture _is_ linked in (ADR-0006), so
    the boundary is a package and a CI check rather than a process; the tree still
    compiles with `CGO_ENABLED=0`, and only the darwin build needs cgo at all.
    A pure-Go path is preferred even inside capture, e.g. `modernc.org/sqlite`.
@@ -32,6 +33,7 @@ it calls, React/TS is the face.** Each is used where it's strongest and nowhere 
    generated code, never hand-written wire types.
 
 ## Why not all-Rust (recorded, since it came up)
+
 Rust's safety/perf wins land in ~15% of this app (the engine), but its friction is
 paid across the 85% that's UI/orchestration/glue — wrong trade for an iterate-heavy
 product. The perf-critical math goes to the GPU regardless of host language, so the

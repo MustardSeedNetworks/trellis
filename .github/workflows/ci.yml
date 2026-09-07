@@ -35,6 +35,68 @@ permissions:
   contents: read
 
 jobs:
+  # ===========================================================================
+  # Changed paths — the filter every expensive job keys off
+  # ===========================================================================
+  # Fleet parity with seed's ci.yml. Before this job every one of the fifteen
+  # jobs below ran on every PR, so a one-line docs edit paid for three Go
+  # backends, Playwright and Storybook. The org is on the GitHub Free plan
+  # (20 concurrent hosted jobs), which is the concrete cost.
+  changes:
+    name: Changed paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      # dorny/paths-filter reads the PR's file list through the API.
+      pull-requests: read
+    outputs:
+      # merge_group has no PR base to diff against, and the queue exists to
+      # test the merged result — so every filter reports true there and the
+      # full suite runs. Path filtering stays in effect for pull_request/push.
+      backend: ${{ github.event_name == 'merge_group' && 'true' || steps.filter.outputs.backend }}
+      frontend: ${{ github.event_name == 'merge_group' && 'true' || steps.filter.outputs.frontend }}
+      docs: ${{ github.event_name == 'merge_group' && 'true' || steps.filter.outputs.docs }}
+      ci_infra: ${{ github.event_name == 'merge_group' && 'true' || steps.filter.outputs.ci_infra }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        if: github.event_name != 'merge_group'
+        with:
+          filters: |
+            backend:
+              - '**/*.go'
+              - 'go.mod'
+              - 'go.sum'
+              - 'Makefile'
+              - 'mk/**'
+              # The proto is the API contract and gen/ is what the Go and TS
+              # sides compile against; buf lint runs inside the backend job.
+              - 'proto/**'
+              - 'gen/**'
+              - 'buf*.yaml'
+            frontend:
+              - 'ui/**'
+              - 'gen/**'
+            docs:
+              - '**/*.md'
+            # Everything that *implements* a gate, not just the workflow that
+            # calls it. Naming scripts one at a time is the failure mode: a PR
+            # could rewrite scripts/check-theme-contract.py, run no job that
+            # used it, and merge green — CI Complete accepts `skipped`.
+            ci_infra:
+              - '.github/workflows/**'
+              - '.github/actions/**'
+              - 'scripts/**'
+              - '.golangci.yml'
+              - 'ui/biome.json'
+              - '.markdownlint.json'
+              - '.markdownlint-cli2.jsonc'
+              - '.pre-commit-config.yaml'
+
   # Go-only CI for now. The fleet-shared reusable license-check/semgrep
   # workflows (MustardSeedNetworks/.github) assume a ui/ npm project; wire
   # those in once Trellis grows its UI. govulncheck is a hard gate per fleet
@@ -42,6 +104,8 @@ jobs:
   backend:
     name: Backend (Go)
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.ci_infra == 'true'
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -129,6 +193,8 @@ jobs:
   backend-windows:
     name: Backend (Windows)
     runs-on: windows-latest
+    needs: [changes]
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.ci_infra == 'true'
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -163,6 +229,8 @@ jobs:
   backend-darwin:
     name: Backend (macOS)
     runs-on: macos-latest
+    needs: [changes]
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.ci_infra == 'true'
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -271,6 +339,8 @@ jobs:
   security:
     name: Security Scanning
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci_infra == 'true'
     timeout-minutes: 15
     permissions:
       contents: read
@@ -393,6 +463,8 @@ jobs:
   govulncheck:
     name: govulncheck
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.ci_infra == 'true'
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -421,6 +493,8 @@ jobs:
   e2e:
     name: E2E Browser Tests
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci_infra == 'true'
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -491,6 +565,8 @@ jobs:
   frontend:
     name: Frontend (React/TS)
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci_infra == 'true'
     timeout-minutes: 15
     defaults:
       run:
@@ -533,6 +609,8 @@ jobs:
   storybook:
     name: Storybook interactions and accessibility
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci_infra == 'true'
     timeout-minutes: 25
     defaults:
       run:
@@ -601,6 +679,8 @@ jobs:
   i18n:
     name: i18n Validation
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci_infra == 'true'
     timeout-minutes: 10
 
     steps:
@@ -622,6 +702,8 @@ jobs:
   workflow-lint:
     name: Workflow Lint
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.ci_infra == 'true'
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -692,6 +774,107 @@ jobs:
   # is why this runs per PR rather than on a schedule.
   # Defined once in MustardSeedNetworks/.github (fleet-shared); ci-complete
   # still needs: [ci-conformance].
+  # ===========================================================================
+  # Documentation Quality
+  # ===========================================================================
+  # Trellis was the only product repo without this gate. Unlike seed's and
+  # niac-go's, which lint only the files a PR touches because those trees carry
+  # hundreds of pre-existing violations, this one gates the WHOLE tree: T-C1
+  # cleared all 494 violations first, so there is no debt to ratchet down and a
+  # changed-files scope would only let new debt in through an untouched file.
+  #
+  # The action bundles markdownlint-cli2; the version it bundles must equal
+  # mk/lint.mk's MARKDOWNLINT_CLI2_VERSION and .pre-commit-config.yaml's rev.
+  # If they drift, `make lint-md` becomes a false clear against this job —
+  # MD060 landed in cli2 0.23 and an older local copy reports a clean tree.
+  docs-quality:
+    name: Documentation Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [changes]
+    if: needs.changes.outputs.docs == 'true' || needs.changes.outputs.ci_infra == 'true'
+    # External link checking is deliberately NOT here: it walks every URL in
+    # every .md file, fails on third-party link rot rather than on the change
+    # under review, and already runs on a schedule in docs-link-check.yml.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Lint markdown (whole tree)
+        uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff # v24.2.0
+        with:
+          # Scope passed here, not via a "globs" key in
+          # .markdownlint-cli2.jsonc: cli2 UNIONS a config "globs" entry with
+          # the caller's rather than replacing it.
+          globs: |
+            **/*.md
+
+  # ===========================================================================
+  # Build Verification
+  # ===========================================================================
+  # The backend job runs a bare `go build ./...`, which proves the tree
+  # compiles but produces no daemon and injects no ldflags. Universal Build
+  # Contract rule 6: a CI build must mirror the Makefile recipe, or the binary
+  # it produces reports uiBuildHash "unknown". This job builds trellisd the way
+  # `make build` does and asserts the version metadata is actually embedded —
+  # the assertion is the point, since a missing ldflag fails nothing on its own.
+  build:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [changes, backend, frontend]
+    # always() lets this evaluate when an upstream was skipped; a skipped
+    # backend or frontend on a docs-only change must not drag this to failed.
+    if: |
+      always() &&
+      (needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' ||
+       needs.changes.outputs.ci_infra == 'true') &&
+      (needs.backend.result == 'success' || needs.backend.result == 'skipped') &&
+      (needs.frontend.result == 'success' || needs.frontend.result == 'skipped')
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # `make build` derives VERSION from `git describe --tags`; a shallow
+          # clone has no tags and would silently stamp "dev".
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-go
+      - uses: ./.github/actions/setup-node
+
+      - name: Build UI
+        run: npm --prefix ui ci && npm --prefix ui run build
+
+      - name: Build (make build — ldflags and all)
+        run: make build
+
+      - name: Assert the build contract is satisfied
+        # `make build` writes bin/trellisd; a binary built outside the make
+        # pipeline reports uiBuildHash "unknown" and /__version cannot prove
+        # the UI was embedded. Read the values back out of the binary rather
+        # than trusting that the recipe ran.
+        run: |
+          set -euo pipefail
+          test -x bin/trellisd
+          expected=$(./scripts/ui-build-hash.sh)
+          echo "expected uiBuildHash: ${expected}"
+          if [ -z "${expected}" ] || [ "${expected}" = "unknown" ]; then
+            echo "::error::ui-build-hash.sh produced no hash — the UI was not embedded"
+            exit 1
+          fi
+          # Written to a file rather than piped into `grep -q`: grep exits as
+          # soon as it matches, strings takes SIGPIPE, and under `pipefail`
+          # that pipeline reports 141 — a PASS would have failed this job.
+          # (`go version -m` is not an option here: -trimpath strips the
+          # ldflags from the build info.)
+          strings bin/trellisd > /tmp/trellisd.strings
+          if ! grep -qF "${expected}" /tmp/trellisd.strings; then
+            echo "::error::bin/trellisd does not carry uiBuildHash ${expected}"
+            exit 1
+          fi
+          echo "uiBuildHash ${expected} is embedded in bin/trellisd"
+
   ci-conformance:
     uses: MustardSeedNetworks/.github/.github/workflows/ci-conformance.yml@cd60ad04e0f305b3706481580091dc7f3e1863aa # v1.11.0
     permissions:
@@ -724,6 +907,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs:
+      # changes gates every job below it: if the filter itself fails, every
+      # consumer skips and this aggregator would otherwise pass on an empty run.
+      - changes
       - backend
       - backend-darwin
       - backend-windows
@@ -739,6 +925,8 @@ jobs:
       - dependency-review
       - ci-conformance
       - codeql-alert-gate
+      - docs-quality
+      - build
     if: always()
     steps:
       - name: Verify upstream results

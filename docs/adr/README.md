@@ -1,10 +1,10 @@
 # Architecture Decision Records
 
-Short, dated records of the load-bearing decisions and *why*. Supersede by adding a new
+Short, dated records of the load-bearing decisions and _why_. Supersede by adding a new
 ADR that references the old one — don't edit history.
 
 | ADR | Decision | Status |
-|---|---|---|
+| --- | --- | --- |
 | [0001](ADR-0001-process-isolated-architecture.md) | Process-isolated, local-first, transport-agnostic core | Accepted |
 | [0002](ADR-0002-language-per-component.md) | Go core · C++/GPU engine · TS/React UI (not all-Rust) | Accepted |
 | [0003](ADR-0003-protobuf-seams-shared-memory.md) | Schema-first protobuf seams; shared-memory for grids | Accepted |

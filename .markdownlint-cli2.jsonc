@@ -1,0 +1,25 @@
+{
+  // No "globs" here on purpose. markdownlint-cli2 UNIONS a "globs" property
+  // with any globs passed on the command line — it does not replace them, so a
+  // "globs" entry here would silently widen every caller's scope. Callers pass
+  // their own: `make lint-md` and the CI docs gate both pass "**/*.md" because
+  // this repo's tree is clean (T-C1 cleared 494 violations); the pre-commit
+  // hook passes the staged files.
+
+  // Globs to ignore
+  "ignores": [
+    "**/node_modules/**",
+    "docs/archive/**",
+    "build/**",
+    "dist/**",
+    "coverage/**",
+    "storybook-static/**",
+    "playwright-report/**",
+    "test-results/**",
+    ".claude/**",
+    "**/CHANGELOG.md"
+  ],
+
+  // Use the .markdownlint.json config
+  "config": ".markdownlint.json"
+}
