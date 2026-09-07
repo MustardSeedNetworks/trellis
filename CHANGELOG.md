@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.28](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.27...v0.2.28) (2026-09-07)
+
+
+### Features
+
+* **live:** say how old a paused reading is ([#348](https://github.com/MustardSeedNetworks/trellis/issues/348)) ([a09f8f7](https://github.com/MustardSeedNetworks/trellis/commit/a09f8f73c4a4516798f3b1bd62bd80e5913a39f5))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#336](https://github.com/MustardSeedNetworks/trellis/issues/336)) ([109f2f7](https://github.com/MustardSeedNetworks/trellis/commit/109f2f7496ce1c526c9a1f072f7b7d4699b689ed))
+
 ## [0.2.27](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.26...v0.2.27) (2026-09-07)
 
 
