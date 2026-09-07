@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.27](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.26...v0.2.27) (2026-09-07)
+
+
+### Bug Fixes
+
+* **coverage:** the dead-zone findings are about RSSI, and now say so ([#345](https://github.com/MustardSeedNetworks/trellis/issues/345)) ([b484d82](https://github.com/MustardSeedNetworks/trellis/commit/b484d82e4347ad6ad67ee2664805b553a411cdcb))
+* **survey:** refuse a floor plan that would strand the measurements on it ([#343](https://github.com/MustardSeedNetworks/trellis/issues/343)) ([2e5d742](https://github.com/MustardSeedNetworks/trellis/commit/2e5d7423e19c39b53d568fc48084d90a10cd2c14))
+
 ## [0.2.26](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.25...v0.2.26) (2026-09-06)
 
 
