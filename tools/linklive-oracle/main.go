@@ -347,7 +347,7 @@ func readProcessed(path string) (*processed, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close() //nolint:errcheck // read-only
+	defer func() { _ = f.Close() }()
 
 	var reader io.Reader = f
 	head := make([]byte, 2)
@@ -362,7 +362,7 @@ func readProcessed(path string) (*processed, error) {
 		if gzErr != nil {
 			return nil, gzErr
 		}
-		defer gz.Close() //nolint:errcheck // read-only
+		defer func() { _ = gz.Close() }()
 		reader = gz
 	}
 
