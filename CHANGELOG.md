@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.34](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.33...v0.2.34) (2026-09-07)
+
+
+### Continuous Integration
+
+* add the fleet markdown gate, changed-path filter and build verification ([#370](https://github.com/MustardSeedNetworks/trellis/issues/370)) ([92d086b](https://github.com/MustardSeedNetworks/trellis/commit/92d086ba32e0a0341417c0331f036577df264d2c))
+
 ## [0.2.33](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.32...v0.2.33) (2026-09-07)
 
 
