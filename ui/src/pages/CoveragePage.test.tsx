@@ -149,6 +149,32 @@ describe('CoveragePage', () => {
    * The service reads threshold_dbm == 0 as "unset" and substitutes -75, so a
    * zero would be answered with a different threshold than the one on screen.
    */
+  // The dead-zone analysis has one metric and it is RSSI: GetCoverage takes no
+  // metric parameter at all. Offering it under the SNR map put a dBm threshold
+  // and signal-strength findings beneath a picture of signal-to-noise, with
+  // every number still about RSSI and nothing saying so.
+  it('drops the threshold and the findings on the SNR map, and keeps the map', async () => {
+    renderPage();
+    await screen.findByTestId('coverage-findings');
+
+    fireEvent.click(screen.getByRole('button', { name: 'SNR' }));
+
+    await waitFor(() =>
+      expect(getHeatmap).toHaveBeenCalledWith(expect.objectContaining({ metric: 'snr' })),
+    );
+    expect(screen.queryByLabelText(/dead zone below/i)).toBeNull();
+    expect(screen.queryByTestId('coverage-findings')).toBeNull();
+    // The map is a real reading and keeps rendering.
+    expect(await screen.findByTestId('surface-meta')).toBeInTheDocument();
+  });
+
+  it('says the findings are about RSSI, whichever map is on screen', async () => {
+    renderPage();
+
+    const findings = await screen.findByTestId('coverage-findings');
+    expect(findings).toHaveTextContent(/RSSI coverage findings/i);
+  });
+
   it('never sends a threshold the service would reinterpret', async () => {
     renderPage();
 

@@ -10,6 +10,7 @@
     "deadZones_one": "{{count}} zona muerta por debajo de {{threshold}} dBm",
     "deadZones_other": "{{count}} zonas muertas por debajo de {{threshold}} dBm",
     "description": "Señal medida en la planta estudiada, y dónde resulta insuficiente.",
+    "findingsTitle": "Hallazgos de cobertura RSSI",
     "heatmapAlt": "Mapa de calor de {{metric}} de la planta estudiada",
     "heatmapFailed": "El mapa de calor no se generó: {{error}}",
     "legendUnavailable": "El servicio no describió la escala de color que utilizó.",

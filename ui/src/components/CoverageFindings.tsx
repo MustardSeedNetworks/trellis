@@ -12,6 +12,12 @@ import type { RollupState } from '@/ui/StatusRollup';
  * an unreadable analysis prints em dashes and says why, never zeros.
  */
 interface CoverageFindingsProps {
+  /**
+   * What the findings are about. The panel reads as a verdict on whatever map
+   * is on screen, and it is always the RSSI analysis whichever layer is drawn,
+   * so it says which one it means rather than letting the map imply it.
+   */
+  title: string;
   state: RollupState;
   headline: string;
   body?: string;
@@ -28,6 +34,7 @@ const STATE_STYLES: Record<RollupState, { edge: string; kicker: string }> = {
 };
 
 export function CoverageFindings({
+  title,
   state,
   headline,
   body,
@@ -59,7 +66,8 @@ export function CoverageFindings({
       <span aria-hidden="true" className={`absolute inset-y-0 left-0 w-[3px] ${styles.edge}`} />
 
       <div>
-        <p className={`kicker ${styles.kicker}`}>{stateLabels[state]}</p>
+        <p className="kicker text-text-muted">{title}</p>
+        <p className={`kicker mt-1 ${styles.kicker}`}>{stateLabels[state]}</p>
         <h2 className="mt-2 text-base font-extrabold tracking-[-0.02em] text-text-primary">
           {headline}
         </h2>
