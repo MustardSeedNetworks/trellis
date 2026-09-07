@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.32](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.31...v0.2.32) (2026-09-07)
+
+
+### Features
+
+* **survey:** validate the AirMapper importer against Link-Live's own decode ([#363](https://github.com/MustardSeedNetworks/trellis/issues/363)) ([15c554b](https://github.com/MustardSeedNetworks/trellis/commit/15c554bb596a545da529d53e7cee3cd0a376e27a))
+
 ## [0.2.31](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.30...v0.2.31) (2026-09-07)
 
 
