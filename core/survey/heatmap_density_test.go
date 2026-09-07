@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"math"
 	"testing"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
@@ -136,5 +137,30 @@ func TestGenerateFloorHeatmapDenseWalkStaysReadable(t *testing.T) {
 	}
 	if longest := maxRun(runs); longest > 9 {
 		t.Errorf("expected no marker run longer than one full marker (9 px), got %d", longest)
+	}
+}
+
+// The radius has to be decided in float64. A single reading has no neighbour
+// and its spacing is +Inf; converting that to int is architecture-defined —
+// arm64 saturates to maxint and amd64 to minint — so a version of this that
+// clamped after the conversion drew the full marker on an M2 Mac and a bare dot
+// on the Linux runner, which is how CI caught it.
+func TestMarkerRadiusForSpacing(t *testing.T) {
+	for _, tc := range []struct {
+		spacing float64
+		want    int
+	}{
+		{math.Inf(1), 4}, // a lone reading
+		{40, 4},
+		{10, 4}, // the full marker plus its gap
+		{9, 3},
+		{6, 2},
+		{5, 1},
+		{1, 1}, // never smaller than a visible dot
+		{0, 1},
+	} {
+		if got := survey.ExportMarkerRadiusForSpacing(tc.spacing); got != tc.want {
+			t.Errorf("spacing %v: radius %d, want %d", tc.spacing, got, tc.want)
+		}
 	}
 }

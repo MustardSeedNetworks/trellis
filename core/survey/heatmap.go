@@ -515,11 +515,17 @@ func renderSamplePoints(img *image.RGBA, samples []SampleValue) {
 // markerRadiusForSpacing sizes the marker so two neighbours keep a background
 // gap between them, never larger than the marker a sparse walk gets and never
 // smaller than a single visible dot.
+//
+// The full-marker case is decided in float64 rather than by clamping after the
+// conversion. A single reading has no neighbour and its spacing is +Inf, and
+// converting +Inf to int is architecture-defined in Go: arm64 saturates to
+// maxint and amd64 to minint, so a clamp afterwards would draw a full marker on
+// the developer's Mac and a bare dot on the Linux runner.
 func markerRadiusForSpacing(spacing float64) int {
-	radius := int((spacing - markerGapPixels) / 2)
-	if radius > markerSizePixels {
+	if spacing >= float64(2*markerSizePixels+markerGapPixels) {
 		return markerSizePixels
 	}
+	radius := int((spacing - markerGapPixels) / 2)
 	if radius < markerMinRadiusPixels {
 		return markerMinRadiusPixels
 	}

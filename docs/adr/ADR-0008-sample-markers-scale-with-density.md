@@ -37,6 +37,12 @@ walk gets, so a stop-and-go survey renders pixel-identically to before. And two
 markers always keep two pixels of background between them, so what is drawn
 reads as separate readings rather than as a stroke.
 
+The full-marker case is decided in float64, before any conversion to int. A
+single reading has no neighbour and its spacing is `+Inf`, and converting `+Inf`
+to `int` is architecture-defined in Go: arm64 saturates to maxint and amd64 to
+minint. A first version clamped after the conversion and so drew the full marker
+on the developer's M2 and a bare dot on the Linux runner, where CI caught it.
+
 The white centre is dropped below radius 2 because at that size it consumes the
 marker rather than punctuating it.
 

@@ -126,6 +126,11 @@ func ExportRenderSamplePoints(img *image.RGBA, samples []SampleValue) {
 	renderSamplePoints(img, samples)
 }
 
+// ExportMarkerRadiusForSpacing exports markerRadiusForSpacing for testing.
+func ExportMarkerRadiusForSpacing(spacing float64) int {
+	return markerRadiusForSpacing(spacing)
+}
+
 // ExportRenderGrid exports renderGrid for testing.
 func ExportRenderGrid(img *image.RGBA, cellSize int) {
 	renderGrid(img, cellSize)
