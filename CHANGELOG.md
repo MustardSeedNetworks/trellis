@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.36](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.35...v0.2.36) (2026-09-07)
+
+
+### Bug Fixes
+
+* **survey:** re-measure Gate G1 on AirMapper ground truth ([#374](https://github.com/MustardSeedNetworks/trellis/issues/374)) ([7c7375c](https://github.com/MustardSeedNetworks/trellis/commit/7c7375c0ed5e47568720c99e42636c910844097d))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#379](https://github.com/MustardSeedNetworks/trellis/issues/379)) ([4caa5c2](https://github.com/MustardSeedNetworks/trellis/commit/4caa5c28d987c4656a912dddf3504757c0ceac95))
+
 ## [0.2.35](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.34...v0.2.35) (2026-09-07)
 
 
