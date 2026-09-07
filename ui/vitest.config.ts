@@ -50,6 +50,11 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
+      // Vitest 4 removed `coverage.all`, so without an explicit include a
+      // source file that no test imports is ABSENT from the report rather than
+      // counted at 0% -- the gate then passes on a denominator that quietly
+      // omits exactly the untested files it exists to catch (#354).
+      include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'node_modules/',
         'src/test-setup.ts',
@@ -57,6 +62,13 @@ export default defineConfig({
         '**/*.config.*',
         'dist/',
         'src/gen/',
+        // Storybook stories are fixtures for the Storybook runner, which has
+        // its own gate in ci.yml and its own config
+        // (vitest.storybook.config.ts). The include above would otherwise pull
+        // them into this suite's denominator at 0%, measuring them twice and
+        // failing here for something that is green there.
+        'src/**/*.stories.tsx',
+        'src/test/',
       ],
       // This project had no coverage gate at all: no `test:coverage` script, no
       // thresholds, and CI running plain `npm run test`. Coverage passed
