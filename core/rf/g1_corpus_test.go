@@ -61,19 +61,7 @@ const censoredDBm = -99
 func TestG1PathLossAgainstMeasuredFloors(t *testing.T) {
 	root, files := svdCorpus(t)
 
-	type floorResult struct {
-		name       string
-		aps        int
-		preCal     rf.Error
-		postCal    rf.Error
-		exponent   float64
-		rawN       float64
-		clamped    bool
-		censored   int
-		refLossDB  float64
-		medianDist float64
-	}
-	var results []floorResult
+	var placed []placedAP
 
 	for _, name := range files {
 		data, err := fs.ReadFile(root, name)
@@ -89,13 +77,13 @@ func TestG1PathLossAgainstMeasuredFloors(t *testing.T) {
 			// it as well would weight that floor twice.
 			continue
 		}
-		placed := map[string]survey.AirMagnetAP{}
+		placedAPs := map[string]survey.AirMagnetAP{}
 		for _, ap := range file.APs {
 			if ap.BSSID != "" {
-				placed[strings.ToUpper(ap.BSSID)] = ap
+				placedAPs[strings.ToUpper(ap.BSSID)] = ap
 			}
 		}
-		if len(placed) == 0 {
+		if len(placedAPs) == 0 {
 			continue
 		}
 
@@ -108,7 +96,7 @@ func TestG1PathLossAgainstMeasuredFloors(t *testing.T) {
 		for _, p := range file.Points {
 			for _, n := range p.Networks {
 				key := strings.ToUpper(n.BSSID)
-				ap, ok := placed[key]
+				ap, ok := placedAPs[key]
 				if !ok || n.Signal == 0 {
 					continue
 				}
@@ -129,59 +117,104 @@ func TestG1PathLossAgainstMeasuredFloors(t *testing.T) {
 		}
 
 		for key, s := range samples {
-			if len(s) < 30 {
-				continue // too few pairs to say anything about a floor
-			}
-			ap := placed[key]
+			ap := placedAPs[key]
 			txPower := defaultTxPowerDBm
 			if ap.PowerMW > 0 {
 				txPower = 10 * math.Log10(float64(ap.PowerMW))
 			}
-			carrier := freqMHz[key]
-			if carrier == 0 {
-				carrier = 2437
-			}
-			preCal := rf.Model{
-				TxPowerDBm: txPower,
-				RefLossDB:  rf.FreeSpaceLossDB(carrier),
-				Exponent:   defaultExponent,
-			}
-			cal, err := rf.Fit(txPower, s)
-			if err != nil {
-				t.Errorf("%s %s: fit: %v", name, key, err)
-				continue
-			}
-			preErr := rf.Evaluate(preCal, s)
-			postErr := rf.Evaluate(cal.Model, s)
-			if !cal.Clamped && postErr.RMSEDB > preErr.RMSEDB+1e-9 {
-				t.Errorf("%s %s: calibration made the floor worse: RMSE %.2f -> %.2f dB",
-					name, key, preErr.RMSEDB, postErr.RMSEDB)
-			}
-			results = append(results, floorResult{
+			placed = append(placed, placedAP{
 				name:       fmt.Sprintf("%s %s", name, key),
-				aps:        len(placed),
-				preCal:     preErr,
-				postCal:    postErr,
-				exponent:   cal.Model.Exponent,
-				rawN:       cal.RawExponent,
-				clamped:    cal.Clamped,
-				refLossDB:  cal.Model.RefLossDB,
+				samples:    s,
+				txPowerDBm: txPower,
+				carrierMHz: freqMHz[key],
 				censored:   censored[key],
-				medianDist: medianDistance(s),
 			})
 		}
 	}
 
+	results := scorePlacedAPs(t, placed)
+	reportG1(t, results, fmt.Sprintf("readings at or below %d dBm dropped as censored", censoredDBm))
+}
+
+// placedAP is one surveyor-placed AP and every reading of it along the walk.
+type placedAP struct {
+	name       string
+	samples    []rf.Sample
+	txPowerDBm float64
+	carrierMHz float64
+	censored   int
+}
+
+type floorResult struct {
+	name       string
+	preCal     rf.Error
+	postCal    rf.Error
+	exponent   float64
+	rawN       float64
+	clamped    bool
+	censored   int
+	medianDist float64
+}
+
+// minPairs is the smallest number of (position, AP) pairs that says anything
+// about a floor. Below it the fit is describing noise.
+const minPairs = 30
+
+// scorePlacedAPs runs the gate's measurement: the uncalibrated model as a
+// planner would start from it, then the fit, on every AP with enough pairs.
+func scorePlacedAPs(t *testing.T, in []placedAP) []floorResult {
+	t.Helper()
+	var results []floorResult
+	for _, p := range in {
+		if len(p.samples) < minPairs {
+			continue
+		}
+		carrier := p.carrierMHz
+		if carrier == 0 {
+			carrier = 2437
+		}
+		preCal := rf.Model{
+			TxPowerDBm: p.txPowerDBm,
+			RefLossDB:  rf.FreeSpaceLossDB(carrier),
+			Exponent:   defaultExponent,
+		}
+		cal, err := rf.Fit(p.txPowerDBm, p.samples)
+		if err != nil {
+			t.Errorf("%s: fit: %v", p.name, err)
+			continue
+		}
+		preErr := rf.Evaluate(preCal, p.samples)
+		postErr := rf.Evaluate(cal.Model, p.samples)
+		if !cal.Clamped && postErr.RMSEDB > preErr.RMSEDB+1e-9 {
+			t.Errorf("%s: calibration made the floor worse: RMSE %.2f -> %.2f dB",
+				p.name, preErr.RMSEDB, postErr.RMSEDB)
+		}
+		results = append(results, floorResult{
+			name:       p.name,
+			preCal:     preErr,
+			postCal:    postErr,
+			exponent:   cal.Model.Exponent,
+			rawN:       cal.RawExponent,
+			clamped:    cal.Clamped,
+			censored:   p.censored,
+			medianDist: medianDistance(p.samples),
+		})
+	}
 	if len(results) == 0 {
 		t.Fatal("no placed AP in the corpus joined a measurement: the corpus has no ground truth, " +
 			"or the AP-placement BSSID no longer matches what the measurements carry")
 	}
+	return results
+}
 
+// reportG1 prints the table docs/11-GATE-G1-RESULT.md records.
+func reportG1(t *testing.T, results []floorResult, censoredNote string) {
+	t.Helper()
 	sort.Slice(results, func(i, j int) bool { return results[i].name < results[j].name })
 	t.Logf("%-62s %5s %8s %8s %8s %8s %8s %7s %7s",
 		"walk / placed AP", "pairs", "pre-MAE", "pre-bias", "pre-p95", "cal-MAE", "cal-p95", "n", "med-d-m")
 	var sumPre, sumPost float64
-	clamped := 0
+	clamped, censoredTotal := 0, 0
 	for _, r := range results {
 		mark := ""
 		if r.clamped {
@@ -197,15 +230,11 @@ func TestG1PathLossAgainstMeasuredFloors(t *testing.T) {
 			r.exponent, mark, r.medianDist)
 		sumPre += r.preCal.MeanAbsDB
 		sumPost += r.postCal.MeanAbsDB
-	}
-	censoredTotal := 0
-	for _, r := range results {
 		censoredTotal += r.censored
 	}
-	t.Logf("walks=%d (%d fitted outside the physical exponent bounds, marked *; "+
-		"%d censored readings at or below %d dBm dropped)  "+
-		"mean pre-calibration MAE=%.2f dB  mean calibrated MAE=%.2f dB",
-		len(results), clamped, censoredTotal, censoredDBm,
+	t.Logf("placed APs scored=%d (%d fitted outside the physical exponent bounds, marked *; "+
+		"%d %s)  mean pre-calibration MAE=%.2f dB  mean calibrated MAE=%.2f dB",
+		len(results), clamped, censoredTotal, censoredNote,
 		sumPre/float64(len(results)), sumPost/float64(len(results)))
 }
 
@@ -218,13 +247,23 @@ func medianDistance(s []rf.Sample) float64 {
 	return d[len(d)/2]
 }
 
-// svdCorpus opens the corpus directory as a filesystem rooted at itself, so
-// every read stays inside the directory the operator named.
+// svdCorpus and ampCorpus open the corpus directory as a filesystem rooted at
+// itself, so every read stays inside the directory the operator named.
 func svdCorpus(t *testing.T) (fs.FS, []string) {
 	t.Helper()
-	dir := os.Getenv(svdCorpusEnv)
+	return corpus(t, svdCorpusEnv, ".svd")
+}
+
+func ampCorpus(t *testing.T) (fs.FS, []string) {
+	t.Helper()
+	return corpus(t, ampCorpusEnv, ".amp")
+}
+
+func corpus(t *testing.T, env, ext string) (fs.FS, []string) {
+	t.Helper()
+	dir := os.Getenv(env)
 	if dir == "" {
-		t.Skipf("set %s to a directory of AirMagnet .svd files to run this", svdCorpusEnv)
+		t.Skipf("set %s to a directory of %s files to run this", env, ext)
 	}
 	if strings.HasPrefix(dir, "~/") {
 		if home, err := os.UserHomeDir(); err == nil {
@@ -237,13 +276,13 @@ func svdCorpus(t *testing.T) (fs.FS, []string) {
 		if err != nil {
 			return err
 		}
-		if !d.IsDir() && strings.EqualFold(filepath.Ext(path), ".svd") {
+		if !d.IsDir() && strings.EqualFold(filepath.Ext(path), ext) {
 			files = append(files, path)
 		}
 		return nil
 	})
 	if err != nil || len(files) == 0 {
-		t.Fatalf("no .svd files under %s (err=%v)", dir, err)
+		t.Fatalf("no %s files under %s (err=%v)", ext, dir, err)
 	}
 	return root, files
 }
@@ -259,29 +298,7 @@ func svdCorpus(t *testing.T) (fs.FS, []string) {
 // drops placements again would otherwise quietly restore the premise the gate
 // already recorded as wrong.
 func TestG1AirMapperCorpusCarriesAPPlacements(t *testing.T) {
-	dir := os.Getenv(ampCorpusEnv)
-	if dir == "" {
-		t.Skipf("set %s to a directory of AirMapper .amp archives to run this", ampCorpusEnv)
-	}
-	if strings.HasPrefix(dir, "~/") {
-		if home, err := os.UserHomeDir(); err == nil {
-			dir = filepath.Join(home, dir[2:])
-		}
-	}
-	root := os.DirFS(dir)
-	var names []string
-	err := fs.WalkDir(root, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if !d.IsDir() && strings.EqualFold(filepath.Ext(path), ".amp") {
-			names = append(names, path)
-		}
-		return nil
-	})
-	if err != nil {
-		t.Fatalf("walk %s: %v", dir, err)
-	}
+	root, names := ampCorpus(t)
 
 	archives, placements := 0, 0
 	for _, name := range names {
@@ -304,7 +321,7 @@ func TestG1AirMapperCorpusCarriesAPPlacements(t *testing.T) {
 		}
 	}
 	if archives == 0 {
-		t.Fatalf("no readable .amp archives under %s", dir)
+		t.Fatal("no readable .amp archives in the corpus")
 	}
 	t.Logf("%d AirMapper archives read, %d AP placements between them", archives, placements)
 	if placements == 0 {
