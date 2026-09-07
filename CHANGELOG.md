@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.35](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.34...v0.2.35) (2026-09-07)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @bufbuild/protobuf to v2.14.1 ([#375](https://github.com/MustardSeedNetworks/trellis/issues/375)) ([7023216](https://github.com/MustardSeedNetworks/trellis/commit/70232169f3d1e0086294766c9515855d7f16afd1))
+
 ## [0.2.34](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.33...v0.2.34) (2026-09-07)
 
 
