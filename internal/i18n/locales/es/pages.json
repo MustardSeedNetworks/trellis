@@ -177,6 +177,8 @@
     "transitionFailed": "El estudio no cambió de estado: {{error}}",
     "uncalibrated": "El plano aún no tiene escala. Las distancias derivadas de él —sobre todo el radio de una zona muerta— están en píxeles hasta que la tenga.",
     "uploadPlan": "Subir un plano",
+    "walkStartFailed": "El recorrido no se inició: {{error}}",
+    "walkStopFailed": "El recorrido no se detuvo: {{error}}",
     "walkStopped": "El recorrido se detuvo: {{error}}",
     "walkingAt_one": "En recorrido en ({{x}}, {{y}}): {{count}} punto hasta ahora.",
     "walkingAt_other": "En recorrido en ({{x}}, {{y}}): {{count}} puntos hasta ahora."

@@ -218,26 +218,33 @@ export function CaptureSurface({
           download: throughputMutation.data.reading?.downloadMbps.toFixed(1) ?? '0',
           upload: throughputMutation.data.reading?.uploadMbps.toFixed(1) ?? '0',
         })
-      : capture && !capture.running && capture.lastError !== ''
-        ? t('pages:surveys.walkStopped', { error: capture.lastError })
-        : capturing
-          ? t('pages:surveys.walkingAt', { x: capture.x, y: capture.y, count: pins.length })
-          : captureMutation.isPending
-            ? t('pages:surveys.capturing')
-            : captureMutation.isError
-              ? t('pages:surveys.captureFailed', { error: String(captureMutation.error) })
-              : samplesQuery.isError
-                ? t('pages:surveys.samplesFailed', { error: String(samplesQuery.error) })
-                : captured && capturedAt
-                  ? t('pages:surveys.captured', {
-                      count: captured.networks.length,
-                      x: capturedAt.x,
-                      y: capturedAt.y,
-                      signal: signalText(captured.networks[0]?.signalDbm),
-                    })
-                  : pins.length === 0
-                    ? t('pages:surveys.noPoints')
-                    : '';
+      : walkMutation.isError
+        ? t('pages:surveys.walkStartFailed', { error: String(walkMutation.error) })
+        : stopMutation.isError
+          ? // Ahead of the walking reading on purpose: the walk may well still
+            // be running, and "walking at 12, 40" over a refused stop tells the
+            // operator the opposite of what just happened.
+            t('pages:surveys.walkStopFailed', { error: String(stopMutation.error) })
+          : capture && !capture.running && capture.lastError !== ''
+            ? t('pages:surveys.walkStopped', { error: capture.lastError })
+            : capturing
+              ? t('pages:surveys.walkingAt', { x: capture.x, y: capture.y, count: pins.length })
+              : captureMutation.isPending
+                ? t('pages:surveys.capturing')
+                : captureMutation.isError
+                  ? t('pages:surveys.captureFailed', { error: String(captureMutation.error) })
+                  : samplesQuery.isError
+                    ? t('pages:surveys.samplesFailed', { error: String(samplesQuery.error) })
+                    : captured && capturedAt
+                      ? t('pages:surveys.captured', {
+                          count: captured.networks.length,
+                          x: capturedAt.x,
+                          y: capturedAt.y,
+                          signal: signalText(captured.networks[0]?.signalDbm),
+                        })
+                      : pins.length === 0
+                        ? t('pages:surveys.noPoints')
+                        : '';
   const failed =
     throughputMutation.isError ||
     captureMutation.isError ||

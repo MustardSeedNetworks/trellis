@@ -288,6 +288,33 @@ describe('continuous capture', () => {
     expect(status).toHaveClass('text-status-error');
   });
 
+  // The surface marked itself failed and said nothing: `failed` read both walk
+  // mutations' isError, and the status line read neither of their errors. An
+  // operator saw a walk that was not running and no reason — no radio, survey
+  // not in progress, permission — which is the same silence the walkStopped
+  // reading exists to prevent.
+  it('says why a walk refused to start', async () => {
+    startContinuousCapture.mockRejectedValue(new Error('capture: no Wi-Fi interface'));
+    renderSurface(true);
+
+    fireEvent.click(screen.getByTestId('toggle-continuous'));
+
+    const status = await screen.findByTestId('capture-status');
+    await waitFor(() => expect(status).toHaveTextContent('no Wi-Fi interface'));
+    expect(status).toHaveClass('text-status-error');
+  });
+
+  it('says why a stop refused, and does not claim the walk is still going', async () => {
+    stopContinuousCapture.mockRejectedValue(new Error('survey is not in progress'));
+    renderSurface(true, captureStatus());
+
+    fireEvent.click(screen.getByTestId('toggle-continuous'));
+
+    const status = await screen.findByTestId('capture-status');
+    await waitFor(() => expect(status).toHaveTextContent('not in progress'));
+    expect(status).not.toHaveTextContent(/walking at/i);
+  });
+
   it('offers no walk on a survey that is not in progress', () => {
     renderSurface(false);
 
