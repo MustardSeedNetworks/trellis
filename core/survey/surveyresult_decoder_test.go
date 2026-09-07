@@ -493,7 +493,7 @@ func TestParseSurveyResultOmitsSNRWithoutAUsableNoiseFloor(t *testing.T) {
 // TestSurveyResultChannelIsFieldSix pins which field the channel is read from.
 //
 // It was field 16 until 2026-09-07, chosen because "its values are all real
-// 802.11 channel numbers". They are not: across 55,218 observations in seven
+// 802.11 channel numbers". They are not: across 85,690 observations in eleven
 // reference archives, field 16 equalled NetAlly's own decode of the channel
 // zero times, while field 6 equalled it on every one. Field 16 carries a band
 // code — 24 under a 2.4 GHz BSS, 50 under a 5 GHz one — so a 2.4 GHz AP on

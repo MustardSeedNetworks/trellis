@@ -30,6 +30,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
@@ -47,18 +48,25 @@ type record struct {
 
 // processed is Link-Live's decode of the archive's measurements.
 type processed struct {
-	Points []struct {
-		X   float64 `json:"x"`
-		Y   float64 `json:"y"`
-		APs []struct {
-			BSSID          string `json:"bssid"`
-			Signal         int    `json:"signal"`
-			ChannelPrimary int    `json:"channelPrimary"`
-		} `json:"aps"`
-	} `json:"points"`
+	Points      []llPoint `json:"points"`
 	APLocations []struct {
 		Label string `json:"label"`
 	} `json:"apLocations"`
+}
+
+// llPoint is one walk position as Link-Live decoded it.
+type llPoint struct {
+	X   float64 `json:"x"`
+	Y   float64 `json:"y"`
+	APs []llAP  `json:"aps"`
+}
+
+// llAP is one BSS observed from a walk position.
+type llAP struct {
+	BSSID          string `json:"bssid"`
+	Signal         int    `json:"signal"`
+	Noise          int    `json:"noise"`
+	ChannelPrimary int    `json:"channelPrimary"`
 }
 
 // comparison is one survey's result, in the order the report prints it.
@@ -68,8 +76,10 @@ type comparison struct {
 	mode       string
 	points     [2]int // Link-Live, Trellis
 	placements [2]int
+	positions  [2]int // agreeing, compared
 	bssids     [2]int // common, disjoint
 	signal     [2]int // agreeing, compared
+	noise      [2]int
 	channel    [2]int
 }
 
@@ -79,9 +89,25 @@ type comparison struct {
 // numbers are reported side by side and read by a person.
 func (c comparison) agrees() bool {
 	return c.points[0] == c.points[1] &&
+		c.positions[0] == c.positions[1] &&
 		c.bssids[1] == 0 &&
 		c.signal[0] == c.signal[1] &&
+		c.noise[0] == c.noise[1] &&
 		c.channel[0] == c.channel[1]
+}
+
+// add accumulates one survey into a totals row, so the figures quoted
+// elsewhere come out of the tool rather than out of somebody's arithmetic.
+func (c *comparison) add(other comparison) {
+	for i := range 2 {
+		c.points[i] += other.points[i]
+		c.placements[i] += other.placements[i]
+		c.positions[i] += other.positions[i]
+		c.bssids[i] += other.bssids[i]
+		c.signal[i] += other.signal[i]
+		c.noise[i] += other.noise[i]
+		c.channel[i] += other.channel[i]
+	}
 }
 
 func main() {
@@ -96,13 +122,34 @@ func main() {
 		os.Exit(2)
 	}
 
-	records, err := readIndex(*index)
+	report, agreed, err := run(*index, *dir, *corpus)
 	if err != nil {
 		fatal(err)
 	}
-	archives, err := readCorpus(*corpus)
+	if *out == "" {
+		fmt.Print(report)
+	} else if writeErr := os.WriteFile(*out, []byte(report), 0o600); writeErr != nil {
+		fatal(writeErr)
+	}
+	if !agreed {
+		os.Exit(1)
+	}
+}
+
+// run pairs every Link-Live record with an archive and compares the two reads.
+// It reports disagreement as a bool rather than an error: a survey the two
+// sides read differently is the finding, not a failure of the comparison.
+//
+// A run that pairs nothing does not agree either. Silence from a comparison
+// that compared nothing is the one result that must never read as a pass.
+func run(indexPath, processedDir, corpusDir string) (report string, agreed bool, err error) {
+	records, err := readIndex(indexPath)
 	if err != nil {
-		fatal(err)
+		return "", false, err
+	}
+	archives, err := readCorpus(corpusDir)
+	if err != nil {
+		return "", false, err
 	}
 
 	var (
@@ -116,29 +163,20 @@ func main() {
 			unpaired = append(unpaired, id)
 			continue
 		}
-		result, compareErr := compare(id, rec, filepath.Join(*dir, id+".json.gz"), amp)
+		result, compareErr := compare(id, rec, filepath.Join(processedDir, id+".json.gz"), amp)
 		if compareErr != nil {
-			fatal(fmt.Errorf("%s: %w", id, compareErr))
+			return "", false, fmt.Errorf("%s: %w", id, compareErr)
 		}
 		results = append(results, result)
 	}
 
-	report := renderReport(results, unpaired)
-	if *out == "" {
-		fmt.Print(report)
-	} else if err := os.WriteFile(*out, []byte(report), 0o600); err != nil {
-		fatal(err)
-	}
-
-	if len(results) == 0 {
-		fmt.Fprintln(os.Stderr, "linklive-oracle: no Link-Live record paired with an archive")
-		os.Exit(1)
-	}
+	agreed = len(results) > 0
 	for _, r := range results {
 		if !r.agrees() {
-			os.Exit(1)
+			agreed = false
 		}
 	}
+	return renderReport(results, unpaired), agreed, nil
 }
 
 // key pairs a survey with its archive. The plan filename alone is not unique —
@@ -226,15 +264,18 @@ func compare(id string, rec record, processedPath, ampPath string) (comparison, 
 		return result, err
 	}
 
-	result.points = [2]int{len(ll.Points), len(points)}
-	result.placements = [2]int{len(ll.APLocations), len(imported.APLocations)}
+	diff(&result, ll, points, imported)
+	return result, nil
+}
 
-	// Readings are compared per (point, BSSID). Link-Live and Trellis both
-	// preserve the archive's point order, so the index joins them.
-	type reading struct {
-		signal  int
-		channel int
-	}
+// diff fills in everything the two sides can be held to. Both preserve the
+// archive's point order, so the index joins a walk position, and a position
+// plus a BSSID joins one reading.
+func diff(into *comparison, ll *processed, points []survey.SurveyPointRecord, imported *survey.AirMapperImportResult) {
+	into.points = [2]int{len(ll.Points), len(points)}
+	into.placements = [2]int{len(ll.APLocations), len(imported.APLocations)}
+
+	type reading struct{ signal, noise, channel int }
 	truth := map[[2]string]reading{}
 	llBSSIDs := map[string]bool{}
 	for i, p := range ll.Points {
@@ -244,41 +285,52 @@ func compare(id string, rec record, processedPath, ampPath string) (comparison, 
 				continue
 			}
 			llBSSIDs[b] = true
-			truth[[2]string{fmt.Sprint(i), b}] = reading{ap.Signal, ap.ChannelPrimary}
+			truth[[2]string{strconv.Itoa(i), b}] = reading{ap.Signal, ap.Noise, ap.ChannelPrimary}
 		}
 	}
+
 	trBSSIDs := map[string]bool{}
 	for i, p := range points {
+		if i < len(ll.Points) {
+			into.positions[1]++
+			if int(ll.Points[i].X) == p.X && int(ll.Points[i].Y) == p.Y {
+				into.positions[0]++
+			}
+		}
 		for _, n := range p.Networks {
 			b := normalizeBSSID(n.BSSID)
 			trBSSIDs[b] = true
-			want, ok := truth[[2]string{fmt.Sprint(i), b}]
+			want, ok := truth[[2]string{strconv.Itoa(i), b}]
 			if !ok {
 				continue
 			}
-			result.signal[1]++
-			result.channel[1]++
+			into.signal[1]++
+			into.noise[1]++
+			into.channel[1]++
 			if want.signal == n.Signal {
-				result.signal[0]++
+				into.signal[0]++
+			}
+			if want.noise == n.NoiseFloor {
+				into.noise[0]++
 			}
 			if want.channel == n.Channel {
-				result.channel[0]++
+				into.channel[0]++
 			}
 		}
 	}
+
 	for b := range llBSSIDs {
 		if trBSSIDs[b] {
-			result.bssids[0]++
+			into.bssids[0]++
 		} else {
-			result.bssids[1]++
+			into.bssids[1]++
 		}
 	}
 	for b := range trBSSIDs {
 		if !llBSSIDs[b] {
-			result.bssids[1]++
+			into.bssids[1]++
 		}
 	}
-	return result, nil
 }
 
 // normalizeBSSID reduces both sides to bare lowercase hex. Link-Live writes
@@ -329,22 +381,31 @@ func readProcessed(path string) (*processed, error) {
 
 func renderReport(results []comparison, unpaired []string) string {
 	var b strings.Builder
-	b.WriteString("| Link-Live analysis | Unit | Mode | Points LL/TR | Placements LL/TR | BSSIDs common/disjoint | Signal agree | Channel agree |\n")
-	b.WriteString("|---|---|---|---|---|---|---|---|\n")
+	b.WriteString("| Link-Live analysis | Unit | Mode | Points LL/TR | Placements LL/TR | Positions agree | BSSIDs common/disjoint | Signal agree | Noise agree | Channel agree |\n")
+	b.WriteString("|---|---|---|---|---|---|---|---|---|---|\n")
+	var totals comparison
 	for _, r := range results {
-		fmt.Fprintf(&b, "| `%s` | %s | %s | %d/%d | %d/%d | %d/%d | %d/%d | %d/%d |\n",
-			r.analysisID, r.unit, r.mode,
-			r.points[0], r.points[1],
-			r.placements[0], r.placements[1],
-			r.bssids[0], r.bssids[1],
-			r.signal[0], r.signal[1],
-			r.channel[0], r.channel[1])
+		b.WriteString(row(fmt.Sprintf("`%s`", r.analysisID), r.unit, r.mode, r))
+		totals.add(r)
 	}
+	b.WriteString(row(fmt.Sprintf("**%d surveys**", len(results)), "", "", totals))
 	if len(unpaired) > 0 {
 		fmt.Fprintf(&b, "\nNo archive in the corpus matches %d Link-Live records: %s\n",
 			len(unpaired), strings.Join(unpaired, ", "))
 	}
 	return b.String()
+}
+
+func row(label, unit, mode string, c comparison) string {
+	return fmt.Sprintf("| %s | %s | %s | %d/%d | %d/%d | %d/%d | %d/%d | %d/%d | %d/%d | %d/%d |\n",
+		label, unit, mode,
+		c.points[0], c.points[1],
+		c.placements[0], c.placements[1],
+		c.positions[0], c.positions[1],
+		c.bssids[0], c.bssids[1],
+		c.signal[0], c.signal[1],
+		c.noise[0], c.noise[1],
+		c.channel[0], c.channel[1])
 }
 
 func sortedKeys(m map[string]record) []string {

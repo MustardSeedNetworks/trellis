@@ -5,7 +5,7 @@ package survey_test
 // AirMapper writes its AP placements at the top level of the `.serial`
 // sidecar, under `apLocations`. The parser read them from a nested
 // `locations.aps` member that no archive in the reference corpus carries, so
-// every placement was dropped in silence: 374 of them across the corpus, and
+// every placement was dropped in silence: 216 of them across 48 archives, and
 // the ground truth Gate G1 went looking for and reported as absent.
 //
 // The oracle is NetAlly's own decode of the same archives, served by Link-Live

@@ -57,8 +57,8 @@ const (
 	// frObsChannel was read from field 16 until 2026-09-07 on the grounds that
 	// its values looked like channel numbers. They are band codes -- 24 under
 	// a 2.4 GHz BSS, 50 under a 5 GHz one -- so a 2.4 GHz AP on channel 8
-	// imported as channel 28. Link-Live's own decode of seven of these
-	// archives agrees with field 6 on all 55,218 observations and with field
+	// imported as channel 28. Link-Live's own decode of eleven of these
+	// archives agrees with field 6 on all 85,690 observations and with field
 	// 16 on none (docs/12-CROSS-PRODUCT-ORACLE.md).
 	frObsChannel = 6
 	frObsRSSI    = 21 // dBm, two's-complement in a varint
