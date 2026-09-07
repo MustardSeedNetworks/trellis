@@ -148,4 +148,43 @@ describe('LivePage', () => {
       vi.useRealTimers();
     }
   });
+
+  // Pausing stops the polling and changes nothing the page draws, so without
+  // this a scan from ten minutes ago reads exactly like the airspace right now
+  // — the one thing a live view must never do. The daemon has always answered
+  // with the moment it swept; the page never read it.
+  it('says how old the reading is once it stops refreshing it', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const sweptAt = new Date('2026-09-06T12:00:00Z');
+      vi.setSystemTime(sweptAt);
+      scan.mockResolvedValue({
+        networks: [network()],
+        scannedAt: { seconds: BigInt(Math.floor(sweptAt.getTime() / 1000)), nanos: 0 },
+      });
+      renderPage();
+      await waitFor(() => expect(scan).toHaveBeenCalled());
+
+      // While it is polling there is nothing to disclose: the reading is being
+      // replaced every interval.
+      expect(screen.queryByTestId('scan-age')).toBeNull();
+
+      fireEvent.click(screen.getByTestId('toggle-polling'));
+      const age = await screen.findByTestId('scan-age');
+      expect(age).toHaveAttribute('data-stale', 'false');
+
+      await vi.advanceTimersByTimeAsync(6000);
+      expect(age).toHaveTextContent(/6 seconds ago/);
+      // Still fresh: two poll intervals is 10 s, and the point of measuring
+      // staleness in intervals rather than seconds is that it keeps meaning
+      // "this should have been replaced by now" if the interval changes.
+      expect(age).toHaveAttribute('data-stale', 'false');
+
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(age).toHaveTextContent(/11 seconds ago/);
+      expect(age).toHaveAttribute('data-stale', 'true');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

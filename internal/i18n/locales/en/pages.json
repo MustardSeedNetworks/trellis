@@ -81,6 +81,8 @@
     "notReported": "Not reported",
     "nothingHeard": "The sweep returned no networks. The adapter is reachable but heard nothing — an unusual result anywhere a person is standing.",
     "pause": "Pause scanning",
+    "pausedAge_one": "Paused. Last scan {{time}}, {{count}} second ago.",
+    "pausedAge_other": "Paused. Last scan {{time}}, {{count}} seconds ago.",
     "resume": "Resume scanning",
     "scanFailed": "The scan failed",
     "scanning": "Scanning…",

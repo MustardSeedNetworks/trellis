@@ -81,6 +81,8 @@
     "notReported": "No informado",
     "nothingHeard": "El barrido no devolvió redes. El adaptador responde pero no escuchó nada, un resultado inusual donde hay alguien de pie.",
     "pause": "Pausar exploración",
+    "pausedAge_one": "En pausa. Último barrido a las {{time}}, hace {{count}} segundo.",
+    "pausedAge_other": "En pausa. Último barrido a las {{time}}, hace {{count}} segundos.",
     "resume": "Reanudar exploración",
     "scanFailed": "El barrido falló",
     "scanning": "Explorando…",
