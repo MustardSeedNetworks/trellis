@@ -336,11 +336,13 @@ jobs:
   # trellis gated govulncheck and Semgrep but had no secret scanning, no
   # dependency audit and no filesystem scan -- thinner than seed, stem and niac,
   # which all run the full set. Same tools, same pins, same fail-closed posture.
+  # Deliberately NOT gated on `changes`, matching seed. gitleaks scans the whole
+  # tree for secrets and Trivy scans the filesystem: a secret pasted into a .md
+  # would otherwise reach main with only the filename check in `quality` between
+  # it and the branch.
   security:
     name: Security Scanning
     runs-on: ubuntu-latest
-    needs: [changes]
-    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci_infra == 'true'
     timeout-minutes: 15
     permissions:
       contents: read

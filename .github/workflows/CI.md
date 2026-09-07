@@ -30,10 +30,11 @@ Trellis has no C dataplane, so it carries no `c-lint` job. It has everything
 else the fleet runs: E2E, Storybook, i18n, the markdown gate, build
 verification and a `ci-complete` aggregate.
 
-Every job except `quality`, `semgrep`, `dependency-review`, `ci-conformance`
-and `codeql-alert-gate` is gated on `changes`. `quality` stays ungated because
-it is the job that reads `.md` content (the banned-vocabulary policy), so a
-docs-only PR still has to satisfy it. On a `merge_group` event every filter
+Every job except `quality`, `security`, `semgrep`, `dependency-review`,
+`ci-conformance` and `codeql-alert-gate` is gated on `changes`. `quality` stays
+ungated because it is the job that reads `.md` content (the banned-vocabulary
+policy), and `security` because gitleaks and Trivy scan the whole tree — a
+secret pasted into a `.md` must not skip them. seed gates neither. On a `merge_group` event every filter
 reports true and the full suite runs — the queue exists to test the merged
 result, and there is no PR base there to diff against.
 
