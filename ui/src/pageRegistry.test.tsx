@@ -46,6 +46,21 @@ describe('pageRegistry <-> navGroups', () => {
     expect(missing, `pages missing from navGroups: ${missing.join(', ')}`).toEqual([]);
   });
 
+  // The other direction, which was not enforced and let the rail advertise
+  // Floors, Interference and Capacity — three analyses with no page behind
+  // them. A rail entry is a claim about what the product does.
+  it('routes every rail entry to a page that exists', () => {
+    const { result: nav } = renderHook(() => useNavGroups());
+    const { result: pages } = renderHook(() => usePages());
+
+    const pagePaths = new Set(pages.current.map((page) => page.path));
+    const dangling = nav.current
+      .flatMap((group) => group.items.map((item) => item.path))
+      .filter((path) => !pagePaths.has(path));
+
+    expect(dangling, `rail entries with no page: ${dangling.join(', ')}`).toEqual([]);
+  });
+
   it('titles each page the same as its rail entry', () => {
     const { result: nav } = renderHook(() => useNavGroups());
     const { result: pages } = renderHook(() => usePages());

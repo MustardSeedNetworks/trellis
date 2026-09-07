@@ -11,8 +11,9 @@
     "generating": "Generando…"
   },
   "emptyState": {
-    "notBuiltBody": "Esta sección aparece en la barra lateral para que la forma del producto sea visible, pero su página aún no se ha desarrollado.",
-    "notBuiltTitle": "Aún no desarrollado"
+    "notFoundBody": "No hay ninguna página en esta dirección. Puede ser una URL mal escrita o un enlace a una página que ya no existe.",
+    "notFoundHome": "Ir a Estudios",
+    "notFoundTitle": "Página no encontrada"
   },
   "labels": {
     "companyName": "Nombre de la empresa",
@@ -37,13 +38,10 @@
   },
   "nav": {
     "analysis": "Análisis",
-    "capacity": "Capacidad",
     "capture": "Captura",
     "coverage": "Cobertura",
     "deliver": "Entrega",
-    "floors": "Plantas",
     "import": "Importar",
-    "interference": "Interferencias",
     "live": "En vivo",
     "reports": "Informes",
     "surveys": "Estudios"

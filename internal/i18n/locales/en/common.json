@@ -11,8 +11,9 @@
     "generating": "Generating…"
   },
   "emptyState": {
-    "notBuiltBody": "This section is listed in the rail so the shape of the product is visible, but its page has not been built.",
-    "notBuiltTitle": "Not built yet"
+    "notFoundBody": "There is no page at this address. It may be a mistyped URL or a link to a page that no longer exists.",
+    "notFoundHome": "Go to Surveys",
+    "notFoundTitle": "Page not found"
   },
   "labels": {
     "companyName": "Company name",
@@ -37,13 +38,10 @@
   },
   "nav": {
     "analysis": "Analysis",
-    "capacity": "Capacity",
     "capture": "Capture",
     "coverage": "Coverage",
     "deliver": "Deliver",
-    "floors": "Floors",
     "import": "Import",
-    "interference": "Interference",
     "live": "Live",
     "reports": "Reports",
     "surveys": "Surveys"
