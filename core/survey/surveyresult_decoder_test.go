@@ -43,10 +43,12 @@ const (
 
 	tagObsBSSID   = 1
 	tagObsSSID    = 3
-	tagObsChannel = 16
-	tagObsRSSI    = 21
-	tagObsNoise   = 22
-	tagObsTime    = 24
+	tagObsChannel = 6
+	// Field 16 is NOT the channel; see TestSurveyResultChannelIsFieldSix.
+	tagObsNotChannel = 16
+	tagObsRSSI       = 21
+	tagObsNoise      = 22
+	tagObsTime       = 24
 )
 
 const (
@@ -485,5 +487,45 @@ func TestParseSurveyResultOmitsSNRWithoutAUsableNoiseFloor(t *testing.T) {
 				t.Errorf("SNR = %d, want %d", got, tt.want)
 			}
 		})
+	}
+}
+
+// TestSurveyResultChannelIsFieldSix pins which field the channel is read from.
+//
+// It was field 16 until 2026-09-07, chosen because "its values are all real
+// 802.11 channel numbers". They are not: across 55,218 observations in seven
+// reference archives, field 16 equalled NetAlly's own decode of the channel
+// zero times, while field 6 equalled it on every one. Field 16 carries a band
+// code — 24 under a 2.4 GHz BSS, 50 under a 5 GHz one — so a 2.4 GHz AP on
+// channel 8 imported as "channel 28", which is not a channel at all.
+//
+// The oracle is Link-Live's processed decode of the same archives, recorded in
+// docs/12-CROSS-PRODUCT-ORACLE.md.
+func TestSurveyResultChannelIsFieldSix(t *testing.T) {
+	obs := bytesField(tagPointObs, concat(
+		strField(tagObsBSSID, "58:ef:68:09:f9:07"),
+		strField(tagObsSSID, "Subway_2.4_Secured"),
+		varintField(tagObsChannel, 8),
+		varintField(tagObsNotChannel, 28),
+		varintField(tagObsRSSI, negDBm(76)),
+		varintField(tagObsNoise, negDBm(90)),
+		varintField(tagObsTime, refMillis),
+	))
+	msg := point(
+		varintField(tagPointX, 1532),
+		varintField(tagPointY, 3980),
+		varintField(tagPointTime, refMillis),
+		obs,
+	)
+
+	points, err := survey.ParseSurveyResult(msg)
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if len(points) != 1 || len(points[0].Networks) != 1 {
+		t.Fatalf("points=%d networks=%d, want 1 and 1", len(points), len(points[0].Networks))
+	}
+	if got := points[0].Networks[0].Channel; got != 8 {
+		t.Errorf("channel = %d, want 8 — field 16's band code (28) is not a channel", got)
 	}
 }

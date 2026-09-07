@@ -10,9 +10,12 @@ package survey
 // checking each candidate against something the file already asserts about
 // itself. Field 21 is RSSI because its values span -84..-25 dBm across 5,297
 // observations in one survey and never leave a radio's range in any of the
-// twelve; field 16 is the channel because its values are all real 802.11
-// channel numbers; point x/y fall inside the floor plan's own pixel
-// dimensions. The strongest check is arithmetic rather than plausibility: the
+// twelve; point x/y fall inside the floor plan's own pixel dimensions.
+//
+// Plausibility is a weak check and it got the channel wrong once: field 16
+// held values that looked like channels and is a band code. The field numbers
+// are now checked against NetAlly's own decode of the same archives, which
+// Link-Live serves back (docs/12-CROSS-PRODUCT-ORACLE.md). The strongest check is arithmetic rather than plausibility: the
 // `.serial` sidecar declares surveyPointCount, and the point count recovered
 // here matches it exactly in all twelve files.
 //
@@ -51,10 +54,16 @@ const (
 	frAssocChan   = 27
 	frObsBSSID    = 1
 	frObsSSID     = 3
-	frObsChannel  = 16
-	frObsRSSI     = 21 // dBm, two's-complement in a varint
-	frObsNoise    = 22 // dBm, same encoding
-	frObsTime     = 24
+	// frObsChannel was read from field 16 until 2026-09-07 on the grounds that
+	// its values looked like channel numbers. They are band codes -- 24 under
+	// a 2.4 GHz BSS, 50 under a 5 GHz one -- so a 2.4 GHz AP on channel 8
+	// imported as channel 28. Link-Live's own decode of seven of these
+	// archives agrees with field 6 on all 55,218 observations and with field
+	// 16 on none (docs/12-CROSS-PRODUCT-ORACLE.md).
+	frObsChannel = 6
+	frObsRSSI    = 21 // dBm, two's-complement in a varint
+	frObsNoise   = 22 // dBm, same encoding
+	frObsTime    = 24
 )
 
 // Wire types.
