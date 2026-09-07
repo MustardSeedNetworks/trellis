@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.37](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.36...v0.2.37) (2026-09-07)
+
+
+### Bug Fixes
+
+* **survey:** size sample markers by how close the readings lie ([#381](https://github.com/MustardSeedNetworks/trellis/issues/381)) ([c6d87b7](https://github.com/MustardSeedNetworks/trellis/commit/c6d87b7ffcd28a7199c1e45599353e4d15c68ba5))
+
 ## [0.2.36](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.35...v0.2.36) (2026-09-07)
 
 
