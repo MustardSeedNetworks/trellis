@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.31](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.30...v0.2.31) (2026-09-07)
+
+
+### Features
+
+* **rf:** run Gate G1 and record the result ([#359](https://github.com/MustardSeedNetworks/trellis/issues/359)) ([ca826c1](https://github.com/MustardSeedNetworks/trellis/commit/ca826c1dd132723ac62e7ce28a315f1f8d2e6520))
+
+
+### Bug Fixes
+
+* **import:** an AirMagnet AP placement is not addressed by its media type ([ca826c1](https://github.com/MustardSeedNetworks/trellis/commit/ca826c1dd132723ac62e7ce28a315f1f8d2e6520))
+
 ## [0.2.30](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.29...v0.2.30) (2026-09-07)
 
 
