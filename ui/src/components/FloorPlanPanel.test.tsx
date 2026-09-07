@@ -121,5 +121,32 @@ describe('FloorPlanPanel', () => {
     const status = await screen.findByTestId('floor-plan-status');
     expect(status).toHaveTextContent('not a PNG or JPEG image');
     expect(status).toHaveClass('text-status-error');
+    // An ordinary refusal gets no hint: there is nothing to explain beyond
+    // "that was not an image".
+    expect(screen.queryByTestId('floor-plan-stranded-hint')).toBeNull();
+  });
+
+  // The one refusal an operator can act on. Reporting it alone reads as the
+  // product being broken; the point is that a same-sized plan works and a
+  // differently-sized one would move every measured point.
+  it('explains a plan refused because it would strand the measurements', async () => {
+    setFloorPlan.mockRejectedValue(
+      new Error(
+        'replacing the floor plan would strand the measurements taken on it: ' +
+          '3 measurements on this floor were taken against a 800x600 plan, not 1024x768',
+      ),
+    );
+    renderPanel();
+
+    const file = new File([new Uint8Array([1])], 'plan.png', { type: 'image/png' });
+    fireEvent.change(screen.getByTestId('floor-plan-input'), { target: { files: [file] } });
+
+    const status = await screen.findByTestId('floor-plan-status');
+    // The server says how much is at stake; three points is a different
+    // decision from three hundred.
+    expect(status).toHaveTextContent('3 measurements');
+    const hint = await screen.findByTestId('floor-plan-stranded-hint');
+    expect(hint).toHaveTextContent(/same dimensions/i);
+    expect(hint).toHaveTextContent(/delete the measurements/i);
   });
 });

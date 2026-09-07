@@ -82,6 +82,11 @@ export function FloorPlanPanel({
 
   const width = planQuery.data?.width ?? 0;
   const error = uploadMutation.error ?? calibrateMutation.error;
+  // The one refusal an operator can do something about, and the one worth
+  // explaining rather than only reporting: a plan of different dimensions over
+  // a floor that already holds measurements is refused, because every stored
+  // point is a pixel coordinate on the plan it was walked against.
+  const stranded = error !== null && /strand the measurements/i.test(String(error));
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="floor-plan-title">
@@ -159,6 +164,12 @@ export function FloorPlanPanel({
                 : t('pages:surveys.calibratedScaleOnly', { scale: scaleM.toFixed(3) })
               : t('pages:surveys.uncalibrated')}
       </p>
+
+      {stranded ? (
+        <p className="text-sm text-text-secondary" data-testid="floor-plan-stranded-hint">
+          {t('pages:surveys.planWouldStrandHint')}
+        </p>
+      ) : null}
     </section>
   );
 }

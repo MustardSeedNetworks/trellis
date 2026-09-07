@@ -144,6 +144,7 @@
     "notArriving": "Survey data is not arriving",
     "pause": "Pause",
     "planWidthMetres": "Plan width in metres",
+    "planWouldStrandHint": "A plan of the same dimensions replaces this one and keeps its scale. To use a differently sized plan, delete the measurements on this floor first, or import it as a new survey.",
     "plotCoverage": "Plot coverage",
     "pointsOnFloor_one": "{{count}} point on this floor",
     "pointsOnFloor_other": "{{count}} points on this floor",
