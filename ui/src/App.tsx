@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Route, Routes } from 'react-router';
+import { Link, Route, Routes } from 'react-router';
 import { type PageConfig, usePages } from '@/pageRegistry';
 import { PageHeader } from '@/ui/PageHeader';
 import { Sidebar } from '@/ui/Sidebar';
@@ -11,10 +11,10 @@ import { Sidebar } from '@/ui/Sidebar';
  * (see ui/SHELL.md in the sibling products); everything inside a route is
  * trellis's own.
  *
- * Surveys, Import and Coverage have pages. The remaining nav items are listed
- * in navGroups.ts and land on the placeholder below until they are built,
- * which is deliberate: an item that routes somewhere honest is easier to
- * review than a rail that hides how much is left.
+ * Every rail entry has a page, so an unmatched path is a mistyped URL or a
+ * stale link rather than a feature on its way — and it says so. The
+ * placeholder that used to answer here told a reader that /interferance was
+ * being built.
  */
 export function App() {
   const pages = usePages();
@@ -35,7 +35,7 @@ export function App() {
               }
             />
           ))}
-          <Route path="*" element={<NotBuiltYet />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
     </div>
@@ -81,14 +81,20 @@ function PageLoading() {
  * Says what it is rather than pretending. A blank pane reads as a failure; this
  * reads as a plan.
  */
-function NotBuiltYet() {
+function NotFound() {
   const { t } = useTranslation('common');
 
   return (
     <div className="flex flex-1 items-center justify-center p-8">
-      <div className="panel max-w-md p-6 text-center">
-        <p className="kicker">{t('emptyState.notBuiltTitle')}</p>
-        <p className="mt-2 text-sm text-text-secondary">{t('emptyState.notBuiltBody')}</p>
+      <div className="panel max-w-md p-6 text-center" data-testid="not-found">
+        <p className="kicker">{t('emptyState.notFoundTitle')}</p>
+        <p className="mt-2 text-sm text-text-secondary">{t('emptyState.notFoundBody')}</p>
+        <Link
+          to="/"
+          className="mt-4 inline-block rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-raised"
+        >
+          {t('emptyState.notFoundHome')}
+        </Link>
       </div>
     </div>
   );

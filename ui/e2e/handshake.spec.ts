@@ -36,13 +36,19 @@ test('__version reports real build metadata, not placeholders', async ({ request
   );
 });
 
-test('navigates to the built pages without falling through to NotBuiltYet', async ({ page }) => {
-  // '/', '/import', '/coverage' and '/reports' are the routes with real
-  // components; everything else is deliberately NotBuiltYet. A regression that
-  // dropped one from the registry would still render *something*, so assert the
-  // page header rather than merely that the route resolved.
-  for (const path of ['/', '/import', '/coverage', '/reports']) {
+test('navigates to every built page, and says so when a path is not one', async ({ page }) => {
+  // Every rail entry now has a page, so these are the rail. A regression that
+  // dropped one from the registry would still render *something* — the Not
+  // Found panel — so assert the page header rather than merely that the route
+  // resolved.
+  for (const path of ['/', '/import', '/coverage', '/live', '/reports']) {
     await page.goto(path);
     await expect(page.getByTestId('page-header-title'), `no page header at ${path}`).toBeVisible();
   }
+
+  // And the other half: a mistyped address is a mistake, not a feature on its
+  // way. This used to render the same "not built yet" panel as three rail
+  // items that had no page behind them.
+  await page.goto('/interferance');
+  await expect(page.getByTestId('not-found')).toBeVisible();
 });

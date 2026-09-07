@@ -2,6 +2,7 @@ import { fileURLToPath, URL } from 'node:url';
 import babel from '@rolldown/plugin-babel';
 import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
+import pkg from './package.json' with { type: 'json' };
 
 // Node's own experimental webstorage global is read once per test file while
 // the jsdom environment is set up, and each read prints
@@ -17,6 +18,10 @@ process.env.NODE_OPTIONS = [process.env.NODE_OPTIONS, '--no-experimental-webstor
   .join(' ');
 
 export default defineConfig({
+  // Mirrors vite.config.ts. Without it App.tsx cannot render under test at
+  // all — the shell reads __APP_VERSION__ for the rail footer — which is why
+  // the routing had no test until one was written for the Not Found page.
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   plugins: [
     react(),
     // The React Compiler, matching vite.config.ts. Without it the suite
