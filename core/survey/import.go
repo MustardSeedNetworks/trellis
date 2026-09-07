@@ -58,7 +58,6 @@ func (m *Manager) ImportAirMapper(name string, data []byte) (*Survey, error) {
 
 	if err := m.UpdateImportedData(svy.ID, ImportedDataUpdate{
 		APLocations:      importedAPLocations(result.APLocations),
-		ClientLocations:  importedClientLocations(result.ClientLocations),
 		PassFailCriteria: importedPassFailCriteria(result.PassFailCriteria),
 	}); err != nil {
 		return nil, err
@@ -141,25 +140,7 @@ func importedAPLocations(in []APLocationData) []APLocation {
 			Y:        roundToInt(ap.Y),
 			Label:    ap.Label,
 			BSSID:    ap.BSSID,
-			Imported: true,
-		})
-	}
-	return out
-}
-
-// importedClientLocations maps AirMapper client placements onto the survey type.
-func importedClientLocations(in []ClientLocationData) []ClientLocation {
-	if len(in) == 0 {
-		return nil
-	}
-	out := make([]ClientLocation, 0, len(in))
-	for _, c := range in {
-		out = append(out, ClientLocation{
-			ID:       uuid.New().String(),
-			X:        roundToInt(c.X),
-			Y:        roundToInt(c.Y),
-			Label:    c.Label,
-			MAC:      c.MAC,
+			Vendor:   ap.Vendor,
 			Imported: true,
 		})
 	}

@@ -39,11 +39,21 @@ from and would weight that floor twice.
 ## The dataset, and why it is not the one the roadmap named
 
 The roadmap says the Everett AirMapper walk hands the engine "73 measured points
-+ AP layout + floorplan". **It does not.** No archive in the AirMapper reference
-corpus carries a single AP placement — 48 archives, 0 placements — and the
-`TestG1AirMapperCorpusCarriesNoAPPlacements` tripwire will say so if one ever
-does, since an AirMapper archive would bring a real metres-per-pixel scale with
-it and would be the better ground truth.
++ AP layout + floorplan". At the time this gate ran, no archive in the AirMapper
+reference corpus appeared to carry a single AP placement — 48 archives, 0
+placements — so the tripwire left behind here would say so if one ever did,
+since an AirMapper archive brings a real metres-per-pixel scale with it and
+would be the better ground truth.
+
+> **Correction, 2026-09-07.** That tripwire fired, and it was right: the
+> placements were in the archives all along. Three of the 48 carry 216 between
+> them, under a `.serial` member the importer read from the wrong name
+> (`docs/12-CROSS-PRODUCT-ORACLE.md`, defect 2). The paragraph below stands as
+> the reason this gate ran on borrowed data, but the premise it rests on was a
+> parser bug rather than a property of the corpus, and the channel of every
+> imported observation was a band code as well (defect 1). **This result is
+> superseded pending a re-measurement on the AirMapper walks that do carry
+> placements (#362).**
 
 The ground truth used instead is **AirMagnet Survey Pro demo projects**, where
 the surveyor placed the APs on the plan by hand and the export carries those

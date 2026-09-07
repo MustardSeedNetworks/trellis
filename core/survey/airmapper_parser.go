@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -35,39 +36,36 @@ type AirMapperFile struct {
 
 // SerialMetadata contains metadata from the .serial JSON file in an AirMapper archive.
 type SerialMetadata struct {
-	FileName          string         `json:"fileName"`
-	FloorPlanScalePpf float64        `json:"floorPlanScalePpf"` // pixels per foot
-	Propagation       float64        `json:"propagation"`
-	PropagationUnit   string         `json:"propagationUnit"`
-	SurveyPointCount  int            `json:"surveyPointCount"`
-	SurveyItemsCount  int            `json:"surveyItemsCount"`
-	Locations         *LocationsData `json:"locations,omitempty"`
-	InsitesLimits     []InsitesLimit `json:"insitesLimits,omitempty"`
-	Views             []ViewConfig   `json:"views,omitempty"`
+	FileName string `json:"fileName"`
+	// FloorPlanFilename is the plan's own name, which need not match the name
+	// of the archive member holding the image.
+	FloorPlanFilename string  `json:"floorPlanFilename"`
+	FloorPlanScalePpf float64 `json:"floorPlanScalePpf"` // pixels per foot
+	Propagation       float64 `json:"propagation"`
+	PropagationUnit   string  `json:"propagationUnit"`
+	SurveyPointCount  int     `json:"surveyPointCount"`
+	SurveyItemsCount  int     `json:"surveyItemsCount"`
+	// APLocations are the operator's AP placements. AirMapper writes them at
+	// the top level of the sidecar under this name; no archive in the
+	// reference corpus carries the nested `locations.aps` member this parser
+	// read until 2026-09-07, which is why every placement was dropped.
+	APLocations   []APLocationData `json:"apLocations,omitempty"`
+	InsitesLimits []InsitesLimit   `json:"insitesLimits,omitempty"`
+	Views         []ViewConfig     `json:"views,omitempty"`
 }
 
-// LocationsData contains AP and client location data.
-type LocationsData struct {
-	APLocations     []APLocationData     `json:"aps,omitempty"`
-	ClientLocations []ClientLocationData `json:"clients,omitempty"`
-}
-
-// APLocationData represents a placed AP location from AirMapper.
+// APLocationData represents a placed AP location from AirMapper. The archive
+// states only a position and a label; BSSID and Vendor are read out of the
+// label by ToImportResult where it carries an address.
 type APLocationData struct {
-	BSSID   string  `json:"bssid"`
-	X       float64 `json:"x"`
-	Y       float64 `json:"y"`
-	Label   string  `json:"label,omitempty"`
-	Channel int     `json:"channel,omitempty"`
-	Band    string  `json:"band,omitempty"`
-}
-
-// ClientLocationData represents a client location from AirMapper.
-type ClientLocationData struct {
-	MAC   string  `json:"mac"`
 	X     float64 `json:"x"`
 	Y     float64 `json:"y"`
 	Label string  `json:"label,omitempty"`
+
+	// BSSID and Vendor are derived, not read: AirMapper writes no address
+	// field of its own.
+	BSSID  string `json:"-"`
+	Vendor string `json:"-"`
 }
 
 // InsitesLimit represents a pass/fail criterion from AirMapper.
@@ -100,7 +98,6 @@ type AirMapperImportResult struct {
 	FloorPlanFilename string               `json:"floorPlanFilename"`
 	Calibration       AirMapperCalibration `json:"calibration"`
 	APLocations       []APLocationData     `json:"apLocations,omitempty"`
-	ClientLocations   []ClientLocationData `json:"clientLocations,omitempty"`
 	PassFailCriteria  []InsitesLimit       `json:"passFailCriteria,omitempty"`
 	SurveyPointCount  int                  `json:"surveyPointCount"`
 	SurveyItemsCount  int                  `json:"surveyItemsCount"`
@@ -274,11 +271,7 @@ func (a *AirMapperFile) ToImportResult() (*AirMapperImportResult, error) {
 		result.Calibration.PropagationM = defaultPropagationMeters
 	}
 
-	// Copy locations if available
-	if a.Serial.Locations != nil {
-		result.APLocations = a.Serial.Locations.APLocations
-		result.ClientLocations = a.Serial.Locations.ClientLocations
-	}
+	result.APLocations = placementsWithAddresses(a.Serial.APLocations)
 
 	// Copy pass/fail criteria
 	result.PassFailCriteria = a.Serial.InsitesLimits
@@ -288,4 +281,43 @@ func (a *AirMapperFile) ToImportResult() (*AirMapperImportResult, error) {
 	result.SurveyItemsCount = a.Serial.SurveyItemsCount
 
 	return result, nil
+}
+
+// placementsWithAddresses fills in the address AirMapper folds into a
+// placement's label. A placement of a single BSS is labelled
+// "BelkinIn:58ef68-09f907"; one that groups a whole AP's radios is labelled
+// with the AP's name and gets no address, since choosing one of its BSSIDs
+// would join measurements to the wrong radio.
+func placementsWithAddresses(in []APLocationData) []APLocationData {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]APLocationData, 0, len(in))
+	for _, ap := range in {
+		ap.Vendor, ap.BSSID = splitPlacementLabel(ap.Label)
+		out = append(out, ap)
+	}
+	return out
+}
+
+// splitPlacementLabel reads "Vendor:oui-nic" into the vendor and a
+// colon-separated BSSID. Anything else is an AP name and yields neither.
+func splitPlacementLabel(label string) (vendor, bssid string) {
+	vendor, address, found := strings.Cut(label, ":")
+	if !found {
+		return "", ""
+	}
+	oui, nic, found := strings.Cut(address, "-")
+	if !found || len(oui) != 6 || len(nic) != 6 {
+		return "", ""
+	}
+	hex := oui + nic
+	octets := make([]string, 0, 6)
+	for i := 0; i < len(hex); i += 2 {
+		if _, err := strconv.ParseUint(hex[i:i+2], 16, 8); err != nil {
+			return "", ""
+		}
+		octets = append(octets, strings.ToLower(hex[i:i+2]))
+	}
+	return vendor, strings.Join(octets, ":")
 }

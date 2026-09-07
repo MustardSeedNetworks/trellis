@@ -1,6 +1,11 @@
 # build / deps (for when code lands)
 /engine/build/
 /core/bin/
+# `go build ./...` writes each main package into the working directory, so the
+# daemon lands here by its package name. A 21 MB binary was tracked from #304
+# until 2026-09-07 because of it.
+/trellisd
+/linklive-oracle
 /ui/node_modules/
 /ui/dist/
 /ui/*.tsbuildinfo
@@ -33,4 +38,9 @@ coverage.out
 ui/playwright-report/
 ui/test-results/
 bin/
+# `go build ./...` writes each main package into the working directory, so the
+# daemon lands here by its package name. A 21 MB binary was tracked from #304
+# until 2026-09-07 because of it.
+/trellisd
+/linklive-oracle
 ui/storybook-static/

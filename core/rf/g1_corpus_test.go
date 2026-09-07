@@ -248,17 +248,17 @@ func svdCorpus(t *testing.T) (fs.FS, []string) {
 	return root, files
 }
 
-// TestG1AirMapperCorpusCarriesNoAPPlacements is why Gate G1 ran on AirMagnet
-// exports and not on the AirMapper walks docs/06-ROADMAP.md points at. The
-// roadmap says the Everett walk hands the engine "73 measured points + AP
-// layout"; no archive in the reference corpus carries an AP layout at all, so
-// there is nothing to measure a prediction against.
+// TestG1AirMapperCorpusCarriesAPPlacements guards the ground truth Gate G1
+// went looking for. The gate ran on AirMagnet exports because this corpus was
+// read as carrying no AP layout at all -- and the tripwire that said so fired
+// on 2026-09-07, correctly: the placements were always in the archives, under
+// a `.serial` member the importer read from the wrong name. Three archives
+// carry 216 of them.
 //
-// This is a tripwire, not a preference: if an archive ever does carry
-// placements, that is better ground truth than the AirMagnet demo projects —
-// it comes with a real metres-per-pixel scale — and G1 should be re-run
-// against it.
-func TestG1AirMapperCorpusCarriesNoAPPlacements(t *testing.T) {
+// So the assertion is inverted rather than deleted. An importer change that
+// drops placements again would otherwise quietly restore the premise the gate
+// already recorded as wrong.
+func TestG1AirMapperCorpusCarriesAPPlacements(t *testing.T) {
 	dir := os.Getenv(ampCorpusEnv)
 	if dir == "" {
 		t.Skipf("set %s to a directory of AirMapper .amp archives to run this", ampCorpusEnv)
@@ -307,9 +307,8 @@ func TestG1AirMapperCorpusCarriesNoAPPlacements(t *testing.T) {
 		t.Fatalf("no readable .amp archives under %s", dir)
 	}
 	t.Logf("%d AirMapper archives read, %d AP placements between them", archives, placements)
-	if placements != 0 {
-		t.Fatalf("the AirMapper corpus now carries %d AP placements: Gate G1 has better ground "+
-			"truth than the AirMagnet demo projects and docs/11-GATE-G1-RESULT.md should be re-measured",
-			placements)
+	if placements == 0 {
+		t.Fatalf("no AP placements in %d AirMapper archives: the importer has stopped reading "+
+			"them, and Gate G1's ground truth is gone with them", archives)
 	}
 }
