@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.33](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.32...v0.2.33) (2026-09-07)
+
+
+### Miscellaneous
+
+* settle the bookkeeping GitHub never saw (T-C0) ([#366](https://github.com/MustardSeedNetworks/trellis/issues/366)) ([c91f09b](https://github.com/MustardSeedNetworks/trellis/commit/c91f09b805abae904f610b7f50483fd9dc3d3f33)), closes [#354](https://github.com/MustardSeedNetworks/trellis/issues/354)
+
 ## [0.2.32](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.31...v0.2.32) (2026-09-07)
 
 
