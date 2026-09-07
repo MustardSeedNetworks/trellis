@@ -139,7 +139,20 @@ jobs:
           ---
           _This issue was automatically created by the TODO Tracker workflow._"
 
-          gh issue create \
+          NEW=$(gh issue create \
             --title "TODO Summary $WEEK: ${{ steps.todos.outputs.count }} items" \
             --body "$BODY" \
-            --label "type: chore,status: needs-triage"
+            --label "type: chore,status: needs-triage")
+          echo "Created $NEW"
+
+          # Supersede every earlier weekly summary. Without this the check
+          # above only ever suppressed a duplicate for the CURRENT week, so
+          # each week's issue accumulated: #53 (W34), #130 (W35) and #258
+          # (W36) were all open at once for the same two TODOs.
+          gh issue list --state open --label "type: chore" \
+            --search "TODO Summary in:title" --json number,title \
+            --jq '.[] | select(.title | startswith("TODO Summary '"$WEEK"'") | not) | .number' \
+          | while read -r OLD; do
+              echo "Superseding #$OLD"
+              gh issue close "$OLD" --comment "Superseded by $NEW."
+            done
