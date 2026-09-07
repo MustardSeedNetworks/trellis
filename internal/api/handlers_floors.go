@@ -198,7 +198,11 @@ func planError(err error) error {
 	switch {
 	case errors.Is(err, survey.ErrSurveyNotFound), errors.Is(err, survey.ErrFloorNotFound):
 		return connect.NewError(connect.CodeNotFound, err)
-	case errors.Is(err, survey.ErrNoFloorPlan):
+	case errors.Is(err, survey.ErrNoFloorPlan),
+		errors.Is(err, survey.ErrPlanWouldStrandSamples):
+		// Both are true statements about the survey's current state rather
+		// than faults in the request, and the message carries what the
+		// operator needs to decide what to do next.
 		return connect.NewError(connect.CodeFailedPrecondition, err)
 	default:
 		return connect.NewError(connect.CodeInvalidArgument, err)

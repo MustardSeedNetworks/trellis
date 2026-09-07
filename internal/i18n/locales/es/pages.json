@@ -144,6 +144,7 @@
     "notArriving": "Los datos de estudios no están llegando",
     "pause": "Pausar",
     "planWidthMetres": "Ancho del plano en metros",
+    "planWouldStrandHint": "Un plano con las mismas dimensiones sustituye a este y conserva su escala. Para usar un plano de otro tamaño, elimine primero las mediciones de esta planta o impórtelo como un estudio nuevo.",
     "plotCoverage": "Trazar la cobertura",
     "pointsOnFloor_one": "{{count}} punto en esta planta",
     "pointsOnFloor_other": "{{count}} puntos en esta planta",

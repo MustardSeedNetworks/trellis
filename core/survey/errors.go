@@ -16,4 +16,9 @@ var (
 	// inflates past maxArchiveEntryBytes. The transport bounds the compressed
 	// message; this bounds what one member is allowed to become.
 	ErrArchiveEntryTooLarge = errors.New("archive entry exceeds the inflated size limit")
+	// ErrPlanWouldStrandSamples is returned when a floor plan of different
+	// dimensions is uploaded over a floor that already holds measurements. A
+	// sample's position is a pixel coordinate on the plan it was taken
+	// against, so a new pixel space silently moves every one of them.
+	ErrPlanWouldStrandSamples = errors.New("replacing the floor plan would strand the measurements taken on it")
 )

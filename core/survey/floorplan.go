@@ -76,6 +76,19 @@ func (m *Manager) SetFloorPlan(surveyID, floorID string, imageData []byte) error
 		// A different-sized plan is a different pixel space, and the old scale
 		// does not describe it.
 		scale = 0
+
+		// Neither do the measurements. Every stored sample is a pixel
+		// coordinate on the plan it was walked against, so accepting this
+		// would leave the points where they were while the building underneath
+		// them moved — a map that looks right and is not. Reprojecting them is
+		// not an option either: a replacement plan is rarely a pure scale of
+		// the old one, so any transform would be a guess presented as a
+		// measurement. The operator decides instead, with the count in hand.
+		if n := len(floor.Samples); n > 0 {
+			return fmt.Errorf("%w: %d %s on this floor were taken against a %dx%d plan, not %dx%d",
+				ErrPlanWouldStrandSamples, n, pluralSamples(n),
+				floor.FloorPlan.Width, floor.FloorPlan.Height, config.Width, config.Height)
+		}
 	}
 
 	floor.FloorPlan = &FloorPlan{
@@ -87,6 +100,14 @@ func (m *Manager) SetFloorPlan(surveyID, floorID string, imageData []byte) error
 	floor.UpdatedAt = time.Now()
 	s.UpdatedAt = floor.UpdatedAt
 	return m.persistSurvey(s)
+}
+
+// pluralSamples keeps the refusal readable when a floor holds exactly one.
+func pluralSamples(n int) string {
+	if n == 1 {
+		return "measurement"
+	}
+	return "measurements"
 }
 
 // CalibrateFloorPlan sets how many metres a pixel of the plan is, from two
