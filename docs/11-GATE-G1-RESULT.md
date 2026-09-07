@@ -1,7 +1,13 @@
 # Gate G1 result — engine credibility
 
-**Run:** 2026-09-07 · **Verdict: FAIL on the data in hand. The predictive
-engine is not built.**
+**First run:** 2026-09-07 on AirMagnet demo projects · **re-measured the same
+day** on the AirMapper walks that carry AP placements (#362).
+
+**Verdict: FAIL, confirmed on both datasets. The predictive engine is not
+built.** 10.42 dB uncalibrated / 4.34 dB calibrated on AirMagnet; **16.75 dB
+uncalibrated / 4.02 dB calibrated on AirMapper**, against thresholds of ≤6 dB
+and ≤3–4 dB. The re-measurement is the one that counts, and it is
+[below](#re-measurement-on-airmapper-ground-truth-2026-09-07).
 
 `docs/06-ROADMAP.md` makes Gate G1 the make-or-break test before any predictive
 engine work: predict received power at measured positions from a placed AP
@@ -51,9 +57,9 @@ would be the better ground truth.
 > (`docs/12-CROSS-PRODUCT-ORACLE.md`, defect 2). The paragraph below stands as
 > the reason this gate ran on borrowed data, but the premise it rests on was a
 > parser bug rather than a property of the corpus, and the channel of every
-> imported observation was a band code as well (defect 1). **This result is
-> superseded pending a re-measurement on the AirMapper walks that do carry
-> placements (#362).**
+> imported observation was a band code as well (defect 1). **That
+> re-measurement has since run (#362) and is recorded below; this section is
+> kept as the record of the first run.**
 
 The ground truth used instead is **AirMagnet Survey Pro demo projects**, where
 the surveyor placed the APs on the plan by hand and the export carries those
@@ -129,15 +135,91 @@ filed.** Per `docs/06-ROADMAP.md` the alternative to a pass is to fix the model
 or rethink the bet — and this repository does not have the ground truth to tell
 those apart.
 
-The measurement to run before the gate is reconsidered is the one the roadmap
-assumed it already had: **one floor walked with APs whose positions we placed
+The measurement still to run before the gate is reconsidered is the one the
+roadmap assumed it already had: **one floor walked with APs whose positions we placed
 ourselves, at a scale we calibrated ourselves.** That is the same walk the
 alpha's kill criterion needs (`T-KILL` in the plan of record), on the same
 hardware. Until then, this result stands as a fail on borrowed data rather than
 a verdict on the physics.
 
-Re-running is one command; the corpus is the vendor's and is not committed:
+Re-running is one command per corpus; both corpora are the vendor's and neither
+is committed:
 
 ```bash
 TRELLIS_SVD_CORPUS=~/AirMagnet/DemoProjects go test ./core/rf/ -run G1 -v
+TRELLIS_AMP_CORPUS=~/AirMapper/Survey go test ./core/rf/ -run G1AirMapper -v
 ```
+
+## Re-measurement on AirMapper ground truth (2026-09-07)
+
+The first run scored the model against AirMagnet demo projects because the
+AirMapper reference corpus appeared to carry no AP placements. It did carry
+them: three of the 48 archives hold 216 between them, under a `.serial` member
+the importer read from the wrong name (#361). This is the same measurement on
+that data.
+
+It is the better ground truth on two counts the AirMagnet exports could not
+offer. The archive states its own **metres per pixel**, so no coordinate unit
+has to be assumed — the AirMagnet run had to read `ScaleUnits=0` as feet and
+carry that as a stated limit. And the placements and the walk positions are in
+the same pixel space by construction, so the join needs no registration step.
+
+What it does not offer is transmit power: an AirMapper placement records none,
+so every AP is scored uncalibrated at an assumed 20 dBm, which is what a
+planner with this data would have to assume. That assumption is the largest
+lever on the uncalibrated column, and it does not change the verdict — see the
+sensitivity below.
+
+### Dataset
+
+| Archive | Walk positions | AP placements | Addressed | Joined | Scored (≥30 pairs) |
+| --- | --- | --- | --- | --- | --- |
+| `Utopia floor 1.amp` | 74 | 53 | 45 | 43 | 20 |
+| `Utopia floor 2.amp` | 132 | 65 | 60 | 58 | 25 |
+| `Link-Live_DIAMainHall_2021-12-09.amp` | 36 | 98 | 34 | 34 | 0 |
+
+A placement labelled with an AP name rather than an address groups several
+radios; joining it to one of them would score the wrong radio, so those are not
+addressed and are not scored. The DIA Main Hall walk contributes nothing: 36
+positions is too few for any one of its APs to reach 30 pairs. So the
+re-measurement is **45 placed APs across two floors of one building** — a
+narrower base than the AirMagnet run's two sites, and that is a limit of the
+result, not a strength.
+
+### Result
+
+**Mean over 45 placed APs: 16.75 dB uncalibrated, 4.02 dB calibrated.**
+
+Against the roadmap thresholds (≤6 dB pre-cal, ≤3–4 dB post-cal): **both fail.**
+
+- **18 of the 45 fits (40%) landed outside the physical exponent bounds** and
+  were pulled back to them. None were negative this time — the unbounded
+  exponents ran 0.07 to 1.48, meaning the line through the measurements is
+  nearly flat: over these walks, distance barely predicts what the radio heard.
+  On the AirMagnet corpus the same symptom appeared as negative exponents at
+  one site and reasonable ones at the other.
+- **Calibration is uniformly large and uniformly helpful.** Every AP improved,
+  the calibrated MAE spread is 2.2–7.5 dB, and the mean lands just outside the
+  3–4 dB band the roadmap allows after calibration.
+- **The uncalibrated column is dominated by the assumed transmit power**, as it
+  must be when the file records none. Scoring the same data at 10, 15, 20 and
+  23 dBm gives pre-calibration means of 10.99, 13.45, 16.75 and 19.05 dB. The
+  calibrated mean is 4.02 dB at every one of them, because the fit absorbs the
+  intercept. **Even the most favourable assumption fails the ≤6 dB
+  threshold by 5 dB.**
+
+### What this changes
+
+Nothing about the verdict, and one thing about its reasoning. The first run
+called the fail "a fail on borrowed data rather than a verdict on the physics",
+because the two AirMagnet sites disagreed completely. On AirMapper data with a
+real scale the model is _consistently_ poor rather than site-dependent: 40% of
+fits unphysically flat, and a calibrated error above the post-calibration
+threshold on data where calibration is doing all the work.
+
+The measurement that would settle it is unchanged and is still not this one:
+one floor walked with APs whose positions we placed ourselves, at a scale we
+calibrated ourselves, on our own hardware (`T-KILL` in the plan of record).
+Two floors of one building, surveyed by someone else, with no recorded
+transmit power and no AP heights, is a stronger fail than the first — not a
+verdict on the physics.

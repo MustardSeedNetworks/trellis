@@ -9,10 +9,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"image"
 	"io"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	_ "image/jpeg" // floor plans are JPEG or PNG; DecodeConfig needs both
+	_ "image/png"
 )
 
 // Unit conversion and default constants for AirMapper parsing.
@@ -32,6 +36,9 @@ type AirMapperFile struct {
 	// SurveyResult is the raw measurement member, decoded by
 	// ParseSurveyResult. Nil when the archive carries none.
 	SurveyResult []byte `json:"-"`
+	// ForeignSerial records a sidecar that was dropped because it described a
+	// different plan. Serial is nil in that case; this says why.
+	ForeignSerial string `json:"-"`
 }
 
 // SerialMetadata contains metadata from the .serial JSON file in an AirMapper archive.
@@ -41,6 +48,11 @@ type SerialMetadata struct {
 	// of the archive member holding the image.
 	FloorPlanFilename string  `json:"floorPlanFilename"`
 	FloorPlanScalePpf float64 `json:"floorPlanScalePpf"` // pixels per foot
+	// FloorPlanWidthPx and FloorPlanHeightPx are the plan the sidecar was
+	// written for. They are what identifies the sidecar as belonging to this
+	// archive rather than another survey — see serialDescribesPlan.
+	FloorPlanWidthPx  int     `json:"floorPlanWidthPx"`
+	FloorPlanHeightPx int     `json:"floorPlanHeightPx"`
 	Propagation       float64 `json:"propagation"`
 	PropagationUnit   string  `json:"propagationUnit"`
 	SurveyPointCount  int     `json:"surveyPointCount"`
@@ -158,7 +170,42 @@ func ParseAirMapperFile(data []byte) (*AirMapperFile, error) {
 		return nil, errors.New("no floor plan image found in archive")
 	}
 
+	// A `.serial` states the plan it was written for. One archive in the
+	// reference corpus carries another survey's sidecar — a 64-point Walmart
+	// walk packed beside a 39-point TouchTel one — and its scale, propagation
+	// radius and AP placements all belong to that other building. A sidecar
+	// that does not describe this archive's plan is dropped rather than
+	// applied.
+	if reason := foreignSerialReason(result); reason != "" {
+		result.ForeignSerial = reason
+		result.Serial = nil
+	}
+
 	return result, nil
+}
+
+// foreignSerialReason reports why the sidecar does not belong to this archive,
+// or "" when it does. A sidecar that declares no plan size cannot be checked
+// this way and is kept: the check catches a sidecar naming a different plan,
+// it does not demand a field.
+func foreignSerialReason(a *AirMapperFile) string {
+	if a.Serial == nil || a.Serial.FloorPlanWidthPx <= 0 || a.Serial.FloorPlanHeightPx <= 0 {
+		return ""
+	}
+	config, _, err := image.DecodeConfig(bytes.NewReader(a.FloorPlan))
+	if err != nil {
+		// An undecodable plan leaves the sidecar unchecked rather than
+		// refused: the image reader is not the arbiter of the metadata.
+		return ""
+	}
+	if config.Width == a.Serial.FloorPlanWidthPx && config.Height == a.Serial.FloorPlanHeightPx {
+		return ""
+	}
+	return fmt.Sprintf(
+		"The archive metadata does not describe this archive: it was written for a %dx%d floor plan named %q, "+
+			"but this archive's plan is %dx%d. Its scale, propagation and AP placements have been discarded.",
+		a.Serial.FloorPlanWidthPx, a.Serial.FloorPlanHeightPx, a.Serial.FloorPlanFilename,
+		config.Width, config.Height)
 }
 
 // parseSerialFile parses the .serial JSON file from an AirMapper archive.
@@ -224,6 +271,10 @@ func (a *AirMapperFile) ToImportResult() (*AirMapperImportResult, error) {
 		result.FloorPlanFilename = a.FloorPlanFilename
 	} else {
 		result.Warnings = append(result.Warnings, "No floor plan image found")
+	}
+
+	if a.ForeignSerial != "" {
+		result.Warnings = append(result.Warnings, a.ForeignSerial)
 	}
 
 	if a.Serial == nil {

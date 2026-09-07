@@ -12,14 +12,16 @@ package survey_test
 // Without it the test skips, so CI stays green without ever seeing the data.
 //
 // The oracle is the archive's own `.serial` sidecar, which declares
-// surveyPointCount. That is what makes this a real check rather than a
-// plausibility argument: the reader must recover exactly the number of points
-// the file says it contains, for every file, with no fixture to tune against.
+// surveyPointCount: the reader must recover exactly the number of points the
+// file says it contains, with no fixture to tune against.
+//
+// Not every archive has one. An export from Link-Live carries the measurements
+// and the plan and nothing else (#335), and one archive carries a sidecar
+// written for a different survey, which the parser now drops. Those archives
+// are still checked — the decoded rows have to be internally consistent and to
+// yield measurements — they just have no declared count to be checked against.
 
 import (
-	"archive/zip"
-	"encoding/json"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,50 +33,34 @@ import (
 const corpusEnv = "TRELLIS_AMP_CORPUS"
 
 type ampParts struct {
+	// declaredPoints is the sidecar's surveyPointCount, or -1 when the archive
+	// has no sidecar the parser accepts and so declares nothing.
 	declaredPoints int
 	surveyResult   []byte
 }
 
 // readAMP pulls the declared point count and the measurement member out of an
-// AirMapper archive.
+// AirMapper archive. It goes through ParseAirMapperFile rather than reading the
+// members itself, so "does this archive declare a count" is answered by the
+// same code the daemon runs — including its refusal of a sidecar written for
+// another survey's floor plan.
 func readAMP(t *testing.T, path string) ampParts {
 	t.Helper()
 
-	zr, err := zip.OpenReader(filepath.Clean(path))
+	data, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
-		t.Fatalf("open %s: %v", filepath.Base(path), err)
+		t.Fatalf("read %s: %v", filepath.Base(path), err)
 	}
-	defer func() { _ = zr.Close() }()
-
-	var out ampParts
-	for _, f := range zr.File {
-		name := strings.ToLower(f.Name)
-		rc, openErr := f.Open()
-		if openErr != nil {
-			t.Fatalf("open member %s: %v", f.Name, openErr)
-		}
-		data, readErr := io.ReadAll(rc)
-		_ = rc.Close()
-		if readErr != nil {
-			t.Fatalf("read member %s: %v", f.Name, readErr)
-		}
-		switch {
-		case strings.HasSuffix(name, ".serial"):
-			var meta struct {
-				SurveyPointCount int `json:"surveyPointCount"`
-			}
-			// Swallowing a decode error here left declaredPoints at 0, which
-			// silently disabled the exact-count oracle below -- the one thing
-			// that makes this a test of correctness rather than of not
-			// crashing. A malformed sidecar is a corpus problem to fix, not a
-			// reason to check less.
-			if err := json.Unmarshal(data, &meta); err != nil {
-				t.Fatalf("decode %s: %v", f.Name, err)
-			}
-			out.declaredPoints = meta.SurveyPointCount
-		case strings.HasSuffix(name, ".surveyresult"):
-			out.surveyResult = data
-		}
+	file, err := survey.ParseAirMapperFile(data)
+	if err != nil {
+		t.Fatalf("ParseAirMapperFile %s: %v", filepath.Base(path), err)
+	}
+	out := ampParts{declaredPoints: -1, surveyResult: file.SurveyResult}
+	if file.Serial != nil {
+		out.declaredPoints = file.Serial.SurveyPointCount
+	}
+	if file.ForeignSerial != "" {
+		t.Logf("sidecar dropped: %s", file.ForeignSerial)
 	}
 	return out
 }
@@ -110,17 +96,19 @@ func TestParseSurveyResultAgainstRealCaptures(t *testing.T) {
 				t.Fatalf("ParseSurveyResult: %v", parseErr)
 			}
 
-			// The file's own declared count is the oracle, so it has to be
-			// present. Guarding this with `declaredPoints > 0` meant an
-			// archive that declared nothing was checked against nothing and
-			// still passed.
-			if parts.declaredPoints <= 0 {
-				t.Fatalf("archive declares %d survey points; the oracle needs a positive count",
-					parts.declaredPoints)
-			}
-			if len(points) != parts.declaredPoints {
+			// A sidecar that declares a count is the oracle: the reader must
+			// recover exactly that many. A sidecar that declares zero is a
+			// malformed one and still fails — only a genuinely absent sidecar
+			// (declaredPoints < 0) leaves the count unchecked, and the decoded
+			// rows below carry the check in that case.
+			switch {
+			case parts.declaredPoints == 0:
+				t.Fatal("archive declares 0 survey points; a sidecar that declares a count must declare a real one")
+			case parts.declaredPoints > 0 && len(points) != parts.declaredPoints:
 				t.Errorf("recovered %d points, the archive declares %d",
 					len(points), parts.declaredPoints)
+			case parts.declaredPoints < 0 && len(points) == 0:
+				t.Error("archive declares no point count and decoded no points: nothing checked it at all")
 			}
 
 			obs, active := 0, 0
