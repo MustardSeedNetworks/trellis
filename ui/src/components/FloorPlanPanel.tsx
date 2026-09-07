@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { type ChangeEvent, useRef, useState } from 'react';
+import { type ChangeEvent, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PlanCalibrator } from '@/components/PlanCalibrator';
 import { surveyClient } from '@/lib/client';
+import { bytesToDataUrl } from '@/lib/format';
 
 /**
  * FloorPlanPanel — the plan a survey's points are drawn on, and what one of its
@@ -32,7 +34,6 @@ export function FloorPlanPanel({
   const { t } = useTranslation(['common', 'pages']);
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [metres, setMetres] = useState('10');
 
   const planQuery = useQuery({
     queryKey: ['floor-plan', surveyId, floorId],
@@ -55,17 +56,18 @@ export function FloorPlanPanel({
   });
 
   const calibrateMutation = useMutation({
-    mutationFn: (line: { metres: number }) =>
+    mutationFn: (line: {
+      from: { x: number; y: number };
+      to: { x: number; y: number };
+      metres: number;
+    }) =>
       surveyClient.calibrateFloorPlan({
         surveyId,
         floorId,
-        // The reference line runs across the plan's own width, which is the
-        // longest measurable thing on it and the one an operator can most
-        // easily pace or read off a drawing's own dimension line.
-        x1: 0,
-        y1: 0,
-        x2: planQuery.data?.width ?? 0,
-        y2: 0,
+        x1: line.from.x,
+        y1: line.from.y,
+        x2: line.to.x,
+        y2: line.to.y,
         metres: line.metres,
       }),
     onSuccess: async () => {
@@ -81,6 +83,17 @@ export function FloorPlanPanel({
   }
 
   const width = planQuery.data?.width ?? 0;
+  // The plan the calibrator draws on. It is the same image the capture surface
+  // shows, encoded the same way: two points mean nothing without the picture
+  // they were marked on.
+  const planImage =
+    planQuery.data && planQuery.data.image.length > 0
+      ? {
+          width: planQuery.data.width,
+          height: planQuery.data.height,
+          imageUrl: bytesToDataUrl(planQuery.data.image, 'image/png'),
+        }
+      : undefined;
   const error = uploadMutation.error ?? calibrateMutation.error;
   // The one refusal an operator can do something about, and the one worth
   // explaining rather than only reporting: a plan of different dimensions over
@@ -112,36 +125,17 @@ export function FloorPlanPanel({
         >
           {hasPlan ? t('pages:surveys.replacePlan') : t('pages:surveys.uploadPlan')}
         </button>
-
-        {/* Offered only once there is a plan: the two points a calibration is
-            expressed in are points on it. */}
-        {hasPlan ? (
-          <>
-            <label className="flex flex-col gap-1 text-sm" htmlFor="plan-width-metres">
-              <span className="kicker">{t('pages:surveys.planWidthMetres')}</span>
-              <input
-                id="plan-width-metres"
-                type="number"
-                min={0.1}
-                step={0.1}
-                value={metres}
-                onChange={(event) => setMetres(event.target.value)}
-                className="figure w-28 rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
-                data-testid="plan-width-metres"
-              />
-            </label>
-            <button
-              type="button"
-              onClick={() => calibrateMutation.mutate({ metres: Number(metres) })}
-              disabled={calibrateMutation.isPending || !(Number(metres) > 0) || width === 0}
-              data-testid="calibrate-floor-plan"
-              className="rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-raised disabled:opacity-50"
-            >
-              {t('pages:surveys.calibrate')}
-            </button>
-          </>
-        ) : null}
       </div>
+
+      {/* Offered only once there is a plan: the two points a calibration is
+          expressed in are points on it. */}
+      {planImage ? (
+        <PlanCalibrator
+          plan={planImage}
+          pending={calibrateMutation.isPending}
+          onApply={(line) => calibrateMutation.mutate(line)}
+        />
+      ) : null}
 
       <p
         className={`text-sm ${error ? 'text-status-error' : 'text-text-secondary'}`}

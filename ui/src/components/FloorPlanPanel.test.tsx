@@ -68,22 +68,36 @@ describe('FloorPlanPanel', () => {
     expect(screen.getByTestId('floor-plan-status')).toHaveTextContent('No plan on this floor');
   });
 
-  it("calibrates across the plan's own width", async () => {
+  it('calibrates from two points marked on the plan', async () => {
     renderPanel(true);
 
     await waitFor(() => expect(getFloorPlanImage).toHaveBeenCalled());
-    fireEvent.change(screen.getByTestId('plan-width-metres'), { target: { value: '20' } });
-    await waitFor(() => expect(screen.getByTestId('calibrate-floor-plan')).not.toBeDisabled());
+    const surface = await screen.findByTestId('calibration-surface');
+    vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      width: 800,
+      height: 600,
+      right: 800,
+      bottom: 600,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.click(surface, { clientX: 100, clientY: 100, detail: 1 });
+    fireEvent.click(surface, { clientX: 500, clientY: 100, detail: 1 });
+    fireEvent.change(screen.getByTestId('calibration-metres'), { target: { value: '20' } });
     fireEvent.click(screen.getByTestId('calibrate-floor-plan'));
 
     await waitFor(() => expect(calibrateFloorPlan).toHaveBeenCalled());
-    // A line from (0,0) to (width,0), which is the longest measurable thing on
-    // the plan and the one a drawing usually dimensions.
+    // The two points the operator marked, not the plan's outer edge. The
+    // previous UI sent (0,0)→(width,0) whatever was on the drawing.
     expect(calibrateFloorPlan.mock.calls[0]?.[0]).toMatchObject({
-      x1: 0,
-      y1: 0,
-      x2: 800,
-      y2: 0,
+      x1: 100,
+      y1: 100,
+      x2: 500,
+      y2: 100,
       metres: 20,
     });
   });
