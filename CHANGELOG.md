@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.30](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.29...v0.2.30) (2026-09-07)
+
+
+### Bug Fixes
+
+* **ui:** the rail lists only pages that exist, and a wrong address says so ([#350](https://github.com/MustardSeedNetworks/trellis/issues/350)) ([ac53e88](https://github.com/MustardSeedNetworks/trellis/commit/ac53e88993eb9058abdd86d2f047b1fe4fbac260))
+
 ## [0.2.29](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.28...v0.2.29) (2026-09-07)
 
 
