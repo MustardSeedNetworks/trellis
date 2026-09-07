@@ -483,7 +483,7 @@ jobs:
       # this suite is new, so there is no existing flake debt to grandfather.
       - name: Enforce flake budget
         if: always()
-        uses: MustardSeedNetworks/.github/.github/actions/flake-budget@75858ef449c9dd62c96b91429e44a8c4b4161af2 # v1.10.0
+        uses: MustardSeedNetworks/.github/.github/actions/flake-budget@cd60ad04e0f305b3706481580091dc7f3e1863aa # v1.11.0
         with:
           report: ui/playwright-report/results.json
           budget: "0"
@@ -552,7 +552,7 @@ jobs:
       # bundling them leaves the apt half with no step budget and no dpkg lock
       # bound. seed lost a whole job budget to exactly that.
       - name: Install Chromium OS dependencies
-        uses: MustardSeedNetworks/.github/.github/actions/apt-install@a146506fd53fe5e01fdc01892dd838c10081d183 # v1.9.0
+        uses: MustardSeedNetworks/.github/.github/actions/apt-install@cd60ad04e0f305b3706481580091dc7f3e1863aa # v1.11.0
         timeout-minutes: 10
         with:
           # cd ui explicitly: the job's defaults.run.working-directory does not
@@ -609,7 +609,7 @@ jobs:
           persist-credentials: false
 
       - name: Validate i18n (parity, glossary, banned vocab, etc.)
-        uses: MustardSeedNetworks/.github/.github/actions/i18n-validate@a146506fd53fe5e01fdc01892dd838c10081d183 # v1.9.0
+        uses: MustardSeedNetworks/.github/.github/actions/i18n-validate@cd60ad04e0f305b3706481580091dc7f3e1863aa # v1.11.0
 
   # actionlint + zizmor over .github/workflows. Ported from seed, which has had
   # this since the fleet CI pass; trellis was the one repo where a workflow
@@ -650,7 +650,7 @@ jobs:
 
   # Fleet-shared SAST gate (MustardSeedNetworks/.github, pinned).
   semgrep:
-    uses: MustardSeedNetworks/.github/.github/workflows/semgrep.yml@a146506fd53fe5e01fdc01892dd838c10081d183 # v1.9.0
+    uses: MustardSeedNetworks/.github/.github/workflows/semgrep.yml@cd60ad04e0f305b3706481580091dc7f3e1863aa # v1.11.0
     permissions:
       contents: read
       # v1.8.0 publishes the all-severity SARIF to code scanning. The
@@ -693,7 +693,7 @@ jobs:
   # Defined once in MustardSeedNetworks/.github (fleet-shared); ci-complete
   # still needs: [ci-conformance].
   ci-conformance:
-    uses: MustardSeedNetworks/.github/.github/workflows/ci-conformance.yml@a146506fd53fe5e01fdc01892dd838c10081d183 # v1.9.0
+    uses: MustardSeedNetworks/.github/.github/workflows/ci-conformance.yml@cd60ad04e0f305b3706481580091dc7f3e1863aa # v1.11.0
     permissions:
       contents: read
 
