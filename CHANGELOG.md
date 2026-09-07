@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.29](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.28...v0.2.29) (2026-09-07)
+
+
+### Miscellaneous
+
+* **deps:** update mustardseednetworks/.github action to v1.11.0 ([#346](https://github.com/MustardSeedNetworks/trellis/issues/346)) ([bcba45f](https://github.com/MustardSeedNetworks/trellis/commit/bcba45f675b1dfbe50d6ab20c93f62a55acb5a63))
+
 ## [0.2.28](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.27...v0.2.28) (2026-09-07)
 
 
