@@ -908,9 +908,16 @@ jobs:
     name: CI Complete
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # `changes` is in the needs list below because it gates every other job: if
+    # the filter itself fails, every consumer skips and this aggregator would
+    # otherwise pass on an empty run.
+    #
+    # Keep this list free of interleaved comments. The fleet conformance check
+    # (MustardSeedNetworks/.github scripts/check-ci-conformance.py) parses it
+    # with `^    needs:\n((?:      - \S+\n)+)`, so a comment between `needs:`
+    # and the first entry makes it read the aggregator as absent and fail with
+    # "nothing gates a merge".
     needs:
-      # changes gates every job below it: if the filter itself fails, every
-      # consumer skips and this aggregator would otherwise pass on an empty run.
       - changes
       - backend
       - backend-darwin
