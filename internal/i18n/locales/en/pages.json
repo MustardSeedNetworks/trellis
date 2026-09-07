@@ -108,6 +108,7 @@
     "title": "Reports"
   },
   "surveys": {
+    "addFloor": "Add floor",
     "available_one": "{{count}} survey available",
     "available_other": "{{count}} surveys available",
     "calibrate": "Calibrate",
@@ -137,7 +138,14 @@
     "emptyBody": "Create a survey to walk a floor, or import an AirMapper archive to analyse one.",
     "floorCount_one": "{{count}} floor",
     "floorCount_other": "{{count}} floors",
+    "floorLevel": "Level {{level}}",
+    "floorLevelField": "Level",
+    "floorName": "Floor name",
     "floorPlanTitle": "Floor plan",
+    "floorSamples_one": "{{count}} sample",
+    "floorSamples_other": "{{count}} samples",
+    "floorWalking": "Walking",
+    "floorsTitle": "Floors",
     "interface": "Wi-Fi interface",
     "interfaceHint": "Optional. As the host names it, such as en0 or wlan0. Left blank, the host's radio is used.",
     "keepIt": "Keep it",
@@ -187,6 +195,7 @@
     "walkStartFailed": "The walk did not start: {{error}}",
     "walkStopFailed": "The walk did not stop: {{error}}",
     "walkStopped": "The walk stopped: {{error}}",
+    "walkThisFloor": "Walk this floor",
     "walkingAt_one": "Walking at ({{x}}, {{y}}) — {{count}} point so far.",
     "walkingAt_other": "Walking at ({{x}}, {{y}}) — {{count}} points so far."
   }

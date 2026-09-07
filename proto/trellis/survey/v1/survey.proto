@@ -45,6 +45,16 @@ service SurveyService {
   // GetFloor returns one floor of a survey by ID.
   rpc GetFloor(GetFloorRequest) returns (GetFloorResponse);
 
+  // CreateFloor adds a storey to an existing survey. A survey opened to be
+  // walked has one floor; a building has more, and until this RPC the extra
+  // ones could only arrive from an import.
+  rpc CreateFloor(CreateFloorRequest) returns (CreateFloorResponse);
+
+  // SetActiveFloor chooses the floor a walk collects onto. Creating a floor
+  // does not switch to it: an operator adds the floors of a building up front
+  // and then walks them one at a time.
+  rpc SetActiveFloor(SetActiveFloorRequest) returns (SetActiveFloorResponse);
+
   // GenerateReport renders a PDF report for a survey.
   rpc GenerateReport(GenerateReportRequest) returns (GenerateReportResponse);
 
@@ -238,6 +248,29 @@ message GetFloorRequest {
 }
 
 message GetFloorResponse {
+  Floor floor = 1;
+}
+
+message CreateFloorRequest {
+  string survey_id = 1;
+  // Operator-facing name; required, since a floor with no name cannot be
+  // picked out of a rail.
+  string name = 2;
+  // Storey number, which may be negative. Two floors may share a level: the
+  // domain orders by it and does not key on it.
+  int32 level = 3;
+}
+
+message CreateFloorResponse {
+  Floor floor = 1;
+}
+
+message SetActiveFloorRequest {
+  string survey_id = 1;
+  string floor_id = 2;
+}
+
+message SetActiveFloorResponse {
   Floor floor = 1;
 }
 

@@ -75,6 +75,57 @@ func (h *SurveyServiceHandler) GetFloor(
 	}), nil
 }
 
+// CreateFloor adds a storey to a survey.
+//
+// The new floor is not made active: a survey is laid out floor by floor before
+// it is walked, and switching the walk on every add would move it away from the
+// floor being measured.
+func (h *SurveyServiceHandler) CreateFloor(
+	_ context.Context,
+	req *connect.Request[surveyv1.CreateFloorRequest],
+) (*connect.Response[surveyv1.CreateFloorResponse], error) {
+	surveyID, name := req.Msg.GetSurveyId(), req.Msg.GetName()
+	if surveyID == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+	}
+	// AddFloor stores whatever name it is given; an unnamed floor is a blank
+	// row in the rail that nothing can pick out, so the refusal is here.
+	if name == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("name is required"))
+	}
+
+	floor, err := h.manager.AddFloor(surveyID, name, int(req.Msg.GetLevel()))
+	if err != nil {
+		return nil, notFoundOrInternal(err)
+	}
+
+	return connect.NewResponse(&surveyv1.CreateFloorResponse{
+		Floor: h.floorAfterChange(surveyID, floor.ID),
+	}), nil
+}
+
+// SetActiveFloor moves the walk onto another floor of the same survey.
+func (h *SurveyServiceHandler) SetActiveFloor(
+	_ context.Context,
+	req *connect.Request[surveyv1.SetActiveFloorRequest],
+) (*connect.Response[surveyv1.SetActiveFloorResponse], error) {
+	surveyID, floorID := req.Msg.GetSurveyId(), req.Msg.GetFloorId()
+	if surveyID == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+	}
+	if floorID == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("floor_id is required"))
+	}
+
+	if err := h.manager.SetActiveFloor(surveyID, floorID); err != nil {
+		return nil, notFoundOrInternal(err)
+	}
+
+	return connect.NewResponse(&surveyv1.SetActiveFloorResponse{
+		Floor: h.floorAfterChange(surveyID, floorID),
+	}), nil
+}
+
 // toFloor maps a domain floor onto the wire, marking it active by identity
 // against the floor the survey collects onto.
 func toFloor(floor *survey.Floor, active *survey.Floor) *surveyv1.Floor {
