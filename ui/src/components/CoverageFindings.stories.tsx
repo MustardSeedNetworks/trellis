@@ -5,6 +5,7 @@ const meta = {
   title: 'Coverage/CoverageFindings',
   component: CoverageFindings,
   args: {
+    title: 'RSSI coverage findings',
     figures: [
       { label: 'Coverage score', value: '82%' },
       { label: 'Dead zones', value: '2' },

@@ -34,14 +34,20 @@ const METRICS = [
 ] as const;
 
 /**
- * Metrics the dead-zone analysis can speak about.
+ * Metrics the dead-zone analysis can speak about — one, and it is RSSI.
  *
- * It compares a signal against a dBm threshold, so it has nothing to say about
- * a throughput layer — a "dead zone below -75 dBm" printed under a map of Mbps
- * would be an answer to a question nobody asked, and the threshold control
- * beside it would appear to do something it does not.
+ * `GetCoverage` takes no metric at all: it always runs the RSSI dead-zone
+ * analysis against a dBm threshold. Offering it under an SNR map put a dBm
+ * control and signal-strength findings beneath a picture of signal-to-noise,
+ * where every number was still about RSSI and none of it said so. The map
+ * still renders for SNR — it is a real reading — but the analysis beside it
+ * does not pretend to be about the layer on screen.
+ *
+ * SNR dead zones are a different analysis: a dB threshold, recommendations
+ * about noise rather than coverage, and a metric parameter on the RPC. That is
+ * #344, not a checkbox here.
  */
-const COVERAGE_METRICS: readonly Metric[] = ['rssi', 'snr'];
+const COVERAGE_METRICS: readonly Metric[] = ['rssi'];
 
 type Metric = (typeof METRICS)[number]['id'];
 
@@ -261,6 +267,7 @@ export function CoveragePage() {
 
         {analysable ? (
           <CoverageFindings
+            title={t('pages:coverage.findingsTitle')}
             state={findings.state}
             headline={findings.headline}
             body={findings.body}

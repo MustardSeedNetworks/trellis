@@ -10,6 +10,7 @@
     "deadZones_one": "{{count}} dead zone below {{threshold}} dBm",
     "deadZones_other": "{{count}} dead zones below {{threshold}} dBm",
     "description": "Measured signal across the surveyed floor, and where it falls short.",
+    "findingsTitle": "RSSI coverage findings",
     "heatmapAlt": "{{metric}} heatmap of the surveyed floor",
     "heatmapFailed": "The heatmap did not render: {{error}}",
     "legendUnavailable": "The service did not describe the colour scale it used.",
