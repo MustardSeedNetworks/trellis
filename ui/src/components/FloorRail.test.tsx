@@ -34,10 +34,7 @@ const ground = create(FloorSchema, {
   isActive: true,
 });
 
-const floors = [
-  ground,
-  create(FloorSchema, { id: 'flr-2', name: 'Basement', level: -1 }),
-];
+const floors = [ground, create(FloorSchema, { id: 'flr-2', name: 'Basement', level: -1 })];
 
 function renderRail(rows = floors) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
