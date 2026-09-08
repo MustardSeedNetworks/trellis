@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.41](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.40...v0.2.41) (2026-09-08)
+
+
+### Performance Improvements
+
+* **ci:** cache the buf binary instead of rebuilding it every run ([#397](https://github.com/MustardSeedNetworks/trellis/issues/397)) ([ad82f2f](https://github.com/MustardSeedNetworks/trellis/commit/ad82f2fd626c7d55bca31bbf8f96f9094155ed39)), closes [#194](https://github.com/MustardSeedNetworks/trellis/issues/194)
+
 ## [0.2.40](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.39...v0.2.40) (2026-09-08)
 
 
