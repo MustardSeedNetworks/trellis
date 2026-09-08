@@ -4,12 +4,14 @@ package api_test
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 	"time"
 
 	"connectrpc.com/connect"
 
+	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
 	"github.com/MustardSeedNetworks/trellis/internal/api"
@@ -504,5 +506,70 @@ func TestListSamplesTellsPlacedReadingsFromPinnedOnes(t *testing.T) {
 	}
 	if samples[0].GetX() != 10 || samples[0].GetY() != 10 {
 		t.Errorf("pinned reading at (%d,%d), want (10,10)", samples[0].GetX(), samples[0].GetY())
+	}
+}
+
+// failingMeter is an iperf3 that cannot reach its server.
+type failingMeter struct{}
+
+func (failingMeter) Measure(
+	_ context.Context, _, _ string, _ int,
+) (survey.ThroughputSample, error) {
+	return survey.ThroughputSample{}, errors.New("connection refused")
+}
+
+// A point where the measurement failed reaches the client as an attempt: a
+// reason, and no numbers at all. A zero rate or a zero signal would draw as
+// the worst coverage on the floor at a place nothing was measured.
+func TestListSamplesCarriesAFailedAttemptWithNoNumbers(t *testing.T) {
+	t.Parallel()
+
+	handler := api.NewSurveyServiceHandler(
+		mustManager(t, t.TempDir(), scriptedScanner{}, nil, failingMeter{}, nil))
+	created, err := handler.CreateSurvey(context.Background(),
+		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "active", Interface: "en0"}))
+	if err != nil {
+		t.Fatalf("CreateSurvey: %v", err)
+	}
+	id := created.Msg.GetSurvey().GetId()
+	if _, err := handler.SetThroughputTarget(context.Background(),
+		connect.NewRequest(&surveyv1.SetThroughputTargetRequest{
+			SurveyId: id, Server: "10.44.10.9", DurationSec: 5,
+		})); err != nil {
+		t.Fatalf("SetThroughputTarget: %v", err)
+	}
+	if _, err := handler.StartSurvey(context.Background(),
+		connect.NewRequest(&surveyv1.StartSurveyRequest{Id: id})); err != nil {
+		t.Fatalf("StartSurvey: %v", err)
+	}
+
+	if _, err := handler.MeasureThroughput(context.Background(),
+		connect.NewRequest(&surveyv1.MeasureThroughputRequest{SurveyId: id, X: 12, Y: 34})); err == nil {
+		t.Fatal("MeasureThroughput against an unreachable server should report the failure")
+	}
+
+	resp, err := handler.ListSamples(context.Background(),
+		connect.NewRequest(&surveyv1.ListSamplesRequest{SurveyId: id}))
+	if err != nil {
+		t.Fatalf("ListSamples: %v", err)
+	}
+	got := resp.Msg.GetSamples()
+	if len(got) != 1 {
+		t.Fatalf("samples = %d, want the failed attempt to be one of them", len(got))
+	}
+	if !strings.Contains(got[0].GetFailure(), "connection refused") {
+		t.Errorf("failure = %q, want the reason the measurement failed", got[0].GetFailure())
+	}
+	if got[0].GetX() != 12 || got[0].GetY() != 34 {
+		t.Errorf("attempt at (%d,%d), want (12,34)", got[0].GetX(), got[0].GetY())
+	}
+	if got[0].DownloadMbps != nil {
+		t.Errorf("attempt carries a rate of %v, want none", *got[0].DownloadMbps)
+	}
+	if got[0].StrongestDbm != nil {
+		t.Errorf("attempt carries a signal of %v, want none", *got[0].StrongestDbm)
+	}
+	if got[0].GetNetworkCount() != 0 {
+		t.Errorf("attempt carries %d networks, want 0", got[0].GetNetworkCount())
 	}
 }

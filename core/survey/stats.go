@@ -23,7 +23,32 @@ type SurveyStats struct {
 	DeadPercent      float64
 }
 
-func calculateSurveyStats(samples []*SamplePoint) SurveyStats {
+// measuredPoints drops the points where a measurement was attempted and
+// produced nothing. They are stored so the map can show where a survey tried
+// and failed, but they are not measurements: counted as samples they divide
+// every percentage by a number nobody measured.
+func measuredPoints(points []*SamplePoint) []*SamplePoint {
+	out := points
+	for i, p := range points {
+		if p.Failed == nil {
+			continue
+		}
+		// Copy only once a failed point is actually seen — a walk with no
+		// failures, which is nearly all of them, keeps its own slice.
+		out = make([]*SamplePoint, 0, len(points))
+		out = append(out, points[:i]...)
+		for _, rest := range points[i:] {
+			if rest.Failed == nil {
+				out = append(out, rest)
+			}
+		}
+		break
+	}
+	return out
+}
+
+func calculateSurveyStats(points []*SamplePoint) SurveyStats {
+	samples := measuredPoints(points)
 	stats := SurveyStats{
 		TotalSamples: len(samples),
 		MinRSSI:      0,

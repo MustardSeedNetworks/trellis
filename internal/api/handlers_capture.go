@@ -391,6 +391,14 @@ func surveySampleOf(sp *survey.SamplePoint) *surveyv1.SurveySample {
 		Interpolated: sp.Interpolated,
 	}
 
+	// A failed attempt is returned before any payload is read, because there
+	// is none: the point carries a reason and no reading, and every value on
+	// the wire stays absent so a client cannot read a zero as coverage.
+	if sp.Failed != nil {
+		out.Failure = sp.Failed.Reason
+		return out
+	}
+
 	var passive *survey.PassiveSample
 	switch data := sp.SampleData.(type) {
 	case *survey.PassiveSample:

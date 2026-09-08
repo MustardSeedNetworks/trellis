@@ -205,6 +205,24 @@ type SamplePoint struct {
 	// kept because the two are different kinds of claim, and a survey that lost
 	// it would assert a precision nobody measured.
 	Interpolated bool `json:"interpolated,omitempty"`
+
+	// Failed is set on a point where a measurement was attempted and produced
+	// nothing. SampleData is nil on such a point — there is no reading — and
+	// every layer leaves it out. See ADR-0009: a floor nobody walked and a
+	// floor where the measurement failed are different facts, and dropping the
+	// attempt makes them look alike.
+	Failed *Attempt `json:"failed,omitempty"`
+}
+
+// Attempt is a measurement that was tried at a position and produced no
+// reading: what was tried, and why it failed.
+//
+// Kind is the sample kind that would have been stored — the operator needs to
+// know a throughput test failed here, not merely that "something" did — and it
+// is what the point is filed under in the store.
+type Attempt struct {
+	Kind   string `json:"kind"`
+	Reason string `json:"reason"`
 }
 
 // Survey represents a WiFi site survey.

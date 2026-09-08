@@ -381,6 +381,40 @@ func (m *Manager) AddSample(id string, x, y int, sampleData any) error {
 	return m.appendPoint(survey.ID, floor.ID, survey, sample)
 }
 
+// AddFailedSample records that a measurement was attempted at (x, y) and
+// produced no reading.
+//
+// The point carries no SampleData, so every layer and every analysis leaves it
+// out: extractSamples drops a point with no value of the metric it is asked
+// for, which is what an attempt is for all of them. What it gives the operator
+// is the distinction the map could not otherwise make — a gap because nobody
+// walked there, or a gap because the measurement failed.
+func (m *Manager) AddFailedSample(surveyID string, x, y int, kind, reason string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	survey, exists := m.surveys[surveyID]
+	if !exists {
+		return fmt.Errorf("%w: %s", ErrSurveyNotFound, surveyID)
+	}
+	if survey.Status != StatusInProgress {
+		return fmt.Errorf("%w: %s is %s", ErrNotWalking, surveyID, survey.Status)
+	}
+	floor := survey.GetActiveFloor()
+	if floor == nil {
+		return fmt.Errorf("no active floor set for survey: %s", surveyID)
+	}
+
+	sample := newSamplePoint(x, y, nil)
+	sample.Failed = &Attempt{Kind: kind, Reason: reason}
+
+	floor.Samples = append(floor.Samples, sample)
+	floor.UpdatedAt = time.Now()
+	survey.UpdatedAt = time.Now()
+
+	return m.appendPoint(survey.ID, floor.ID, survey, sample)
+}
+
 // AddSampleToFloor adds a measurement sample to a specific floor.
 func (m *Manager) AddSampleToFloor(surveyID, floorID string, x, y int, sampleData any) error {
 	m.mu.Lock()

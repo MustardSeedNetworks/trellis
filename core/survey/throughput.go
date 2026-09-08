@@ -97,9 +97,17 @@ func (m *Manager) MeasureThroughput(
 	// the whole of it — for a measurement that does not use the scanner.
 	sample, err := meter.Measure(ctx, iface, server, duration)
 	if err != nil {
-		// Nothing is stored. A point saved for a failed test is a zero-speed
-		// reading at a position where nothing was measured — a dead spot the
-		// survey invented.
+		// The attempt is stored and the reading is not (ADR-0009). A point
+		// saved *with a number* would be a zero-speed reading at a position
+		// where nothing was measured — a dead spot the survey invented — but a
+		// point saved with no number says the only true thing there is to say:
+		// the operator stood here, the test ran, and it failed.
+		//
+		// A store that fails now is reported instead of the measurement error,
+		// because a survey that cannot write is the larger problem.
+		if addErr := m.AddFailedSample(surveyID, x, y, "throughput", err.Error()); addErr != nil {
+			return nil, fmt.Errorf("record failed measurement at (%d,%d): %w", x, y, addErr)
+		}
 		return nil, fmt.Errorf("measure at (%d,%d): %w", x, y, err)
 	}
 

@@ -135,7 +135,11 @@ export function CaptureSurface({
   const throughputMutation = useMutation({
     mutationFn: (point: Point) =>
       surveyClient.measureThroughput({ surveyId, x: point.x, y: point.y }),
-    onSuccess: async () => {
+    // onSettled, not onSuccess: a failed test stores an attempted point
+    // (ADR-0009), so the failure ages the point list exactly as a reading does.
+    // Invalidating only on success would leave the attempt on disk and off the
+    // map until something unrelated refetched.
+    onSettled: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['samples', surveyId] }),
         queryClient.invalidateQueries({ queryKey: ['surveys'] }),
@@ -345,37 +349,56 @@ export function CaptureSurface({
               <line x1={cursor.x} y1={cursor.y - 14} x2={cursor.x} y2={cursor.y + 14} />
             </g>
           ) : null}
-          {pins.map((pin) => (
-            <g
-              key={pinKey(pin)}
-              data-testid="capture-pin"
-              data-interpolated={pin.interpolated ? 'true' : undefined}
-            >
-              {/* A placed reading is drawn hollow and smaller: its position was
+          {pins.map((pin) =>
+            pin.failure ? (
+              /* A measurement was attempted here and produced nothing. It is
+                 drawn as a cross rather than as a dot on the colour scale,
+                 because the scale means signal and no signal was measured — a
+                 dot in any colour would read as coverage. Shape, not colour, so
+                 a reader who cannot use colour sees the same distinction. */
+              <g key={pinKey(pin)} data-testid="capture-pin" data-failure={pin.failure}>
+                <title>{t('pages:surveys.measurementFailedHere', { error: pin.failure })}</title>
+                <g className="stroke-status-error" strokeWidth={2}>
+                  <line x1={pin.x - 7} y1={pin.y - 7} x2={pin.x + 7} y2={pin.y + 7} />
+                  <line x1={pin.x - 7} y1={pin.y + 7} x2={pin.x + 7} y2={pin.y - 7} />
+                </g>
+              </g>
+            ) : (
+              <g
+                key={pinKey(pin)}
+                data-testid="capture-pin"
+                data-interpolated={pin.interpolated ? 'true' : undefined}
+              >
+                {/* A placed reading is drawn hollow and smaller: its position was
                   worked out from the marks on either side of it, not recorded,
                   and a survey that drew the two alike would show a claim about
                   a position as a record of one. Shape, not only colour — the
                   colour is already carrying the signal. */}
-              <circle
-                cx={pin.x}
-                cy={pin.y}
-                r={pin.interpolated ? 5 : 9}
-                className={
-                  pin.interpolated
-                    ? `fill-none ${strokeClass(pin.strongestDbm)}`
-                    : `${pinClass(pin.strongestDbm)} stroke-surface-raised`
-                }
-                strokeWidth={2}
-              />
-              {/* Only the marks are labelled. A walk stores a reading every few
+                <circle
+                  cx={pin.x}
+                  cy={pin.y}
+                  r={pin.interpolated ? 5 : 9}
+                  className={
+                    pin.interpolated
+                      ? `fill-none ${strokeClass(pin.strongestDbm)}`
+                      : `${pinClass(pin.strongestDbm)} stroke-surface-raised`
+                  }
+                  strokeWidth={2}
+                />
+                {/* Only the marks are labelled. A walk stores a reading every few
                   seconds, and a value beside each one is an unreadable page. */}
-              {pin.interpolated ? null : (
-                <text x={pin.x + 14} y={pin.y + 4} className="figure fill-text-primary text-[13px]">
-                  {signalText(pin.strongestDbm)}
-                </text>
-              )}
-            </g>
-          ))}
+                {pin.interpolated ? null : (
+                  <text
+                    x={pin.x + 14}
+                    y={pin.y + 4}
+                    className="figure fill-text-primary text-[13px]"
+                  >
+                    {signalText(pin.strongestDbm)}
+                  </text>
+                )}
+              </g>
+            ),
+          )}
         </svg>
       </button>
 

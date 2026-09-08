@@ -6,6 +6,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"sync/atomic"
 	"time"
 
@@ -42,13 +43,22 @@ func newThroughputMeter() survey.ThroughputMeter {
 // component that reported the same number for both.
 type scriptedMeter struct{}
 
+// unreachableTarget is the server a spec names when it wants the measurement
+// to fail. A real host that refuses the connection would do the same thing;
+// naming one keeps the failure inside the meter, which is the only component
+// the runner cannot supply, rather than faking it further up.
+const unreachableTarget = "unreachable.invalid"
+
 func (scriptedMeter) Measure(
 	ctx context.Context,
-	_, _ string,
+	_, server string,
 	_ int,
 ) (survey.ThroughputSample, error) {
 	if err := ctx.Err(); err != nil {
 		return survey.ThroughputSample{}, err
+	}
+	if server == unreachableTarget {
+		return survey.ThroughputSample{}, fmt.Errorf("dial %s: connection refused", server)
 	}
 	return survey.ThroughputSample{DownloadMbps: 221.4, UploadMbps: 88.2}, nil
 }

@@ -5,6 +5,7 @@ package survey_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
@@ -122,7 +123,7 @@ func TestMeasureThroughputWithoutAMeter(t *testing.T) {
 	}
 }
 
-func TestAFailedMeasurementStoresNothing(t *testing.T) {
+func TestAFailedMeasurementStoresAnAttemptedPoint(t *testing.T) {
 	t.Parallel()
 
 	meter := &scriptedMeter{err: errors.New("the server is busy running a test")}
@@ -131,11 +132,104 @@ func TestAFailedMeasurementStoresNothing(t *testing.T) {
 	if _, err := mgr.MeasureThroughput(context.Background(), id, 1, 1); err == nil {
 		t.Fatal("want the meter's error")
 	}
-	// A point stored for a test that failed is a zero-speed reading at a
-	// position where nothing was measured — a dead spot the survey invented.
+	// The operator stood here and the survey tried. A map that drops the
+	// attempt cannot tell a place nobody measured from a place where the
+	// measurement failed, and those are different facts about a floor
+	// (ADR-0009). What it must not do is invent a number for it.
 	s, _ := mgr.GetSurvey(id)
-	if got := len(s.GetAllSamples()); got != 0 {
-		t.Errorf("%d points stored for a failed measurement, want 0", got)
+	points := s.GetAllSamples()
+	if len(points) != 1 {
+		t.Fatalf("%d points stored for a failed measurement, want 1", len(points))
+	}
+	if points[0].Failed == nil {
+		t.Fatal("the point does not record that a measurement was attempted here")
+	}
+	if !strings.Contains(points[0].Failed.Reason, "busy running a test") {
+		t.Errorf("Reason = %q, want the meter's reason", points[0].Failed.Reason)
+	}
+	if points[0].Failed.Kind != "throughput" {
+		t.Errorf("Kind = %q, want the measurement that was tried", points[0].Failed.Kind)
+	}
+	if points[0].SampleData != nil {
+		t.Errorf("attempted point carries %T, want no reading at all", points[0].SampleData)
+	}
+}
+
+func TestAnAttemptedPointFeedsNoLayer(t *testing.T) {
+	t.Parallel()
+
+	meter := &scriptedMeter{err: errors.New("connection refused")}
+	mgr, id := throughputSurvey(t, meter)
+	if _, err := mgr.MeasureThroughput(context.Background(), id, 40, 40); err == nil {
+		t.Fatal("want the meter's error")
+	}
+	// One real reading so the layers have something to draw; the attempt must
+	// not join it.
+	meter.err = nil
+	meter.sample = survey.ThroughputSample{DownloadMbps: 180}
+	if _, err := mgr.MeasureThroughput(context.Background(), id, 300, 300); err != nil {
+		t.Fatalf("MeasureThroughput: %v", err)
+	}
+
+	s, _ := mgr.GetSurvey(id)
+	for _, metric := range []string{
+		string(survey.HeatmapDownload), string(survey.HeatmapRSSI), string(survey.HeatmapSNR),
+	} {
+		values := survey.ExtractSamplesFromSurvey(s, metric)
+		for _, v := range values {
+			if v.Point.X == 40 && v.Point.Y == 40 {
+				t.Errorf("%s layer drew a value at the attempted point: %+v", metric, v)
+			}
+		}
+	}
+}
+
+func TestAnAttemptedPointSurvivesAReload(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	meter := &scriptedMeter{err: errors.New("no route to host")}
+	mgr := mustManager(t, dir, &countingScanner{}, nil, meter, nil)
+	s, err := mgr.CreateSurvey("attempted", "", "en0", survey.TypePassive)
+	if err != nil {
+		t.Fatalf("CreateSurvey: %v", err)
+	}
+	if err := mgr.SetThroughputTarget(s.ID, "10.44.10.9", 5); err != nil {
+		t.Fatalf("SetThroughputTarget: %v", err)
+	}
+	if err := mgr.StartSurvey(s.ID); err != nil {
+		t.Fatalf("StartSurvey: %v", err)
+	}
+	if _, err := mgr.MeasureThroughput(context.Background(), s.ID, 77, 88); err == nil {
+		t.Fatal("want the meter's error")
+	}
+	if err := mgr.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	reopened := mustManager(t, dir, nil, nil, nil, nil)
+	if err := reopened.LoadSurveys(); err != nil {
+		t.Fatalf("LoadSurveys: %v", err)
+	}
+	after, err := reopened.GetSurvey(s.ID)
+	if err != nil {
+		t.Fatalf("GetSurvey: %v", err)
+	}
+	points := after.GetAllSamples()
+	if len(points) != 1 {
+		t.Fatalf("%d points after reload, want 1", len(points))
+	}
+	if points[0].X != 77 || points[0].Y != 88 {
+		t.Errorf("attempt at (%d,%d), want (77,88)", points[0].X, points[0].Y)
+	}
+	if points[0].Failed == nil || !strings.Contains(points[0].Failed.Reason, "no route to host") {
+		t.Errorf("Failed = %+v after reload, want the reason it was stored with", points[0].Failed)
+	}
+	if points[0].Failed != nil && points[0].Failed.Kind != "throughput" {
+		t.Errorf("Kind = %q after reload, want throughput", points[0].Failed.Kind)
+	}
+	if points[0].SampleData != nil {
+		t.Errorf("reloaded attempt carries %T, want no reading", points[0].SampleData)
 	}
 }
 

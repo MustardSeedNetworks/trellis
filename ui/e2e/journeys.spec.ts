@@ -241,6 +241,50 @@ test('measures throughput at a point and maps it as its own layer', async ({ pag
   await expect(page.getByTestId('coverage-findings')).toHaveCount(0);
 });
 
+test('keeps a failed measurement on the map as an attempt', async ({ page }) => {
+  await createSurvey(page, uniqueName('Attempt'));
+
+  // A server that refuses the connection. The measurement fails for the reason
+  // an operator's would: not a fake in the UI, a real error out of the meter.
+  await page.getByTestId('throughput-target').fill('unreachable.invalid');
+  await page.getByTestId('save-throughput-target').click();
+  await page.getByTestId('survey-start').click();
+
+  const surface = page.getByTestId('capture-surface');
+  await expect(surface).toBeEnabled();
+  const box = await surface.boundingBox();
+  if (!box) {
+    throw new Error('capture surface has no layout box');
+  }
+  await surface.click({ position: { x: box.width * 0.25, y: box.height * 0.3 } });
+  await expect(page.getByTestId('capture-pin')).toHaveCount(1);
+
+  await page.getByTestId('measure-throughput').click();
+  await expect(page.getByTestId('capture-status')).toContainText('connection refused');
+
+  // The attempt is on the map — the operator can see where the survey tried —
+  // and it is drawn as an attempt, not as a reading on the colour scale.
+  await expect(page.getByTestId('capture-pin')).toHaveCount(2);
+  const attempt = page.locator('[data-testid="capture-pin"][data-failure]');
+  await expect(attempt).toHaveCount(1);
+  await expect(attempt).toContainText('connection refused');
+  await expect(attempt.locator('circle')).toHaveCount(0);
+
+  // And it feeds nothing. The RSSI layer draws the one passive point; the
+  // download layer has no samples at all, because the only throughput point on
+  // this floor measured nothing — and says so rather than drawing an empty map
+  // or a map of the signal.
+  await page.getByTestId('survey-complete').click();
+  await page.getByTestId('plot-coverage').click();
+  await expect(page.getByTestId('heatmap-image')).toBeVisible();
+  await page.getByRole('button', { name: 'Download' }).click();
+  // The read is retried before it settles, so this waits past the default.
+  await expect(page.getByTestId('surface-message')).toContainText('no samples found', {
+    timeout: 20_000,
+  });
+  await expect(page.getByTestId('heatmap-image')).toHaveCount(0);
+});
+
 test('uploads a floor plan, calibrates it, and walks on it', async ({ page }) => {
   await createSurvey(page, uniqueName('Plan'));
 

@@ -187,6 +187,7 @@
     "surveyServiceSilent": "The survey service did not answer: {{error}}",
     "testing": "Testing…",
     "throughputFailed": "The throughput test failed: {{error}}",
+    "measurementFailedHere": "Measurement failed here: {{error}}",
     "throughputTarget": "Throughput target",
     "throughputTargetPlaceholder": "iperf3 server, e.g. 10.44.10.9",
     "throughputTest": "Throughput test",
