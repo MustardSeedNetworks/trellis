@@ -286,14 +286,17 @@ func floorDimensions(floor *Floor) (int, int) {
 }
 
 // dimensionsFromSamples bounds the measured points, with padding so the
-// outermost sample is not on the canvas edge.
+// outermost sample is not on the canvas edge. A failed attempt is not one of
+// them: the canvas is the area a survey claims to have measured, and reaching
+// out to a point that measured nothing fills the difference with interpolation
+// drawn from readings metres away.
 func dimensionsFromSamples(points []*SamplePoint) (int, int) {
 	if len(points) == 0 {
 		return 0, 0
 	}
 
 	var maxX, maxY int
-	for _, s := range points {
+	for _, s := range measuredPoints(points) {
 		if s.X > maxX {
 			maxX = s.X
 		}

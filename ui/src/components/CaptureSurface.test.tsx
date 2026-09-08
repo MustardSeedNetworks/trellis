@@ -322,6 +322,39 @@ describe('continuous capture', () => {
   });
 });
 
+describe('attempted points', () => {
+  it('draws a failed measurement as an attempt, never as coverage', async () => {
+    listSamples.mockResolvedValue({
+      samples: [
+        sample(10, 10, -50, 1000),
+        create(SurveySampleSchema, {
+          x: 200,
+          y: 120,
+          networkCount: 0,
+          capturedAt: timestampFromMs(3000),
+          failure: 'connection refused',
+        }),
+      ],
+    });
+    renderSurface(true);
+
+    const pins = await screen.findAllByTestId('capture-pin');
+    const attempt = pins.find((pin) => pin.getAttribute('data-failure') !== null);
+    if (!attempt) {
+      throw new Error('the failed measurement was dropped from the map');
+    }
+    expect(attempt).toHaveAttribute('data-failure', 'connection refused');
+
+    // A cross, not a filled dot on the colour scale: the scale means signal,
+    // and nothing was measured here. Shape carries it so a reader who cannot
+    // use colour sees the same thing.
+    expect(attempt.querySelector('circle')).toBeNull();
+    expect(attempt.querySelectorAll('line')).toHaveLength(2);
+    // The reason is readable rather than only in the DOM.
+    expect(attempt.querySelector('title')?.textContent).toContain('connection refused');
+  });
+});
+
 describe('placed readings', () => {
   it('draws a reading whose position was worked out differently from one that was marked', async () => {
     listSamples.mockResolvedValue({
@@ -392,6 +425,30 @@ describe('active measurement', () => {
     const status = await screen.findByTestId('capture-status');
     expect(status).toHaveTextContent('iperf3 is not installed');
     expect(status).toHaveClass('text-status-error');
+  });
+
+  it('re-reads the points after a failed test, because one was stored for it', async () => {
+    // The daemon stores an attempted point when a measurement fails
+    // (ADR-0009), so the read has to be aged on failure as well as on success —
+    // invalidating only onSuccess leaves the attempt on disk and off the map
+    // until something else happens to refetch.
+    listSamples.mockResolvedValueOnce({ samples: [] }).mockResolvedValue({
+      samples: [
+        create(SurveySampleSchema, {
+          x: 100,
+          y: 200,
+          capturedAt: timestampFromMs(4000),
+          failure: 'connection refused',
+        }),
+      ],
+    });
+    measureThroughput.mockRejectedValue(new Error('connection refused'));
+    renderSurface(true, undefined, '10.44.10.9');
+
+    fireEvent.click(screen.getByTestId('measure-throughput'));
+
+    const attempt = await screen.findByTestId('capture-pin');
+    expect(attempt).toHaveAttribute('data-failure', 'connection refused');
   });
 
   it('does not offer a throughput test during a walk', () => {

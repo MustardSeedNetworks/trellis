@@ -187,6 +187,7 @@
     "surveyServiceSilent": "El servicio de estudios no respondió: {{error}}",
     "testing": "Probando…",
     "throughputFailed": "La prueba de rendimiento falló: {{error}}",
+    "measurementFailedHere": "La medición falló aquí: {{error}}",
     "throughputTarget": "Destino de rendimiento",
     "throughputTargetPlaceholder": "Servidor iperf3, p. ej. 10.44.10.9",
     "throughputTest": "Prueba de rendimiento",

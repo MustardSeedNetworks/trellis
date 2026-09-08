@@ -3600,7 +3600,13 @@ type SurveySample struct {
 	// rather than recorded by the operator. Only a continuous walk produces
 	// these; a pin-drop and an import never do. A client that drew the two alike
 	// would show a claim about a position as a record of one.
-	Interpolated  bool `protobuf:"varint,6,opt,name=interpolated,proto3" json:"interpolated,omitempty"`
+	Interpolated bool `protobuf:"varint,6,opt,name=interpolated,proto3" json:"interpolated,omitempty"`
+	// Why the measurement attempted here produced no reading. Empty on every
+	// point that carries one. A point with this set has no rate and no signal —
+	// not a zero — and a client draws it as an attempt rather than as coverage:
+	// the operator needs to tell a place nobody walked from a place where the
+	// measurement failed.
+	Failure       string `protobuf:"bytes,8,opt,name=failure,proto3" json:"failure,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3682,6 +3688,13 @@ func (x *SurveySample) GetInterpolated() bool {
 		return x.Interpolated
 	}
 	return false
+}
+
+func (x *SurveySample) GetFailure() string {
+	if x != nil {
+		return x.Failure
+	}
+	return ""
 }
 
 var File_trellis_survey_v1_survey_proto protoreflect.FileDescriptor
@@ -3921,7 +3934,7 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\x12ListSamplesRequest\x12\x1b\n" +
 	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\"P\n" +
 	"\x13ListSamplesResponse\x129\n" +
-	"\asamples\x18\x01 \x03(\v2\x1f.trellis.survey.v1.SurveySampleR\asamples\"\xa8\x02\n" +
+	"\asamples\x18\x01 \x03(\v2\x1f.trellis.survey.v1.SurveySampleR\asamples\"\xc2\x02\n" +
 	"\fSurveySample\x12\f\n" +
 	"\x01x\x18\x01 \x01(\x05R\x01x\x12\f\n" +
 	"\x01y\x18\x02 \x01(\x05R\x01y\x12;\n" +
@@ -3930,7 +3943,8 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\rnetwork_count\x18\x04 \x01(\x05R\fnetworkCount\x12(\n" +
 	"\rstrongest_dbm\x18\x05 \x01(\x05H\x00R\fstrongestDbm\x88\x01\x01\x12(\n" +
 	"\rdownload_mbps\x18\a \x01(\x01H\x01R\fdownloadMbps\x88\x01\x01\x12\"\n" +
-	"\finterpolated\x18\x06 \x01(\bR\finterpolatedB\x10\n" +
+	"\finterpolated\x18\x06 \x01(\bR\finterpolated\x12\x18\n" +
+	"\afailure\x18\b \x01(\tR\afailureB\x10\n" +
 	"\x0e_strongest_dbmB\x10\n" +
 	"\x0e_download_mbps2\xb9\x15\n" +
 	"\rSurveyService\x12h\n" +

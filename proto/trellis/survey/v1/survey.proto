@@ -643,4 +643,11 @@ message SurveySample {
   // these; a pin-drop and an import never do. A client that drew the two alike
   // would show a claim about a position as a record of one.
   bool interpolated = 6;
+
+  // Why the measurement attempted here produced no reading. Empty on every
+  // point that carries one. A point with this set has no rate and no signal —
+  // not a zero — and a client draws it as an attempt rather than as coverage:
+  // the operator needs to tell a place nobody walked from a place where the
+  // measurement failed.
+  string failure = 8;
 }

@@ -128,12 +128,20 @@ func insertFloor(ctx context.Context, tx *sql.Tx, surveyID string, f *Floor) err
 
 func insertPoint(ctx context.Context, tx *sql.Tx, surveyID, floorID string, p *SamplePoint) error {
 	kind, passive, active, tput := classifySample(p.SampleData)
+	var failure string
+	if p.Failed != nil {
+		// The kind comes from the attempt, not from classifySample: a failed
+		// point has no payload to classify, and the default would file a
+		// failed throughput test as a passive scan.
+		kind, failure = p.Failed.Kind, p.Failed.Reason
+		passive, active, tput = nil, nil, nil
+	}
 	res, err := tx.ExecContext(ctx, `
 		INSERT INTO survey_points (floor_id, survey_id, x, y, recorded_at, sample_kind,
-			interpolated)
-		VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			interpolated, failure)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		floorID, surveyID, p.X, p.Y, p.Timestamp.UTC().Format(rfc3339Nano), kind,
-		boolToInt(p.Interpolated),
+		boolToInt(p.Interpolated), failure,
 	)
 	if err != nil {
 		return fmt.Errorf("insert point: %w", err)
@@ -324,7 +332,7 @@ func (m *Manager) loadFloors(ctx context.Context, s *Survey) error {
 
 func (m *Manager) loadPoints(ctx context.Context, f *Floor) error {
 	rows, err := m.db.QueryContext(ctx, `
-		SELECT id, x, y, recorded_at, sample_kind, interpolated
+		SELECT id, x, y, recorded_at, sample_kind, interpolated, failure
 		FROM survey_points WHERE floor_id = ? ORDER BY id`, f.ID)
 	if err != nil {
 		return fmt.Errorf("list points: %w", err)
@@ -341,13 +349,20 @@ func (m *Manager) loadPoints(ctx context.Context, f *Floor) error {
 	for rows.Next() {
 		var id int64
 		var p SamplePoint
-		var recorded, kind string
+		var recorded, kind, failure string
 		var interpolated int
-		if err := rows.Scan(&id, &p.X, &p.Y, &recorded, &kind, &interpolated); err != nil {
+		if err := rows.Scan(&id, &p.X, &p.Y, &recorded, &kind, &interpolated, &failure); err != nil {
 			return fmt.Errorf("scan point: %w", err)
 		}
 		p.Interpolated = interpolated != 0
 		p.Timestamp, _ = time.Parse(rfc3339Nano, recorded)
+		if failure != "" {
+			// No payload table is read for an attempt: there is none, and the
+			// kind names what was tried rather than what was stored.
+			p.Failed = &Attempt{Kind: kind, Reason: failure}
+			todo = append(todo, pending{point: &p, id: id, kind: kind})
+			continue
+		}
 		var ps *PassiveSample
 		if kind == "active" {
 			act, actErr := m.loadActiveSample(ctx, id)
