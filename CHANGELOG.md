@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.39](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.38...v0.2.39) (2026-09-08)
+
+
+### Features
+
+* **survey:** store a failed measurement as an attempted point ([#388](https://github.com/MustardSeedNetworks/trellis/issues/388)) ([dfe9fa4](https://github.com/MustardSeedNetworks/trellis/commit/dfe9fa4d97768318fc3c9d1b21cfaf18848e4036)), closes [#62](https://github.com/MustardSeedNetworks/trellis/issues/62) [#63](https://github.com/MustardSeedNetworks/trellis/issues/63)
+
 ## [0.2.38](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.37...v0.2.38) (2026-09-08)
 
 
