@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.43](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.42...v0.2.43) (2026-09-08)
+
+
+### Bug Fixes
+
+* **build:** pin the buf that make lint runs ([#402](https://github.com/MustardSeedNetworks/trellis/issues/402)) ([fb59f50](https://github.com/MustardSeedNetworks/trellis/commit/fb59f50ecb5d94a0ec64785815b536770df64a37)), closes [#396](https://github.com/MustardSeedNetworks/trellis/issues/396)
+
 ## [0.2.42](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.41...v0.2.42) (2026-09-08)
 
 
