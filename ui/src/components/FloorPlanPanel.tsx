@@ -90,16 +90,28 @@ export function FloorPlanPanel({
         throw new Error('no plan to move');
       }
       const created = await surveyClient.createFloor({ surveyId, name, level: nextLevel });
+      // Not `?? ''`: an empty floor_id means the ACTIVE floor, which is the one
+      // that just refused this plan, so a fallback would quietly re-run the
+      // failure and report it as the new floor's.
+      if (created.floor === undefined) {
+        throw new Error('the new floor came back without an id');
+      }
       const buffer = await image.arrayBuffer();
       return surveyClient.setFloorPlan({
         surveyId,
-        floorId: created.floor?.id ?? '',
+        floorId: created.floor.id,
         image: new Uint8Array(buffer),
       });
     },
-    onSettled: async () => {
+    // The upload is reset only once the plan is on the new floor. Resetting it
+    // on failure too would clear the refusal that draws this form, taking the
+    // bytes with it — the operator would have to choose the same file again to
+    // get the offer back, which is what this route exists to avoid.
+    onSuccess: () => {
       setNewFloorName('');
       uploadMutation.reset();
+    },
+    onSettled: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['floors', surveyId] }),
         queryClient.invalidateQueries({ queryKey: ['surveys'] }),
@@ -126,12 +138,16 @@ export function FloorPlanPanel({
           imageUrl: bytesToDataUrl(planQuery.data.image, 'image/png'),
         }
       : undefined;
-  const error = uploadMutation.error ?? calibrateMutation.error ?? newFloorMutation.error;
+  // The new-floor route's failure comes first: the strand refusal is still
+  // standing by design while the form is offered, so leaving it ahead would
+  // report the old refusal instead of what just went wrong.
+  const error = newFloorMutation.error ?? uploadMutation.error ?? calibrateMutation.error;
   // The one refusal an operator can do something about, and the one worth
   // explaining rather than only reporting: a plan of different dimensions over
   // a floor that already holds measurements is refused, because every stored
   // point is a pixel coordinate on the plan it was walked against.
-  const stranded = error !== null && /strand the measurements/i.test(String(error));
+  const stranded =
+    uploadMutation.error !== null && /strand the measurements/i.test(String(uploadMutation.error));
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="floor-plan-title">

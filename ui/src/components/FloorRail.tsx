@@ -33,12 +33,16 @@ export function FloorRail({ surveyId, floors }: { surveyId: string; floors: Floo
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
 
   // The floor list, the survey summary whose floor count is drawn from it, and
-  // the samples: a deleted floor takes its measurements off every layer.
+  // everything drawn from the measurements: a deleted floor takes its readings
+  // off the capture surface AND off Coverage, which keys its heatmap and its
+  // findings separately and would otherwise serve the deleted floor's numbers.
   const refresh = () =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: ['floors', surveyId] }),
       queryClient.invalidateQueries({ queryKey: ['surveys'] }),
       queryClient.invalidateQueries({ queryKey: ['samples', surveyId] }),
+      queryClient.invalidateQueries({ queryKey: ['heatmap', surveyId] }),
+      queryClient.invalidateQueries({ queryKey: ['coverage', surveyId] }),
     ]);
 
   const createMutation = useMutation({

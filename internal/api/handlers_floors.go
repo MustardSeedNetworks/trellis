@@ -152,7 +152,7 @@ func (h *SurveyServiceHandler) UpdateFloor(
 // deleting the floor being walked moves the walk, so the caller cannot derive
 // the new state from the request it sent.
 func (h *SurveyServiceHandler) DeleteFloor(
-	_ context.Context,
+	ctx context.Context,
 	req *connect.Request[surveyv1.DeleteFloorRequest],
 ) (*connect.Response[surveyv1.DeleteFloorResponse], error) {
 	surveyID, floorID := req.Msg.GetSurveyId(), req.Msg.GetFloorId()
@@ -167,7 +167,7 @@ func (h *SurveyServiceHandler) DeleteFloor(
 		return nil, floorError(err)
 	}
 
-	listed, err := h.ListFloors(context.Background(),
+	listed, err := h.ListFloors(ctx,
 		connect.NewRequest(&surveyv1.ListFloorsRequest{SurveyId: surveyID}))
 	if err != nil {
 		return nil, err

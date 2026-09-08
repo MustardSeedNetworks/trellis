@@ -211,4 +211,32 @@ describe('FloorPlanPanel', () => {
     await screen.findByTestId('floor-plan-status');
     expect(screen.queryByTestId('strand-new-floor')).toBeNull();
   });
+
+  it('keeps the offer and the bytes when the new floor cannot be made', async () => {
+    setFloorPlan.mockRejectedValueOnce(
+      new Error('replacing the floor plan would strand the measurements taken on it: 3 …'),
+    );
+    createFloor.mockRejectedValueOnce(new Error('[unavailable] the daemon went away'));
+    renderPanel();
+
+    const file = new File([new Uint8Array([1, 2, 3])], 'ninth.png', { type: 'image/png' });
+    fireEvent.change(screen.getByTestId('floor-plan-input'), { target: { files: [file] } });
+    await screen.findByTestId('floor-plan-stranded-hint');
+
+    fireEvent.change(screen.getByTestId('strand-new-floor-name'), { target: { value: 'Ninth' } });
+    fireEvent.click(screen.getByTestId('strand-new-floor'));
+
+    // What just went wrong, not the refusal that is still standing behind it.
+    await waitFor(() =>
+      expect(screen.getByTestId('floor-plan-status')).toHaveTextContent('the daemon went away'),
+    );
+    // And the offer survives with the file already chosen: making the operator
+    // re-pick it is the thing this route exists to avoid.
+    expect(screen.getByTestId('strand-new-floor')).toBeInTheDocument();
+
+    createFloor.mockResolvedValueOnce({ floor: { id: 'flr-9', name: 'Ninth', level: 1 } });
+    fireEvent.click(screen.getByTestId('strand-new-floor'));
+    await waitFor(() => expect(setFloorPlan).toHaveBeenCalledTimes(2));
+    expect(setFloorPlan.mock.calls[1]?.[0]).toMatchObject({ floorId: 'flr-9' });
+  });
 });

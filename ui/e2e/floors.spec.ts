@@ -107,3 +107,48 @@ test('renames a floor, then deletes it with its measurements', async ({ page }) 
   // The last floor offers no delete: the handler refuses it.
   await expect(page.getByTestId(/^delete-floor-/)).toHaveCount(0);
 });
+
+/**
+ * TR-1's refusal, and the route it was written to have and could not build
+ * (#337, #342). A plan of different dimensions over a floor that already holds
+ * measurements is refused — every stored point is a pixel on the plan it was
+ * walked against — and the answer is that the plan usually belongs to a
+ * different storey. So the panel offers to put it on one.
+ *
+ * Round trip, not mocks: the refusal comes from the daemon, and the new floor
+ * and its plan have to come back from it too.
+ */
+test('puts a plan that would strand the measurements on a floor of its own', async ({ page }) => {
+  await createSurvey(page, uniqueName('Strand'));
+
+  await page.getByTestId('floor-plan-input').setInputFiles('e2e/fixtures/ninth-floor.png');
+  await expect(page.getByTestId('floor-plan-status')).toContainText('no scale yet');
+
+  // A measurement on this plan is what makes the replacement dangerous.
+  await page.getByTestId('survey-start').click();
+  const surface = page.getByTestId('capture-surface');
+  await expect(surface).toBeEnabled();
+  const box = await surface.boundingBox();
+  if (!box) {
+    throw new Error('capture surface has no layout box');
+  }
+  await surface.click({ position: { x: box.width * 0.4, y: box.height * 0.4 } });
+  await expect(page.getByTestId('capture-pin')).toHaveCount(1);
+
+  // A 1024x768 plan over a floor walked against an 800x600 one.
+  await page.getByTestId('floor-plan-input').setInputFiles('e2e/fixtures/tenth-floor.png');
+  await expect(page.getByTestId('floor-plan-status')).toContainText('strand the measurements');
+  await expect(page.getByTestId('floor-plan-stranded-hint')).toContainText('add it as a new floor');
+
+  await page.getByTestId('strand-new-floor-name').fill('Tenth');
+  await page.getByTestId('strand-new-floor').click();
+
+  const rows = page.getByTestId('floor-rail').getByRole('listitem');
+  await expect(rows).toHaveCount(2);
+  await expect(rows.nth(1)).toContainText('Tenth');
+  // The refusal is gone and the offer with it: the plan found a home, and the
+  // walked floor still has the plan and the point it was measured against.
+  await expect(page.getByTestId('strand-new-floor')).toHaveCount(0);
+  await expect(page.getByTestId('capture-pin')).toHaveCount(1);
+  await expect(rows.nth(0)).toContainText('1 sample');
+});
