@@ -1,3 +1,5 @@
+# Packages no binary reaches today. This list is debt, not permission: it may
+# shrink and must not grow. The package path is the first field; the rest of
+# the line says why it is here.
 
-# Nothing. Every internal package in trellis is reachable from a binary, and
-# the gate is here to keep it that way.
+core/rf  Gate G1's path-loss model. No binary reaches it and none should yet — the gate asks whether a closed-form model is worth building an engine around, and the answer is a number, not a shipped feature. It failed twice (10.42 dB on AirMagnet, 16.75 dB on the corrected AirMapper ground truth, against a 6 dB threshold; docs/11-GATE-G1-RESULT.md), and T-KILL's own walk is the measurement that settles it — `go test ./core/rf -run G1` is the only consumer until then. Delete it, or wire it into the daemon, when that verdict is final.
