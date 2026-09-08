@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.40](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.39...v0.2.40) (2026-09-08)
+
+
+### Features
+
+* **survey:** rename and delete a floor, and put a refused plan on its own ([#392](https://github.com/MustardSeedNetworks/trellis/issues/392)) ([05961a8](https://github.com/MustardSeedNetworks/trellis/commit/05961a845239ea20fa4ee9f90a30661b3bbcc553))
+
 ## [0.2.39](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.38...v0.2.39) (2026-09-08)
 
 
