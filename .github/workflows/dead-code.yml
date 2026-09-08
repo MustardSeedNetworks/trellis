@@ -12,9 +12,9 @@
 
 # Dead-code analysis.
 #
-# One step gates: "Check package reachability" fails the job when an internal
-# package is reachable from no binary and is not recorded in
-# scripts/package-reachability-baseline.txt.
+# One step gates: "Check package reachability" fails the job when any non-main
+# package — core/ as well as internal/ — is reachable from no binary and is not
+# recorded in scripts/package-reachability-baseline.txt.
 #
 # Every other step in this workflow is advisory by design — staticcheck's
 # unused checks and ts-prune both produce false positives on interfaces,
