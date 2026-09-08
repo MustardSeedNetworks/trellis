@@ -23,6 +23,8 @@ import (
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
 	"github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1/surveyv1connect"
 	"github.com/MustardSeedNetworks/trellis/internal/api"
+
+	"google.golang.org/protobuf/proto"
 )
 
 // buildAMP synthesizes a minimal but valid AirMapper (.amp) archive: a JSON
@@ -206,8 +208,8 @@ func TestSurveyServiceEndToEnd(t *testing.T) {
 
 	// --- GetCoverage over the API ---------------------------------------
 	coverageResp, err := client.GetCoverage(ctx, connect.NewRequest(&surveyv1.GetCoverageRequest{
-		SurveyId:     surveyID,
-		ThresholdDbm: -75,
+		SurveyId:  surveyID,
+		Threshold: proto.Int32(-75),
 	}))
 	if err != nil {
 		t.Fatalf("GetCoverage: %v", err)

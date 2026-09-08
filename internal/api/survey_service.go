@@ -19,10 +19,6 @@ import (
 	"github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1/surveyv1connect"
 )
 
-// defaultDeadZoneThresholdDBm is used when a GetCoverage request leaves
-// threshold_dbm unset (zero value).
-const defaultDeadZoneThresholdDBm = -75
-
 // SurveyServiceHandler implements surveyv1connect.SurveyServiceHandler by
 // wrapping a *survey.Manager.
 type SurveyServiceHandler struct {
@@ -283,6 +279,26 @@ func legendStops(scale survey.ColorScale) []*surveyv1.LegendStop {
 	return stops
 }
 
+// coverageMetric resolves the requested layer, and refuses one the analysis
+// has no rule for. The heatmap's own metric parser falls back to RSSI for
+// anything it does not know, which is right for a picture — something has to
+// be drawn — and wrong here: it would answer about signal strength under a
+// heading that says otherwise, which is the defect this parameter closes.
+func coverageMetric(name string) (survey.HeatmapType, error) {
+	if name == "" {
+		return survey.HeatmapRSSI, nil
+	}
+	metric := survey.HeatmapType(name)
+	if !survey.SupportsCoverageAnalysis(metric) {
+		return "", connect.NewError(
+			connect.CodeInvalidArgument,
+			fmt.Errorf("metric %q has no dead-zone analysis; use %q or %q",
+				name, survey.HeatmapRSSI, survey.HeatmapSNR),
+		)
+	}
+	return metric, nil
+}
+
 // GetCoverage runs dead-zone detection over one floor's measured samples.
 func (h *SurveyServiceHandler) GetCoverage(
 	_ context.Context,
@@ -298,9 +314,17 @@ func (h *SurveyServiceHandler) GetCoverage(
 		return nil, notFoundOrInternal(err)
 	}
 
-	threshold := int(req.Msg.GetThresholdDbm())
-	if threshold == 0 {
-		threshold = defaultDeadZoneThresholdDBm
+	metric, err := coverageMetric(req.Msg.GetMetric())
+	if err != nil {
+		return nil, err
+	}
+
+	// Presence, not a zero check: the two metrics have unrelated defaults, so
+	// there is no one number that means "unset" under both. A caller that
+	// omits the threshold gets the metric's own.
+	threshold := survey.DefaultThresholdFor(metric)
+	if req.Msg.Threshold != nil {
+		threshold = int(req.Msg.GetThreshold())
 	}
 
 	// Coverage is scored per floor, like the heatmap beside it: a whole-survey
@@ -311,7 +335,7 @@ func (h *SurveyServiceHandler) GetCoverage(
 		return nil, err
 	}
 
-	analysis, err := survey.DetectFloorDeadZones(svy.ID, floor, threshold, nil)
+	analysis, err := survey.DetectFloorDeadZones(svy.ID, floor, metric, threshold, nil)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
@@ -320,6 +344,8 @@ func (h *SurveyServiceHandler) GetCoverage(
 		CoverageScore:   analysis.CoverageScore,
 		DeadZoneCount:   int32(len(analysis.DeadZones)),
 		Recommendations: analysis.Recommendations,
+		Metric:          analysis.Metric,
+		Threshold:       int32(analysis.Threshold),
 	}), nil
 }
 

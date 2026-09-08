@@ -22,17 +22,18 @@ func ExportCalculateCoverageScore(allSamples, weakSamples []SampleValue) float64
 }
 
 // ExportDetermineSeverity exports determineSeverity for testing.
-func ExportDetermineSeverity(avgRSSI float64) string {
-	return determineSeverity(avgRSSI)
+func ExportDetermineSeverity(metric HeatmapType, avg float64) string {
+	return determineSeverity(metric, avg)
 }
 
 // ExportGenerateRecommendations exports generateRecommendations for testing.
 func ExportGenerateRecommendations(
+	metric HeatmapType,
 	deadZones []DeadZone,
 	coverageScore float64,
 	totalSamples int,
 ) []string {
-	return generateRecommendations(deadZones, coverageScore, totalSamples)
+	return generateRecommendations(metric, deadZones, coverageScore, totalSamples)
 }
 
 // SetSurvey sets a survey in the manager for testing.

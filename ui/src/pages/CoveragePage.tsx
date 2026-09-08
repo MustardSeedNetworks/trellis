@@ -34,31 +34,28 @@ const METRICS = [
 ] as const;
 
 /**
- * Metrics the dead-zone analysis can speak about — one, and it is RSSI.
- *
- * `GetCoverage` takes no metric at all: it always runs the RSSI dead-zone
- * analysis against a dBm threshold. Offering it under an SNR map put a dBm
- * control and signal-strength findings beneath a picture of signal-to-noise,
- * where every number was still about RSSI and none of it said so. The map
- * still renders for SNR — it is a real reading — but the analysis beside it
- * does not pretend to be about the layer on screen.
- *
- * SNR dead zones are a different analysis: a dB threshold, recommendations
- * about noise rather than coverage, and a metric parameter on the RPC. That is
- * #344, not a checkbox here.
+ * Metrics the dead-zone analysis can speak about. Download throughput is not
+ * one of them: `GetCoverage` refuses a metric it has no rule for rather than
+ * answering about signal strength under another heading, so offering it here
+ * would only produce an error where a finding belongs.
  */
-const COVERAGE_METRICS: readonly Metric[] = ['rssi'];
+const COVERAGE_METRICS: readonly Metric[] = ['rssi', 'snr'];
+
+/**
+ * Each metric's own dead-zone threshold, in its own unit. There is no shared
+ * default and no shared range: -75 dB of signal-to-noise is not a number, and
+ * a threshold typed under one layer must not follow the operator to the other.
+ * The service applies the same defaults when a request omits one.
+ */
+const THRESHOLDS: Record<Metric & ('rssi' | 'snr'), { default: number; min: number; max: number }> =
+  {
+    /* The service reads a threshold it was sent verbatim; these bounds are the
+       range over which each analysis means anything. */
+    rssi: { default: -75, min: -90, max: -40 },
+    snr: { default: 20, min: 5, max: 40 },
+  };
 
 type Metric = (typeof METRICS)[number]['id'];
-
-/** Matches the service default in internal/api. */
-const DEFAULT_THRESHOLD_DBM = -75;
-/* The service reads threshold_dbm == 0 as "unset" and substitutes its default,
-   so an operator who types 0 would silently be shown the -75 dBm answer. The
-   control cannot reach 0: these bounds are the range a dead-zone threshold is
-   meaningful over anyway. */
-const MIN_THRESHOLD_DBM = -90;
-const MAX_THRESHOLD_DBM = -40;
 
 export function CoveragePage() {
   const { t } = useTranslation(['common', 'pages']);
@@ -66,7 +63,14 @@ export function CoveragePage() {
      survey's coverage, and so a floor worth showing someone is a link. */
   const [searchParams, setSearchParams] = useSearchParams();
   const [metric, setMetric] = useState<Metric>('rssi');
-  const [threshold, setThreshold] = useState(DEFAULT_THRESHOLD_DBM);
+  /* One threshold per metric, not one control that changes unit under the
+     operator: carrying -75 into a dB box would ask for a margin no radio has,
+     and the number an operator settled on for one layer is still the one they
+     want when they come back to it. */
+  const [thresholds, setThresholds] = useState<Record<string, number>>({
+    rssi: THRESHOLDS.rssi.default,
+    snr: THRESHOLDS.snr.default,
+  });
 
   const surveysQuery = useQuery({
     queryKey: ['surveys'],
@@ -112,19 +116,24 @@ export function CoveragePage() {
     enabled: surveyId !== undefined,
   });
 
+  const analysable = COVERAGE_METRICS.includes(metric);
+  const bounds = THRESHOLDS[metric as 'rssi' | 'snr'] ?? THRESHOLDS.rssi;
+  const threshold = thresholds[metric] ?? bounds.default;
+
   const coverageQuery = useQuery({
-    queryKey: ['coverage', surveyId, threshold, floorId],
+    queryKey: ['coverage', surveyId, metric, threshold, floorId],
     queryFn: () =>
-      surveyClient.getCoverage({ surveyId: surveyId ?? '', thresholdDbm: threshold, floorId }),
-    enabled: surveyId !== undefined,
+      surveyClient.getCoverage({ surveyId: surveyId ?? '', metric, threshold, floorId }),
+    enabled: surveyId !== undefined && analysable,
   });
 
   const heatmap = heatmapQuery.data;
   const unit = METRICS.find((m) => m.id === metric)?.unit ?? '';
-  const analysable = COVERAGE_METRICS.includes(metric);
   const findings = describeCoverage(
     {
+      metric,
       threshold,
+      unit,
       hasSurvey: surveyId !== undefined,
       loading: coverageQuery.isLoading,
       error: coverageQuery.error,
@@ -206,9 +215,9 @@ export function CoveragePage() {
         </div>
 
         {/* Only where it means something. The threshold and the findings below
-            speak about signal against a dBm floor; over a throughput layer they
-            would answer a question nobody asked, and a control that appears to
-            do nothing is worse than one that is not there. */}
+            speak about a layer the analysis has a rule for; over a throughput
+            layer they would answer a question nobody asked, and a control that
+            appears to do nothing is worse than one that is not there. */}
         {analysable ? (
           <label className="flex items-center gap-2 text-sm" htmlFor="coverage-threshold">
             <span className="kicker">{t('pages:coverage.deadZoneThreshold')}</span>
@@ -216,22 +225,21 @@ export function CoveragePage() {
               id="coverage-threshold"
               type="number"
               value={threshold}
-              min={MIN_THRESHOLD_DBM}
-              max={MAX_THRESHOLD_DBM}
+              min={bounds.min}
+              max={bounds.max}
               step={1}
               onChange={(event) => {
                 const parsed = Number(event.target.value);
-                if (
-                  Number.isInteger(parsed) &&
-                  parsed >= MIN_THRESHOLD_DBM &&
-                  parsed <= MAX_THRESHOLD_DBM
-                ) {
-                  setThreshold(parsed);
+                if (Number.isInteger(parsed) && parsed >= bounds.min && parsed <= bounds.max) {
+                  setThresholds((current) => ({ ...current, [metric]: parsed }));
                 }
               }}
               className="figure w-24 rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
+              data-testid="coverage-threshold"
             />
-            <span className="text-text-secondary">dBm</span>
+            <span className="text-text-secondary" data-testid="coverage-threshold-unit">
+              {unit}
+            </span>
           </label>
         ) : null}
 
@@ -267,7 +275,11 @@ export function CoveragePage() {
 
         {analysable ? (
           <CoverageFindings
-            title={t('pages:coverage.findingsTitle')}
+            title={
+              metric === 'snr'
+                ? t('pages:coverage.findingsTitleSnr')
+                : t('pages:coverage.findingsTitleRssi')
+            }
             state={findings.state}
             headline={findings.headline}
             body={findings.body}
@@ -371,7 +383,9 @@ function renderSurface(
 }
 
 interface CoverageState {
+  metric: Metric;
   threshold: number;
+  unit: string;
   hasSurvey: boolean;
   loading: boolean;
   error: unknown;
@@ -389,7 +403,7 @@ interface CoverageVerdict {
 
 /** Turns the analysis into the sentence the findings panel leads with. */
 function describeCoverage(
-  { threshold, hasSurvey, loading, error, coverage, sampleCount }: CoverageState,
+  { metric, threshold, unit, hasSurvey, loading, error, coverage, sampleCount }: CoverageState,
   t: TFunction<['common', 'pages']>,
 ): CoverageVerdict {
   if (!hasSurvey) {
@@ -431,15 +445,16 @@ function describeCoverage(
   if (coverage.deadZoneCount === 0) {
     return {
       state: 'ok',
-      headline: t('pages:coverage.noDeadZones', { threshold }),
+      headline: t('pages:coverage.noDeadZones', { threshold, unit }),
       figures,
       recommendations: coverage.recommendations,
     };
   }
   return {
     state: 'warn',
-    headline: t('pages:coverage.deadZones', { count: coverage.deadZoneCount, threshold }),
-    body: t('pages:coverage.deadZoneBody'),
+    headline: t('pages:coverage.deadZones', { count: coverage.deadZoneCount, threshold, unit }),
+    body:
+      metric === 'snr' ? t('pages:coverage.deadZoneBodySnr') : t('pages:coverage.deadZoneBodyRssi'),
     figures,
     recommendations: coverage.recommendations,
   };

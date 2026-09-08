@@ -122,7 +122,7 @@ func TestMeasuredSurveyPipelineEndToEnd(t *testing.T) {
 	// Threshold -75 dBm (typical "usable Wi-Fi" floor): the -88 corner must
 	// register as a dead zone. AnomalyDetector is nil (that engine stays in
 	// Seed); dead-zone/coverage analysis must still work.
-	dz, err := survey.DetectDeadZones(svy, -75, nil)
+	dz, err := survey.DetectDeadZones(svy, survey.HeatmapRSSI, -75, nil)
 	if err != nil {
 		t.Fatalf("DetectDeadZones: %v", err)
 	}

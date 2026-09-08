@@ -330,17 +330,28 @@ message LegendStop {
 
 message GetCoverageRequest {
   string survey_id = 1;
-  // Dead-zone threshold in dBm. Defaults to -75.
-  int32 threshold_dbm = 2;
+  // Dead-zone threshold, in the unit of `metric`: dBm for rssi, dB for snr.
+  // Absent means that metric's own default, -75 dBm or 20 dB. There is no
+  // shared default because -75 dB of signal-to-noise is not a number, and a
+  // threshold sent under one metric must never be read under the other.
+  optional int32 threshold = 2;
   // Floor to analyse. Empty means every floor's samples together, which is
   // the whole-survey verdict; naming a floor scores that floor alone.
   string floor_id = 3;
+  // Which measured layer the analysis is about: "rssi" (the default when
+  // empty) or "snr". A metric the analysis has no rule for is refused rather
+  // than answered about signal strength.
+  string metric = 4;
 }
 
 message GetCoverageResponse {
   double coverage_score = 1;
   int32 dead_zone_count = 2;
   repeated string recommendations = 3;
+  // The metric analysed and the threshold applied, echoed so a caller that
+  // sent neither can still label the figures with the right unit.
+  string metric = 4;
+  int32 threshold = 5;
 }
 
 message GenerateReportRequest {
