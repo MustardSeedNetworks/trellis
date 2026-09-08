@@ -179,11 +179,66 @@ jobs:
           # tree verified clean (0 issues) before this gate was added.
           args: --timeout=5m
 
+      # `go run <module>@<version>` rebuilt buf from source on every run: the
+      # step took 57s and 59s in the two most recent main runs, of which only
+      # ~4s was `go: downloading`. The rest was compile and link, and it never
+      # got cheaper, because setup-go keys its cache on this repo's go.sum —
+      # so the run that compiled buf found a cache HIT ("not saving cache") and
+      # discarded buf's object files at job end, every time.
+      #
+      # Caching the linked binary, rather than hoping the build cache carries
+      # it, is the whole fix. Resolution stays on the module proxy and sumdb:
+      # a miss runs `go install <module>@<version>`, never a curl'd release
+      # binary, which would trade that verification away for the same minute.
+      #
+      # The pinned version is read back out of the `go install` line below so
+      # there is exactly one copy of it. A hand-written cache key would let a
+      # Renovate bump of that line hit a stale key and lint with the OLD
+      # binary, passing quietly — the same shape of false clear as a stale
+      # local golangci-lint.
+      - name: Resolve the pinned buf version
+        id: buf
+        run: |
+          v=$(sed -n \
+            's|^ *run: go install github\.com/bufbuild/buf/cmd/buf@v\([0-9][0-9.]*\) *$|\1|p' \
+            .github/workflows/ci.yml)
+          if [ -z "$v" ]; then
+            echo "::error::could not read the pinned buf version out of ci.yml"
+            exit 1
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Cache the buf binary
+        id: buf-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/go/bin/buf
+          key: buf-${{ runner.os }}-${{ steps.buf.outputs.version }}
+
+      # `go install` rather than `go run` is also what makes this pin visible
+      # to Renovate at all: the org preset's regex manager matches
+      # `go install <module>@<version>` in workflows and matched nothing in
+      # this file while the line said `go run`. An invisible pin goes stale
+      # silently, which the preset's own description calls worse than a
+      # floating one.
+      - name: Install buf
+        if: steps.buf-cache.outputs.cache-hit != 'true'
+        run: go install github.com/bufbuild/buf/cmd/buf@v1.72.0
+
       - name: Buf lint
         # Pinned rather than floating: `make lint` runs bare `buf lint` against
         # whatever the developer has installed, so CI is the only place the
         # version is nailed down.
-        run: go run github.com/bufbuild/buf/cmd/buf@v1.72.0 lint
+        env:
+          WANT: ${{ steps.buf.outputs.version }}
+        run: |
+          BUF="$(go env GOPATH)/bin/buf"
+          got=$("$BUF" --version)
+          if [ "$got" != "$WANT" ]; then
+            echo "::error::restored buf is $got, ci.yml pins $WANT"
+            exit 1
+          fi
+          "$BUF" lint
 
   # The ubuntu backend job builds the Linux nl80211 backend but never the
   # Windows one, which reads WLAN_BSS_ENTRY straight out of memory wlanapi
