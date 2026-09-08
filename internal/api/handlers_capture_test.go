@@ -573,3 +573,71 @@ func TestListSamplesCarriesAFailedAttemptWithNoNumbers(t *testing.T) {
 		t.Errorf("attempt carries %d networks, want 0", got[0].GetNetworkCount())
 	}
 }
+
+// The counts a person reads are counts of measurements. A summary or a floor
+// rail that says two where one reading was taken tells the operator the survey
+// measured something it did not — while the layer built from the same floor
+// draws one point.
+func TestCountsExcludeAFailedAttempt(t *testing.T) {
+	t.Parallel()
+
+	handler := api.NewSurveyServiceHandler(
+		mustManager(t, t.TempDir(), scriptedScanner{networks: []wifi.ScannedNetwork{
+			{SSID: "Near", BSSID: "aa:bb:cc:00:00:02", Signal: -41, Channel: 52, Frequency: 5260},
+		}}, nil, failingMeter{}, nil))
+	created, err := handler.CreateSurvey(context.Background(),
+		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "counts", Interface: "en0"}))
+	if err != nil {
+		t.Fatalf("CreateSurvey: %v", err)
+	}
+	id := created.Msg.GetSurvey().GetId()
+	if _, err := handler.SetThroughputTarget(context.Background(),
+		connect.NewRequest(&surveyv1.SetThroughputTargetRequest{
+			SurveyId: id, Server: "10.44.10.9", DurationSec: 5,
+		})); err != nil {
+		t.Fatalf("SetThroughputTarget: %v", err)
+	}
+	if _, err := handler.StartSurvey(context.Background(),
+		connect.NewRequest(&surveyv1.StartSurveyRequest{Id: id})); err != nil {
+		t.Fatalf("StartSurvey: %v", err)
+	}
+	if _, err := handler.CapturePoint(context.Background(),
+		connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: 10, Y: 10})); err != nil {
+		t.Fatalf("CapturePoint: %v", err)
+	}
+	if _, err := handler.MeasureThroughput(context.Background(),
+		connect.NewRequest(&surveyv1.MeasureThroughputRequest{SurveyId: id, X: 99, Y: 99})); err == nil {
+		t.Fatal("the scripted meter should have failed")
+	}
+
+	got, err := handler.GetSurvey(context.Background(),
+		connect.NewRequest(&surveyv1.GetSurveyRequest{Id: id}))
+	if err != nil {
+		t.Fatalf("GetSurvey: %v", err)
+	}
+	if n := got.Msg.GetSurvey().GetSampleCount(); n != 1 {
+		t.Errorf("survey sample_count = %d, want 1 measurement", n)
+	}
+
+	floors, err := handler.ListFloors(context.Background(),
+		connect.NewRequest(&surveyv1.ListFloorsRequest{SurveyId: id}))
+	if err != nil {
+		t.Fatalf("ListFloors: %v", err)
+	}
+	if len(floors.Msg.GetFloors()) != 1 {
+		t.Fatalf("floors = %d, want 1", len(floors.Msg.GetFloors()))
+	}
+	if n := floors.Msg.GetFloors()[0].GetSampleCount(); n != 1 {
+		t.Errorf("floor sample_count = %d, want 1 measurement", n)
+	}
+
+	// Both points are still on the map: the attempt is drawn, just not counted.
+	samples, err := handler.ListSamples(context.Background(),
+		connect.NewRequest(&surveyv1.ListSamplesRequest{SurveyId: id}))
+	if err != nil {
+		t.Fatalf("ListSamples: %v", err)
+	}
+	if n := len(samples.Msg.GetSamples()); n != 2 {
+		t.Errorf("ListSamples returned %d points, want the reading and the attempt", n)
+	}
+}

@@ -328,6 +328,28 @@ func (s *Survey) GetAllSamples() []*SamplePoint {
 	return samples
 }
 
+// GetAllMeasuredSamples is GetAllSamples without the points where a
+// measurement was attempted and produced nothing (ADR-0009).
+//
+// Every count a person reads — the survey summary, the floor rail, the report
+// header, the raw-data appendix — is a count of measurements, so it uses this.
+// A rail saying "3 samples" for a floor whose layer draws one is telling the
+// operator the survey measured something it did not. The map uses
+// GetAllSamples, because showing where the survey tried is the whole point of
+// storing an attempt.
+func (s *Survey) GetAllMeasuredSamples() []*SamplePoint {
+	return measuredPoints(s.GetAllSamples())
+}
+
+// MeasuredSamples is the floor's points that carry a reading. See
+// [Survey.GetAllMeasuredSamples].
+func (f *Floor) MeasuredSamples() []*SamplePoint {
+	if f == nil {
+		return nil
+	}
+	return measuredPoints(f.Samples)
+}
+
 // snapshot returns a survey a caller can read while a walk is writing to it.
 //
 // The manager's map holds one live *Survey per survey, and a continuous capture

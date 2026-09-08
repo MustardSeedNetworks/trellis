@@ -40,10 +40,20 @@ A `SamplePoint` gains `Failed *Attempt{Kind, Reason}`. When it is set,
   value of the metric it is asked for, which is every metric for an attempt, so
   interpolation, every heatmap layer and the dead-zone analysis exclude it
   without a special case.
-- **No statistic counts it.** `measuredPoints` filters attempts out of
-  `calculateSurveyStats`, which divides by the number of points it was given —
-  an attempt in that denominator moved a floor's coverage score from 100 to 50
-  in the test that caught it.
+- **No count of measurements includes it.** `measuredPoints` filters attempts
+  out of `calculateSurveyStats`, which divides by the number of points it was
+  given — an attempt in that denominator moved a floor's coverage score from
+  100 to 50 in the test that caught it. `Survey.GetAllMeasuredSamples` and
+  `Floor.MeasuredSamples` are what every number a person reads is built from:
+  the survey summary's `sample_count`, the floor rail's, the report header, the
+  per-floor "Samples: n", the channel table and the raw-data appendix. A rail
+  saying "3 samples" for a floor whose layer draws one would tell the operator
+  the survey measured something it did not. The _points_ are all still there —
+  `ListSamples` returns the attempt, because drawing it is the point.
+- **A floor of nothing but attempts still produces a report**, without a map
+  and without statistics: the report's map gate asks whether the floor holds
+  measurements, not whether it holds points, so it cannot walk into a heatmap
+  with no extent.
 - **The canvas does not reach for it.** `dimensionsFromSamples` bounds the
   measured points only; a failed attempt at the far corner of a floor would
   otherwise enlarge the surveyed area and fill the difference with
