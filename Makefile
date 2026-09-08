@@ -1,4 +1,4 @@
-.PHONY: generate generate-ts ui build build-e2e ui-build-hash lint lint-md golangci-lint vet test fmt-check check-stale-tests packages
+.PHONY: generate generate-ts ui build build-e2e ui-build-hash lint lint-md golangci-lint buf vet test fmt-check check-stale-tests packages
 
 include mk/lint.mk
 
@@ -26,11 +26,25 @@ GOFLAGS = -trimpath -buildvcs=false -ldflags "$(LDFLAGS)"
 GOLANGCI_LINT_VERSION := v2.13.2
 GOLANGCI_LINT := $(shell go env GOPATH)/bin/golangci-lint
 
-generate:
-	buf generate
+# Must match the buf pin in .github/workflows/ci.yml. Bare `buf` is the same
+# false clear as a stale golangci-lint: this machine had 1.71.0 while CI pinned
+# 1.72.0, so `make lint` and CI were linting the protos with different rule sets.
+#
+# The version is derived FROM the install line, not the other way round. The org
+# Renovate preset has dedicated managers for GOLANGCI_LINT_VERSION and
+# MARKDOWNLINT_CLI2_VERSION and none for buf, so only the literal
+# `go install <module>@<version>` form is tracked; `@$(BUF_VERSION)` would be an
+# invisible pin, which the preset's own description calls worse than a floating
+# one. One literal means a Renovate bump cannot leave a stale copy behind.
+BUF_INSTALL := go install github.com/bufbuild/buf/cmd/buf@v1.72.0
+BUF_VERSION := $(lastword $(subst @, ,$(BUF_INSTALL)))
+BUF := $(shell go env GOPATH)/bin/buf
 
-generate-ts:
-	buf generate --template buf.gen.ui.yaml
+generate: buf
+	$(BUF) generate
+
+generate-ts: buf
+	$(BUF) generate --template buf.gen.ui.yaml
 
 # Compiles the whole tree, then produces the daemon with the contract's ldflags.
 build:
@@ -50,12 +64,12 @@ ui-build-hash:
 # gosec findings reached CI that way. GOOS is enough to fix it for the pure-Go
 # backends and for the daemon's per-platform bind-error check; the darwin
 # backend needs cgo and so only lints on a Mac.
-lint: golangci-lint
+lint: golangci-lint buf
 	$(GOLANGCI_LINT) run ./core/... ./internal/... ./cmd/... ./tools/...
 	GOOS=linux $(GOLANGCI_LINT) run ./internal/capture/... ./cmd/trellisd/...
 	GOOS=windows $(GOLANGCI_LINT) run ./internal/capture/... ./cmd/trellisd/...
 	$(GOLANGCI_LINT) run --build-tags e2e ./cmd/trellisd/...
-	buf lint
+	$(BUF) lint
 
 vet:
 	go vet ./...
@@ -104,4 +118,17 @@ packages: ui
 golangci-lint:
 	@if ! "$(GOLANGCI_LINT)" version 2>/dev/null | grep -q "$(GOLANGCI_LINT_VERSION:v%=%)"; then \
 		go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); \
+	fi
+
+# Same shape, plus an assert the golangci-lint target does not have: an install
+# that silently produces some other version would be a new false clear rather
+# than the one this target removes, so the version is checked again after it.
+buf:
+	@if ! "$(BUF)" --version 2>/dev/null | grep -qx "$(BUF_VERSION:v%=%)"; then \
+		$(BUF_INSTALL); \
+	fi
+	@got="$$("$(BUF)" --version 2>/dev/null)"; \
+	if [ "$$got" != "$(BUF_VERSION:v%=%)" ]; then \
+		echo "buf is $${got:-absent}, the Makefile pins $(BUF_VERSION:v%=%)" >&2; \
+		exit 1; \
 	fi

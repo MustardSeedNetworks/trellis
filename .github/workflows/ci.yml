@@ -226,9 +226,10 @@ jobs:
         run: go install github.com/bufbuild/buf/cmd/buf@v1.72.0
 
       - name: Buf lint
-        # Pinned rather than floating: `make lint` runs bare `buf lint` against
-        # whatever the developer has installed, so CI is the only place the
-        # version is nailed down.
+        # The pin below and the Makefile's BUF_INSTALL must stay in step: both
+        # are matched by the org preset's `go install <module>@<version>`
+        # manager, so Renovate moves them together, and `make lint` installs and
+        # asserts the same version rather than running whatever is on PATH.
         env:
           WANT: ${{ steps.buf.outputs.version }}
         run: |
