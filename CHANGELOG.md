@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.38](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.37...v0.2.38) (2026-09-08)
+
+
+### Features
+
+* **survey:** SNR dead-zone analysis with its own dB threshold ([#383](https://github.com/MustardSeedNetworks/trellis/issues/383)) ([c6cff5e](https://github.com/MustardSeedNetworks/trellis/commit/c6cff5edead3c46f56f752ad318786f50af0bac5)), closes [#344](https://github.com/MustardSeedNetworks/trellis/issues/344)
+
 ## [0.2.37](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.36...v0.2.37) (2026-09-07)
 
 
