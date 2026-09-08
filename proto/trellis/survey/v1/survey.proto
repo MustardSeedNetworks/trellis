@@ -55,6 +55,15 @@ service SurveyService {
   // and then walks them one at a time.
   rpc SetActiveFloor(SetActiveFloorRequest) returns (SetActiveFloorResponse);
 
+  // UpdateFloor renames a floor and sets its storey number. Both fields are
+  // written: a ground floor is level 0, which proto3 cannot tell from an
+  // absent field, so the caller sends the pair it wants stored.
+  rpc UpdateFloor(UpdateFloorRequest) returns (UpdateFloorResponse);
+
+  // DeleteFloor removes a storey and everything measured on it. The last
+  // floor of a survey cannot be deleted: a survey collects onto a floor.
+  rpc DeleteFloor(DeleteFloorRequest) returns (DeleteFloorResponse);
+
   // GenerateReport renders a PDF report for a survey.
   rpc GenerateReport(GenerateReportRequest) returns (GenerateReportResponse);
 
@@ -272,6 +281,30 @@ message SetActiveFloorRequest {
 
 message SetActiveFloorResponse {
   Floor floor = 1;
+}
+
+message UpdateFloorRequest {
+  string survey_id = 1;
+  string floor_id = 2;
+  // Required, for the reason CreateFloorRequest.name is.
+  string name = 3;
+  int32 level = 4;
+}
+
+message UpdateFloorResponse {
+  Floor floor = 1;
+}
+
+message DeleteFloorRequest {
+  string survey_id = 1;
+  string floor_id = 2;
+}
+
+// The floors that remain, so a caller redraws its rail from the reply rather
+// than from what it assumes the delete did — the active floor moves when the
+// floor being walked is the one deleted.
+message DeleteFloorResponse {
+  repeated Floor floors = 1;
 }
 
 message GetHeatmapRequest {

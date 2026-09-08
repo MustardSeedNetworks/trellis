@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { type ChangeEvent, useRef } from 'react';
+import { type ChangeEvent, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PlanCalibrator } from '@/components/PlanCalibrator';
 import { surveyClient } from '@/lib/client';
@@ -25,15 +25,20 @@ export function FloorPlanPanel({
   floorId,
   hasPlan,
   scaleM,
+  nextLevel,
 }: {
   surveyId: string;
   floorId: string;
   hasPlan: boolean;
   scaleM: number;
+  // The storey the new floor gets when a refused plan is put on one of its
+  // own: one above the highest the survey already has.
+  nextLevel: number;
 }) {
   const { t } = useTranslation(['common', 'pages']);
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [newFloorName, setNewFloorName] = useState('');
 
   const planQuery = useQuery({
     queryKey: ['floor-plan', surveyId, floorId],
@@ -75,6 +80,33 @@ export function FloorPlanPanel({
     },
   });
 
+  // The plan a floor refused, put on a floor of its own. The bytes are the
+  // ones already uploaded — react-query keeps a failed mutation's variables —
+  // so the operator does not choose the same file twice.
+  const newFloorMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const image = uploadMutation.variables;
+      if (image === undefined) {
+        throw new Error('no plan to move');
+      }
+      const created = await surveyClient.createFloor({ surveyId, name, level: nextLevel });
+      const buffer = await image.arrayBuffer();
+      return surveyClient.setFloorPlan({
+        surveyId,
+        floorId: created.floor?.id ?? '',
+        image: new Uint8Array(buffer),
+      });
+    },
+    onSettled: async () => {
+      setNewFloorName('');
+      uploadMutation.reset();
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['floors', surveyId] }),
+        queryClient.invalidateQueries({ queryKey: ['surveys'] }),
+      ]);
+    },
+  });
+
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const chosen = event.target.files?.[0];
     if (chosen) {
@@ -94,7 +126,7 @@ export function FloorPlanPanel({
           imageUrl: bytesToDataUrl(planQuery.data.image, 'image/png'),
         }
       : undefined;
-  const error = uploadMutation.error ?? calibrateMutation.error;
+  const error = uploadMutation.error ?? calibrateMutation.error ?? newFloorMutation.error;
   // The one refusal an operator can do something about, and the one worth
   // explaining rather than only reporting: a plan of different dimensions over
   // a floor that already holds measurements is refused, because every stored
@@ -160,9 +192,33 @@ export function FloorPlanPanel({
       </p>
 
       {stranded ? (
-        <p className="text-sm text-text-secondary" data-testid="floor-plan-stranded-hint">
-          {t('pages:surveys.planWouldStrandHint')}
-        </p>
+        <>
+          <p className="text-sm text-text-secondary" data-testid="floor-plan-stranded-hint">
+            {t('pages:surveys.planWouldStrandHint')}
+          </p>
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="flex flex-col gap-1 text-sm text-text-secondary">
+              {t('pages:surveys.newFloorName')}
+              <input
+                value={newFloorName}
+                onChange={(event) => setNewFloorName(event.target.value)}
+                data-testid="strand-new-floor-name"
+                className="rounded border border-hairline bg-surface-raised px-3 py-2 text-sm text-text-primary"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() =>
+                newFloorName.trim() !== '' && newFloorMutation.mutate(newFloorName.trim())
+              }
+              disabled={newFloorMutation.isPending}
+              data-testid="strand-new-floor"
+              className="rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-raised disabled:opacity-50"
+            >
+              {t('pages:surveys.planAsNewFloor', { level: nextLevel })}
+            </button>
+          </div>
+        </>
       ) : null}
     </section>
   );

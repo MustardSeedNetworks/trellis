@@ -39,6 +39,12 @@ export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
   });
   const activeFloor =
     floorsQuery.data?.floors.find((floor) => floor.isActive) ?? floorsQuery.data?.floors[0];
+  // The storey a plan refused by the active floor would land on: one above the
+  // highest the survey holds, so it does not collide with a floor already there.
+  const nextLevel = (floorsQuery.data?.floors ?? []).reduce(
+    (highest, floor) => Math.max(highest, floor.level + 1),
+    1,
+  );
 
   const planQuery = useQuery({
     queryKey: ['floor-plan', survey.id, activeFloor?.id ?? ''],
@@ -106,6 +112,7 @@ export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
             floorId={activeFloor.id}
             hasPlan={activeFloor.hasFloorPlan}
             scaleM={activeFloor.scaleM}
+            nextLevel={nextLevel}
           />
         ) : null}
       </div>

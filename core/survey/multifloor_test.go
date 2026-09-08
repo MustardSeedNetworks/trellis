@@ -1,6 +1,7 @@
 package survey_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
@@ -133,7 +134,7 @@ func TestManager_DeleteFloor_LastFloor(t *testing.T) {
 	if err == nil {
 		t.Error("Expected error when deleting last floor")
 	}
-	if err.Error() != "cannot delete the last floor" {
+	if !errors.Is(err, survey.ErrLastFloor) {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
