@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.42](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.41...v0.2.42) (2026-09-08)
+
+
+### Bug Fixes
+
+* **deps:** update module golang.org/x/sys to v0.48.0 ([#399](https://github.com/MustardSeedNetworks/trellis/issues/399)) ([f1d8e28](https://github.com/MustardSeedNetworks/trellis/commit/f1d8e28b3d75fbff543f5e4076b7ca7d8973d156))
+
 ## [0.2.41](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.40...v0.2.41) (2026-09-08)
 
 
