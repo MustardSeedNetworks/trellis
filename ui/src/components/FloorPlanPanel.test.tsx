@@ -12,22 +12,30 @@ import { FloorPlanPanel } from './FloorPlanPanel';
 const setFloorPlan = vi.fn();
 const calibrateFloorPlan = vi.fn();
 const getFloorPlanImage = vi.fn();
+const createFloor = vi.fn();
 
 vi.mock('@/lib/client', () => ({
   surveyClient: {
     setFloorPlan: (req: unknown) => setFloorPlan(req),
     calibrateFloorPlan: (req: unknown) => calibrateFloorPlan(req),
     getFloorPlanImage: (req: unknown) => getFloorPlanImage(req),
+    createFloor: (req: unknown) => createFloor(req),
   },
 }));
 
-function renderPanel(hasPlan = false, scaleM = 0) {
+function renderPanel(hasPlan = false, scaleM = 0, nextLevel = 1) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   function wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   }
   return render(
-    <FloorPlanPanel surveyId="svy-9" floorId="flr-1" hasPlan={hasPlan} scaleM={scaleM} />,
+    <FloorPlanPanel
+      surveyId="svy-9"
+      floorId="flr-1"
+      hasPlan={hasPlan}
+      scaleM={scaleM}
+      nextLevel={nextLevel}
+    />,
     { wrapper },
   );
 }
@@ -36,6 +44,8 @@ beforeEach(() => {
   setFloorPlan.mockReset();
   calibrateFloorPlan.mockReset();
   getFloorPlanImage.mockReset();
+  createFloor.mockReset();
+  createFloor.mockResolvedValue({ floor: { id: 'flr-9', name: 'Ninth', level: 1 } });
   setFloorPlan.mockResolvedValue({ floor: { id: 'flr-1', hasFloorPlan: true } });
   calibrateFloorPlan.mockResolvedValue({ floor: { id: 'flr-1', scaleM: 0.025 } });
   getFloorPlanImage.mockResolvedValue({
@@ -162,5 +172,71 @@ describe('FloorPlanPanel', () => {
     const hint = await screen.findByTestId('floor-plan-stranded-hint');
     expect(hint).toHaveTextContent(/same dimensions/i);
     expect(hint).toHaveTextContent(/delete the measurements/i);
+  });
+
+  // The route TR-1 was written to have and could not build: the plan a floor
+  // refused is a plan of a different storey often enough that offering the new
+  // floor is the fix, not an apology.
+  it('puts the refused plan on a new floor without asking for the file again', async () => {
+    setFloorPlan.mockRejectedValueOnce(
+      new Error('replacing the floor plan would strand the measurements taken on it: 3 …'),
+    );
+    renderPanel();
+
+    const file = new File([new Uint8Array([1, 2, 3])], 'ninth.png', { type: 'image/png' });
+    fireEvent.change(screen.getByTestId('floor-plan-input'), { target: { files: [file] } });
+    await screen.findByTestId('floor-plan-stranded-hint');
+
+    fireEvent.change(screen.getByTestId('strand-new-floor-name'), { target: { value: 'Ninth' } });
+    fireEvent.click(screen.getByTestId('strand-new-floor'));
+
+    await waitFor(() => expect(createFloor).toHaveBeenCalled());
+    expect(createFloor.mock.calls[0]?.[0]).toMatchObject({
+      surveyId: 'svy-9',
+      name: 'Ninth',
+      level: 1,
+    });
+    // The bytes the operator already chose go straight onto the new floor.
+    await waitFor(() => expect(setFloorPlan).toHaveBeenCalledTimes(2));
+    expect(setFloorPlan.mock.calls[1]?.[0]).toMatchObject({ floorId: 'flr-9' });
+    expect(setFloorPlan.mock.calls[1]?.[0].image).toBeInstanceOf(Uint8Array);
+  });
+
+  it('offers the new-floor route only on the refusal that has one', async () => {
+    renderPanel();
+
+    const file = new File([new Uint8Array([1])], 'notes.txt', { type: 'text/plain' });
+    fireEvent.change(screen.getByTestId('floor-plan-input'), { target: { files: [file] } });
+
+    await screen.findByTestId('floor-plan-status');
+    expect(screen.queryByTestId('strand-new-floor')).toBeNull();
+  });
+
+  it('keeps the offer and the bytes when the new floor cannot be made', async () => {
+    setFloorPlan.mockRejectedValueOnce(
+      new Error('replacing the floor plan would strand the measurements taken on it: 3 …'),
+    );
+    createFloor.mockRejectedValueOnce(new Error('[unavailable] the daemon went away'));
+    renderPanel();
+
+    const file = new File([new Uint8Array([1, 2, 3])], 'ninth.png', { type: 'image/png' });
+    fireEvent.change(screen.getByTestId('floor-plan-input'), { target: { files: [file] } });
+    await screen.findByTestId('floor-plan-stranded-hint');
+
+    fireEvent.change(screen.getByTestId('strand-new-floor-name'), { target: { value: 'Ninth' } });
+    fireEvent.click(screen.getByTestId('strand-new-floor'));
+
+    // What just went wrong, not the refusal that is still standing behind it.
+    await waitFor(() =>
+      expect(screen.getByTestId('floor-plan-status')).toHaveTextContent('the daemon went away'),
+    );
+    // And the offer survives with the file already chosen: making the operator
+    // re-pick it is the thing this route exists to avoid.
+    expect(screen.getByTestId('strand-new-floor')).toBeInTheDocument();
+
+    createFloor.mockResolvedValueOnce({ floor: { id: 'flr-9', name: 'Ninth', level: 1 } });
+    fireEvent.click(screen.getByTestId('strand-new-floor'));
+    await waitFor(() => expect(setFloorPlan).toHaveBeenCalledTimes(2));
+    expect(setFloorPlan.mock.calls[1]?.[0]).toMatchObject({ floorId: 'flr-9' });
   });
 });

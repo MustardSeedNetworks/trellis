@@ -482,3 +482,151 @@ func TestSetActiveFloorOnAnUnknownFloorIsNotFound(t *testing.T) {
 		t.Fatalf("SetActiveFloor on an unknown floor = %v, want NotFound", err)
 	}
 }
+
+func TestUpdateFloorRenamesAndRestoreys(t *testing.T) {
+	t.Parallel()
+
+	handler, _, surveyID, _, basement := twoFloorSurvey(t)
+
+	resp, err := handler.UpdateFloor(context.Background(),
+		connect.NewRequest(&surveyv1.UpdateFloorRequest{
+			SurveyId: surveyID, FloorId: basement, Name: "Lower ground", Level: 0,
+		}))
+	if err != nil {
+		t.Fatalf("UpdateFloor: %v", err)
+	}
+	got := resp.Msg.GetFloor()
+	if got.GetName() != "Lower ground" || got.GetLevel() != 0 {
+		t.Errorf("renamed floor = %q level %d, want Lower ground level 0",
+			got.GetName(), got.GetLevel())
+	}
+	// A rename touches metadata only: the measurements walked on the floor are
+	// still its own.
+	if got.GetSampleCount() != 3 {
+		t.Errorf("sample count after rename = %d, want 3", got.GetSampleCount())
+	}
+}
+
+func TestUpdateFloorRejectsAnEmptyName(t *testing.T) {
+	t.Parallel()
+
+	handler, _, surveyID, _, basement := twoFloorSurvey(t)
+
+	_, err := handler.UpdateFloor(context.Background(),
+		connect.NewRequest(&surveyv1.UpdateFloorRequest{
+			SurveyId: surveyID, FloorId: basement, Name: "   ",
+		}))
+	if connect.CodeOf(err) != connect.CodeInvalidArgument {
+		t.Fatalf("UpdateFloor with a blank name = %v, want InvalidArgument", err)
+	}
+}
+
+func TestUpdateFloorOnAnUnknownFloorIsNotFound(t *testing.T) {
+	t.Parallel()
+
+	handler, _, surveyID, _, _ := twoFloorSurvey(t)
+
+	_, err := handler.UpdateFloor(context.Background(),
+		connect.NewRequest(&surveyv1.UpdateFloorRequest{
+			SurveyId: surveyID, FloorId: "no-such-floor", Name: "Anywhere",
+		}))
+	if connect.CodeOf(err) != connect.CodeNotFound {
+		t.Fatalf("UpdateFloor of an unknown floor = %v, want NotFound", err)
+	}
+}
+
+func TestDeleteFloorReturnsTheStoreysThatRemain(t *testing.T) {
+	t.Parallel()
+
+	handler, _, surveyID, ground, basement := twoFloorSurvey(t)
+
+	resp, err := handler.DeleteFloor(context.Background(),
+		connect.NewRequest(&surveyv1.DeleteFloorRequest{
+			SurveyId: surveyID, FloorId: basement,
+		}))
+	if err != nil {
+		t.Fatalf("DeleteFloor: %v", err)
+	}
+	// The reply is what the rail redraws from, so it has to describe the
+	// survey after the delete rather than acknowledge the request.
+	floors := resp.Msg.GetFloors()
+	if len(floors) != 1 || floors[0].GetId() != ground {
+		t.Fatalf("floors after delete = %d, want only the ground floor", len(floors))
+	}
+	if !floors[0].GetIsActive() {
+		t.Error("the surviving floor is not active; a survey collects onto a floor")
+	}
+
+	// And the deleted floor's measurements went with it.
+	coverage, err := handler.ListSamples(context.Background(),
+		connect.NewRequest(&surveyv1.ListSamplesRequest{SurveyId: surveyID}))
+	if err != nil {
+		t.Fatalf("ListSamples: %v", err)
+	}
+	if got := len(coverage.Msg.GetSamples()); got != 2 {
+		t.Errorf("samples after deleting the basement = %d, want the ground floor's 2", got)
+	}
+}
+
+func TestDeleteFloorMovesTheWalkWhenItDeletesTheWalkedFloor(t *testing.T) {
+	t.Parallel()
+
+	handler, _, surveyID, ground, basement := twoFloorSurvey(t)
+
+	if _, err := handler.SetActiveFloor(context.Background(),
+		connect.NewRequest(&surveyv1.SetActiveFloorRequest{
+			SurveyId: surveyID, FloorId: basement,
+		})); err != nil {
+		t.Fatalf("SetActiveFloor: %v", err)
+	}
+
+	resp, err := handler.DeleteFloor(context.Background(),
+		connect.NewRequest(&surveyv1.DeleteFloorRequest{
+			SurveyId: surveyID, FloorId: basement,
+		}))
+	if err != nil {
+		t.Fatalf("DeleteFloor: %v", err)
+	}
+	floors := resp.Msg.GetFloors()
+	if len(floors) != 1 || floors[0].GetId() != ground || !floors[0].GetIsActive() {
+		t.Errorf("after deleting the walked floor the walk did not move to the survivor: %+v", floors)
+	}
+}
+
+func TestDeleteFloorRefusesTheLastStorey(t *testing.T) {
+	t.Parallel()
+
+	handler, _, surveyID, ground, basement := twoFloorSurvey(t)
+
+	if _, err := handler.DeleteFloor(context.Background(),
+		connect.NewRequest(&surveyv1.DeleteFloorRequest{
+			SurveyId: surveyID, FloorId: basement,
+		})); err != nil {
+		t.Fatalf("DeleteFloor basement: %v", err)
+	}
+
+	// A survey collects onto a floor, so the refusal is a true statement about
+	// the survey's state rather than a fault in the request.
+	_, err := handler.DeleteFloor(context.Background(),
+		connect.NewRequest(&surveyv1.DeleteFloorRequest{
+			SurveyId: surveyID, FloorId: ground,
+		}))
+	if connect.CodeOf(err) != connect.CodeFailedPrecondition {
+		t.Fatalf("DeleteFloor of the last floor = %v (%v), want FailedPrecondition",
+			err, connect.CodeOf(err))
+	}
+}
+
+func TestDeleteFloorOnAnUnknownFloorIsNotFound(t *testing.T) {
+	t.Parallel()
+
+	handler, _, surveyID, _, _ := twoFloorSurvey(t)
+
+	_, err := handler.DeleteFloor(context.Background(),
+		connect.NewRequest(&surveyv1.DeleteFloorRequest{
+			SurveyId: surveyID, FloorId: "no-such-floor",
+		}))
+	if connect.CodeOf(err) != connect.CodeNotFound {
+		t.Fatalf("DeleteFloor of an unknown floor = %v, want NotFound", err)
+	}
+}

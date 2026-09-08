@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { type ChangeEvent, useRef } from 'react';
+import { type ChangeEvent, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PlanCalibrator } from '@/components/PlanCalibrator';
 import { surveyClient } from '@/lib/client';
@@ -25,15 +25,20 @@ export function FloorPlanPanel({
   floorId,
   hasPlan,
   scaleM,
+  nextLevel,
 }: {
   surveyId: string;
   floorId: string;
   hasPlan: boolean;
   scaleM: number;
+  // The storey the new floor gets when a refused plan is put on one of its
+  // own: one above the highest the survey already has.
+  nextLevel: number;
 }) {
   const { t } = useTranslation(['common', 'pages']);
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [newFloorName, setNewFloorName] = useState('');
 
   const planQuery = useQuery({
     queryKey: ['floor-plan', surveyId, floorId],
@@ -75,6 +80,45 @@ export function FloorPlanPanel({
     },
   });
 
+  // The plan a floor refused, put on a floor of its own. The bytes are the
+  // ones already uploaded — react-query keeps a failed mutation's variables —
+  // so the operator does not choose the same file twice.
+  const newFloorMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const image = uploadMutation.variables;
+      if (image === undefined) {
+        throw new Error('no plan to move');
+      }
+      const created = await surveyClient.createFloor({ surveyId, name, level: nextLevel });
+      // Not `?? ''`: an empty floor_id means the ACTIVE floor, which is the one
+      // that just refused this plan, so a fallback would quietly re-run the
+      // failure and report it as the new floor's.
+      if (created.floor === undefined) {
+        throw new Error('the new floor came back without an id');
+      }
+      const buffer = await image.arrayBuffer();
+      return surveyClient.setFloorPlan({
+        surveyId,
+        floorId: created.floor.id,
+        image: new Uint8Array(buffer),
+      });
+    },
+    // The upload is reset only once the plan is on the new floor. Resetting it
+    // on failure too would clear the refusal that draws this form, taking the
+    // bytes with it — the operator would have to choose the same file again to
+    // get the offer back, which is what this route exists to avoid.
+    onSuccess: () => {
+      setNewFloorName('');
+      uploadMutation.reset();
+    },
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['floors', surveyId] }),
+        queryClient.invalidateQueries({ queryKey: ['surveys'] }),
+      ]);
+    },
+  });
+
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const chosen = event.target.files?.[0];
     if (chosen) {
@@ -94,12 +138,16 @@ export function FloorPlanPanel({
           imageUrl: bytesToDataUrl(planQuery.data.image, 'image/png'),
         }
       : undefined;
-  const error = uploadMutation.error ?? calibrateMutation.error;
+  // The new-floor route's failure comes first: the strand refusal is still
+  // standing by design while the form is offered, so leaving it ahead would
+  // report the old refusal instead of what just went wrong.
+  const error = newFloorMutation.error ?? uploadMutation.error ?? calibrateMutation.error;
   // The one refusal an operator can do something about, and the one worth
   // explaining rather than only reporting: a plan of different dimensions over
   // a floor that already holds measurements is refused, because every stored
   // point is a pixel coordinate on the plan it was walked against.
-  const stranded = error !== null && /strand the measurements/i.test(String(error));
+  const stranded =
+    uploadMutation.error !== null && /strand the measurements/i.test(String(uploadMutation.error));
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="floor-plan-title">
@@ -160,9 +208,33 @@ export function FloorPlanPanel({
       </p>
 
       {stranded ? (
-        <p className="text-sm text-text-secondary" data-testid="floor-plan-stranded-hint">
-          {t('pages:surveys.planWouldStrandHint')}
-        </p>
+        <>
+          <p className="text-sm text-text-secondary" data-testid="floor-plan-stranded-hint">
+            {t('pages:surveys.planWouldStrandHint')}
+          </p>
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="flex flex-col gap-1 text-sm text-text-secondary">
+              {t('pages:surveys.newFloorName')}
+              <input
+                value={newFloorName}
+                onChange={(event) => setNewFloorName(event.target.value)}
+                data-testid="strand-new-floor-name"
+                className="rounded border border-hairline bg-surface-raised px-3 py-2 text-sm text-text-primary"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() =>
+                newFloorName.trim() !== '' && newFloorMutation.mutate(newFloorName.trim())
+              }
+              disabled={newFloorMutation.isPending}
+              data-testid="strand-new-floor"
+              className="rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-raised disabled:opacity-50"
+            >
+              {t('pages:surveys.planAsNewFloor', { level: nextLevel })}
+            </button>
+          </div>
+        </>
       ) : null}
     </section>
   );

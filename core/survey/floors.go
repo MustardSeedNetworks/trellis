@@ -1,8 +1,8 @@
 package survey
 
 import (
-	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -58,6 +58,11 @@ func (m *Manager) AddFloor(surveyID, name string, level int) (*Floor, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, ErrFloorNameEmpty
+	}
+
 	survey, exists := m.surveys[surveyID]
 	if !exists {
 		return nil, fmt.Errorf("%w: %s", ErrSurveyNotFound, surveyID)
@@ -84,9 +89,18 @@ func (m *Manager) AddFloor(surveyID, name string, level int) (*Floor, error) {
 }
 
 // UpdateFloor updates floor metadata (name, level).
+//
+// Both fields are written on every call: proto3 cannot tell a level of 0 from
+// an absent one, and a ground floor is level 0, so a caller sends the pair it
+// wants the floor to end up with rather than a patch.
 func (m *Manager) UpdateFloor(surveyID, floorID, name string, level int) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return ErrFloorNameEmpty
+	}
 
 	survey, exists := m.surveys[surveyID]
 	if !exists {
@@ -116,27 +130,34 @@ func (m *Manager) DeleteFloor(surveyID, floorID string) error {
 		return fmt.Errorf("%w: %s", ErrSurveyNotFound, surveyID)
 	}
 
-	// Don't allow deletion of the last floor
-	if len(survey.Floors) <= 1 {
-		return errors.New("cannot delete the last floor")
-	}
-
-	// Find and remove the floor
+	// Whether the floor exists is settled before whether it is the last one:
+	// asking the count first answers "cannot delete the last floor" about a
+	// floor the caller never named.
+	index := -1
 	for i, floor := range survey.Floors {
 		if floor.ID == floorID {
-			survey.Floors = append(survey.Floors[:i], survey.Floors[i+1:]...)
-
-			// If we deleted the active floor, switch to the first remaining floor
-			if survey.ActiveFloorID == floorID {
-				survey.ActiveFloorID = survey.Floors[0].ID
-			}
-
-			survey.UpdatedAt = time.Now()
-			return m.persistSurvey(survey)
+			index = i
+			break
 		}
 	}
+	if index < 0 {
+		return fmt.Errorf("%w: %s", ErrFloorNotFound, floorID)
+	}
+	if len(survey.Floors) <= 1 {
+		return ErrLastFloor
+	}
 
-	return fmt.Errorf("%w: %s", ErrFloorNotFound, floorID)
+	// The floor's measurements go with it: persistSurvey rewrites the survey's
+	// floors, and survey_points cascades on floor_id.
+	survey.Floors = append(survey.Floors[:index], survey.Floors[index+1:]...)
+
+	// If we deleted the active floor, switch to the first remaining floor
+	if survey.ActiveFloorID == floorID {
+		survey.ActiveFloorID = survey.Floors[0].ID
+	}
+
+	survey.UpdatedAt = time.Now()
+	return m.persistSurvey(survey)
 }
 
 // SetActiveFloor sets the active floor for data collection.

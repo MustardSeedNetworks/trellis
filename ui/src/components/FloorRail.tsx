@@ -16,18 +16,33 @@ import { surveyClient } from '@/lib/client';
  * Creating a floor deliberately does not switch to it. The floors of a
  * building are entered together and walked one at a time; moving the walk on
  * every add would take it off the floor being measured.
+ *
+ * Deleting one is two clicks, like deleting a survey: a floor holds the
+ * measurements walked on it and they go with it.
  */
 export function FloorRail({ surveyId, floors }: { surveyId: string; floors: Floor[] }) {
   const { t } = useTranslation(['common', 'pages']);
   const queryClient = useQueryClient();
   const [name, setName] = useState('');
   const [level, setLevel] = useState('');
+  // Which row is being renamed, and which is armed for deletion — by floor ID
+  // rather than a boolean, so arming one row does not arm every row.
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editLevel, setEditLevel] = useState('');
+  const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
 
-  // The floor list, and the survey summary whose floor count is drawn from it.
+  // The floor list, the survey summary whose floor count is drawn from it, and
+  // everything drawn from the measurements: a deleted floor takes its readings
+  // off the capture surface AND off Coverage, which keys its heatmap and its
+  // findings separately and would otherwise serve the deleted floor's numbers.
   const refresh = () =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: ['floors', surveyId] }),
       queryClient.invalidateQueries({ queryKey: ['surveys'] }),
+      queryClient.invalidateQueries({ queryKey: ['samples', surveyId] }),
+      queryClient.invalidateQueries({ queryKey: ['heatmap', surveyId] }),
+      queryClient.invalidateQueries({ queryKey: ['coverage', surveyId] }),
     ]);
 
   const createMutation = useMutation({
@@ -45,8 +60,31 @@ export function FloorRail({ surveyId, floors }: { surveyId: string; floors: Floo
     onSuccess: refresh,
   });
 
+  const renameMutation = useMutation({
+    mutationFn: (floor: { floorId: string; name: string; level: number }) =>
+      surveyClient.updateFloor({ surveyId, ...floor }),
+    // onSettled, not onSuccess: a refused rename still leaves the rail showing
+    // whatever the server holds, which is the thing worth drawing.
+    onSettled: async () => {
+      setEditing(null);
+      await refresh();
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (floorId: string) => surveyClient.deleteFloor({ surveyId, floorId }),
+    onSettled: async () => {
+      setConfirmingDelete(null);
+      await refresh();
+    },
+  });
+
   const trimmed = name.trim();
-  const error = createMutation.error ?? activateMutation.error;
+  const error =
+    createMutation.error ?? activateMutation.error ?? renameMutation.error ?? deleteMutation.error;
+  // The last floor cannot be deleted — the handler refuses it, and a button
+  // that can only fail is worse than no button.
+  const deletable = floors.length > 1;
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="floor-rail-title">
@@ -68,6 +106,105 @@ export function FloorRail({ surveyId, floors }: { surveyId: string; floors: Floo
             <span className="text-sm text-text-secondary">
               {t('pages:surveys.floorSamples', { count: floor.sampleCount })}
             </span>
+            {editing === floor.id ? (
+              <>
+                <label className="sr-only" htmlFor={`floor-rename-${floor.id}`}>
+                  {t('pages:surveys.floorName')}
+                </label>
+                <input
+                  id={`floor-rename-${floor.id}`}
+                  value={editName}
+                  onChange={(event) => setEditName(event.target.value)}
+                  data-testid={`floor-rename-input-${floor.id}`}
+                  className="rounded border border-hairline bg-surface-raised px-2 py-1 text-sm text-text-primary"
+                />
+                <label className="sr-only" htmlFor={`floor-relevel-${floor.id}`}>
+                  {t('pages:surveys.floorLevelField')}
+                </label>
+                <input
+                  id={`floor-relevel-${floor.id}`}
+                  type="number"
+                  value={editLevel}
+                  onChange={(event) => setEditLevel(event.target.value)}
+                  data-testid={`floor-relevel-input-${floor.id}`}
+                  className="w-20 rounded border border-hairline bg-surface-raised px-2 py-1 text-sm text-text-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => setEditing(null)}
+                  className="rounded border border-hairline px-3 py-1 text-sm text-text-primary hover:bg-surface-raised"
+                  data-testid={`floor-rename-cancel-${floor.id}`}
+                >
+                  {t('pages:surveys.cancelRename')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    editName.trim() !== '' &&
+                    renameMutation.mutate({
+                      floorId: floor.id,
+                      name: editName.trim(),
+                      level: Number.parseInt(editLevel, 10) || 0,
+                    })
+                  }
+                  disabled={renameMutation.isPending}
+                  data-testid={`floor-rename-save-${floor.id}`}
+                  className="rounded bg-brand-primary px-3 py-1 text-sm font-medium text-on-brand hover:bg-brand-accent disabled:opacity-50"
+                >
+                  {t('pages:surveys.saveRename')}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditing(floor.id);
+                  setEditName(floor.name);
+                  setEditLevel(String(floor.level));
+                }}
+                data-testid={`rename-floor-${floor.id}`}
+                className="rounded border border-hairline px-3 py-1 text-sm text-text-primary hover:bg-surface-raised"
+              >
+                {t('pages:surveys.renameFloor')}
+              </button>
+            )}
+
+            {deletable ? (
+              confirmingDelete === floor.id ? (
+                <>
+                  <span className="text-sm text-text-secondary">
+                    {t('pages:surveys.deleteFloorPrompt', { count: floor.sampleCount })}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingDelete(null)}
+                    data-testid={`delete-floor-cancel-${floor.id}`}
+                    className="rounded border border-hairline px-3 py-1 text-sm text-text-primary hover:bg-surface-raised"
+                  >
+                    {t('pages:surveys.keepIt')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deleteMutation.mutate(floor.id)}
+                    disabled={deleteMutation.isPending}
+                    data-testid={`delete-floor-confirm-${floor.id}`}
+                    className="rounded border border-status-error px-3 py-1 text-sm text-status-error hover:bg-surface-raised disabled:opacity-50"
+                  >
+                    {t('pages:surveys.confirmDeleteFloor', { name: floor.name })}
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmingDelete(floor.id)}
+                  data-testid={`delete-floor-${floor.id}`}
+                  className="rounded border border-status-error px-3 py-1 text-sm text-status-error hover:bg-surface-raised"
+                >
+                  {t('pages:surveys.deleteFloor')}
+                </button>
+              )
+            ) : null}
+
             {floor.isActive ? (
               <span className="kicker" data-testid={`floor-walking-${floor.id}`}>
                 {t('pages:surveys.floorWalking')}

@@ -88,15 +88,12 @@ func (h *SurveyServiceHandler) CreateFloor(
 	if surveyID == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
 	}
-	// AddFloor stores whatever name it is given; an unnamed floor is a blank
-	// row in the rail that nothing can pick out, so the refusal is here.
-	if name == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("name is required"))
-	}
 
+	// AddFloor refuses a blank name itself, so there is one rule about what a
+	// floor may be called rather than two that can drift apart.
 	floor, err := h.manager.AddFloor(surveyID, name, int(req.Msg.GetLevel()))
 	if err != nil {
-		return nil, notFoundOrInternal(err)
+		return nil, floorError(err)
 	}
 
 	return connect.NewResponse(&surveyv1.CreateFloorResponse{
@@ -118,12 +115,80 @@ func (h *SurveyServiceHandler) SetActiveFloor(
 	}
 
 	if err := h.manager.SetActiveFloor(surveyID, floorID); err != nil {
-		return nil, notFoundOrInternal(err)
+		return nil, floorError(err)
 	}
 
 	return connect.NewResponse(&surveyv1.SetActiveFloorResponse{
 		Floor: h.floorAfterChange(surveyID, floorID),
 	}), nil
+}
+
+// UpdateFloor renames a floor and sets its storey number.
+func (h *SurveyServiceHandler) UpdateFloor(
+	_ context.Context,
+	req *connect.Request[surveyv1.UpdateFloorRequest],
+) (*connect.Response[surveyv1.UpdateFloorResponse], error) {
+	surveyID, floorID := req.Msg.GetSurveyId(), req.Msg.GetFloorId()
+	if surveyID == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+	}
+	if floorID == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("floor_id is required"))
+	}
+
+	if err := h.manager.UpdateFloor(surveyID, floorID,
+		req.Msg.GetName(), int(req.Msg.GetLevel())); err != nil {
+		return nil, floorError(err)
+	}
+
+	return connect.NewResponse(&surveyv1.UpdateFloorResponse{
+		Floor: h.floorAfterChange(surveyID, floorID),
+	}), nil
+}
+
+// DeleteFloor removes a storey and the measurements walked on it.
+//
+// The reply is the survey's remaining floors rather than an acknowledgement:
+// deleting the floor being walked moves the walk, so the caller cannot derive
+// the new state from the request it sent.
+func (h *SurveyServiceHandler) DeleteFloor(
+	ctx context.Context,
+	req *connect.Request[surveyv1.DeleteFloorRequest],
+) (*connect.Response[surveyv1.DeleteFloorResponse], error) {
+	surveyID, floorID := req.Msg.GetSurveyId(), req.Msg.GetFloorId()
+	if surveyID == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+	}
+	if floorID == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("floor_id is required"))
+	}
+
+	if err := h.manager.DeleteFloor(surveyID, floorID); err != nil {
+		return nil, floorError(err)
+	}
+
+	listed, err := h.ListFloors(ctx,
+		connect.NewRequest(&surveyv1.ListFloorsRequest{SurveyId: surveyID}))
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&surveyv1.DeleteFloorResponse{
+		Floors: listed.Msg.GetFloors(),
+	}), nil
+}
+
+// floorError maps a floor failure onto a code that says whose problem it is.
+// A blank name is the request's fault; the last floor of a survey is a true
+// statement about the survey, which is what FailedPrecondition is for.
+func floorError(err error) error {
+	switch {
+	case errors.Is(err, survey.ErrFloorNameEmpty):
+		return connect.NewError(connect.CodeInvalidArgument, err)
+	case errors.Is(err, survey.ErrLastFloor):
+		return connect.NewError(connect.CodeFailedPrecondition, err)
+	default:
+		return notFoundOrInternal(err)
+	}
 }
 
 // toFloor maps a domain floor onto the wire, marking it active by identity

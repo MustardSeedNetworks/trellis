@@ -21,4 +21,12 @@ var (
 	// sample's position is a pixel coordinate on the plan it was taken
 	// against, so a new pixel space silently moves every one of them.
 	ErrPlanWouldStrandSamples = errors.New("replacing the floor plan would strand the measurements taken on it")
+	// ErrLastFloor is returned when the only floor of a survey is deleted. A
+	// survey collects onto a floor, so one without any has nowhere to put the
+	// next reading.
+	ErrLastFloor = errors.New("cannot delete the last floor of a survey")
+	// ErrFloorNameEmpty is returned when a floor is created or renamed with a
+	// blank name. Floors are listed and picked by name, and a blank one is a
+	// row nothing can identify.
+	ErrFloorNameEmpty = errors.New("floor name is required")
 )

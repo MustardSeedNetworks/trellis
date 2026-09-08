@@ -72,6 +72,12 @@ const (
 	// SurveyServiceSetActiveFloorProcedure is the fully-qualified name of the SurveyService's
 	// SetActiveFloor RPC.
 	SurveyServiceSetActiveFloorProcedure = "/trellis.survey.v1.SurveyService/SetActiveFloor"
+	// SurveyServiceUpdateFloorProcedure is the fully-qualified name of the SurveyService's UpdateFloor
+	// RPC.
+	SurveyServiceUpdateFloorProcedure = "/trellis.survey.v1.SurveyService/UpdateFloor"
+	// SurveyServiceDeleteFloorProcedure is the fully-qualified name of the SurveyService's DeleteFloor
+	// RPC.
+	SurveyServiceDeleteFloorProcedure = "/trellis.survey.v1.SurveyService/DeleteFloor"
 	// SurveyServiceGenerateReportProcedure is the fully-qualified name of the SurveyService's
 	// GenerateReport RPC.
 	SurveyServiceGenerateReportProcedure = "/trellis.survey.v1.SurveyService/GenerateReport"
@@ -152,6 +158,13 @@ type SurveyServiceClient interface {
 	// does not switch to it: an operator adds the floors of a building up front
 	// and then walks them one at a time.
 	SetActiveFloor(context.Context, *connect.Request[v1.SetActiveFloorRequest]) (*connect.Response[v1.SetActiveFloorResponse], error)
+	// UpdateFloor renames a floor and sets its storey number. Both fields are
+	// written: a ground floor is level 0, which proto3 cannot tell from an
+	// absent field, so the caller sends the pair it wants stored.
+	UpdateFloor(context.Context, *connect.Request[v1.UpdateFloorRequest]) (*connect.Response[v1.UpdateFloorResponse], error)
+	// DeleteFloor removes a storey and everything measured on it. The last
+	// floor of a survey cannot be deleted: a survey collects onto a floor.
+	DeleteFloor(context.Context, *connect.Request[v1.DeleteFloorRequest]) (*connect.Response[v1.DeleteFloorResponse], error)
 	// GenerateReport renders a PDF report for a survey.
 	GenerateReport(context.Context, *connect.Request[v1.GenerateReportRequest]) (*connect.Response[v1.GenerateReportResponse], error)
 	// CreateSurvey opens a new, empty survey to walk. The measured counterpart
@@ -307,6 +320,18 @@ func NewSurveyServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(surveyServiceMethods.ByName("SetActiveFloor")),
 			connect.WithClientOptions(opts...),
 		),
+		updateFloor: connect.NewClient[v1.UpdateFloorRequest, v1.UpdateFloorResponse](
+			httpClient,
+			baseURL+SurveyServiceUpdateFloorProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("UpdateFloor")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteFloor: connect.NewClient[v1.DeleteFloorRequest, v1.DeleteFloorResponse](
+			httpClient,
+			baseURL+SurveyServiceDeleteFloorProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("DeleteFloor")),
+			connect.WithClientOptions(opts...),
+		),
 		generateReport: connect.NewClient[v1.GenerateReportRequest, v1.GenerateReportResponse](
 			httpClient,
 			baseURL+SurveyServiceGenerateReportProcedure,
@@ -419,6 +444,8 @@ type surveyServiceClient struct {
 	getFloor               *connect.Client[v1.GetFloorRequest, v1.GetFloorResponse]
 	createFloor            *connect.Client[v1.CreateFloorRequest, v1.CreateFloorResponse]
 	setActiveFloor         *connect.Client[v1.SetActiveFloorRequest, v1.SetActiveFloorResponse]
+	updateFloor            *connect.Client[v1.UpdateFloorRequest, v1.UpdateFloorResponse]
+	deleteFloor            *connect.Client[v1.DeleteFloorRequest, v1.DeleteFloorResponse]
 	generateReport         *connect.Client[v1.GenerateReportRequest, v1.GenerateReportResponse]
 	createSurvey           *connect.Client[v1.CreateSurveyRequest, v1.CreateSurveyResponse]
 	startSurvey            *connect.Client[v1.StartSurveyRequest, v1.StartSurveyResponse]
@@ -490,6 +517,16 @@ func (c *surveyServiceClient) CreateFloor(ctx context.Context, req *connect.Requ
 // SetActiveFloor calls trellis.survey.v1.SurveyService.SetActiveFloor.
 func (c *surveyServiceClient) SetActiveFloor(ctx context.Context, req *connect.Request[v1.SetActiveFloorRequest]) (*connect.Response[v1.SetActiveFloorResponse], error) {
 	return c.setActiveFloor.CallUnary(ctx, req)
+}
+
+// UpdateFloor calls trellis.survey.v1.SurveyService.UpdateFloor.
+func (c *surveyServiceClient) UpdateFloor(ctx context.Context, req *connect.Request[v1.UpdateFloorRequest]) (*connect.Response[v1.UpdateFloorResponse], error) {
+	return c.updateFloor.CallUnary(ctx, req)
+}
+
+// DeleteFloor calls trellis.survey.v1.SurveyService.DeleteFloor.
+func (c *surveyServiceClient) DeleteFloor(ctx context.Context, req *connect.Request[v1.DeleteFloorRequest]) (*connect.Response[v1.DeleteFloorResponse], error) {
+	return c.deleteFloor.CallUnary(ctx, req)
 }
 
 // GenerateReport calls trellis.survey.v1.SurveyService.GenerateReport.
@@ -603,6 +640,13 @@ type SurveyServiceHandler interface {
 	// does not switch to it: an operator adds the floors of a building up front
 	// and then walks them one at a time.
 	SetActiveFloor(context.Context, *connect.Request[v1.SetActiveFloorRequest]) (*connect.Response[v1.SetActiveFloorResponse], error)
+	// UpdateFloor renames a floor and sets its storey number. Both fields are
+	// written: a ground floor is level 0, which proto3 cannot tell from an
+	// absent field, so the caller sends the pair it wants stored.
+	UpdateFloor(context.Context, *connect.Request[v1.UpdateFloorRequest]) (*connect.Response[v1.UpdateFloorResponse], error)
+	// DeleteFloor removes a storey and everything measured on it. The last
+	// floor of a survey cannot be deleted: a survey collects onto a floor.
+	DeleteFloor(context.Context, *connect.Request[v1.DeleteFloorRequest]) (*connect.Response[v1.DeleteFloorResponse], error)
 	// GenerateReport renders a PDF report for a survey.
 	GenerateReport(context.Context, *connect.Request[v1.GenerateReportRequest]) (*connect.Response[v1.GenerateReportResponse], error)
 	// CreateSurvey opens a new, empty survey to walk. The measured counterpart
@@ -754,6 +798,18 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(surveyServiceMethods.ByName("SetActiveFloor")),
 		connect.WithHandlerOptions(opts...),
 	)
+	surveyServiceUpdateFloorHandler := connect.NewUnaryHandler(
+		SurveyServiceUpdateFloorProcedure,
+		svc.UpdateFloor,
+		connect.WithSchema(surveyServiceMethods.ByName("UpdateFloor")),
+		connect.WithHandlerOptions(opts...),
+	)
+	surveyServiceDeleteFloorHandler := connect.NewUnaryHandler(
+		SurveyServiceDeleteFloorProcedure,
+		svc.DeleteFloor,
+		connect.WithSchema(surveyServiceMethods.ByName("DeleteFloor")),
+		connect.WithHandlerOptions(opts...),
+	)
 	surveyServiceGenerateReportHandler := connect.NewUnaryHandler(
 		SurveyServiceGenerateReportProcedure,
 		svc.GenerateReport,
@@ -874,6 +930,10 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 			surveyServiceCreateFloorHandler.ServeHTTP(w, r)
 		case SurveyServiceSetActiveFloorProcedure:
 			surveyServiceSetActiveFloorHandler.ServeHTTP(w, r)
+		case SurveyServiceUpdateFloorProcedure:
+			surveyServiceUpdateFloorHandler.ServeHTTP(w, r)
+		case SurveyServiceDeleteFloorProcedure:
+			surveyServiceDeleteFloorHandler.ServeHTTP(w, r)
 		case SurveyServiceGenerateReportProcedure:
 			surveyServiceGenerateReportHandler.ServeHTTP(w, r)
 		case SurveyServiceCreateSurveyProcedure:
@@ -957,6 +1017,14 @@ func (UnimplementedSurveyServiceHandler) CreateFloor(context.Context, *connect.R
 
 func (UnimplementedSurveyServiceHandler) SetActiveFloor(context.Context, *connect.Request[v1.SetActiveFloorRequest]) (*connect.Response[v1.SetActiveFloorResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.SetActiveFloor is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) UpdateFloor(context.Context, *connect.Request[v1.UpdateFloorRequest]) (*connect.Response[v1.UpdateFloorResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.UpdateFloor is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) DeleteFloor(context.Context, *connect.Request[v1.DeleteFloorRequest]) (*connect.Response[v1.DeleteFloorResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.DeleteFloor is not implemented"))
 }
 
 func (UnimplementedSurveyServiceHandler) GenerateReport(context.Context, *connect.Request[v1.GenerateReportRequest]) (*connect.Response[v1.GenerateReportResponse], error) {
