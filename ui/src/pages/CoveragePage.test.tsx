@@ -1,10 +1,10 @@
 /**
  * Coverage — the Canvas page.
  *
- * These pin the three things the page exists to get right: the image is
- * described by the scale the service painted it with, a failure says which
- * failure it was instead of rendering an empty floor, and the dead-zone
- * threshold cannot reach the value the service silently reinterprets.
+ * These pin the things the page exists to get right: the image is described by
+ * the scale the service painted it with, a failure says which failure it was
+ * instead of rendering an empty floor, and each metric's dead-zone threshold
+ * stays in that metric's own unit.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -146,45 +146,70 @@ describe('CoveragePage', () => {
   });
 
   /**
-   * The service reads threshold_dbm == 0 as "unset" and substitutes -75, so a
-   * zero would be answered with a different threshold than the one on screen.
+   * Metrics — the analysis speaks about RSSI and SNR, and they are different
+   * questions with different units. The threshold of one is meaningless under
+   * the other, so the control must not carry a number across.
    */
-  // The dead-zone analysis has one metric and it is RSSI: GetCoverage takes no
-  // metric parameter at all. Offering it under the SNR map put a dBm threshold
-  // and signal-strength findings beneath a picture of signal-to-noise, with
-  // every number still about RSSI and nothing saying so.
-  it('drops the threshold and the findings on the SNR map, and keeps the map', async () => {
+  it("analyses the SNR map in dB, and keeps the layers' thresholds apart", async () => {
     renderPage();
     await screen.findByTestId('coverage-findings');
+    expect(screen.getByTestId('coverage-threshold-unit')).toHaveTextContent('dBm');
+    expect(screen.getByTestId('coverage-threshold')).toHaveValue(-75);
 
     fireEvent.click(screen.getByRole('button', { name: 'SNR' }));
 
     await waitFor(() =>
-      expect(getHeatmap).toHaveBeenCalledWith(expect.objectContaining({ metric: 'snr' })),
+      expect(getCoverage).toHaveBeenCalledWith({
+        surveyId: 'svy-1',
+        metric: 'snr',
+        threshold: 20,
+        floorId: '',
+      }),
     );
-    expect(screen.queryByLabelText(/dead zone below/i)).toBeNull();
+    expect(screen.getByTestId('coverage-threshold-unit')).toHaveTextContent('dB');
+    expect(screen.getByTestId('coverage-threshold')).toHaveValue(20);
+    expect(screen.getByTestId('coverage-findings')).toHaveTextContent(/SNR margin findings/i);
+    expect(await screen.findByText('2 dead zones below 20 dB')).toBeInTheDocument();
+
+    // A threshold set under SNR stays under SNR: the dBm box is still -75.
+    fireEvent.change(screen.getByTestId('coverage-threshold'), { target: { value: '25' } });
+    fireEvent.click(screen.getByRole('button', { name: 'RSSI' }));
+    await waitFor(() => expect(screen.getByTestId('coverage-threshold')).toHaveValue(-75));
+    expect(screen.getByTestId('coverage-threshold-unit')).toHaveTextContent('dBm');
+    for (const call of getCoverage.mock.calls) {
+      if (call[0].metric === 'rssi') {
+        expect(call[0].threshold).toBeLessThan(0);
+      } else {
+        expect(call[0].threshold).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('drops the threshold and the findings on a layer the analysis cannot speak about', async () => {
+    renderPage();
+    await screen.findByTestId('coverage-findings');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Download' }));
+
+    await waitFor(() =>
+      expect(getHeatmap).toHaveBeenCalledWith(expect.objectContaining({ metric: 'download' })),
+    );
+    // The service refuses a metric it has no dead-zone rule for, so the page
+    // must not ask: there is no throughput finding to show.
+    expect(screen.queryByTestId('coverage-threshold')).toBeNull();
     expect(screen.queryByTestId('coverage-findings')).toBeNull();
+    for (const call of getCoverage.mock.calls) {
+      expect(call[0].metric).not.toBe('download');
+    }
     // The map is a real reading and keeps rendering.
     expect(await screen.findByTestId('surface-meta')).toBeInTheDocument();
   });
 
-  it('says the findings are about RSSI, whichever map is on screen', async () => {
+  it('names the metric its findings are about', async () => {
     renderPage();
 
     const findings = await screen.findByTestId('coverage-findings');
     expect(findings).toHaveTextContent(/RSSI coverage findings/i);
-  });
-
-  it('never sends a threshold the service would reinterpret', async () => {
-    renderPage();
-
-    await waitFor(() => expect(getCoverage).toHaveBeenCalled());
-    fireEvent.change(screen.getByLabelText(/dead zone below/i), { target: { value: '0' } });
-
-    for (const call of getCoverage.mock.calls) {
-      expect(call[0].thresholdDbm).not.toBe(0);
-    }
-    expect(screen.getByLabelText(/dead zone below/i)).toHaveValue(-75);
   });
 
   /**
@@ -247,7 +272,8 @@ describe('CoveragePage', () => {
       await waitFor(() =>
         expect(getCoverage).toHaveBeenCalledWith({
           surveyId: 'svy-1',
-          thresholdDbm: -75,
+          metric: 'rssi',
+          threshold: -75,
           floorId: 'flr-basement',
         }),
       );

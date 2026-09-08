@@ -681,11 +681,11 @@ func TestDetectFloorDeadZones_ScoresOneFloor(t *testing.T) {
 		}},
 	}}
 
-	strongAnalysis, err := survey.DetectFloorDeadZones("svy", strong, -75, nil)
+	strongAnalysis, err := survey.DetectFloorDeadZones("svy", strong, survey.HeatmapRSSI, -75, nil)
 	if err != nil {
 		t.Fatalf("strong floor: %v", err)
 	}
-	weakAnalysis, err := survey.DetectFloorDeadZones("svy", weak, -75, nil)
+	weakAnalysis, err := survey.DetectFloorDeadZones("svy", weak, survey.HeatmapRSSI, -75, nil)
 	if err != nil {
 		t.Fatalf("weak floor: %v", err)
 	}
@@ -712,10 +712,10 @@ func TestDetectFloorDeadZones_ScoresOneFloor(t *testing.T) {
 func TestDetectFloorDeadZones_EmptyFloor(t *testing.T) {
 	t.Parallel()
 
-	if _, err := survey.DetectFloorDeadZones("svy", &survey.Floor{ID: "e"}, -75, nil); err == nil {
+	if _, err := survey.DetectFloorDeadZones("svy", &survey.Floor{ID: "e"}, survey.HeatmapRSSI, -75, nil); err == nil {
 		t.Fatal("DetectFloorDeadZones on a floor with no samples: want an error, got none")
 	}
-	if _, err := survey.DetectFloorDeadZones("svy", nil, -75, nil); err == nil {
+	if _, err := survey.DetectFloorDeadZones("svy", nil, survey.HeatmapRSSI, -75, nil); err == nil {
 		t.Fatal("DetectFloorDeadZones(nil): want an error, got none")
 	}
 }

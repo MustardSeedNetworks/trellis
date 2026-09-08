@@ -226,6 +226,19 @@ func extractSamples(points []*SamplePoint, valueType string) []SampleValue {
 	return samples
 }
 
+// snrOrAbsent tells a measured margin from an unrecorded one. The parser
+// derives SNR only when the capture carried a usable noise floor and leaves it
+// at zero otherwise (see parseNetwork), and no receiver hearing a real signal
+// reports zero margin — so a zero here is a field that was not there. Read as
+// a value it makes every such point a severe dead zone; NaN is what the
+// heatmap and the analysis both leave out.
+func snrOrAbsent(snr float64) float64 {
+	if snr <= 0 {
+		return math.NaN()
+	}
+	return snr
+}
+
 // extractValue extracts the requested value from sample data.
 func extractValue(sampleData any, valueType string) float64 {
 	switch data := sampleData.(type) {
@@ -258,8 +271,8 @@ func extractPassiveValue(data *PassiveSample, valueType string) float64 {
 	case string(HeatmapRSSI), HeatmapAliasSignal:
 		// Return strongest signal (first network, sorted by signal)
 		return float64(data.Networks[0].Signal)
-	case "snr":
-		return float64(data.Networks[0].SNR)
+	case string(HeatmapSNR):
+		return snrOrAbsent(float64(data.Networks[0].SNR))
 	case "density", "ap_count":
 		return float64(data.UniqueBSSIDs)
 	case "interference", "cochannel":
@@ -344,7 +357,7 @@ func extractMapValue(data map[string]any, valueType string) float64 {
 				}
 			case string(HeatmapSNR):
 				if snr, snrOK := first["snr"].(float64); snrOK {
-					return snr
+					return snrOrAbsent(snr)
 				}
 			}
 		}

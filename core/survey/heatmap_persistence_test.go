@@ -73,7 +73,7 @@ func TestHeatmapSurvivesReload(t *testing.T) {
 		}
 	}
 
-	analysis, err := survey.DetectDeadZones(loaded, -75, nil)
+	analysis, err := survey.DetectDeadZones(loaded, survey.HeatmapRSSI, -75, nil)
 	if err != nil {
 		t.Fatalf("DetectDeadZones after reload: %v", err)
 	}

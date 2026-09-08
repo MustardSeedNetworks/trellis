@@ -1366,11 +1366,18 @@ func (x *LegendStop) GetColor() string {
 type GetCoverageRequest struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	SurveyId string                 `protobuf:"bytes,1,opt,name=survey_id,json=surveyId,proto3" json:"survey_id,omitempty"`
-	// Dead-zone threshold in dBm. Defaults to -75.
-	ThresholdDbm int32 `protobuf:"varint,2,opt,name=threshold_dbm,json=thresholdDbm,proto3" json:"threshold_dbm,omitempty"`
+	// Dead-zone threshold, in the unit of `metric`: dBm for rssi, dB for snr.
+	// Absent means that metric's own default, -75 dBm or 20 dB. There is no
+	// shared default because -75 dB of signal-to-noise is not a number, and a
+	// threshold sent under one metric must never be read under the other.
+	Threshold *int32 `protobuf:"varint,2,opt,name=threshold,proto3,oneof" json:"threshold,omitempty"`
 	// Floor to analyse. Empty means every floor's samples together, which is
 	// the whole-survey verdict; naming a floor scores that floor alone.
-	FloorId       string `protobuf:"bytes,3,opt,name=floor_id,json=floorId,proto3" json:"floor_id,omitempty"`
+	FloorId string `protobuf:"bytes,3,opt,name=floor_id,json=floorId,proto3" json:"floor_id,omitempty"`
+	// Which measured layer the analysis is about: "rssi" (the default when
+	// empty) or "snr". A metric the analysis has no rule for is refused rather
+	// than answered about signal strength.
+	Metric        string `protobuf:"bytes,4,opt,name=metric,proto3" json:"metric,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1412,9 +1419,9 @@ func (x *GetCoverageRequest) GetSurveyId() string {
 	return ""
 }
 
-func (x *GetCoverageRequest) GetThresholdDbm() int32 {
-	if x != nil {
-		return x.ThresholdDbm
+func (x *GetCoverageRequest) GetThreshold() int32 {
+	if x != nil && x.Threshold != nil {
+		return *x.Threshold
 	}
 	return 0
 }
@@ -1426,13 +1433,24 @@ func (x *GetCoverageRequest) GetFloorId() string {
 	return ""
 }
 
+func (x *GetCoverageRequest) GetMetric() string {
+	if x != nil {
+		return x.Metric
+	}
+	return ""
+}
+
 type GetCoverageResponse struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	CoverageScore   float64                `protobuf:"fixed64,1,opt,name=coverage_score,json=coverageScore,proto3" json:"coverage_score,omitempty"`
 	DeadZoneCount   int32                  `protobuf:"varint,2,opt,name=dead_zone_count,json=deadZoneCount,proto3" json:"dead_zone_count,omitempty"`
 	Recommendations []string               `protobuf:"bytes,3,rep,name=recommendations,proto3" json:"recommendations,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	// The metric analysed and the threshold applied, echoed so a caller that
+	// sent neither can still label the figures with the right unit.
+	Metric        string `protobuf:"bytes,4,opt,name=metric,proto3" json:"metric,omitempty"`
+	Threshold     int32  `protobuf:"varint,5,opt,name=threshold,proto3" json:"threshold,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetCoverageResponse) Reset() {
@@ -1484,6 +1502,20 @@ func (x *GetCoverageResponse) GetRecommendations() []string {
 		return x.Recommendations
 	}
 	return nil
+}
+
+func (x *GetCoverageResponse) GetMetric() string {
+	if x != nil {
+		return x.Metric
+	}
+	return ""
+}
+
+func (x *GetCoverageResponse) GetThreshold() int32 {
+	if x != nil {
+		return x.Threshold
+	}
+	return 0
 }
 
 type GenerateReportRequest struct {
@@ -3743,15 +3775,20 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\n" +
 	"LegendStop\x12\x14\n" +
 	"\x05value\x18\x01 \x01(\x01R\x05value\x12\x14\n" +
-	"\x05color\x18\x02 \x01(\tR\x05color\"q\n" +
+	"\x05color\x18\x02 \x01(\tR\x05color\"\x95\x01\n" +
 	"\x12GetCoverageRequest\x12\x1b\n" +
-	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\x12#\n" +
-	"\rthreshold_dbm\x18\x02 \x01(\x05R\fthresholdDbm\x12\x19\n" +
-	"\bfloor_id\x18\x03 \x01(\tR\afloorId\"\x8e\x01\n" +
+	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\x12!\n" +
+	"\tthreshold\x18\x02 \x01(\x05H\x00R\tthreshold\x88\x01\x01\x12\x19\n" +
+	"\bfloor_id\x18\x03 \x01(\tR\afloorId\x12\x16\n" +
+	"\x06metric\x18\x04 \x01(\tR\x06metricB\f\n" +
+	"\n" +
+	"_threshold\"\xc4\x01\n" +
 	"\x13GetCoverageResponse\x12%\n" +
 	"\x0ecoverage_score\x18\x01 \x01(\x01R\rcoverageScore\x12&\n" +
 	"\x0fdead_zone_count\x18\x02 \x01(\x05R\rdeadZoneCount\x12(\n" +
-	"\x0frecommendations\x18\x03 \x03(\tR\x0frecommendations\"p\n" +
+	"\x0frecommendations\x18\x03 \x03(\tR\x0frecommendations\x12\x16\n" +
+	"\x06metric\x18\x04 \x01(\tR\x06metric\x12\x1c\n" +
+	"\tthreshold\x18\x05 \x01(\x05R\tthreshold\"p\n" +
 	"\x15GenerateReportRequest\x12\x1b\n" +
 	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\x12:\n" +
 	"\aoptions\x18\x02 \x01(\v2 .trellis.survey.v1.ReportOptionsR\aoptions\"\xfc\x01\n" +
@@ -4098,6 +4135,7 @@ func file_trellis_survey_v1_survey_proto_init() {
 		return
 	}
 	file_trellis_survey_v1_survey_proto_msgTypes[0].OneofWrappers = []any{}
+	file_trellis_survey_v1_survey_proto_msgTypes[23].OneofWrappers = []any{}
 	file_trellis_survey_v1_survey_proto_msgTypes[38].OneofWrappers = []any{}
 	file_trellis_survey_v1_survey_proto_msgTypes[61].OneofWrappers = []any{}
 	type x struct{}

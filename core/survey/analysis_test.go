@@ -10,7 +10,7 @@ import (
 )
 
 func TestDetectDeadZones_NilSurvey(t *testing.T) {
-	_, err := survey.DetectDeadZones(nil, survey.DefaultThreshold, nil)
+	_, err := survey.DetectDeadZones(nil, survey.HeatmapRSSI, survey.DefaultThreshold, nil)
 	if err == nil {
 		t.Fatal("Expected error for nil survey, got nil")
 	}
@@ -25,7 +25,7 @@ func TestDetectDeadZones_NoSamples(t *testing.T) {
 		Samples: []*survey.SamplePoint{},
 	}
 
-	_, err := survey.DetectDeadZones(s, survey.DefaultThreshold, nil)
+	_, err := survey.DetectDeadZones(s, survey.HeatmapRSSI, survey.DefaultThreshold, nil)
 	if err == nil {
 		t.Fatal("Expected error for survey with no samples, got nil")
 	}
@@ -50,7 +50,7 @@ func TestDetectDeadZones_NoRSSISamples(t *testing.T) {
 		},
 	}
 
-	_, err := survey.DetectDeadZones(s, survey.DefaultThreshold, nil)
+	_, err := survey.DetectDeadZones(s, survey.HeatmapRSSI, survey.DefaultThreshold, nil)
 	if err == nil {
 		t.Fatal("Expected error for survey with no RSSI samples, got nil")
 	}
@@ -80,8 +80,8 @@ func TestDetectDeadZones_AllGoodSignals(t *testing.T) {
 		t.Errorf("Expected survey ID %s, got %s", s.ID, analysis.SurveyID)
 	}
 
-	if analysis.ThresholdDBm != survey.DefaultThreshold {
-		t.Errorf("Expected threshold %d, got %d", survey.DefaultThreshold, analysis.ThresholdDBm)
+	if analysis.Threshold != survey.DefaultThreshold {
+		t.Errorf("Expected threshold %d, got %d", survey.DefaultThreshold, analysis.Threshold)
 	}
 }
 
@@ -359,13 +359,13 @@ func TestDetectDeadZones_MinMaxRSSI(t *testing.T) {
 
 	zone := analysis.DeadZones[0]
 
-	if zone.MinRSSI != -90 {
-		t.Errorf("Expected min RSSI -90, got %d", zone.MinRSSI)
+	if zone.Min != -90 {
+		t.Errorf("Expected min RSSI -90, got %d", zone.Min)
 	}
 
 	expectedAvg := (-90 + -80 + -85) / 3
-	if zone.AvgRSSI != expectedAvg {
-		t.Errorf("Expected avg RSSI %d, got %d", expectedAvg, zone.AvgRSSI)
+	if zone.Avg != expectedAvg {
+		t.Errorf("Expected avg RSSI %d, got %d", expectedAvg, zone.Avg)
 	}
 }
 
@@ -380,7 +380,7 @@ func TestManager_DetectDeadZones(t *testing.T) {
 	manager.SetSurvey(s)
 
 	// Test through manager
-	analysis, err := manager.DetectDeadZones(s.ID, survey.DefaultThreshold)
+	analysis, err := manager.DetectDeadZones(s.ID, survey.HeatmapRSSI, survey.DefaultThreshold)
 	if err != nil {
 		t.Fatalf("Manager.DetectDeadZones failed: %v", err)
 	}
@@ -393,7 +393,7 @@ func TestManager_DetectDeadZones(t *testing.T) {
 func TestManager_DetectDeadZones_NotFound(t *testing.T) {
 	manager := mustManager(t, t.TempDir(), nil, nil, nil, nil)
 
-	_, err := manager.DetectDeadZones("nonexistent-id", survey.DefaultThreshold)
+	_, err := manager.DetectDeadZones("nonexistent-id", survey.HeatmapRSSI, survey.DefaultThreshold)
 	if err == nil {
 		t.Error("Expected error for nonexistent survey, got nil")
 	}
@@ -470,7 +470,7 @@ func TestDetermineSeverity(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		result := survey.ExportDetermineSeverity(tt.rssi)
+		result := survey.ExportDetermineSeverity(survey.HeatmapRSSI, tt.rssi)
 		if result != tt.severity {
 			t.Errorf("RSSI %.2f: expected '%s', got '%s'", tt.rssi, tt.severity, result)
 		}
@@ -513,7 +513,8 @@ func TestGenerateRecommendations(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			recs := survey.ExportGenerateRecommendations(tt.deadZones, tt.coverageScore, tt.totalSamples)
+			recs := survey.ExportGenerateRecommendations(
+				survey.HeatmapRSSI, tt.deadZones, tt.coverageScore, tt.totalSamples)
 
 			if len(recs) < tt.minRecCount {
 				t.Errorf("Expected at least %d recommendations, got %d", tt.minRecCount, len(recs))
@@ -561,7 +562,7 @@ func detectDeadZonesHelper(
 	threshold int,
 ) (*survey.DeadZoneAnalysis, error) {
 	t.Helper()
-	analysis, err := survey.DetectDeadZones(s, threshold, nil)
+	analysis, err := survey.DetectDeadZones(s, survey.HeatmapRSSI, threshold, nil)
 	if err != nil {
 		t.Errorf("DetectDeadZones failed: %v", err)
 		return nil, err

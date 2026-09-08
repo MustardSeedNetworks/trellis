@@ -52,6 +52,39 @@ test('changing the dead-zone threshold changes the verdict', async ({ page }) =>
   await expect(findings).toHaveAttribute('data-state', 'warn');
 });
 
+test('analyses the SNR layer in dB, on its own threshold', async ({ page }) => {
+  await createSurvey(page, uniqueName('SNRThreshold'));
+  await walkThreePoints(page);
+  await page.getByTestId('plot-coverage').click();
+
+  const findings = page.getByTestId('coverage-findings');
+  await expect(findings).toContainText('No dead zones below -75 dBm');
+
+  await page.getByRole('button', { name: 'SNR' }).click();
+
+  // The threshold does not follow the operator across: -75 dB of margin is not
+  // a number, and the control has to be reading the SNR default instead.
+  await expect(page.locator('#coverage-threshold')).toHaveValue('20');
+  await expect(page.getByTestId('coverage-threshold-unit')).toHaveText('dB');
+  await expect(findings).toContainText('SNR margin findings');
+  // The scripted radio's strongest AP fades from 47 dB of margin down, so all
+  // three points clear 20 dB.
+  await expect(findings).toContainText('No dead zones below 20 dB');
+  await expect(findings).toHaveAttribute('data-state', 'ok');
+
+  // Demand more margin than the walk ever had: now they are findings, and they
+  // are about noise rather than about adding access points.
+  await page.locator('#coverage-threshold').fill('40');
+  await expect(findings).toContainText('below 40 dB');
+  await expect(findings).toHaveAttribute('data-state', 'warn');
+  await expect(findings).toContainText(/noise|interference|channel/i);
+
+  // Back to RSSI: the dBm threshold is the one it was left at.
+  await page.getByRole('button', { name: 'RSSI' }).click();
+  await expect(page.locator('#coverage-threshold')).toHaveValue('-75');
+  await expect(page.getByTestId('coverage-threshold-unit')).toHaveText('dBm');
+});
+
 test('generates a PDF report for a walked survey', async ({ page }) => {
   const name = uniqueName('Report');
   await createSurvey(page, name);

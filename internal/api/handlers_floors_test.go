@@ -15,6 +15,8 @@ import (
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
 	"github.com/MustardSeedNetworks/trellis/internal/api"
+
+	"google.golang.org/protobuf/proto"
 )
 
 // twoFloorSurvey returns a handler over a survey with a strong ground floor and
@@ -166,13 +168,13 @@ func TestHeatmapAndCoverageAreScopedToTheNamedFloor(t *testing.T) {
 	}
 
 	groundCoverage, err := handler.GetCoverage(ctx, connect.NewRequest(&surveyv1.GetCoverageRequest{
-		SurveyId: surveyID, ThresholdDbm: -75, FloorId: ground,
+		SurveyId: surveyID, Threshold: proto.Int32(-75), FloorId: ground,
 	}))
 	if err != nil {
 		t.Fatalf("GetCoverage(ground): %v", err)
 	}
 	basementCoverage, err := handler.GetCoverage(ctx, connect.NewRequest(&surveyv1.GetCoverageRequest{
-		SurveyId: surveyID, ThresholdDbm: -75, FloorId: basement,
+		SurveyId: surveyID, Threshold: proto.Int32(-75), FloorId: basement,
 	}))
 	if err != nil {
 		t.Fatalf("GetCoverage(basement): %v", err)
