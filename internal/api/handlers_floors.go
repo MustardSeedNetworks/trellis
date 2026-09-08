@@ -130,10 +130,11 @@ func (h *SurveyServiceHandler) SetActiveFloor(
 // against the floor the survey collects onto.
 func toFloor(floor *survey.Floor, active *survey.Floor) *surveyv1.Floor {
 	out := &surveyv1.Floor{
-		Id:           floor.ID,
-		Name:         floor.Name,
-		Level:        int32Of(floor.Level),
-		SampleCount:  int32Of(len(floor.Samples)),
+		Id:    floor.ID,
+		Name:  floor.Name,
+		Level: int32Of(floor.Level),
+		// Measurements, not points — see the survey summary (ADR-0009).
+		SampleCount:  int32Of(len(floor.MeasuredSamples())),
 		HasFloorPlan: floor.FloorPlan != nil,
 		IsActive:     active != nil && active.ID == floor.ID,
 	}

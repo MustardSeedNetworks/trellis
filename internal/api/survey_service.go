@@ -400,11 +400,13 @@ func (h *SurveyServiceHandler) surveySummary(svy *survey.Survey) *surveyv1.Surve
 	}
 
 	return &surveyv1.SurveySummary{
-		Id:           svy.ID,
-		Name:         svy.Name,
-		Status:       string(svy.Status),
-		FloorCount:   int32(len(svy.Floors)),
-		SampleCount:  int32(len(svy.GetAllSamples())),
+		Id:         svy.ID,
+		Name:       svy.Name,
+		Status:     string(svy.Status),
+		FloorCount: int32(len(svy.Floors)),
+		// Measurements, not points: a failed attempt is stored and drawn
+		// (ADR-0009) but counting it here would report a measurement nobody took.
+		SampleCount:  int32(len(svy.GetAllMeasuredSamples())),
 		HasFloorPlan: hasFloorPlan,
 		Capture:      captureStatusOf(h.manager.CapturingAt(svy.ID)),
 

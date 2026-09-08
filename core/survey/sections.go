@@ -66,7 +66,7 @@ func (g *ReportGenerator) addCoverPage() {
 	g.pdf.SetTextColor(pdfColorGrayMedium, pdfColorGrayMedium, pdfColorGrayMedium)
 
 	floorCount := len(g.survey.Floors)
-	sampleCount := len(g.survey.GetAllSamples())
+	sampleCount := len(g.survey.GetAllMeasuredSamples())
 	g.pdf.CellFormat(
 		0,
 		pdfSpacingNormal,
@@ -86,7 +86,7 @@ func (g *ReportGenerator) addExecutiveSummary() {
 	g.addSectionHeader("Executive Summary")
 
 	// Calculate overall statistics
-	allSamples := g.survey.GetAllSamples()
+	allSamples := g.survey.GetAllMeasuredSamples()
 	stats := calculateSurveyStats(allSamples)
 
 	// Coverage score card
@@ -172,7 +172,7 @@ func (g *ReportGenerator) addFloorSection(floor *Floor) {
 	g.pdf.CellFormat(
 		0,
 		pdfSpacingMedium,
-		fmt.Sprintf("Level: %d | Samples: %d", floor.Level, len(floor.Samples)),
+		fmt.Sprintf("Level: %d | Samples: %d", floor.Level, len(floor.MeasuredSamples())),
 		"",
 		1,
 		"L",
@@ -210,9 +210,9 @@ func (g *ReportGenerator) addFloorSection(floor *Floor) {
 	}
 
 	// Floor statistics
-	if len(floor.Samples) > 0 {
+	if measured := floor.MeasuredSamples(); len(measured) > 0 {
 		g.pdf.Ln(pdfSpacingSmall)
-		stats := calculateFloorStats(floor.Samples)
+		stats := calculateFloorStats(measured)
 
 		g.pdf.SetFont("Arial", "B", pdfFontSizeNormal)
 		g.pdf.SetTextColor(0, 0, 0)
@@ -234,7 +234,7 @@ func (g *ReportGenerator) addFloorSection(floor *Floor) {
 		}
 
 		// Channel usage summary
-		channels := getChannelUsage(floor.Samples)
+		channels := getChannelUsage(floor.MeasuredSamples())
 		if len(channels) > 0 {
 			g.pdf.Ln(pdfSpacingSmall)
 			g.pdf.SetFont("Arial", "B", pdfFontSizeNormal)
@@ -267,7 +267,9 @@ func (g *ReportGenerator) addFloorSection(floor *Floor) {
 	// and the heatmap is bounded by the measurements themselves. Requiring one
 	// here meant a walk done before anyone drew a plan, and every floor after
 	// the first in a multi-floor survey, got statistics and no map.
-	if g.options.IncludeHeatmaps && len(floor.Samples) > 0 {
+	// Measurements, not points: a floor holding nothing but failed attempts has
+	// no extent to draw and no layer to draw on it (ADR-0009).
+	if g.options.IncludeHeatmaps && len(floor.MeasuredSamples()) > 0 {
 		g.addFloorLayers(floor)
 	}
 }
@@ -389,7 +391,7 @@ func (g *ReportGenerator) addRecommendations() {
 	g.pdf.AddPage()
 	g.addSectionHeader("Recommendations")
 
-	allSamples := g.survey.GetAllSamples()
+	allSamples := g.survey.GetAllMeasuredSamples()
 	stats := calculateSurveyStats(allSamples)
 
 	recommendations := generateSurveyRecommendations(&stats)
@@ -461,7 +463,7 @@ func (g *ReportGenerator) addRawDataAppendix() {
 	g.pdf.AddPage()
 	g.addSectionHeader("Appendix: Raw Sample Data")
 
-	allSamples := g.survey.GetAllSamples()
+	allSamples := g.survey.GetAllMeasuredSamples()
 	if len(allSamples) == 0 {
 		g.pdf.SetFont("Arial", "I", pdfFontSizeSmall)
 		g.pdf.CellFormat(0, pdfSpacingLarge, "No sample data collected", "", 1, "L", false, 0, "")
