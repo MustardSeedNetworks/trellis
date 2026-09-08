@@ -278,11 +278,7 @@ test('keeps a failed measurement on the map as an attempt', async ({ page }) => 
   await page.getByTestId('plot-coverage').click();
   await expect(page.getByTestId('heatmap-image')).toBeVisible();
   await page.getByRole('button', { name: 'Download' }).click();
-  // The query client retries even this deterministic refusal three times
-  // before the page shows it (#389), so this waits past the default.
-  await expect(page.getByTestId('surface-message')).toContainText('no samples found', {
-    timeout: 20_000,
-  });
+  await expect(page.getByTestId('surface-message')).toContainText('no samples found');
   await expect(page.getByTestId('heatmap-image')).toHaveCount(0);
 });
 
