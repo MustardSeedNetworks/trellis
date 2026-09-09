@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.45](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.44...v0.2.45) (2026-09-09)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#407](https://github.com/MustardSeedNetworks/trellis/issues/407)) ([d46c0f2](https://github.com/MustardSeedNetworks/trellis/commit/d46c0f24c9e2b44c722f0694adab95bba46aa909))
+* **deps:** lock file maintenance ([#411](https://github.com/MustardSeedNetworks/trellis/issues/411)) ([d35f166](https://github.com/MustardSeedNetworks/trellis/commit/d35f1669a7b953f2fe64aaa076e2691a1502b600))
+* **deps:** update mustardseednetworks/.github action to v1.13.0 ([#410](https://github.com/MustardSeedNetworks/trellis/issues/410)) ([9ae6aaf](https://github.com/MustardSeedNetworks/trellis/commit/9ae6aafdda36de1534a87f0ebca966aaaa4ed411))
+
 ## [0.2.44](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.43...v0.2.44) (2026-09-08)
 
 
