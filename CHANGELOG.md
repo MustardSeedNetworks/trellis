@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.47](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.46...v0.2.47) (2026-09-09)
+
+
+### Bug Fixes
+
+* **survey:** bound floor-plan pixels, not just bytes ([#416](https://github.com/MustardSeedNetworks/trellis/issues/416)) ([b9f0c78](https://github.com/MustardSeedNetworks/trellis/commit/b9f0c789b7c8a3243f3f1e03c3752c2524f8b10b))
+* **ui:** announce a refused floor plan and zoom the surface on ctrl+wheel ([#418](https://github.com/MustardSeedNetworks/trellis/issues/418)) ([fb3ecbd](https://github.com/MustardSeedNetworks/trellis/commit/fb3ecbd8cb86bf56679bd68c289616442e0be399)), closes [#17](https://github.com/MustardSeedNetworks/trellis/issues/17)
+
 ## [0.2.46](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.45...v0.2.46) (2026-09-09)
 
 
