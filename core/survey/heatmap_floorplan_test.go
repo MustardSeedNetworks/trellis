@@ -17,6 +17,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"runtime"
 	"testing"
 	"time"
 
@@ -123,5 +124,36 @@ func TestHeatmapSurvivesAnUndecodablePlan(t *testing.T) {
 	img := renderWithPlan(t, "data:image/png;base64,bm90LWFuLWltYWdl", w, h)
 	if img.Bounds().Dy() != h {
 		t.Fatalf("height = %d, want %d", img.Bounds().Dy(), h)
+	}
+}
+
+// A plan stored before the pixel bound existed is already in operators'
+// databases, and this is the call that would allocate width*height*4 for it.
+// The heatmap must come back drawn — the measurements are not worth losing
+// over a plan we decline to decode — while never decoding the plan itself.
+func TestHeatmapRefusesToDecodeAnOversizedStoredPlan(t *testing.T) {
+	const w, h = 40, 30
+
+	// Planted directly as a data URI, the way a pre-bound plan sits in the
+	// store: SetFloorPlan would refuse this today.
+	bomb := oversizedPNG(t, 20000, 20000)
+	uri := "data:image/png;base64," + base64.StdEncoding.EncodeToString(bomb)
+
+	var before, after runtime.MemStats
+	runtime.GC()
+	runtime.ReadMemStats(&before)
+	img := renderWithPlan(t, uri, w, h)
+	runtime.ReadMemStats(&after)
+
+	if img.Bounds().Dy() != h {
+		t.Fatalf("height = %d, want %d — the heatmap itself must still render", img.Bounds().Dy(), h)
+	}
+
+	// Decoding would have cost ~1.49 GiB. Allow a generous ceiling: the point
+	// is the order of magnitude, not a byte count that would make this flaky.
+	const ceiling = 256 << 20
+	if grew := after.TotalAlloc - before.TotalAlloc; grew > ceiling {
+		t.Fatalf("allocated %.2f GiB rendering over an oversized plan — it was decoded",
+			float64(grew)/(1<<30))
 	}
 }

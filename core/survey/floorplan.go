@@ -28,6 +28,33 @@ var ErrNoFloorPlan = errors.New("survey: floor has no plan")
 // one bad upload from being the daemon's memory ceiling.
 const maxFloorPlanBytes = 32 << 20
 
+// maxFloorPlanPixels bounds the DECODED size, which the byte cap above cannot
+// see: a PNG's compressed size is unrelated to its decoded size, so a 3 MiB
+// upload can declare a 20000x20000 canvas and cost 1.5 GiB the moment anything
+// draws over it (heatmap.go's image.Decode). Bytes bound what is stored;
+// pixels bound what is allocated.
+//
+// 64 Mpx against a measured corpus: across the 58 real AirMapper archives the
+// largest floor plan is 4096x3168 (12.98 Mpx) and the median is 1.36 Mpx, so
+// this leaves roughly five times headroom over the largest plan anyone has
+// actually surveyed while capping a worst-case decode at ~256 MiB.
+const maxFloorPlanPixels = 64 << 20
+
+// checkFloorPlanPixels refuses an image whose declared dimensions would make
+// decoding it a memory event. It reads a header that DecodeConfig has already
+// parsed, so it costs nothing and — the point — runs before any full decode.
+func checkFloorPlanPixels(width, height int) error {
+	if width <= 0 || height <= 0 {
+		return nil // dimension validity is the caller's own check
+	}
+	if pixels := int64(width) * int64(height); pixels > maxFloorPlanPixels {
+		return fmt.Errorf(
+			"survey: floor plan is %dx%d = %d pixels, over the %d-pixel limit",
+			width, height, pixels, maxFloorPlanPixels)
+	}
+	return nil
+}
+
 // SetFloorPlan stores an image as a floor's plan.
 //
 // The dimensions come from decoding the image, not from the caller. Every
@@ -57,6 +84,9 @@ func (m *Manager) SetFloorPlan(surveyID, floorID string, imageData []byte) error
 	}
 	if config.Width <= 0 || config.Height <= 0 {
 		return fmt.Errorf("survey: %s floor plan has no dimensions", format)
+	}
+	if err := checkFloorPlanPixels(config.Width, config.Height); err != nil {
+		return err
 	}
 
 	m.mu.Lock()

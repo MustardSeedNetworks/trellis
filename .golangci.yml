@@ -48,6 +48,13 @@ linters:
       - text: 'G115: integer overflow conversion int -> int32'
         path: 'internal/api/survey_service.*\.go'
         linters: [ gosec ]
+      # uint32(n) writing a PNG chunk's length field in a test helper that
+      # builds a crafted floor plan. n is the length of a buffer this helper
+      # just produced, and it is explicitly refused above 2^32-1 on the line
+      # before; gosec does not follow the guard. Scoped to the one test file.
+      - text: 'G115: integer overflow conversion uint64 -> uint32'
+        path: 'core/survey/floorplan_pixels_test\.go'
+        linters: [ gosec ]
       # os.ReadFile over a path from filepath.Glob with a pattern this package
       # controls — not user input. The call site documents the same.
       - text: 'G304: Potential file inclusion via variable'
