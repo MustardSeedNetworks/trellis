@@ -408,6 +408,17 @@ func drawFloorPlan(dst *image.RGBA, plan *FloorPlan) {
 	if err != nil {
 		return
 	}
+	// Checked again here, not only where the plan was accepted: this is the
+	// call that allocates width*height*4, and a plan stored before the bound
+	// existed is already in operators' databases. DecodeConfig reads the header
+	// only, so the guard costs a header parse and cannot itself blow up.
+	cfg, _, err := image.DecodeConfig(bytes.NewReader(raw))
+	if err != nil {
+		return
+	}
+	if checkFloorPlanPixels(cfg.Width, cfg.Height) != nil {
+		return
+	}
 	src, _, err := image.Decode(bytes.NewReader(raw))
 	if err != nil {
 		return

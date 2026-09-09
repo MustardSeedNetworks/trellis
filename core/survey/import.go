@@ -41,6 +41,11 @@ func (m *Manager) ImportAirMapper(name string, data []byte) (*Survey, error) {
 	if err != nil {
 		return nil, fmt.Errorf("decode floor plan image: %w", err)
 	}
+	// An archive is an untrusted file from outside the product, so it gets the
+	// same pixel bound an operator's own upload does.
+	if err := checkFloorPlanPixels(cfg.Width, cfg.Height); err != nil {
+		return nil, err
+	}
 
 	svy, err := m.CreateSurvey(name, "Imported from AirMapper", "", TypePassive)
 	if err != nil {
