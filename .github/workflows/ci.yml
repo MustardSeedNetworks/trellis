@@ -178,6 +178,18 @@ jobs:
           # did — the other three products have gated on it for months. Full
           # tree verified clean (0 issues) before this gate was added.
           args: --timeout=5m
+          # The action's analysis cache can report findings that are NOT in the
+          # tree. On seed it failed this job twice with two nolintlint findings
+          # in untouched files, survived a plain re-run so it did not read as a
+          # flake, and went green the moment the cache entries were deleted
+          # (seed#2511, fixed in seed#2538). The key is
+          # golangci-lint.cache-<OS>-<week>-<module-hash>: it carries neither
+          # GOOS nor the linter config, so passes analysing different trees
+          # share one entry. A phantom is indistinguishable from a real finding
+          # and both obvious responses are wrong — editing production code to
+          # please it, or deleting a //nolint that is load-bearing elsewhere.
+          # Measured cost of always analysing the real tree: +14s (seed#2538).
+          skip-cache: true
 
       # `go run <module>@<version>` rebuilt buf from source on every run: the
       # step took 57s and 59s in the two most recent main runs, of which only
