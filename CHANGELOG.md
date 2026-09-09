@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.49](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.48...v0.2.49) (2026-09-09)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#423](https://github.com/MustardSeedNetworks/trellis/issues/423)) ([cf5af1c](https://github.com/MustardSeedNetworks/trellis/commit/cf5af1c9d9bf73ac34a026f1b0c88f288b15658a))
+* **deps:** update goreleaser/goreleaser-cross docker tag to v1.27.1 ([#421](https://github.com/MustardSeedNetworks/trellis/issues/421)) ([a934622](https://github.com/MustardSeedNetworks/trellis/commit/a934622b19d61bb093ef182db69f98f2faf738dd))
+* **deps:** update storybook monorepo to v10.6.0 ([#422](https://github.com/MustardSeedNetworks/trellis/issues/422)) ([c4c3d1c](https://github.com/MustardSeedNetworks/trellis/commit/c4c3d1c8a03d6825ff04fa99beb143d077f95418))
+
 ## [0.2.48](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.47...v0.2.48) (2026-09-09)
 
 
