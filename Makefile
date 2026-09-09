@@ -20,6 +20,16 @@ LDFLAGS = -s -w \
 	-X $(VERSION_PKG).UIBuildHash=$(UI_BUILD_HASH)
 GOFLAGS = -trimpath -buildvcs=false -ldflags "$(LDFLAGS)"
 
+# Vite's entry output, and the file goreleaser's before hook already treats as
+# proof the UI was built. Used here as the make target standing for the bundle.
+UI_BUNDLE := internal/api/ui/index.html
+# What a rebuild must react to. Deliberately not all of ui/: e2e specs, stories
+# and the Playwright config are not inputs to the bundle, and listing them would
+# rebuild it for changes that cannot affect it.
+UI_SOURCES := $(shell find ui/src ui/public -type f 2>/dev/null) \
+	ui/index.html ui/package.json ui/vite.config.ts \
+	ui/tsconfig.json ui/tsconfig.app.json ui/postcss.config.js
+
 # Must match the golangci-lint pin in .github/workflows/ci.yml. A copy on PATH
 # of any other version is a false clear: it passes what CI rejects or rejects
 # what CI passes.
@@ -47,13 +57,22 @@ generate-ts: buf
 	$(BUF) generate --template buf.gen.ui.yaml
 
 # Compiles the whole tree, then produces the daemon with the contract's ldflags.
-build:
+# The UI bundle is a prerequisite, not a separate target a caller must remember:
+# without it UI_BUILD_HASH expands to "unknown" and the binary proves nothing
+# about its UI (Universal Build Contract rules 1 and 3). UI_BUILD_HASH is
+# deliberately `=` and not `:=` — it expands when the recipe line below runs,
+# which is after $(UI_BUNDLE) has been made, so the hash covers the bundle this
+# build actually embeds.
+build: $(UI_BUNDLE)
 	go build ./...
 	go build $(GOFLAGS) -o bin/trellisd ./cmd/trellisd
 
 # The daemon the Playwright suite drives: the same recipe with the radio swapped
 # for a scripted scanner (cmd/trellisd/scanner_e2e.go).
-build-e2e:
+# Same UI prerequisite as `build`: Playwright's webServer builds through this
+# target and handshake.spec.ts asserts the uiBuildHash in /__version, so on a
+# clean tree without it the suite fails on the hash rather than on a defect.
+build-e2e: $(UI_BUNDLE)
 	go build -tags e2e $(GOFLAGS) -o bin/trellisd-e2e ./cmd/trellisd
 
 ui-build-hash:
@@ -94,8 +113,29 @@ fmt-check:
 # Vite writes straight into internal/api/ui/, which Go embeds — no copy step
 # (Universal Build Contract). `packages` needs it because goreleaser's before
 # hook refuses to build a binary with an empty UI.
-ui:
-	cd ui && npm ci && npm run build
+#
+# Split into two file targets rather than one phony recipe, because `build` now
+# depends on this: a phony `ui` would re-run `npm ci` on every `make build`,
+# which is a slow default for a backend-only change. `npm ci` re-runs only when
+# the lockfile moves; Vite re-runs only when a UI source moves.
+ui: $(UI_BUNDLE)
+
+ui/node_modules: ui/package-lock.json
+	cd ui && npm ci
+	@touch ui/node_modules
+
+# The output directory is emptied first, keeping .gitkeep. Vite cannot do this
+# itself: emptyOutDir must stay false because outDir is outside the Vite project
+# root and Vite would wipe the tracked .gitkeep (Universal Build Contract). With
+# it left uncleaned, Rollup's content-hashed filenames mean every rebuild ADDS a
+# chunk instead of replacing one, so internal/api/ui/ accumulates orphans that
+# `go:embed` ships inside the binary — and UI_BUILD_HASH, an md5 over that whole
+# directory, becomes a function of the machine's build history rather than of
+# the source. Two clean checkouts at one commit produced different hashes before
+# this line, which defeats the point of embedding the hash at all.
+$(UI_BUNDLE): ui/node_modules $(UI_SOURCES)
+	find internal/api/ui -mindepth 1 ! -name .gitkeep -delete
+	cd ui && npm run build
 
 # Local .deb/.rpm for validating an install on the dev servers. The published
 # packages come from release.yml through goreleaser-cross; this is the same
