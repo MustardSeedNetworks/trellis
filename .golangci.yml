@@ -63,6 +63,12 @@ linters:
       - text: 'G115: integer overflow conversion byte -> int8'
         path: 'internal/capture/radiotap\.go'
         linters: [ gosec ]
+      # byte(int8) writing a signed dBm reading INTO a radiotap header, which
+      # is the parser's own conversion in reverse: the test builds the same
+      # frame layout a driver emits so it can vary one field.
+      - text: 'G115: integer overflow conversion int8 -> byte'
+        path: 'internal/capture/monitor_linux_test\.go'
+        linters: [ gosec ]
       # uint32(ifindex) and uint32(frequency) filling nl80211 netlink
       # attributes, which are uint32 by the kernel's own definition. Both
       # values come from the kernel in the same exchange — an interface index

@@ -106,3 +106,36 @@ func TestParseManagementFrameStripsFCS(t *testing.T) {
 			len(stripped.elements), len(plain.elements))
 	}
 }
+
+// TestChannelFromElements covers the fallback order. An AP that omits the DS
+// Parameter Set still announces its primary channel in the HT Operation
+// element, and reading that is the difference between placing the BSS on its
+// real channel and reporting it as channel 0.
+func TestChannelFromElements(t *testing.T) {
+	tests := []struct {
+		name     string
+		elements []element
+		want     int
+	}{
+		{"DS Parameter Set", []element{{id: elemDSParameterSet, data: []byte{11}}}, 11},
+		{"HT Operation fallback", []element{{id: elemHTOperation, data: []byte{6, 0, 0}}}, 6},
+		{
+			"DS Parameter Set wins over HT Operation",
+			[]element{
+				{id: elemHTOperation, data: []byte{6, 0, 0}},
+				{id: elemDSParameterSet, data: []byte{1}},
+			},
+			1,
+		},
+		{"neither element", []element{{id: elemSSID, data: []byte("x")}}, 0},
+		{"malformed DS Parameter Set", []element{{id: elemDSParameterSet, data: nil}}, 0},
+		{"no elements at all", nil, 0},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := channelFromElements(tt.elements); got != tt.want {
+				t.Errorf("channelFromElements = %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
