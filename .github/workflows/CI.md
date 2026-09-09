@@ -83,7 +83,13 @@ Permissions follow least privilege: workflows declare `permissions: {}` (or
 `contents: read`) at the top level and grant scopes per job. `release.yml`
 deliberately runs without npm caching, because its output is published and
 attested and a restored cache entry could land inside a signed artifact; it
-opts out by passing `cache: ""` to the `setup-node` composite action.
+opts out by passing `cache: ""` to the `setup-node` composite action. The
+`golangci-lint-action` step opts out too, with `skip-cache: true`: a restored
+analysis cache reported two `nolintlint` findings that were not in the tree and
+survived a re-run (seed#2511, fixed in seed#2538), and its key carries neither
+`GOOS` nor the linter config, so passes analysing different trees would share
+one entry. Trellis has a single Go lint step today; keep the flag on any that
+are added, since a phantom finding cannot be told apart from a real one.
 
 ## The Node.js pin lives in one file
 
