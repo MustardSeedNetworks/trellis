@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.46](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.45...v0.2.46) (2026-09-09)
+
+
+### Continuous Integration
+
+* skip the golangci-lint action cache so lint reflects the tree ([#412](https://github.com/MustardSeedNetworks/trellis/issues/412)) ([959120f](https://github.com/MustardSeedNetworks/trellis/commit/959120ff1e30de081db7db7adf05a25a092662e4))
+
 ## [0.2.45](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.44...v0.2.45) (2026-09-09)
 
 
