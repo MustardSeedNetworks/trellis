@@ -55,6 +55,28 @@ linters:
       - text: 'G115: integer overflow conversion uint64 -> uint32'
         path: 'core/survey/floorplan_pixels_test\.go'
         linters: [ gosec ]
+      # int8(b[offset]) reading a radiotap field. NL80211/radiotap define the
+      # dBm antenna signal and noise as SIGNED 8-bit values delivered in a
+      # byte, so reinterpreting the sign is the whole point of the conversion
+      # — refusing it would turn every real (negative) reading into a large
+      # positive one, which is the exact bug the parser exists to avoid.
+      - text: 'G115: integer overflow conversion byte -> int8'
+        path: 'internal/capture/radiotap\.go'
+        linters: [ gosec ]
+      # byte(int8) writing a signed dBm reading INTO a radiotap header, which
+      # is the parser's own conversion in reverse: the test builds the same
+      # frame layout a driver emits so it can vary one field.
+      - text: 'G115: integer overflow conversion int8 -> byte'
+        path: 'internal/capture/monitor_linux_test\.go'
+        linters: [ gosec ]
+      # uint32(ifindex) and uint32(frequency) filling nl80211 netlink
+      # attributes, which are uint32 by the kernel's own definition. Both
+      # values come from the kernel in the same exchange — an interface index
+      # and a frequency out of the adapter's advertised band list — so neither
+      # can be negative or large enough to wrap.
+      - text: 'G115: integer overflow conversion int -> uint32'
+        path: 'internal/capture/monitor_linux\.go'
+        linters: [ gosec ]
       # os.ReadFile over a path from filepath.Glob with a pattern this package
       # controls — not user input. The call site documents the same.
       - text: 'G304: Potential file inclusion via variable'

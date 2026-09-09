@@ -216,18 +216,56 @@ plausible nonsense. `TestWLANBSSEntryLayout` pins all sixteen offsets and the
 aggressively than Linux. That needs measuring on a host with a logged-in user,
 which is the same thing the live scan needs.
 
-## Tier 2 — not implemented anywhere
+## Tier 2 — monitor mode, on Linux only
 
-Channel utilisation, retry rates and airtime are **not obtainable** from any
-Tier 1 API on any platform. They require monitor mode.
+Retry rates and airtime are **not obtainable** from any Tier 1 API on any
+platform. They require monitor mode.
 
-- **macOS:** CoreWLAN exposes no monitor-mode API. Capture goes through BPF
-  (`/dev/bpf*`, owned `root:access_bpf`), so it needs root or membership of
-  `access_bpf` — the group Wireshark's ChmodBPF installer creates. Unverified on
-  Apple Silicon hardware.
-- **Linux:** a monitor-mode virtual interface via mac80211. Requires
-  `CAP_NET_ADMIN` / `CAP_NET_RAW`.
-- **Windows:** Npcap, with the weakest monitor-mode support of the three.
+Monitor-mode _acquisition_ has landed on **Linux** (2.4 GHz). It is opt-in:
+set `TRELLIS_CAPTURE_MODE=monitor`, and leave it unset for the OS scan that
+remains the default. What it buys is control of time and channel — the radio
+dwells on one channel for a known interval, so every reading is attributable
+to a channel and a moment, where an OS scan returns a merged cache on the
+driver's own schedule. What it costs is the association: monitor mode takes
+the adapter away from its network, so it cannot run during an active
+(throughput) survey and is the wrong choice on a host whose only radio is
+also its uplink.
+
+Retry rates and airtime are still not derived — those need the data frames
+counted, not just the management frames decoded. Channel utilisation continues
+to come from the AP's own BSS Load element in both modes.
+
+- **macOS:** CoreWLAN exposes no monitor-mode API, so this is a gap the OS
+  imposes rather than work outstanding. Raw capture would have to go through
+  BPF (`/dev/bpf*`, owned `root:access_bpf`), needing root or membership of
+  `access_bpf` — the group Wireshark's ChmodBPF installer creates. Unverified
+  on Apple Silicon hardware.
+- **Linux:** implemented. A monitor virtual interface (`trlmon0`) is created
+  on the adapter's PHY via nl80211, the 2.4 GHz channel plan is read from the
+  kernel's own band list (so the regulatory domain is already applied), and
+  frames are read from an `AF_PACKET` socket and decoded from radiotap.
+  Requires `CAP_NET_ADMIN`. 5 and 6 GHz wait on hardware: the only adapter
+  with proven monitor mode is 2.4 GHz-only (#11).
+- **Windows:** not attempted. Native Wifi exposes no monitor mode through the
+  documented API, so it would mean shipping Npcap — a packaging decision, not
+  a port.
+
+### Why a separate interface, and what a crash leaves behind
+
+The monitor interface is created alongside the operator's interface rather
+than switching that interface to monitor type. The managed interface therefore
+keeps its type no matter how a sweep ends, so no failure can leave the adapter
+in a mode nothing recorded as temporary.
+
+Two things do have to be undone, and a process killed with `SIGKILL` cannot
+undo them itself: the monitor interface stays, and the managed link stays down
+(the link must be down for the radio to accept a channel change — with it up,
+`NL80211_CMD_SET_WIPHY` fails with `EBUSY` and every frame keeps arriving on
+the association's channel). The next sweep repairs both. A monitor interface
+under Trellis's own name is the evidence that Trellis, not the operator, is
+why the link is down, so recovery deletes it **and** raises the link — deleting
+only the interface would leave the operator's Wi-Fi switched off and the next
+run would faithfully "restore" it to off.
 
 Note the architectural consequence, which is the whole of ADR-0006. On macOS
 Tier 1 needs **no** privilege — the gate is TCC, not root, and a root daemon gets
@@ -252,6 +290,11 @@ is linked into `trellisd` today rather than split out.
   from the last, so the stored points are measurements rather than repeats — an
   earlier version stored 94 points holding two distinct readings. Not a fast
   continuous walk on either platform, and slower on macOS than on Linux.
+- Monitor-mode acquisition: **Linux only, 2.4 GHz only**, opt-in via
+  `TRELLIS_CAPTURE_MODE=monitor`. Validated against the OS scan on the same
+  adapter in the same minute — both reported the same 11 BSSs, with no
+  disagreement in either direction. macOS cannot do it at all; Windows would
+  need Npcap.
 - Channel utilisation as _the AP advertises it_ (BSS Load, element 11): **yes
   on Linux and Windows**, which hand back raw information elements; **no on
   macOS**, where CoreWLAN decodes the beacon for us and exposes no elements.
