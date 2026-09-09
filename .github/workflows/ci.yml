@@ -571,12 +571,6 @@ jobs:
         working-directory: ui
         run: npx playwright install --with-deps chromium webkit
 
-      # Into internal/api/ui, which the daemon go:embeds. Without this the
-      # binary serves nothing and every test fails on an empty page.
-      - name: Build the UI the daemon will serve
-        working-directory: ui
-        run: npm run build
-
       # Universal Build Contract. This is the one job with the UI embedded, so
       # it is where a `make build` binary can be proven to carry the hash: the
       # md5 the script computes must appear in the binary, or /__version would
@@ -901,10 +895,11 @@ jobs:
       - uses: ./.github/actions/setup-go
       - uses: ./.github/actions/setup-node
 
-      - name: Build UI
-        run: npm --prefix ui ci && npm --prefix ui run build
-
-      - name: Build (make build — ldflags and all)
+      # No separate UI step: `make build` builds the UI itself (#405). Leaving
+      # one here would mean this job could pass on a Makefile that never builds
+      # the UI at all — which is exactly how #405 stayed invisible in CI while
+      # a clean checkout embedded "unknown".
+      - name: Build (make build — UI, ldflags and all)
         run: make build
 
       - name: Assert the build contract is satisfied
