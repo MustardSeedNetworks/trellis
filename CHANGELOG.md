@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.48](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.47...v0.2.48) (2026-09-09)
+
+
+### Features
+
+* **capture:** monitor-mode acquisition on Linux 2.4 GHz ([#419](https://github.com/MustardSeedNetworks/trellis/issues/419)) ([53b0f53](https://github.com/MustardSeedNetworks/trellis/commit/53b0f535d6751a2518f8b68973405279f90c4118))
+
 ## [0.2.47](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.46...v0.2.47) (2026-09-09)
 
 
