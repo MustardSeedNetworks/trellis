@@ -145,6 +145,11 @@ describe('FloorPlanPanel', () => {
     const status = await screen.findByTestId('floor-plan-status');
     expect(status).toHaveTextContent('not a PNG or JPEG image');
     expect(status).toHaveClass('text-status-error');
+    /* The refusal has to be ANNOUNCED, not merely coloured. The live region is
+       asserted on the element itself and unconditionally — a role that appears
+       with the error is announced unreliably, because a screen reader has to
+       be watching the region before the text changes. */
+    expect(status).toHaveAttribute('aria-live', 'polite');
     // An ordinary refusal gets no hint: there is nothing to explain beyond
     // "that was not an image".
     expect(screen.queryByTestId('floor-plan-stranded-hint')).toBeNull();

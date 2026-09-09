@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { bytesToDataUrl, formatSignal } from '@/lib/format';
 
@@ -7,6 +7,12 @@ import { bytesToDataUrl, formatSignal } from '@/lib/format';
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 4;
 const ZOOM_STEP = 0.25;
+
+/** One clamp for every way the zoom can change, so a gesture cannot reach a
+ *  factor a button could not. */
+function clampZoom(next: number) {
+  return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number(next.toFixed(2))));
+}
 
 export interface HeatmapSurfaceProps {
   png: Uint8Array;
@@ -44,6 +50,7 @@ export function HeatmapSurface({
 }: HeatmapSurfaceProps) {
   const { t } = useTranslation(['common', 'pages']);
   const imageRef = useRef<HTMLImageElement>(null);
+  const viewportRef = useRef<HTMLElement>(null);
   const [zoom, setZoom] = useState(MIN_ZOOM);
   const [reading, setReading] = useState<{ value: number; x: number; y: number } | null>(null);
 
@@ -86,11 +93,33 @@ export function HeatmapSurface({
   );
 
   function changeZoom(delta: number) {
-    setZoom((current) => {
-      const next = Number((current + delta).toFixed(2));
-      return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next));
-    });
+    setZoom((current) => clampZoom(current + delta));
   }
+
+  /* Ctrl+wheel is the zoom gesture on a mouse, and a trackpad pinch arrives as
+     the same event with ctrlKey set, so one handler covers both. It is
+     attached here rather than as onWheel because React registers wheel at the
+     root as a PASSIVE listener: preventDefault inside onWheel is ignored, and
+     the browser would zoom the whole page on top of the surface. A plain wheel
+     is left alone — the region scrolls, which is how an operator moves around
+     a plan that is larger than the panel. */
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) {
+      return;
+    }
+
+    function zoomOnPinch(event: WheelEvent) {
+      if (!event.ctrlKey) {
+        return;
+      }
+      event.preventDefault();
+      setZoom((current) => clampZoom(current + (event.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP)));
+    }
+
+    viewport.addEventListener('wheel', zoomOnPinch, { passive: false });
+    return () => viewport.removeEventListener('wheel', zoomOnPinch);
+  }, []);
 
   return (
     /* The controls sit inside the scrolling region rather than above it. A
@@ -100,6 +129,7 @@ export function HeatmapSurface({
        With the buttons in here, Tab reaches them and the arrow keys then pan
        the region they are in. Sticky keeps them in view while it scrolls. */
     <section
+      ref={viewportRef}
       className="max-h-[70vh] overflow-auto rounded-[12px] border border-hairline"
       aria-label={t('pages:coverage.surfaceRegion')}
       data-testid="heatmap-viewport"

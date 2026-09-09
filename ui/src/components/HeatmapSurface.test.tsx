@@ -126,6 +126,42 @@ describe('HeatmapSurface', () => {
     expect(viewport).toHaveAttribute('data-zoom', '1');
   });
 
+  /**
+   * Ctrl+wheel is the zoom gesture on a mouse and, because browsers report a
+   * trackpad pinch as a wheel event with ctrlKey set, the pinch gesture too.
+   * A PLAIN wheel has to keep scrolling the region — a component that zooms on
+   * every wheel takes the page's scroll away from the operator, which is why
+   * that half is asserted as loudly as the zoom itself.
+   */
+  it('zooms on ctrl+wheel and leaves a plain wheel to scroll', () => {
+    renderSurface();
+    const viewport = screen.getByTestId('heatmap-viewport');
+
+    fireEvent.wheel(viewport, { deltaY: -100, ctrlKey: true });
+    expect(viewport).toHaveAttribute('data-zoom', '1.25');
+
+    fireEvent.wheel(viewport, { deltaY: 100, ctrlKey: true });
+    expect(viewport).toHaveAttribute('data-zoom', '1');
+
+    fireEvent.wheel(viewport, { deltaY: -100 });
+    expect(viewport).toHaveAttribute('data-zoom', '1');
+  });
+
+  it('clamps a wheel zoom to the same bounds as the buttons', () => {
+    renderSurface();
+    const viewport = screen.getByTestId('heatmap-viewport');
+
+    for (let i = 0; i < 40; i += 1) {
+      fireEvent.wheel(viewport, { deltaY: -100, ctrlKey: true });
+    }
+    expect(viewport).toHaveAttribute('data-zoom', '4');
+
+    for (let i = 0; i < 40; i += 1) {
+      fireEvent.wheel(viewport, { deltaY: 100, ctrlKey: true });
+    }
+    expect(viewport).toHaveAttribute('data-zoom', '1');
+  });
+
   it('stops at the zoom bounds', () => {
     renderSurface();
     const zoomIn = screen.getByTestId('zoom-in');

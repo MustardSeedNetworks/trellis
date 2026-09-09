@@ -148,6 +148,36 @@ test('reads a measured value off the heatmap and zooms it', async ({ page }) => 
 
   await page.getByTestId('zoom-reset').click();
   await expect(viewport).toHaveAttribute('data-zoom', '1');
+
+  /* The pinch gesture, and the one assertion jsdom cannot make. React
+     registers wheel at the root as a PASSIVE listener, where preventDefault is
+     silently ignored and the browser zooms the whole page alongside the
+     surface; the component therefore binds its own listener with
+     passive: false. Only a real browser enforces that, so defaultPrevented is
+     checked here — it is false on a passive listener however the handler is
+     written, which is exactly the regression this pins. */
+  const zoomedPrevented = await viewport.evaluate((node) => {
+    const event = new WheelEvent('wheel', {
+      deltaY: -100,
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    node.dispatchEvent(event);
+    return event.defaultPrevented;
+  });
+  expect(zoomedPrevented).toBe(true);
+  await expect(viewport).toHaveAttribute('data-zoom', '1.25');
+
+  // A plain wheel is not the zoom gesture: it must reach the scroll container
+  // uncancelled, or the operator loses the ability to move around the plan.
+  const scrollPrevented = await viewport.evaluate((node) => {
+    const event = new WheelEvent('wheel', { deltaY: -100, bubbles: true, cancelable: true });
+    node.dispatchEvent(event);
+    return event.defaultPrevented;
+  });
+  expect(scrollPrevented).toBe(false);
+  await expect(viewport).toHaveAttribute('data-zoom', '1.25');
 });
 
 test('reads the live airspace and stops taking the radio when paused', async ({ page }) => {

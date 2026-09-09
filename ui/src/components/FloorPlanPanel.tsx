@@ -185,7 +185,13 @@ export function FloorPlanPanel({
         />
       ) : null}
 
+      {/* The live region is unconditional, and so is its politeness. A role
+          that appeared only with the error would be announced unreliably: a
+          screen reader has to be watching the region BEFORE its text changes.
+          The calibration result is worth hearing for the same reason the
+          refusal is — both are the answer to something the operator just did. */}
       <p
+        aria-live="polite"
         className={`text-sm ${error ? 'text-status-error' : 'text-text-secondary'}`}
         data-testid="floor-plan-status"
       >
