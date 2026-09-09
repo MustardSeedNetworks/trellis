@@ -15,12 +15,13 @@ import "encoding/binary"
 
 // Element IDs used here, from IEEE 802.11.
 const (
-	elemSSID         = 0
-	elemBSSLoad      = 11
-	elemHTOperation  = 61
-	elemRSN          = 48
-	elemVendor       = 221
-	elemVHTOperation = 192
+	elemSSID           = 0
+	elemDSParameterSet = 3
+	elemBSSLoad        = 11
+	elemHTOperation    = 61
+	elemRSN            = 48
+	elemVendor         = 221
+	elemVHTOperation   = 192
 )
 
 // Selector suites are OUI (3 bytes) + type (1 byte). 00-0F-AC is the IEEE
