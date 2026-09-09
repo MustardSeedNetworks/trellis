@@ -615,7 +615,7 @@ jobs:
       # this suite is new, so there is no existing flake debt to grandfather.
       - name: Enforce flake budget
         if: always()
-        uses: MustardSeedNetworks/.github/.github/actions/flake-budget@4ffdaf668446e6ed6d4460d3267ef16ebde218d5 # v1.12.0
+        uses: MustardSeedNetworks/.github/.github/actions/flake-budget@048d173dd72ca0f9e5fa832fb5b9fd2a6447e5e9 # v1.13.0
         with:
           report: ui/playwright-report/results.json
           budget: "0"
@@ -688,7 +688,7 @@ jobs:
       # bundling them leaves the apt half with no step budget and no dpkg lock
       # bound. seed lost a whole job budget to exactly that.
       - name: Install Chromium OS dependencies
-        uses: MustardSeedNetworks/.github/.github/actions/apt-install@4ffdaf668446e6ed6d4460d3267ef16ebde218d5 # v1.12.0
+        uses: MustardSeedNetworks/.github/.github/actions/apt-install@048d173dd72ca0f9e5fa832fb5b9fd2a6447e5e9 # v1.13.0
         timeout-minutes: 10
         with:
           # cd ui explicitly: the job's defaults.run.working-directory does not
@@ -747,7 +747,7 @@ jobs:
           persist-credentials: false
 
       - name: Validate i18n (parity, glossary, banned vocab, etc.)
-        uses: MustardSeedNetworks/.github/.github/actions/i18n-validate@4ffdaf668446e6ed6d4460d3267ef16ebde218d5 # v1.12.0
+        uses: MustardSeedNetworks/.github/.github/actions/i18n-validate@048d173dd72ca0f9e5fa832fb5b9fd2a6447e5e9 # v1.13.0
 
   # actionlint + zizmor over .github/workflows. Ported from seed, which has had
   # this since the fleet CI pass; trellis was the one repo where a workflow
@@ -790,7 +790,7 @@ jobs:
 
   # Fleet-shared SAST gate (MustardSeedNetworks/.github, pinned).
   semgrep:
-    uses: MustardSeedNetworks/.github/.github/workflows/semgrep.yml@4ffdaf668446e6ed6d4460d3267ef16ebde218d5 # v1.12.0
+    uses: MustardSeedNetworks/.github/.github/workflows/semgrep.yml@048d173dd72ca0f9e5fa832fb5b9fd2a6447e5e9 # v1.13.0
     permissions:
       contents: read
       # v1.8.0 publishes the all-severity SARIF to code scanning. The
@@ -934,7 +934,7 @@ jobs:
           echo "uiBuildHash ${expected} is embedded in bin/trellisd"
 
   ci-conformance:
-    uses: MustardSeedNetworks/.github/.github/workflows/ci-conformance.yml@4ffdaf668446e6ed6d4460d3267ef16ebde218d5 # v1.12.0
+    uses: MustardSeedNetworks/.github/.github/workflows/ci-conformance.yml@048d173dd72ca0f9e5fa832fb5b9fd2a6447e5e9 # v1.13.0
     permissions:
       contents: read
 
@@ -956,7 +956,7 @@ jobs:
   # severity, several of which encode deliberate decisions.
   codeql-alert-gate:
     name: CodeQL Alert Gate
-    uses: MustardSeedNetworks/.github/.github/workflows/codeql-alert-gate.yml@4ffdaf668446e6ed6d4460d3267ef16ebde218d5 # v1.12.0
+    uses: MustardSeedNetworks/.github/.github/workflows/codeql-alert-gate.yml@048d173dd72ca0f9e5fa832fb5b9fd2a6447e5e9 # v1.13.0
     permissions:
       security-events: read
 
