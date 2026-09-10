@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.51](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.50...v0.2.51) (2026-09-10)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#430](https://github.com/MustardSeedNetworks/trellis/issues/430)) ([1c17252](https://github.com/MustardSeedNetworks/trellis/commit/1c17252eea0e0a0b220a9dd0a2e9ba0b3a78164e))
+* **deps:** update dependency postcss to v8.5.28 ([#427](https://github.com/MustardSeedNetworks/trellis/issues/427)) ([e2c5de8](https://github.com/MustardSeedNetworks/trellis/commit/e2c5de8f72ec37440282390df3bb728abc55a0f4))
+
 ## [0.2.50](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.49...v0.2.50) (2026-09-10)
 
 
