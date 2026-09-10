@@ -67,7 +67,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "jsdom": "30.0.1",
     "playwright": "1.62.1",
-    "postcss": "8.5.26",
+    "postcss": "8.5.28",
     "storybook": "10.6.0",
     "tailwindcss": "4.3.3",
     "typescript": "7.0.2",
