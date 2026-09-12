@@ -4,8 +4,8 @@ package auth_test
 
 import (
 	"context"
-	"strings"
 	"net/http"
+	"strings"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -86,4 +86,3 @@ func TestInterceptorRefusalIsOpaque(t *testing.T) {
 		}
 	}
 }
-

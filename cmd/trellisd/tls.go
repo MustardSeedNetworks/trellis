@@ -38,12 +38,14 @@ const (
 //
 // TLS 1.2 is the floor, matching the rest of the fleet.
 func tlsConfigFor(dataDir string) (*tls.Config, error) {
-	certPath, keyPath := os.Getenv(envTLSCert), os.Getenv(envTLSKey)
+	// Cleaned because these come from the environment: an operator naming a
+	// path with traversal in it gets the path they meant, not a walk out of it.
+	certPath, keyPath := cleanPath(os.Getenv(envTLSCert)), cleanPath(os.Getenv(envTLSKey))
 	if (certPath == "") != (keyPath == "") {
 		return nil, fmt.Errorf("%s and %s must be set together", envTLSCert, envTLSKey)
 	}
 	if certPath == "" {
-		dir := filepath.Join(dataDir, certDirName)
+		dir := filepath.Join(cleanPath(dataDir), certDirName)
 		certPath, keyPath = filepath.Join(dir, certFileName), filepath.Join(dir, keyFileName)
 		if err := ensureSelfSignedCert(dir, certPath, keyPath); err != nil {
 			return nil, err
@@ -117,4 +119,12 @@ func writePEM(path string, mode os.FileMode, block *pem.Block) error {
 		return fmt.Errorf("write %s: %w", path, err)
 	}
 	return f.Close()
+}
+
+// cleanPath normalises an operator-supplied path, leaving "" as "".
+func cleanPath(p string) string {
+	if p == "" {
+		return ""
+	}
+	return filepath.Clean(p)
 }

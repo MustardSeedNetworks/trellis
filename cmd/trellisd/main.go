@@ -123,7 +123,7 @@ func run() error {
 	options := []connect.HandlerOption{connect.WithReadMaxBytes(maxUploadBytes)}
 	var gate *auth.Gate
 	if credential.Configured() {
-		if gate, err = auth.NewGate(credential, true); err != nil {
+		if gate, err = auth.NewGate(credential); err != nil {
 			return err
 		}
 		defer gate.Close()

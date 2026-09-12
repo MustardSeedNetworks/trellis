@@ -15,7 +15,7 @@ import (
 
 func newGate(t *testing.T) *auth.Gate {
 	t.Helper()
-	g, err := auth.NewGate(mustCredential(t, "surveyor", testPassword), true)
+	g, err := auth.NewGate(mustCredential(t, "surveyor", testPassword))
 	if err != nil {
 		t.Fatalf("NewGate: %v", err)
 	}
@@ -35,12 +35,15 @@ func newGateMux(t *testing.T) (*auth.Gate, *http.ServeMux) {
 type session struct {
 	cookies []*http.Cookie
 	csrf    string
+	// raw overrides cookies when a test needs to send a value under a name it
+	// was not issued under, which no real http.Cookie would carry.
+	raw []string
 }
 
 func login(t *testing.T, mux *http.ServeMux, user, password string) (*httptest.ResponseRecorder, session) {
 	t.Helper()
 	body := strings.NewReader(`{"username":"` + user + `","password":"` + password + `"}`)
-	req := httptest.NewRequest(http.MethodPost, "/auth/login", body)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/auth/login", body)
 	req.RemoteAddr = "10.0.0.1:54321"
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
@@ -57,6 +60,9 @@ func (s session) header() http.Header {
 	h := http.Header{}
 	for _, c := range s.cookies {
 		h.Add("Cookie", c.Name+"="+c.Value)
+	}
+	for _, c := range s.raw {
+		h.Add("Cookie", c)
 	}
 	if s.csrf != "" {
 		h.Set(auth.HeaderCSRFToken, s.csrf)
@@ -176,10 +182,7 @@ func TestAuthenticateRefusesWhatItMust(t *testing.T) {
 				refresh = c
 			}
 		}
-		swapped := session{
-			cookies: []*http.Cookie{{Name: auth.CookieAccess, Value: refresh.Value}},
-			csrf:    s.csrf,
-		}
+		swapped := session{raw: []string{auth.CookieAccess + "=" + refresh.Value}, csrf: s.csrf}
 		if _, err := g.Authenticate(swapped.header(), "10.0.0.1"); err == nil {
 			t.Fatal("a refresh token presented as an access token authenticated")
 		}
@@ -191,7 +194,7 @@ func TestLogoutEndsTheSession(t *testing.T) {
 	g, mux := newGateMux(t)
 	_, s := login(t, mux, "surveyor", testPassword)
 
-	req := httptest.NewRequest(http.MethodPost, "/auth/logout", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/auth/logout", nil)
 	req.Header = s.header()
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
@@ -214,7 +217,7 @@ func TestRefreshRenewsTheAccessToken(t *testing.T) {
 	g, mux := newGateMux(t)
 	_, s := login(t, mux, "surveyor", testPassword)
 
-	req := httptest.NewRequest(http.MethodPost, "/auth/refresh", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/auth/refresh", nil)
 	req.Header = s.header()
 	req.RemoteAddr = "10.0.0.1:54321"
 	rec := httptest.NewRecorder()
@@ -253,11 +256,8 @@ func TestRefreshRefusesAnAccessToken(t *testing.T) {
 			access = c
 		}
 	}
-	req := httptest.NewRequest(http.MethodPost, "/auth/refresh", nil)
-	req.Header = session{
-		cookies: []*http.Cookie{{Name: auth.CookieRefresh, Value: access.Value}},
-		csrf:    s.csrf,
-	}.header()
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/auth/refresh", nil)
+	req.Header = session{raw: []string{auth.CookieRefresh + "=" + access.Value}, csrf: s.csrf}.header()
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 	if rec.Code != http.StatusUnauthorized {
@@ -269,7 +269,57 @@ func TestRefreshRefusesAnAccessToken(t *testing.T) {
 // default credential" structural rather than a check someone can forget.
 func TestNewGateRequiresACredential(t *testing.T) {
 	t.Parallel()
-	if _, err := auth.NewGate(auth.Credential{}, true); !errors.Is(err, auth.ErrMissingCredentials) {
+	if _, err := auth.NewGate(auth.Credential{}); !errors.Is(err, auth.ErrMissingCredentials) {
 		t.Fatalf("NewGate with no credential = %v, want ErrMissingCredentials", err)
+	}
+}
+
+// The UI has to know whether this daemon wants a login before it renders
+// anything. A daemon with no gate never registers the route, so a 404 is the
+// "no credential configured" answer and needs no flag of its own.
+func TestSessionProbe(t *testing.T) {
+	t.Parallel()
+	g, mux := newGateMux(t)
+
+	probe := func(h http.Header) (int, map[string]any) {
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/auth/session", nil)
+		if h != nil {
+			req.Header = h
+		}
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+		var out map[string]any
+		_ = json.Unmarshal(rec.Body.Bytes(), &out)
+		return rec.Code, out
+	}
+
+	code, out := probe(nil)
+	if code != http.StatusOK {
+		t.Fatalf("anonymous probe returned %d, want 200", code)
+	}
+	if out["authenticated"] != false {
+		t.Fatalf("anonymous probe says authenticated=%v", out["authenticated"])
+	}
+	if _, leaked := out["csrfToken"]; leaked {
+		t.Fatal("the anonymous probe handed out a CSRF token")
+	}
+
+	_, s := login(t, mux, "surveyor", testPassword)
+	code, out = probe(s.header())
+	if code != http.StatusOK {
+		t.Fatalf("authenticated probe returned %d, want 200", code)
+	}
+	if out["authenticated"] != true || out["username"] != "surveyor" {
+		t.Fatalf("authenticated probe returned %v", out)
+	}
+	// A reload must recover a usable CSRF token, or the session survives in the
+	// cookie while every RPC fails.
+	token, _ := out["csrfToken"].(string)
+	if token == "" {
+		t.Fatal("the authenticated probe returned no CSRF token")
+	}
+	recovered := session{cookies: s.cookies, csrf: token}
+	if _, err := g.Authenticate(recovered.header(), "10.0.0.1"); err != nil {
+		t.Fatalf("the token the probe returned does not authenticate: %v", err)
 	}
 }

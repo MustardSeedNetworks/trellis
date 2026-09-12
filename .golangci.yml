@@ -55,6 +55,22 @@ linters:
       - text: 'G115: integer overflow conversion uint64 -> uint32'
         path: 'core/survey/floorplan_pixels_test\.go'
         linters: [ gosec ]
+      # G101 on two const blocks that name things rather than hold secrets:
+      # internal/auth's TRELLIS_AUTH_USERNAME/PASSWORD are the environment
+      # variable NAMES the credential is read from, and HeaderCSRFToken is an
+      # HTTP header name. gosec matches the identifier, not the value; the
+      # actual credential never appears in the source. Scoped to the package.
+      - text: 'G101: Potential hardcoded credentials'
+        path: 'internal/auth/'
+        linters: [ gosec ]
+      # G703 taint analysis on the TLS paths. TRELLIS_TLS_CERT and
+      # TRELLIS_TLS_KEY are operator-supplied file paths — naming a file
+      # anywhere on their own disk is the whole point of the setting, so there
+      # is no root to confine them to. They are filepath.Clean'd, and the only
+      # actor who can set them already runs the daemon. Scoped to the one file.
+      - text: 'G703: Path traversal via taint analysis'
+        path: 'cmd/trellisd/tls\.go'
+        linters: [ gosec ]
       # int8(b[offset]) reading a radiotap field. NL80211/radiotap define the
       # dBm antenna signal and noise as SIGNED 8-bit values delivered in a
       # byte, so reinterpreting the sign is the whole point of the conversion

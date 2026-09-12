@@ -103,33 +103,28 @@ func TestSessionRefusesAnExpiredToken(t *testing.T) {
 	}
 }
 
-// The daemon can be reached over plain HTTP on loopback and over TLS off it.
-// The cookie must be Secure in the second case or the session travels in clear.
+// A session cookie only ever travels over the TLS listener a configured
+// credential turns on, so every flag is unconditional.
 func TestSessionCookiesCarryTheSecurityFlags(t *testing.T) {
 	t.Parallel()
-	for name, secure := range map[string]bool{"tls": true, "loopback http": false} {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			c := auth.NewSessionCookie(auth.CookieAccess, "token-value", auth.AccessTokenDuration, secure)
-			if !c.HttpOnly {
-				t.Error("cookie is not HttpOnly — script can read the session")
-			}
-			if c.SameSite != http.SameSiteStrictMode {
-				t.Errorf("cookie SameSite = %v, want Strict", c.SameSite)
-			}
-			if c.Secure != secure {
-				t.Errorf("cookie Secure = %v, want %v", c.Secure, secure)
-			}
-			if c.Path != "/" {
-				t.Errorf("cookie Path = %q, want /", c.Path)
-			}
-		})
+	c := auth.NewSessionCookie(auth.CookieAccess, "token-value", auth.AccessTokenDuration)
+	if !c.HttpOnly {
+		t.Error("cookie is not HttpOnly — script can read the session")
+	}
+	if !c.Secure {
+		t.Error("cookie is not Secure — the session can travel in clear")
+	}
+	if c.SameSite != http.SameSiteStrictMode {
+		t.Errorf("cookie SameSite = %v, want Strict", c.SameSite)
+	}
+	if c.Path != "/" {
+		t.Errorf("cookie Path = %q, want /", c.Path)
 	}
 }
 
 func TestClearedCookieExpiresImmediately(t *testing.T) {
 	t.Parallel()
-	c := auth.ClearSessionCookie(auth.CookieAccess, true)
+	c := auth.ClearSessionCookie(auth.CookieAccess)
 	if c.MaxAge >= 0 {
 		t.Fatalf("cleared cookie MaxAge = %d, want negative", c.MaxAge)
 	}

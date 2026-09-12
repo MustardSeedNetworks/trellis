@@ -137,7 +137,13 @@ func verifyPassword(password, encoded string) bool {
 	if !ok {
 		return false
 	}
-	got := argon2.IDKey([]byte(password), salt, time, memory, threads, uint32(len(want)))
+	// The stored key must be exactly the length we produce. Deriving to
+	// len(want) instead would let a malformed hash choose the comparison
+	// length, and a one-byte key would then match one password in 256.
+	if len(want) != argon2KeyLen {
+		return false
+	}
+	got := argon2.IDKey([]byte(password), salt, time, memory, threads, argon2KeyLen)
 	return subtle.ConstantTimeCompare(got, want) == 1
 }
 

@@ -89,4 +89,3 @@ func TestRequireBindAllowedAdmitsAProtectedDaemon(t *testing.T) {
 		})
 	}
 }
-

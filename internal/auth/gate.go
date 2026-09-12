@@ -43,13 +43,10 @@ type Gate struct {
 	sessions *SessionManager
 	csrf     *csrf.Manager
 	limiter  *RateLimiter
-	// secure marks the session cookies Secure. It follows the listener: a
-	// Secure cookie is never sent back over the plain-HTTP loopback listener.
-	secure bool
 }
 
 // NewGate returns the gate authenticating against cred.
-func NewGate(cred Credential, secure bool) (*Gate, error) {
+func NewGate(cred Credential) (*Gate, error) {
 	if !cred.Configured() {
 		return nil, ErrMissingCredentials
 	}
@@ -62,7 +59,6 @@ func NewGate(cred Credential, secure bool) (*Gate, error) {
 		sessions: sessions,
 		csrf:     csrf.NewManager(),
 		limiter:  NewRateLimiter(LoginAttemptLimit, LoginAttemptWindow),
-		secure:   secure,
 	}, nil
 }
 
@@ -77,6 +73,7 @@ func (g *Gate) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /auth/login", g.handleLogin)
 	mux.HandleFunc("POST /auth/logout", g.handleLogout)
 	mux.HandleFunc("POST /auth/refresh", g.handleRefresh)
+	mux.HandleFunc("GET /auth/session", g.handleSession)
 }
 
 // Authenticate checks the session a request carries and returns its username.
@@ -141,10 +138,36 @@ func (g *Gate) handleRefresh(w http.ResponseWriter, r *http.Request) {
 	g.issueSession(w, user, client)
 }
 
+// handleSession reports whether the caller already has a session, and hands a
+// live CSRF token back to one that does.
+//
+// A reload keeps the cookies but loses the token the login response returned,
+// so without this a returning operator would hold a valid session every RPC
+// refuses. An anonymous caller is told only that they are anonymous.
+func (g *Gate) handleSession(w http.ResponseWriter, r *http.Request) {
+	token := cookieValue(r.Header, CookieAccess)
+	user, err := g.sessions.Validate(token, TokenAccess)
+	if err != nil {
+		writeJSON(w, http.StatusOK, map[string]any{"authenticated": false})
+		return
+	}
+	csrfToken, err := g.csrf.GetOrCreate(csrf.SessionKey(token))
+	if err != nil {
+		slog.Error("could not recover CSRF token", "error", err)
+		writeAuthError(w, http.StatusInternalServerError, "could not read session")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"authenticated": true,
+		"username":      user,
+		"csrfToken":     csrfToken,
+	})
+}
+
 func (g *Gate) handleLogout(w http.ResponseWriter, r *http.Request) {
 	g.csrf.Revoke(csrf.SessionKey(cookieValue(r.Header, CookieAccess)))
-	http.SetCookie(w, ClearSessionCookie(CookieAccess, g.secure))
-	http.SetCookie(w, ClearSessionCookie(CookieRefresh, g.secure))
+	http.SetCookie(w, ClearSessionCookie(CookieAccess))
+	http.SetCookie(w, ClearSessionCookie(CookieRefresh))
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -165,8 +188,8 @@ func (g *Gate) issueSession(w http.ResponseWriter, user, client string) {
 	}
 	g.limiter.Reset(client)
 
-	http.SetCookie(w, NewSessionCookie(CookieAccess, access, AccessTokenDuration, g.secure))
-	http.SetCookie(w, NewSessionCookie(CookieRefresh, refresh, RefreshTokenDuration, g.secure))
+	http.SetCookie(w, NewSessionCookie(CookieAccess, access, AccessTokenDuration))
+	http.SetCookie(w, NewSessionCookie(CookieRefresh, refresh, RefreshTokenDuration))
 	writeJSON(w, http.StatusOK, map[string]string{"username": user, "csrfToken": csrfToken})
 }
 

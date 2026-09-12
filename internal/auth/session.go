@@ -143,24 +143,33 @@ func (m *SessionManager) Validate(token string, want TokenType) (string, error) 
 
 // NewSessionCookie returns the cookie carrying a session token.
 //
-// secure follows the listener rather than being hardcoded: the daemon serves
-// plain HTTP on loopback, where a Secure cookie would simply never be sent
-// back, and TLS everywhere else, where it must be.
-func NewSessionCookie(name, value string, lifetime time.Duration, secure bool) *http.Cookie {
+// Secure is unconditional. There is no plain-HTTP session to serve: the gate
+// exists only when a credential is configured, and a configured credential is
+// exactly what turns the listener into a TLS one. A daemon on loopback issues
+// no session cookies at all.
+func NewSessionCookie(name, value string, lifetime time.Duration) *http.Cookie {
 	return &http.Cookie{
 		Name:     name,
 		Value:    value,
 		Path:     "/",
 		MaxAge:   int(lifetime.Seconds()),
 		HttpOnly: true,
-		Secure:   secure,
+		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 	}
 }
 
-// ClearSessionCookie returns the cookie that deletes a session cookie.
-func ClearSessionCookie(name string, secure bool) *http.Cookie {
-	c := NewSessionCookie(name, "", 0, secure)
-	c.MaxAge = -1
-	return c
+// ClearSessionCookie returns the cookie that deletes a session cookie. The
+// attributes are repeated rather than borrowed from NewSessionCookie: a
+// browser only replaces a cookie when the new one matches on them.
+func ClearSessionCookie(name string) *http.Cookie {
+	return &http.Cookie{
+		Name:     name,
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	}
 }

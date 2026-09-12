@@ -33,13 +33,13 @@ func TestCredentialRefusesWrongInput(t *testing.T) {
 	t.Parallel()
 	c := mustCredential(t, "surveyor", testPassword)
 	for name, tc := range map[string]struct{ user, pass string }{
-		"wrong password":     {"surveyor", "wrong-horse-battery"},
-		"wrong username":     {"someone", testPassword},
-		"empty password":     {"surveyor", ""},
-		"empty username":     {"", testPassword},
-		"password as user":   {testPassword, "surveyor"},
-		"password prefix":    {"surveyor", testPassword[:len(testPassword)-1]},
-		"username case":      {"Surveyor", testPassword},
+		"wrong password":   {"surveyor", "wrong-horse-battery"},
+		"wrong username":   {"someone", testPassword},
+		"empty password":   {"surveyor", ""},
+		"empty username":   {"", testPassword},
+		"password as user": {testPassword, "surveyor"},
+		"password prefix":  {"surveyor", testPassword[:len(testPassword)-1]},
+		"username case":    {"Surveyor", testPassword},
 	} {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
