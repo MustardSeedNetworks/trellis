@@ -93,6 +93,22 @@
     "weakLink": "{{ssid}} has only {{snr}} dB of margin",
     "weakLinkBody": "Signal-to-noise this low is where rates drop and roams start. Signal alone can look fine here."
   },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "This daemon serves other devices, so it asks who you are.",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "signOut": "Sign out",
+    "checking": "Checking your session…",
+    "errors": {
+      "invalid": "That username and password do not match.",
+      "rateLimited": "Too many attempts. Wait a few minutes and try again.",
+      "unavailable": "Could not reach the daemon.",
+      "empty": "Enter a username and password."
+    }
+  },
   "reports": {
     "companyPlaceholder": "Printed on the cover page",
     "description": "Generate a PDF for a survey, choosing what it contains.",

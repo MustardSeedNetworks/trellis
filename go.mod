@@ -6,10 +6,12 @@ require (
 	connectrpc.com/connect v1.20.0
 	github.com/MustardSeedNetworks/foundation v0.5.5
 	github.com/go-pdf/fpdf v0.9.0
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/mdlayher/genetlink v1.4.0
 	github.com/mdlayher/netlink v1.11.2
 	github.com/pressly/goose/v3 v3.28.0
+	golang.org/x/crypto v0.56.0
 	golang.org/x/sys v0.48.0
 	google.golang.org/protobuf v1.36.12
 	modernc.org/sqlite v1.58.0
