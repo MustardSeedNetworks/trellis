@@ -362,6 +362,11 @@ jobs:
       - name: TypeScript strictness contract
         run: python3 scripts/check-tsconfig-flags.py
 
+      # Source files are exempt from the name patterns: internal/auth/credential.go
+      # is a Go file implementing a Credential type, not a committed credential.
+      # A secret written INTO source is caught by gitleaks and gosec G101, which
+      # read contents; this check reads names and is for a .env or a .key that
+      # should never have been added.
       - name: Check for sensitive files
         run: |
           SENSITIVE_FILES=$(find . -type f \( \
@@ -370,7 +375,8 @@ jobs:
             -name "*.key" -o \
             -name "*secret*" -o \
             -name "*credential*" \
-          \) ! -path "./.git/*" ! -name "*.example" ! -name "*.sample" 2>/dev/null || true)
+          \) ! -path "./.git/*" ! -name "*.example" ! -name "*.sample" \
+            ! -name "*.go" ! -name "*.ts" ! -name "*.tsx" 2>/dev/null || true)
           if [ -n "$SENSITIVE_FILES" ]; then
             echo "Sensitive files found:"
             echo "$SENSITIVE_FILES"
