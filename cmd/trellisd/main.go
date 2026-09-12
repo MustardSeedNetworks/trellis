@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -19,13 +20,15 @@ import (
 	"github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1/surveyv1connect"
 	"github.com/MustardSeedNetworks/trellis/internal/api"
 	"github.com/MustardSeedNetworks/trellis/internal/apppaths"
+	"github.com/MustardSeedNetworks/trellis/internal/auth"
 )
 
 const (
-	// defaultAddr binds loopback only, and so must any TRELLIS_ADDR: the
-	// server has no authentication, TLS or CSRF, and requireLoopback refuses
-	// an address that would put it on a network. Serving another device is
-	// #160, a feature gated on those three landing first.
+	// defaultAddr binds loopback: the desktop app of ADR-0007, one operator's
+	// browser on the same machine. A TRELLIS_ADDR that would put the API on a
+	// network is refused by requireBindAllowed unless an operator credential
+	// is configured, which is what installs auth, CSRF and TLS in front of it
+	// (#439, the feature #160 gated).
 	defaultAddr         = "127.0.0.1:8446"
 	shutdownGracePeriod = 10 * time.Second
 	readHeaderTimeout   = 5 * time.Second
@@ -68,7 +71,14 @@ func run() error {
 	if !explicitAddr {
 		addr = defaultAddr
 	}
-	if err := requireLoopback(addr); err != nil {
+	// The operator credential is what lifts the loopback gate. Read it before
+	// anything is opened, so an unprotected routable bind fails with no store,
+	// no radio and no listener touched.
+	credential, credErr := auth.CredentialFromEnv()
+	if credErr != nil && !errors.Is(credErr, auth.ErrMissingCredentials) {
+		return credErr
+	}
+	if err := requireBindAllowed(addr, credential.Configured()); err != nil {
 		return err
 	}
 
@@ -106,12 +116,26 @@ func run() error {
 		go reportCaptureReadiness(ctx, scanner, surveyHandler)
 	}
 
+	// A credential turns the daemon from a desktop app into one serving other
+	// devices: every RPC is authenticated and CSRF-checked, and the listener
+	// gets TLS below. Without one the handler is registered bare and the bind
+	// gate has already confined it to loopback.
+	options := []connect.HandlerOption{connect.WithReadMaxBytes(maxUploadBytes)}
+	var gate *auth.Gate
+	if credential.Configured() {
+		if gate, err = auth.NewGate(credential, true); err != nil {
+			return err
+		}
+		defer gate.Close()
+		options = append(options, connect.WithInterceptors(gate.Interceptor()))
+	}
+
 	mux := http.NewServeMux()
-	path, handler := surveyv1connect.NewSurveyServiceHandler(
-		surveyHandler,
-		connect.WithReadMaxBytes(maxUploadBytes),
-	)
+	path, handler := surveyv1connect.NewSurveyServiceHandler(surveyHandler, options...)
 	mux.Handle(path, handler)
+	if gate != nil {
+		gate.RegisterRoutes(mux)
+	}
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -133,6 +157,14 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	scheme := "http"
+	if gate != nil {
+		tlsConfig, err := tlsConfigFor(dataDir)
+		if err != nil {
+			return err
+		}
+		ln, scheme = tls.NewListener(ln, tlsConfig), "https"
+	}
 
 	srv := &http.Server{
 		Addr:              boundAddr,
@@ -146,7 +178,7 @@ func run() error {
 
 	serveErr := make(chan error, 1)
 	go func() {
-		slog.Info("trellisd listening", "addr", boundAddr)
+		slog.Info("trellisd listening", "addr", boundAddr, "scheme", scheme, "authenticated", gate != nil)
 		if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			serveErr <- err
 			return
