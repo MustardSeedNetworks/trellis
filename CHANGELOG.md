@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.55](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.54...v0.2.55) (2026-09-13)
+
+
+### Miscellaneous
+
+* **deps:** update dependency @biomejs/biome to v2.5.13 ([#441](https://github.com/MustardSeedNetworks/trellis/issues/441)) ([3de27b3](https://github.com/MustardSeedNetworks/trellis/commit/3de27b326290528f55b0b65a677f6a7b616f9863))
+
 ## [0.2.54](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.53...v0.2.54) (2026-09-11)
 
 
