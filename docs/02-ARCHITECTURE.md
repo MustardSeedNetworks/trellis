@@ -108,8 +108,9 @@ Turns radios into `wifi.ScannedNetwork` values behind one `Scanner` interface.
   does — granted per user in an interactive session, and not substitutable by
   elevation. Tier 2 (monitor mode) needs privilege on every platform; it is
   implemented on Linux 2.4 GHz only (opt-in, `CAP_NET_ADMIN`, #419), has no API
-  on macOS and was not attempted on Windows. It will want its own process when
-  it covers more than one band.
+  on macOS and was not attempted on Windows. It landed inside `trellisd` rather
+  than in a process of its own — ADR-0006's reasoning, restated at
+  [10-WIFI-CAPTURE.md](10-WIFI-CAPTURE.md) "the architectural consequence".
 - **External hardware is first-class** (supported USB radio / NetAlly appliance over
   USB-IP) — a separate process behind the same `Scanner`, unaffected by ADR-0006.
 - **The one place cgo is allowed**, enforced by `scripts/check-cgo-confinement.py`.
