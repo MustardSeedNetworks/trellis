@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.57](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.56...v0.2.57) (2026-09-14)
+
+
+### Miscellaneous
+
+* **deps:** update dependency @rolldown/plugin-babel to v0.2.4 ([#445](https://github.com/MustardSeedNetworks/trellis/issues/445)) ([42473c3](https://github.com/MustardSeedNetworks/trellis/commit/42473c3cad651d2f0c59e92fdded748b7fdda0ff))
+
 ## [0.2.56](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.55...v0.2.56) (2026-09-13)
 
 
