@@ -1,10 +1,14 @@
 # Gate G1 result — engine credibility
 
 **First run:** 2026-09-07 on AirMagnet demo projects · **re-measured the same
-day** on the AirMapper walks that carry AP placements (#362).
+day** on the AirMapper walks that carry AP placements (#362) · **re-scoped
+2026-09-08 by the owner** — see [The owner's decision](#the-owners-decision-2026-09-08).
 
-**Verdict: FAIL, confirmed on both datasets. The predictive engine is not
-built.** 10.42 dB uncalibrated / 4.34 dB calibrated on AirMagnet; **16.75 dB
+**Verdict against the thresholds this gate was originally specified with: FAIL,
+confirmed on both datasets. The predictive engine is not built.** The gate has
+since been re-scoped and is open again; the numbers below are unchanged and the
+bar they are measured against is not.
+ 10.42 dB uncalibrated / 4.34 dB calibrated on AirMagnet; **16.75 dB
 uncalibrated / 4.02 dB calibrated on AirMapper**, against thresholds of ≤6 dB
 and ≤3–4 dB. The re-measurement is the one that counts, and it is
 [below](#re-measurement-on-airmapper-ground-truth-2026-09-07).
@@ -224,3 +228,50 @@ calibrated ourselves, on our own hardware (`T-KILL` in the plan of record).
 Two floors of one building, surveyed by someone else, with no recorded
 transmit power and no AP heights, is a stronger fail than the first — not a
 verdict on the physics.
+
+## The owner's decision, 2026-09-08
+
+The fail above exposed a wrong premise rather than settling the physics: the
+ground truth the roadmap named did not exist where it said it did, and the
+re-measurement ran on two floors of one building surveyed by someone else, with
+no recorded transmit power and no AP heights. The choice put to the owner was
+to re-run the gate against better ground truth, re-scope the target, or stop
+the planner for good.
+
+**The decision is to re-scope and re-run.** In the owner's terms:
+
+- **Target: 10 dB mean error against the Link-Live oracle** — NetAlly's own
+  decode of the same AirMapper archives, described in
+  `docs/12-CROSS-PRODUCT-ORACLE.md`. The oracle supplies the AP placements, so
+  the gate no longer rests on this repo's reader of a schema-less format being
+  right about where the APs were.
+- **Time box: four weeks from the first run.** The first run was 2026-09-07, so
+  the box closes **2026-10-05**.
+- **Pass → the Phase C planner rows are filed** (floorplan walls, materials, AP
+  placement, predictive layers, calibration, GPU) and the predictive engine is
+  built.
+- **Fail → the planner stops for good. There is no third re-scope.**
+
+Two things this decision leaves stated rather than settled, recorded here so a
+reader does not have to guess and so the owner can correct either in one line:
+
+1. **The original gate named two thresholds** — ≤6 dB mean error before
+   calibration and ≤3–4 dB after. The re-scope names one number. Read plainly,
+   10 dB replaces the 6 dB pre-calibration threshold and the post-calibration
+   threshold is unchanged; that is how it is recorded here and in
+   `docs/06-ROADMAP.md`. If a single combined bar was meant, the roadmap line is
+   the place to correct it.
+2. **"From the first run"** is read here as the first run of this gate,
+   2026-09-07, rather than the first run under the re-scope, which has not
+   happened.
+
+This supersedes the paragraph above on one point only. That paragraph says the
+measurement that would settle the gate is a floor walked with APs we placed
+ourselves — `T-KILL` in the plan of record. The owner chose the oracle route
+instead, and the re-scoped run is the one that decides. `T-KILL` remains worth
+having as the alpha's kill criterion; it is no longer what G1 waits on.
+
+**The re-scoped run has not been made.** It needs Link-Live reachable. No code
+in this repo changes as a result of this decision: the harness it would use is
+`scripts/linklive-fetch-oracle.sh` and `tools/linklive-oracle`, both in tree
+since #363.

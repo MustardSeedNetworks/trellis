@@ -11,7 +11,7 @@ feature-driven.
 | Phase 0 — Plan freeze | Done | `docs/` reviewed; contracts drafted (`proto/trellis/survey/v1` implemented; `docs/contracts/api.proto` and `engine.proto` still draft/unimplemented). |
 | Phase 1 — Migrate measured-survey | Done | `core/survey` in tree, ~92% covered, corpus tests assert values; survey API real; UI wired to the live measured-survey workflow (#268). |
 | Phase 2 — Predictive engine MVP | Not started | Zero lines of C++/Rust/GPU code in the tree; no `/engine`. |
-| Gate G1 — Engine credibility | Run 2026-09-07 — **failed** | CPU log-distance model measured against surveyor-placed APs: 10.42 dB mean error uncalibrated, 4.34 dB calibrated, against thresholds of 6 and 3–4 dB. `docs/11-GATE-G1-RESULT.md`, `core/rf`. |
+| Gate G1 — Engine credibility | Run 2026-09-07 — **failed**; **re-scoped 2026-09-08, re-run pending** | CPU log-distance model measured against surveyor-placed APs: 10.42 dB mean error uncalibrated, 4.34 dB calibrated, against the original thresholds of 6 and 3–4 dB. Re-scoped by the owner to **10 dB mean error against the Link-Live oracle**, four weeks from the first run (box closes 2026-10-05); fail stops the planner for good. `docs/11-GATE-G1-RESULT.md`, `docs/12-CROSS-PRODUCT-ORACLE.md`, `core/rf`. |
 | Phase 3 — Planning UX + Wails | Not started | No Wails; UI is a browser page served over loopback HTTP. |
 | Phase 4 — GPU + full predictive layers | Not started | Depends on Phase 2. |
 | Phase 5 — Capture + survey loop | Partially done | Host-NIC capture backends real on macOS (CoreWLAN), Linux (nl80211), Windows (Native WiFi), linked into `trellisd` (ADR-0006). External HW, calibration not started. |
@@ -62,9 +62,10 @@ The only greenfield, research-grade component. Build it small and prove it.
 
 ## 🚦 Gate G1 — Engine credibility (make-or-break; do NOT skip)
 
-**Ran 2026-09-07 and failed — see `docs/11-GATE-G1-RESULT.md`.** The section
-below is the gate as it was specified; the result doc records what was actually
-available to measure and what it measured.
+**Ran 2026-09-07 and failed, then was re-scoped by the owner on 2026-09-08 and
+is open again — see `docs/11-GATE-G1-RESULT.md`.** The section below is the gate
+as it was originally specified; the result doc records what was actually
+available to measure, what it measured, and the re-scoped bar that now applies.
 
 We now have **real ground truth in hand** (Everett: 73 measured points + AP layout +
 floorplan, decoded by the migrated pipeline).
@@ -74,8 +75,12 @@ floorplan, decoded by the migrated pipeline).
   pct dB error; coverage-boundary agreement). Exercise **calibration**.
 - _(Optional G1a)_ also diff against an AirMagnet/Ekahau predicted export of the same
   scene (model-vs-model) for an implementation sanity check.
-- **PASS (proposed, tune):** ≤ ~6 dB mean error pre-cal, ≤ ~3–4 dB post-cal; coverage
-  boundary within ~1 cell.
+- **PASS (as originally proposed):** ≤ ~6 dB mean error pre-cal, ≤ ~3–4 dB post-cal;
+  coverage boundary within ~1 cell.
+- **PASS (re-scoped 2026-09-08, owner):** ≤ 10 dB mean error against the Link-Live
+  oracle's AP placements, replacing the 6 dB pre-calibration figure; post-calibration
+  unchanged. Four-week box from the first run, closing 2026-10-05. **Fail stops the
+  planner for good — there is no third re-scope.**
 - **Pass:** green-light the full build. **Fail:** fix the model (or rethink the bet)
   _before_ the cathedral — the cheapest possible place to learn the truth.
 
