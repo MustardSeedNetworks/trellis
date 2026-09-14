@@ -106,8 +106,10 @@ Turns radios into `wifi.ScannedNetwork` values behind one `Scanner` interface.
   as `Trellis.app`. Linux needs `CAP_NET_ADMIN` to _trigger_ a scan (not to read
   the cache). Windows 11 gates scanning on Location Services the same way macOS
   does — granted per user in an interactive session, and not substitutable by
-  elevation. Tier 2 (monitor mode) needs privilege on every platform and is
-  not implemented; it will want its own process when it lands.
+  elevation. Tier 2 (monitor mode) needs privilege on every platform; it is
+  implemented on Linux 2.4 GHz only (opt-in, `CAP_NET_ADMIN`, #419), has no API
+  on macOS and was not attempted on Windows. It will want its own process when
+  it covers more than one band.
 - **External hardware is first-class** (supported USB radio / NetAlly appliance over
   USB-IP) — a separate process behind the same `Scanner`, unaffected by ADR-0006.
 - **The one place cgo is allowed**, enforced by `scripts/check-cgo-confinement.py`.
