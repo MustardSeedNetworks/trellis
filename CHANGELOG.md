@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.60](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.59...v0.2.60) (2026-09-14)
+
+
+### Bug Fixes
+
+* **deps:** update connectrpc to v2.2.0 ([#455](https://github.com/MustardSeedNetworks/trellis/issues/455)) ([de1b8ec](https://github.com/MustardSeedNetworks/trellis/commit/de1b8ecc50c2e1d9348170b33000401db117b934))
+
 ## [0.2.59](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.58...v0.2.59) (2026-09-14)
 
 
