@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.59](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.58...v0.2.59) (2026-09-14)
+
+
+### Documentation
+
+* **g1:** record the owner's 2026-09-08 re-scope of Gate G1 ([#451](https://github.com/MustardSeedNetworks/trellis/issues/451)) ([465a53f](https://github.com/MustardSeedNetworks/trellis/commit/465a53f27c4f3148b225aa7a8d2e8a6cb0175b3a))
+
 ## [0.2.58](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.57...v0.2.58) (2026-09-14)
 
 
