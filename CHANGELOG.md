@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.65](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.64...v0.2.65) (2026-09-15)
+
+
+### Bug Fixes
+
+* **ui:** apply the dark palette that was defined and never used ([#483](https://github.com/MustardSeedNetworks/trellis/issues/483)) ([43c0f2a](https://github.com/MustardSeedNetworks/trellis/commit/43c0f2a57c2a71d8e9806987e081d1a15010ef9f)), closes [#472](https://github.com/MustardSeedNetworks/trellis/issues/472)
+
 ## [0.2.64](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.63...v0.2.64) (2026-09-15)
 
 
