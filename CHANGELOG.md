@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.62](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.61...v0.2.62) (2026-09-15)
+
+
+### Features
+
+* **auth:** operator authentication, TLS and CSRF, then a routable bind ([#440](https://github.com/MustardSeedNetworks/trellis/issues/440)) ([8aaf4ab](https://github.com/MustardSeedNetworks/trellis/commit/8aaf4ab06e515967fe51f8bcfb863a29a107bf69)), closes [#439](https://github.com/MustardSeedNetworks/trellis/issues/439)
+
+
+### Documentation
+
+* **adr:** ADR-0010 — auth, TLS and CSRF gate a routable bind; ADR-0007's packaging stands ([#464](https://github.com/MustardSeedNetworks/trellis/issues/464)) ([3a2253a](https://github.com/MustardSeedNetworks/trellis/commit/3a2253a5e24840884d235a83e9639323bf9ab83e))
+
 ## [0.2.61](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.60...v0.2.61) (2026-09-15)
 
 
