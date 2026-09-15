@@ -1307,7 +1307,9 @@ func (x *DeleteFloorResponse) GetFloors() []*Floor {
 type GetHeatmapRequest struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	SurveyId string                 `protobuf:"bytes,1,opt,name=survey_id,json=surveyId,proto3" json:"survey_id,omitempty"`
-	// Heatmap metric: "rssi" or "snr". Defaults to "rssi".
+	// Heatmap metric: "rssi", "snr", "density", "interference", "download" or
+	// "upload", with "signal" and "cochannel" accepted as aliases for the first
+	// and fourth. Unrecognised values fall back to "rssi", as does the default.
 	Metric string `protobuf:"bytes,2,opt,name=metric,proto3" json:"metric,omitempty"`
 	// Floor to render. Empty means the survey's active floor.
 	//

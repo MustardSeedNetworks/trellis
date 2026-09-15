@@ -309,7 +309,9 @@ message DeleteFloorResponse {
 
 message GetHeatmapRequest {
   string survey_id = 1;
-  // Heatmap metric: "rssi" or "snr". Defaults to "rssi".
+  // Heatmap metric: "rssi", "snr", "density", "interference", "download" or
+  // "upload", with "signal" and "cochannel" accepted as aliases for the first
+  // and fourth. Unrecognised values fall back to "rssi", as does the default.
   string metric = 2;
   // Floor to render. Empty means the survey's active floor.
   //

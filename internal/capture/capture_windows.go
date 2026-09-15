@@ -176,7 +176,11 @@ func New() (Scanner, error) {
 	return nativeWifiScanner{}, nil
 }
 
-// Authorize has nothing to ask for: Windows gates nothing on scanning.
+// Authorize has nothing to ask for. Windows does gate scanning, on the Location
+// Services consent described above, but that consent is granted in Settings by
+// the signed-in user and no API asks for it on their behalf — so readiness is
+// only knowable from a real [Scanner.Scan], which is where the caller learns it
+// (#152).
 func Authorize() error { return nil }
 
 // Scan implements [Scanner].

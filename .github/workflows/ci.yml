@@ -77,6 +77,10 @@ jobs:
               # sides compile against; buf lint runs inside the backend job.
               - 'proto/**'
               - 'gen/**'
+              # The TS half of the generated tree lives under ui/, so `ui/**`
+              # alone would route a hand-edited generated file to the frontend
+              # job and skip the drift gate, which runs here.
+              - 'ui/src/gen/**'
               - 'buf*.yaml'
             frontend:
               - 'ui/**'
@@ -252,6 +256,27 @@ jobs:
             exit 1
           fi
           "$BUF" lint
+
+      # The TS generator is a devDependency (buf.gen.ui.yaml), so the drift gate
+      # below needs the UI's node_modules. It lives in this job rather than the
+      # frontend one because buf — resolved, cached and version-asserted above —
+      # is the expensive half, and the proto contract is this job's already.
+      - uses: ./.github/actions/setup-node
+
+      - name: Install the UI dependencies
+        working-directory: ui
+        run: npm ci
+
+      # buf lint reads the .proto and never asks whether gen/ still matches it,
+      # so a contract edited without regenerating — or a generated file edited
+      # by hand — merged green. The target is the Makefile's, not a second copy
+      # of the commands, and the buf resolved above is the one it runs.
+      #
+      # Deterministic because the generators are pinned local binaries: with BSR
+      # remote plugins this gate could not exist, since BSR serves whatever it
+      # released last and rate-limits anonymous callers like this runner.
+      - name: Generated code is in step with the proto
+        run: make check-generated
 
   # The ubuntu backend job builds the Linux nl80211 backend but never the
   # Windows one, which reads WLAN_BSS_ENTRY straight out of memory wlanapi

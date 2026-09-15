@@ -1,4 +1,4 @@
-.PHONY: generate generate-ts ui build build-e2e ui-build-hash lint lint-md golangci-lint buf vet test fmt-check check-stale-tests packages
+.PHONY: generate generate-ts check-generated protoc-plugins ui build build-e2e ui-build-hash lint lint-md golangci-lint buf vet test fmt-check check-stale-tests packages
 
 include mk/lint.mk
 
@@ -50,11 +50,49 @@ BUF_INSTALL := go install github.com/bufbuild/buf/cmd/buf@v1.72.0
 BUF_VERSION := $(lastword $(subst @, ,$(BUF_INSTALL)))
 BUF := $(shell go env GOPATH)/bin/buf
 
-generate: buf
-	$(BUF) generate
+# The code generators run LOCALLY, not as BSR remote plugins, and these two
+# pins are what makes generation reproducible. A `remote:` plugin is a BSR RPC
+# that serves whatever was released last: on 2026-09-15 it served protoc-gen-es
+# v2.15.0 while ui/package.json pinned @bufbuild/protobuf 2.14.1, so `make
+# generate-ts` on a clean main rewrote the stamp to a version .npmrc's
+# min-release-age=7 embargo refuses — BSR is not the npm registry and the
+# embargo does not reach it. Anonymous BSR calls are also rate-limited
+# (`resource_exhausted` after a handful in a few minutes, and a GitHub-hosted
+# runner shares its egress with every other anonymous caller), so a drift gate
+# built on remote plugins is flaky-red by construction.
+#
+# Each version equals the runtime it generates against — go.mod's
+# google.golang.org/protobuf and connectrpc.com/connect, ui/package.json's
+# @bufbuild/protobuf — and each is in the literal `go install <module>@<version>`
+# form the org Renovate preset tracks, so a bump is visible and lands with its
+# runtime. The TS generator is a devDependency for the same reason.
+PROTOC_GEN_GO_INSTALL := go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12
+PROTOC_GEN_CONNECT_GO_INSTALL := go install connectrpc.com/connect/cmd/protoc-gen-connect-go@v1.21.0
+GOBIN := $(shell go env GOPATH)/bin
 
+generate: buf protoc-plugins
+	PATH="$(GOBIN):$$PATH" $(BUF) generate
+
+# The TS generator comes from ui/node_modules, so the UI's dependencies must be
+# installed; `npm ci` is the caller's job (CI runs it, a developer already has
+# it) rather than something this target does behind their back.
 generate-ts: buf
 	$(BUF) generate --template buf.gen.ui.yaml
+
+# Regenerates and fails if the result differs from what is committed, so a
+# .proto edited without regenerating — or a generated file edited by hand —
+# cannot merge. `buf lint` checks the contract's style and says nothing about
+# whether gen/ still matches it.
+#
+# `git add -N` first: `git diff --exit-code` does not see an untracked file, so
+# without it a NEW generated file (a new message, a new service) passes the
+# gate that exists to catch exactly that.
+check-generated: generate generate-ts
+	@git add -N gen ui/src/gen
+	@git diff --exit-code --stat -- gen ui/src/gen || { \
+		echo "gen/ or ui/src/gen/ is stale: run 'make generate generate-ts' and commit the result" >&2; \
+		exit 1; \
+	}
 
 # Compiles the whole tree, then produces the daemon with the contract's ldflags.
 # The UI bundle is a prerequisite, not a separate target a caller must remember:
@@ -163,6 +201,25 @@ golangci-lint:
 # Same shape, plus an assert the golangci-lint target does not have: an install
 # that silently produces some other version would be a new false clear rather
 # than the one this target removes, so the version is checked again after it.
+# Same shape as buf: install only when the pinned version is not already there,
+# then assert it, so a stale binary on PATH cannot generate different bytes than
+# CI does — the false clear a bare `buf` gave this repo before it was pinned.
+protoc-plugins:
+	@if ! "$(GOBIN)/protoc-gen-go" --version 2>/dev/null | grep -qx "protoc-gen-go $(lastword $(subst @, ,$(PROTOC_GEN_GO_INSTALL)))"; then \
+		$(PROTOC_GEN_GO_INSTALL); \
+	fi
+	@if ! "$(GOBIN)/protoc-gen-connect-go" --version 2>/dev/null | grep -qx "$(patsubst v%,%,$(lastword $(subst @, ,$(PROTOC_GEN_CONNECT_GO_INSTALL))))"; then \
+		$(PROTOC_GEN_CONNECT_GO_INSTALL); \
+	fi
+	@got="protoc-gen-go $$("$(GOBIN)/protoc-gen-go" --version 2>/dev/null | awk '{print $$2}')"; \
+	want="protoc-gen-go $(lastword $(subst @, ,$(PROTOC_GEN_GO_INSTALL)))"; \
+	if [ "$$got" != "$$want" ]; then echo "$$got, the Makefile pins $$want" >&2; exit 1; fi
+	@got="$$("$(GOBIN)/protoc-gen-connect-go" --version 2>/dev/null)"; \
+	want="$(patsubst v%,%,$(lastword $(subst @, ,$(PROTOC_GEN_CONNECT_GO_INSTALL))))"; \
+	if [ "$$got" != "$$want" ]; then \
+		echo "protoc-gen-connect-go is $${got:-absent}, the Makefile pins $$want" >&2; exit 1; \
+	fi
+
 buf:
 	@if ! "$(BUF)" --version 2>/dev/null | grep -qx "$(BUF_VERSION:v%=%)"; then \
 		$(BUF_INSTALL); \
