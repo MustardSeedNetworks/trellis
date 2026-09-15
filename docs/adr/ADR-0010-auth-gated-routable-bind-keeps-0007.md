@@ -1,7 +1,8 @@
 # ADR-0010 — Auth, TLS and CSRF gate a routable bind; ADR-0007's packaging shape stands
 
-Status: Proposed · Date: 2026-09-14 · Becomes Accepted when
-[#440](https://github.com/MustardSeedNetworks/trellis/pull/440) merges · Amends
+Status: Accepted · Date: 2026-09-14 · Accepted on the merge of
+[#440](https://github.com/MustardSeedNetworks/trellis/pull/440) (`8aaf4ab`,
+2026-09-15) · Amends
 [ADR-0007](ADR-0007-linux-packaging-and-service-contract.md); answers the auth
 half of [#160](https://github.com/MustardSeedNetworks/trellis/issues/160) and
 [#439](https://github.com/MustardSeedNetworks/trellis/issues/439)
