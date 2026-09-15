@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.63](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.62...v0.2.63) (2026-09-15)
+
+
+### Documentation
+
+* **adr:** accept ADR-0010 on [#440](https://github.com/MustardSeedNetworks/trellis/issues/440)'s merge ([#469](https://github.com/MustardSeedNetworks/trellis/issues/469)) ([e69c594](https://github.com/MustardSeedNetworks/trellis/commit/e69c594f70e35e807f6c7a8a5ee3cbf9a94f25c1))
+
+
+### Tests
+
+* **survey:** stop streaming 1.6 GB through zlib to build a pixel bomb ([#467](https://github.com/MustardSeedNetworks/trellis/issues/467)) ([5433dae](https://github.com/MustardSeedNetworks/trellis/commit/5433daeb7a90f2d3c164c0b83e408fdfad19a272)), closes [#463](https://github.com/MustardSeedNetworks/trellis/issues/463)
+
 ## [0.2.62](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.61...v0.2.62) (2026-09-15)
 
 
