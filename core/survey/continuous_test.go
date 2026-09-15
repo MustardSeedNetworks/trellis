@@ -412,13 +412,6 @@ func TestMovingTheWalkPlacesTheReadingsBetween(t *testing.T) {
 	}
 	points := s.GetAllSamples()
 
-	// Every reading taken after the mark was taken while moving, so all of them
-	// are placed — the earliest of them lands within a pixel of the mark it set
-	// out from, which is where the operator still was.
-	if points[0].X > 2 || points[0].Y > 2 {
-		t.Errorf("first point at (%d,%d), want it still on the mark (0,0)", points[0].X, points[0].Y)
-	}
-
 	var placed []*survey.SamplePoint
 	for _, p := range points {
 		if p.Interpolated {
@@ -427,6 +420,27 @@ func TestMovingTheWalkPlacesTheReadingsBetween(t *testing.T) {
 	}
 	if len(placed) < 2 {
 		t.Fatalf("%d readings placed along the segment, want at least 2", len(placed))
+	}
+
+	// The walk advances: the readings are spread across the segment, not piled
+	// on one end of it. This is what fails if the manager hands placement the
+	// same position twice — a segment from the new mark to itself places every
+	// reading on top of the new mark, and every other check below still passes.
+	//
+	// Where along the segment any single reading lands is deliberately NOT
+	// asserted here. It is a function of how long that sweep took relative to
+	// the whole segment, which is the scheduler's business: this test's segment
+	// is about 40 ms, so an assertion that the first reading sits within 2 px of
+	// 400 is really an assertion that the first sweep started within 0.2 ms of
+	// the mark. That is what it used to assert, and a 2 ms first sweep is enough
+	// to break it — which is how it failed in the merge queue and ejected an
+	// unrelated PR (#460). The arithmetic it was reaching for, including a
+	// reading taken at the mark landing on the mark, is pinned deterministically
+	// in TestPlaceAlongSegment, where fabricated timestamps make it a property
+	// rather than a race.
+	if first, last := placed[0], placed[len(placed)-1]; last.X <= first.X {
+		t.Errorf("first placed reading at x=%d, last at x=%d: the walk did not advance",
+			first.X, last.X)
 	}
 
 	for i, p := range placed {
