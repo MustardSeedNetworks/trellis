@@ -259,47 +259,6 @@ func (m *Manager) CompleteSurvey(id string) error {
 	return m.persistSurvey(survey)
 }
 
-// UpdateSurveySettings updates survey settings (only when survey is in created state).
-func (m *Manager) UpdateSurveySettings(
-	id string,
-	surveyType Type,
-	iperfServer string,
-	testDuration int,
-) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	survey, exists := m.surveys[id]
-	if !exists {
-		return fmt.Errorf("%w: %s", ErrSurveyNotFound, id)
-	}
-
-	if survey.Status != StatusCreated {
-		return errors.New("cannot update settings after survey has started")
-	}
-
-	// Validate survey type
-	switch surveyType {
-	case TypePassive, TypeActive, TypeThroughput:
-		survey.SurveyType = surveyType
-	default:
-		return fmt.Errorf("invalid survey type: %s", surveyType)
-	}
-
-	// Validate test duration
-	if testDuration < 1 {
-		testDuration = defaultTestDurationSec
-	}
-	if testDuration > maxTestDurationSec {
-		testDuration = maxTestDurationSec
-	}
-	survey.TestDuration = testDuration
-	survey.IperfServer = iperfServer
-	survey.UpdatedAt = time.Now()
-
-	return m.persistSurvey(survey)
-}
-
 // ImportedDataUpdate carries the slices a caller wants to replace on a survey.
 // Each field is optional; nil means "leave as-is". An empty (non-nil) slice
 // clears the corresponding survey field, which is the right behaviour when an

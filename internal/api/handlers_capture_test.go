@@ -641,3 +641,26 @@ func TestCountsExcludeAFailedAttempt(t *testing.T) {
 		t.Errorf("ListSamples returned %d points, want the reading and the attempt", n)
 	}
 }
+
+// A duration the manager refuses is a bad argument, not a refused state
+// transition — captureError's default would report it as FailedPrecondition.
+func TestSetThroughputTargetRejectsAnOutOfRangeDuration(t *testing.T) {
+	t.Parallel()
+
+	handler := api.NewSurveyServiceHandler(
+		mustManager(t, t.TempDir(), scriptedScanner{}, nil, failingMeter{}, nil))
+	created, err := handler.CreateSurvey(context.Background(),
+		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "active", Interface: "en0"}))
+	if err != nil {
+		t.Fatalf("CreateSurvey: %v", err)
+	}
+
+	_, err = handler.SetThroughputTarget(context.Background(),
+		connect.NewRequest(&surveyv1.SetThroughputTargetRequest{
+			SurveyId: created.Msg.GetSurvey().GetId(), Server: "10.44.10.9", DurationSec: 999999,
+		}))
+	if connect.CodeOf(err) != connect.CodeInvalidArgument {
+		t.Fatalf("SetThroughputTarget(999999 s) = %v (code %v), want InvalidArgument",
+			err, connect.CodeOf(err))
+	}
+}

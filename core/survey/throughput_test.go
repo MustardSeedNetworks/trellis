@@ -14,20 +14,21 @@ import (
 
 // scriptedMeter stands in for iperf3.
 type scriptedMeter struct {
-	sample survey.ThroughputSample
-	err    error
-	server string
-	iface  string
-	calls  int
+	sample   survey.ThroughputSample
+	err      error
+	server   string
+	iface    string
+	duration int
+	calls    int
 }
 
 func (m *scriptedMeter) Measure(
 	_ context.Context,
 	iface, server string,
-	_ int,
+	duration int,
 ) (survey.ThroughputSample, error) {
 	m.calls++
-	m.iface, m.server = iface, server
+	m.iface, m.server, m.duration = iface, server, duration
 	return m.sample, m.err
 }
 
@@ -374,4 +375,63 @@ func (unassociatedScanner) Scan(context.Context) ([]wifi.ScannedNetwork, error) 
 	return []wifi.ScannedNetwork{
 		{SSID: "guest", BSSID: "aa:bb:cc:00:00:09", Signal: -66, Channel: 11, Frequency: 2462},
 	}, nil
+}
+
+// A duration is how long the handler goroutine runs iperf3 for, twice. An
+// unbounded one is a caller holding the server for as long as it likes, so the
+// bound belongs at the point the value is accepted, not where it is used.
+func TestSetThroughputTargetRejectsAnOutOfRangeDuration(t *testing.T) {
+	t.Parallel()
+
+	mgr := mustManager(t, t.TempDir(), &countingScanner{}, nil, &scriptedMeter{}, nil)
+	s, err := mgr.CreateSurvey("throughput", "", "en0", survey.TypePassive)
+	if err != nil {
+		t.Fatalf("CreateSurvey: %v", err)
+	}
+
+	for _, durationSec := range []int{999999, 61, -1} {
+		if err := mgr.SetThroughputTarget(s.ID, "host", durationSec); !errors.Is(
+			err, survey.ErrInvalidTestDuration,
+		) {
+			t.Errorf("SetThroughputTarget(%d s) = %v, want ErrInvalidTestDuration", durationSec, err)
+		}
+	}
+
+	got, err := mgr.GetSurvey(s.ID)
+	if err != nil {
+		t.Fatalf("GetSurvey: %v", err)
+	}
+	if got.TestDuration != 0 {
+		t.Errorf("stored duration %d s, want the survey left untouched", got.TestDuration)
+	}
+	if got.IperfServer != "" {
+		t.Errorf("stored server %q, want the survey left untouched", got.IperfServer)
+	}
+}
+
+// Zero is the one value outside the range that is not an error: it is what the
+// UI sends, and it means "whatever the default is".
+func TestMeasureThroughputRunsTheDefaultDurationWhenNoneIsSet(t *testing.T) {
+	t.Parallel()
+
+	meter := &scriptedMeter{sample: survey.ThroughputSample{DownloadMbps: 100}}
+	mgr := mustManager(t, t.TempDir(), &countingScanner{}, nil, meter, nil)
+	s, err := mgr.CreateSurvey("throughput", "", "en0", survey.TypePassive)
+	if err != nil {
+		t.Fatalf("CreateSurvey: %v", err)
+	}
+	if err := mgr.SetThroughputTarget(s.ID, "10.44.10.9", 0); err != nil {
+		t.Fatalf("SetThroughputTarget: %v", err)
+	}
+	if err := mgr.StartSurvey(s.ID); err != nil {
+		t.Fatalf("StartSurvey: %v", err)
+	}
+
+	if _, err := mgr.MeasureThroughput(context.Background(), s.ID, 1, 1); err != nil {
+		t.Fatalf("MeasureThroughput: %v", err)
+	}
+	// The single default, defined once in survey.go.
+	if meter.duration != 5 {
+		t.Errorf("ran iperf3 for %d s, want the 5 s default", meter.duration)
+	}
 }

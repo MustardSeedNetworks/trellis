@@ -271,6 +271,9 @@ func captureError(err error) error {
 	case errors.Is(err, survey.ErrSurveyNotFound):
 		return connect.NewError(connect.CodeNotFound, err)
 
+	case errors.Is(err, survey.ErrInvalidTestDuration):
+		return connect.NewError(connect.CodeInvalidArgument, err)
+
 	case errors.Is(err, capture.ErrPermission):
 		// The one failure an operator fixes by doing something. Burying it in
 		// CodeInternal would hide the remedy behind "internal error".
