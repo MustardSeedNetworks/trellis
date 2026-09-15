@@ -14,4 +14,4 @@ ADR that references the old one — don't edit history.
 | [0007](ADR-0007-linux-packaging-and-service-contract.md) | Linux packages install a user-session daemon, not a system service | Accepted |
 | [0008](ADR-0008-sample-markers-scale-with-density.md) | Sample markers are sized by how close the readings lie | Accepted |
 | [0009](ADR-0009-a-failed-measurement-is-a-point.md) | A failed measurement is stored as an attempted point that no layer draws | Accepted |
-| [0010](ADR-0010-auth-gated-routable-bind-keeps-0007.md) | Auth, TLS and CSRF gate a routable bind; ADR-0007's packaging shape stands (amends 0007) | Proposed |
+| [0010](ADR-0010-auth-gated-routable-bind-keeps-0007.md) | Auth, TLS and CSRF gate a routable bind; ADR-0007's packaging shape stands (amends 0007) | Accepted |
