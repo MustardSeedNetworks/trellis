@@ -6,6 +6,10 @@ import '@testing-library/jest-dom/vitest';
 import '@/i18n';
 import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
+import { installMatchMediaStub } from '@/test/matchMedia';
+
+// jsdom has no matchMedia; useTheme asks it for the OS colour scheme on mount.
+installMatchMediaStub();
 
 // This project runs vitest with globals: false, so testing-library's automatic
 // cleanup never registers itself — it hooks a global afterEach that does not

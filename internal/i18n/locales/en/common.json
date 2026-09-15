@@ -5,6 +5,8 @@
     "expandSidebar": "Expand sidebar",
     "openHelp": "Open help for {{title}}",
     "sections": "Trellis sections",
+    "switchToDarkTheme": "Switch to dark theme",
+    "switchToLightTheme": "Switch to light theme",
     "whatIs": "What is {{title}}?"
   },
   "buttons": {

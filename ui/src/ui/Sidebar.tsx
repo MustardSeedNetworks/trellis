@@ -14,12 +14,13 @@
  * four unused surfaces, and the rule this family keeps is that the shell is
  * shared while each product's own contents are not.
  */
-import { ChevronsLeft, ChevronsRight, LogOut, Settings } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, LogOut, Moon, Settings, Sun } from 'lucide-react';
 import { type FC, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
 import { useAuth } from '@/ui/AuthGate';
 import { iconSizes } from '../constants/sizes';
+import { useTheme } from '../hooks/useTheme';
 import { useNavGroups } from '../navGroups';
 import { MsnMark } from './MsnMark';
 
@@ -132,6 +133,8 @@ export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
             mark at the top of the rail is the one that has to be recognised. */}
         <MsnMark collapsed={collapsed} className="mt-3" />
 
+        <ThemeToggle collapsed={collapsed} />
+
         <SignOutButton collapsed={collapsed} />
 
         <button
@@ -152,6 +155,36 @@ export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
     </aside>
   );
 };
+
+/**
+ * Light / dark switch.
+ *
+ * It lives beside the collapse control because both change how the shell looks
+ * rather than what it shows, and because trellis has no settings drawer to put
+ * it in yet (that is UI-TRL-3's). niac carries the same control in its header
+ * bar; the icon and the label-follows-the-destination wording match it.
+ */
+function ThemeToggle({ collapsed }: { collapsed: boolean }) {
+  const { t } = useTranslation('common');
+  const { isDark, toggleTheme } = useTheme();
+  const label = isDark
+    ? t('accessibility.switchToLightTheme')
+    : t('accessibility.switchToDarkTheme');
+
+  return (
+    <button
+      type="button"
+      onClick={toggleTheme}
+      data-testid="theme-toggle"
+      title={label}
+      aria-label={label}
+      className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary"
+    >
+      {isDark ? <Sun className={iconSizes.md} /> : <Moon className={iconSizes.md} />}
+      {!collapsed ? <span className="text-xs">{label}</span> : null}
+    </button>
+  );
+}
 
 /**
  * Ends the operator's session. Rendered only on a daemon that asked for one:
