@@ -20,13 +20,11 @@ var (
 	// ErrNoThroughputMeter means the manager was built without a way to run a
 	// throughput test.
 	ErrNoThroughputMeter = errors.New("survey: no throughput meter configured")
-)
 
-// defaultTestDuration is how long one direction runs when a survey names no
-// duration. Long enough for TCP to leave slow start and settle, short enough
-// that an operator standing at a point is not there for a minute — the test
-// runs twice, once each way.
-const defaultTestDuration = 5
+	// ErrInvalidTestDuration means the caller asked for a throughput test
+	// duration outside what one measurement point can take.
+	ErrInvalidTestDuration = errors.New("survey: throughput test duration out of range")
+)
 
 // SetThroughputTarget names the server a survey's active measurements run
 // against, and how long each direction runs.
@@ -34,7 +32,16 @@ const defaultTestDuration = 5
 // It is survey state rather than a per-measurement argument because it is the
 // same server for every point on a walk: comparing two positions only means
 // something if both were measured against the same thing.
+// A duration outside the range is refused rather than clamped: it is how long
+// this host runs iperf3 for, twice, and silently measuring for something other
+// than the time asked for would make two points incomparable without saying so.
+// Zero is not a duration but the absence of one — it means the default.
 func (m *Manager) SetThroughputTarget(surveyID, server string, durationSec int) error {
+	if durationSec < 0 || durationSec > maxTestDurationSec {
+		return fmt.Errorf("%w: %d s (0 for the %d s default, at most %d s)",
+			ErrInvalidTestDuration, durationSec, defaultTestDurationSec, maxTestDurationSec)
+	}
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -68,7 +75,7 @@ func (m *Manager) MeasureThroughput(
 	meter := m.throughputMeter
 	survey, exists := m.surveys[surveyID]
 	var server, iface string
-	duration := defaultTestDuration
+	duration := defaultTestDurationSec
 	if exists {
 		server, iface = survey.IperfServer, survey.Interface
 		if survey.TestDuration > 0 {

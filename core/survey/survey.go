@@ -31,8 +31,11 @@ const (
 
 // Test duration constants for throughput surveys.
 const (
-	// defaultTestDurationSec is the default duration for throughput tests in seconds.
-	defaultTestDurationSec = 3
+	// defaultTestDurationSec is how long one direction runs when a survey names
+	// no duration. Long enough for TCP to leave slow start and settle, short
+	// enough that an operator standing at a point is not there for a minute —
+	// the test runs twice, once each way.
+	defaultTestDurationSec = 5
 
 	// maxTestDurationSec is the maximum allowed duration for throughput tests in seconds.
 	maxTestDurationSec = 60
