@@ -18,8 +18,20 @@ import { createSurvey, uniqueName, walkThreePoints } from './helpers';
 
 const PHONE = { width: 390, height: 844 };
 
-/** Every route the rail offers, which is every route the registry has. */
-const ROUTES = ['/', '/import', '/coverage', '/live', '/reports'];
+/**
+ * Every route the rail offers, which is every route the registry has, with
+ * what has to be on screen before it is worth measuring. Live is the one that
+ * matters: the scripted radio answers with three BSSs, so a sweep taken as
+ * soon as the rail appears measures an empty page and proves nothing about
+ * the table that actually renders there.
+ */
+const ROUTES: readonly { path: string; ready?: string }[] = [
+  { path: '/' },
+  { path: '/import' },
+  { path: '/coverage' },
+  { path: '/live', ready: 'neighbour-row' },
+  { path: '/reports' },
+];
 
 test.use({ viewport: PHONE });
 
@@ -52,18 +64,22 @@ async function widestControlEdge(page: Page): Promise<{ right: number; label: st
 /**
  * Any element whose own content is wider than the box it is drawn in.
  *
- * A `<select>` is excluded, along with anything containing one: a select clips
- * a long option label inside its own control by design — webkit reports that
- * as overflow on the select and on its ancestors, chromium does not — and a
- * survey named longer than the control is not a layout defect. A select that
- * genuinely escapes the screen is caught by `widestControlEdge`, which
- * measures every control against the viewport rather than against its parent.
+ * Two things are excluded, both of them content that is wider than its box on
+ * purpose. A `<select>` clips a long option label inside its own control by
+ * design — webkit reports that as overflow on the select and on its ancestors,
+ * chromium does not — so a survey named longer than the control is not a
+ * layout defect. An element that declares horizontal scrolling is the other:
+ * the neighbour table on Live is 567px inside a 236px `overflow-x-auto`
+ * wrapper, which is the one shape a narrow screen is allowed to have. Neither
+ * exclusion hides a control escaping the screen — `widestControlEdge` measures
+ * every control against the viewport rather than against its parent.
  */
 async function overflowingElements(page: Page): Promise<string[]> {
   return page.evaluate(() =>
     [...document.querySelectorAll('*')]
       .filter((element) => element.scrollWidth > element.clientWidth + 1 && element.clientWidth > 0)
       .filter((element) => element.tagName !== 'SELECT' && element.querySelector('select') === null)
+      .filter((element) => !/^(auto|scroll)$/.test(getComputedStyle(element).overflowX))
       .map(
         (element) =>
           `${element.tagName.toLowerCase()}.${element.className.toString().slice(0, 60)} ` +
@@ -73,9 +89,12 @@ async function overflowingElements(page: Page): Promise<string[]> {
 }
 
 for (const route of ROUTES) {
-  test(`every control on ${route} is inside a 390px screen`, async ({ page }) => {
-    await page.goto(route);
+  test(`every control on ${route.path} is inside a 390px screen`, async ({ page }) => {
+    await page.goto(route.path);
     await expect(page.getByTestId('sidebar')).toBeVisible();
+    if (route.ready !== undefined) {
+      await expect(page.getByTestId(route.ready).first()).toBeVisible();
+    }
 
     const widest = await widestControlEdge(page);
     expect(widest.right, `${widest.label} runs past the right edge`).toBeLessThanOrEqual(
