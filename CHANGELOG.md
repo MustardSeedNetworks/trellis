@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.61](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.60...v0.2.61) (2026-09-15)
+
+
+### Documentation
+
+* correct the README status on Gate G1 and on monitor mode ([#459](https://github.com/MustardSeedNetworks/trellis/issues/459)) ([23db3d2](https://github.com/MustardSeedNetworks/trellis/commit/23db3d2e8619200a2c6ba760ab0d801fe3e2ed92))
+
+
+### Tests
+
+* **survey:** stop asserting a 0.2 ms scheduler timing in the walk test ([#462](https://github.com/MustardSeedNetworks/trellis/issues/462)) ([9bfba47](https://github.com/MustardSeedNetworks/trellis/commit/9bfba47103500dfa8e8b2cf5125f22fdfe789dfa)), closes [#460](https://github.com/MustardSeedNetworks/trellis/issues/460)
+
 ## [0.2.60](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.59...v0.2.60) (2026-09-14)
 
 
