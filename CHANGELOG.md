@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.2.66](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.65...v0.2.66) (2026-09-15)
+
+
+### Bug Fixes
+
+* **deps:** update module golang.org/x/crypto to v0.57.0 ([#489](https://github.com/MustardSeedNetworks/trellis/issues/489)) ([64fa3a0](https://github.com/MustardSeedNetworks/trellis/commit/64fa3a0ee95508a21d2dc63f0696ca7cd6736efc))
+
+
+### Tests
+
+* **ui:** measure Live with its table on screen, and allow declared scrollers ([#488](https://github.com/MustardSeedNetworks/trellis/issues/488)) ([f28a293](https://github.com/MustardSeedNetworks/trellis/commit/f28a29382535d6dffe619cdaab2bb7bc21c02914))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#490](https://github.com/MustardSeedNetworks/trellis/issues/490)) ([9a25801](https://github.com/MustardSeedNetworks/trellis/commit/9a25801b5d987c3d1b5fc0502b53f9ed909e1042))
+
 ## [0.2.65](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.64...v0.2.65) (2026-09-15)
 
 
