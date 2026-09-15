@@ -6,6 +6,8 @@ import (
 	"errors"
 	"strings"
 	"testing"
+
+	"github.com/MustardSeedNetworks/trellis/internal/auth"
 )
 
 func TestRequireLoopback(t *testing.T) {
@@ -29,7 +31,7 @@ func TestRequireLoopback(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.addr, func(t *testing.T) {
 			t.Parallel()
-			err := requireLoopback(tc.addr)
+			err := requireBindAllowed(tc.addr, false)
 			if tc.ok && err != nil {
 				t.Fatalf("requireLoopback(%q) = %v, want nil", tc.addr, err)
 			}
@@ -39,8 +41,16 @@ func TestRequireLoopback(t *testing.T) {
 				}
 				// The remedy travels with the refusal; a bare "invalid address"
 				// would send the operator to the docs to learn why.
-				if got := err.Error(); !strings.Contains(got, "#160") || !strings.Contains(got, tc.addr) {
-					t.Errorf("error %q should name the address and #160", got)
+				// The remedy travels with the refusal: the operator is
+				// told what to set, not just that they may not do this.
+				got := err.Error()
+				if !strings.Contains(got, tc.addr) {
+					t.Errorf("error %q should name the address", got)
+				}
+				for _, want := range []string{auth.EnvUsername, auth.EnvPassword} {
+					if !strings.Contains(got, want) {
+						t.Errorf("error %q should name %s", got, want)
+					}
 				}
 			}
 		})
@@ -49,7 +59,7 @@ func TestRequireLoopback(t *testing.T) {
 
 func TestRequireLoopbackRejectsUnparseableAddress(t *testing.T) {
 	t.Parallel()
-	if err := requireLoopback("8446"); err == nil || errors.Is(err, errNotLoopback) {
+	if err := requireBindAllowed("8446", false); err == nil || errors.Is(err, errNotLoopback) {
 		t.Fatalf("requireLoopback(\"8446\") = %v, want a parse error", err)
 	}
 }
@@ -63,5 +73,19 @@ func TestRunRefusesNonLoopbackAddress(t *testing.T) {
 	err := run()
 	if !errors.Is(err, errNotLoopback) {
 		t.Fatalf("run() = %v, want errNotLoopback", err)
+	}
+}
+
+// The whole point of the feature: a protected daemon may bind a routable
+// address. The gate stays for an unprotected one.
+func TestRequireBindAllowedAdmitsAProtectedDaemon(t *testing.T) {
+	t.Parallel()
+	for _, addr := range []string{"0.0.0.0:8446", "10.44.10.5:8446", "[::]:8446"} {
+		t.Run(addr, func(t *testing.T) {
+			t.Parallel()
+			if err := requireBindAllowed(addr, true); err != nil {
+				t.Fatalf("requireBindAllowed(%q, protected) = %v, want nil", addr, err)
+			}
+		})
 	}
 }

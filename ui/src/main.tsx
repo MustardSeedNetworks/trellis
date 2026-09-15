@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 import { App } from '@/App';
 import { createQueryClient } from '@/lib/queryClient';
+import { AuthGate } from '@/ui/AuthGate';
 // Side-effect import: initialises i18next before any component renders.
 import '@/i18n';
 import './index.css';
@@ -21,7 +22,9 @@ createRoot(container).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <App />
+        <AuthGate>
+          <App />
+        </AuthGate>
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>,

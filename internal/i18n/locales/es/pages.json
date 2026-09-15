@@ -93,6 +93,22 @@
     "weakLink": "{{ssid}} solo tiene {{snr}} dB de margen",
     "weakLinkBody": "Una relación señal/ruido tan baja es donde caen las tasas y empiezan los saltos. La señal por sí sola puede parecer correcta aquí."
   },
+  "login": {
+    "title": "Iniciar sesión",
+    "subtitle": "Este demonio sirve a otros dispositivos, por eso pregunta quién eres.",
+    "username": "Usuario",
+    "password": "Contraseña",
+    "submit": "Iniciar sesión",
+    "submitting": "Iniciando sesión…",
+    "signOut": "Cerrar sesión",
+    "checking": "Comprobando tu sesión…",
+    "errors": {
+      "invalid": "Ese usuario y contraseña no coinciden.",
+      "rateLimited": "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
+      "unavailable": "No se pudo contactar con el demonio.",
+      "empty": "Introduce un usuario y una contraseña."
+    }
+  },
   "reports": {
     "companyPlaceholder": "Se imprime en la portada",
     "description": "Genere un PDF de un estudio, eligiendo qué contiene.",

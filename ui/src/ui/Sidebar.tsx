@@ -14,10 +14,11 @@
  * four unused surfaces, and the rule this family keeps is that the shell is
  * shared while each product's own contents are not.
  */
-import { ChevronsLeft, ChevronsRight, Settings } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, LogOut, Settings } from 'lucide-react';
 import { type FC, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
+import { useAuth } from '@/ui/AuthGate';
 import { iconSizes } from '../constants/sizes';
 import { useNavGroups } from '../navGroups';
 import { MsnMark } from './MsnMark';
@@ -131,6 +132,8 @@ export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
             mark at the top of the rail is the one that has to be recognised. */}
         <MsnMark collapsed={collapsed} className="mt-3" />
 
+        <SignOutButton collapsed={collapsed} />
+
         <button
           type="button"
           onClick={() => setCollapsed((value) => !value)}
@@ -149,3 +152,32 @@ export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
     </aside>
   );
 };
+
+/**
+ * Ends the operator's session. Rendered only on a daemon that asked for one:
+ * the loopback desktop app has no session to sign out of, and an inert control
+ * there would read as a broken one.
+ */
+function SignOutButton({ collapsed }: { collapsed: boolean }) {
+  const { t } = useTranslation('pages');
+  const { required, signOut } = useAuth();
+
+  if (!required) {
+    return null;
+  }
+  return (
+    <button
+      type="button"
+      onClick={signOut}
+      data-testid="sign-out"
+      aria-label={t('login.signOut')}
+      className="mt-3 flex min-h-11 w-full items-center justify-center rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary"
+    >
+      {collapsed ? (
+        <LogOut className={iconSizes.md} />
+      ) : (
+        <span className="text-xs">{t('login.signOut')}</span>
+      )}
+    </button>
+  );
+}

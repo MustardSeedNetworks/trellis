@@ -1,6 +1,7 @@
-import { createClient } from '@connectrpc/connect';
+import { createClient, type Interceptor } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-web';
 import { SurveyService } from '@/gen/trellis/survey/v1/survey_pb';
+import { currentCsrfToken } from '@/lib/auth';
 
 /**
  * resolveApiBaseUrl decides which host the UI talks to.
@@ -19,8 +20,23 @@ export function resolveApiBaseUrl(override: string | undefined, origin: string):
   return configured ? configured : origin;
 }
 
+/**
+ * A protected daemon checks a per-session CSRF token on every RPC, so the token
+ * the session probe or the login handed back travels with each call. A daemon
+ * on loopback registers no auth at all and there is no token to send, which is
+ * why this adds the header only when one exists rather than always.
+ */
+export const csrfInterceptor: Interceptor = (next) => (req) => {
+  const token = currentCsrfToken();
+  if (token) {
+    req.header.set('X-CSRF-Token', token);
+  }
+  return next(req);
+};
+
 const transport = createConnectTransport({
   baseUrl: resolveApiBaseUrl(import.meta.env.VITE_TRELLIS_API, window.location.origin),
+  interceptors: [csrfInterceptor],
 });
 
 export const surveyClient = createClient(SurveyService, transport);

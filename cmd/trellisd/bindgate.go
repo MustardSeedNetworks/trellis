@@ -6,23 +6,34 @@ import (
 	"errors"
 	"fmt"
 	"net"
+
+	"github.com/MustardSeedNetworks/trellis/internal/auth"
 )
 
 // errNotLoopback is returned for a TRELLIS_ADDR that would put the API on a
-// network. The daemon has no authentication, TLS or CSRF, so off loopback the
-// survey store is open to everyone on the same Wi-Fi — frequently a client's
-// guest network. Serving to another device is a real want (#160) and arrives as
-// a feature with those three in front of the bind, not as an address override.
-var errNotLoopback = errors.New(
-	"trellisd serves plain HTTP with no authentication and binds loopback only; " +
-		"serving other devices is tracked in #160 and needs auth and TLS first")
-
-// requireLoopback refuses any listen address that is not a loopback address.
+// network without an operator credential configured. Unprotected, the survey
+// API is reachable by anyone on the same Wi-Fi — frequently a client's guest
+// network — and it has no authentication, no CSRF and no TLS.
 //
-// An empty host ("":8446") means every interface, and a hostname other than
-// "localhost" could resolve anywhere, so both are refused rather than resolved:
-// the check has to be decidable before anything is bound.
-func requireLoopback(addr string) error {
+// Configuring a credential is what lifts the gate: the daemon then authenticates
+// every RPC, checks a CSRF token against the session, rate-limits the login
+// surface, and serves over TLS rather than plain HTTP.
+var errNotLoopback = errors.New(
+	"trellisd binds loopback only until an operator credential is configured; " +
+		"set " + auth.EnvUsername + " and " + auth.EnvPassword +
+		" to serve another device (TLS is enabled automatically)")
+
+// requireBindAllowed refuses a listen address the daemon must not serve.
+//
+// A loopback address is always allowed: that is the desktop app ADR-0007
+// describes, one operator's browser on the same machine. Any other address is
+// allowed only when protected — a credential is configured, so the gate in
+// internal/auth is installed in front of every RPC.
+//
+// An empty host (":8446") means every interface, and a hostname other than
+// "localhost" could resolve anywhere, so both are treated as non-loopback
+// rather than resolved: the check has to be decidable before anything is bound.
+func requireBindAllowed(addr string, protected bool) error {
 	host, _, err := net.SplitHostPort(addr)
 	if err != nil {
 		return fmt.Errorf("parse listen address %q: %w", addr, err)
@@ -30,9 +41,11 @@ func requireLoopback(addr string) error {
 	if host == "localhost" {
 		return nil
 	}
-	ip := net.ParseIP(host)
-	if ip == nil || !ip.IsLoopback() {
-		return fmt.Errorf("%w: refusing %q", errNotLoopback, addr)
+	if ip := net.ParseIP(host); ip != nil && ip.IsLoopback() {
+		return nil
 	}
-	return nil
+	if protected {
+		return nil
+	}
+	return fmt.Errorf("%w: refusing %q", errNotLoopback, addr)
 }

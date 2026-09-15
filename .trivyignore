@@ -1,0 +1,21 @@
+# Trivy findings that are not actionable here, each with the reason it is not.
+# This file is for advisories with no fix and no reachable path — never for a
+# real vulnerability someone would rather not deal with today. Anything listed
+# here must also be clean under govulncheck, which reads reachability.
+
+# GO-2026-5932 — golang.org/x/crypto/openpgp is unmaintained and unsafe by
+# design. The advisory is filed against the whole golang.org/x/crypto module
+# and has NO fixed version, so no upgrade clears it.
+#
+# Trellis does not import openpgp. `go list -deps ./...` shows the x/crypto
+# packages actually in the build are argon2 and blake2b (the password hash) and
+# chacha20poly1305/cryptobyte pulled in by the TLS stack — zero openpgp.
+# govulncheck agrees: "0 vulnerabilities ... 1 vulnerability in modules you
+# require, but your code doesn't appear to call [it]".
+#
+# Dropping the dependency is not an option that exists: argon2 lives in this
+# module, and it is what seed and stem hash with too.
+#
+# Re-check when x/crypto finally removes openpgp, at which point this line
+# should be deleted rather than renewed.
+GO-2026-5932
