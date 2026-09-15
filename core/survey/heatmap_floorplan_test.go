@@ -136,7 +136,7 @@ func TestHeatmapRefusesToDecodeAnOversizedStoredPlan(t *testing.T) {
 
 	// Planted directly as a data URI, the way a pre-bound plan sits in the
 	// store: SetFloorPlan would refuse this today.
-	bomb := oversizedPNG(t, 20000, 20000)
+	bomb := pngDeclaring(t, 20000, 20000)
 	uri := "data:image/png;base64," + base64.StdEncoding.EncodeToString(bomb)
 
 	var before, after runtime.MemStats

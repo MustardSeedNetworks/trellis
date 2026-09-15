@@ -13,13 +13,20 @@ import (
 	"testing"
 )
 
-// oversizedPNG builds a valid PNG declaring a w*h RGBA canvas that compresses
-// to almost nothing, because every scanline is zero bytes. This is the shape of
-// a decompression bomb: the file clears any byte-based cap and the decoder
-// allocates w*h*4 regardless.
+// pngDeclaring builds a PNG whose IHDR declares a w*h RGBA canvas over an IDAT
+// holding a single zeroed scanline. This is the shape of a decompression bomb:
+// the file clears any byte-based cap and image/png allocates w*h*4 on the
+// header alone, before it reads far enough to find the pixel data ends early.
+//
+// The scanline count is deliberately one and not h. Nothing these tests
+// exercise reads pixel data — every guard refuses on DecodeConfig, which parses
+// IHDR and stops — so streaming h scanlines through zlib only bought 1.6 GB of
+// writes for the 20000x20000 case, and -race instruments every one of them
+// (523 s in a single test against 13 s without, #463).
+//
 // Dimensions are uint32 because that is what a PNG header holds; taking them
 // as int would put an unchecked narrowing conversion in every call.
-func oversizedPNG(t *testing.T, w, h uint32) []byte {
+func pngDeclaring(t *testing.T, w, h uint32) []byte {
 	t.Helper()
 
 	chunk := func(kind string, data []byte) []byte {
@@ -43,10 +50,8 @@ func oversizedPNG(t *testing.T, w, h uint32) []byte {
 	var idat bytes.Buffer
 	zw := zlib.NewWriter(&idat)
 	scanline := make([]byte, 1+int(w)*4) // leading filter byte, then zeroed pixels
-	for range int(h) {
-		if _, err := zw.Write(scanline); err != nil {
-			t.Fatalf("compress scanline: %v", err)
-		}
+	if _, err := zw.Write(scanline); err != nil {
+		t.Fatalf("compress scanline: %v", err)
 	}
 	if err := zw.Close(); err != nil {
 		t.Fatalf("close zlib writer: %v", err)
@@ -65,7 +70,7 @@ func oversizedPNG(t *testing.T, w, h uint32) []byte {
 func TestAnOversizedCanvasPassesTheByteCap(t *testing.T) {
 	t.Parallel()
 
-	b := oversizedPNG(t, 20000, 20000)
+	b := pngDeclaring(t, 20000, 20000)
 
 	// Well under maxFloorPlanBytes (32 MiB), so the byte cap admits it.
 	if len(b) > 4<<20 {
@@ -89,7 +94,7 @@ func TestSetFloorPlanRefusesAnOversizedCanvas(t *testing.T) {
 
 	mgr, id, floorID := planSurvey(t)
 
-	err := mgr.SetFloorPlan(id, floorID, oversizedPNG(t, 20000, 20000))
+	err := mgr.SetFloorPlan(id, floorID, pngDeclaring(t, 20000, 20000))
 	if err == nil {
 		t.Fatal("stored a 400-megapixel floor plan; want a refusal")
 	}
@@ -108,7 +113,7 @@ func TestSetFloorPlanAcceptsTheLargestRealCorpusPlan(t *testing.T) {
 
 	mgr, id, floorID := planSurvey(t)
 
-	if err := mgr.SetFloorPlan(id, floorID, oversizedPNG(t, 4096, 3168)); err != nil {
+	if err := mgr.SetFloorPlan(id, floorID, pngDeclaring(t, 4096, 3168)); err != nil {
 		t.Fatalf("refused a 4096x3168 plan, the largest real one in the corpus: %v", err)
 	}
 }
