@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
 import { useAuth } from '@/ui/AuthGate';
 import { iconSizes } from '../constants/sizes';
+import { useNarrowViewport } from '../hooks/useNarrowViewport';
 import { useTheme } from '../hooks/useTheme';
 import { useNavGroups } from '../navGroups';
 import { MsnMark } from './MsnMark';
@@ -34,16 +35,26 @@ interface SidebarProps {
 export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
   const { t } = useTranslation('common');
   const navGroups = useNavGroups();
-  const [collapsed, setCollapsed] = useState(() => localStorage.getItem(STORAGE_KEY) === 'true');
+  const narrow = useNarrowViewport();
+  const [chosenCollapsed, setChosenCollapsed] = useState(
+    () => localStorage.getItem(STORAGE_KEY) === 'true',
+  );
+
+  // A phone forces the rail narrow; the operator's own choice is what is
+  // remembered. Storing the forced state instead would let one visit on a
+  // phone silently collapse the rail on the desktop the survey is written up
+  // on, which is a preference nobody set.
+  const collapsed = narrow || chosenCollapsed;
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, String(collapsed));
-  }, [collapsed]);
+    localStorage.setItem(STORAGE_KEY, String(chosenCollapsed));
+  }, [chosenCollapsed]);
 
   return (
     <aside
+      data-testid="sidebar"
       className={`flex h-full flex-col border-r border-hairline bg-gradient-to-b from-rail-from to-rail-to transition-all duration-300 ease-in-out ${
-        collapsed ? 'w-16' : 'w-[252px]'
+        collapsed ? 'w-16 shrink-0' : 'w-[252px] shrink-0'
       }`}
     >
       {/* Brand lockup. Two characters, never one: "T" for Stem and "R" for
@@ -105,7 +116,9 @@ export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
         ))}
       </nav>
 
-      <div className={`border-t border-hairline px-3 py-4 ${collapsed ? 'text-center' : ''}`}>
+      {/* The collapsed rail keeps a narrower gutter than the expanded one: at
+          px-3 the version number is 43px of text in a 39px box and clips. */}
+      <div className={`border-t border-hairline py-4 ${collapsed ? 'px-1 text-center' : 'px-3'}`}>
         {onOpenSettings ? (
           <button
             type="button"
@@ -137,20 +150,25 @@ export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
 
         <SignOutButton collapsed={collapsed} />
 
-        <button
-          type="button"
-          onClick={() => setCollapsed((value) => !value)}
-          aria-label={
-            collapsed ? t('accessibility.expandSidebar') : t('accessibility.collapseSidebar')
-          }
-          className="mt-3 flex min-h-11 w-full items-center justify-center rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary"
-        >
-          {collapsed ? (
-            <ChevronsRight className={iconSizes.md} />
-          ) : (
-            <ChevronsLeft className={iconSizes.md} />
-          )}
-        </button>
+        {/* Not offered on a phone: expanding to 252px there leaves 138px of
+            page, which is the defect this rail was fixed for. */}
+        {!narrow ? (
+          <button
+            type="button"
+            onClick={() => setChosenCollapsed((value) => !value)}
+            data-testid="sidebar-collapse"
+            aria-label={
+              collapsed ? t('accessibility.expandSidebar') : t('accessibility.collapseSidebar')
+            }
+            className="mt-3 flex min-h-11 w-full items-center justify-center rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary"
+          >
+            {collapsed ? (
+              <ChevronsRight className={iconSizes.md} />
+            ) : (
+              <ChevronsLeft className={iconSizes.md} />
+            )}
+          </button>
+        ) : null}
       </div>
     </aside>
   );

@@ -79,8 +79,12 @@ export function SurveysPage() {
 
       <CaptureCapabilityNotice />
 
-      <div className="flex flex-1 gap-6 overflow-hidden">
-        <aside className="panel flex w-72 shrink-0 flex-col overflow-hidden">
+      {/* List beside detail on a laptop, stacked on a phone: at 390px the
+          288px list and the detail cannot share a row, and the detail was
+          pushed off the right edge entirely (trellis#473). Below md the page
+          itself scrolls instead of each pane. */}
+      <div className="flex flex-1 flex-col gap-6 overflow-y-auto md:flex-row md:overflow-hidden">
+        <aside className="panel flex w-full shrink-0 flex-col md:w-72 md:overflow-hidden">
           <SurveyCreateForm onCreated={setSelectedId} />
           <div className="flex-1 overflow-y-auto">
             {surveysQuery.isSuccess ? (

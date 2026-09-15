@@ -145,15 +145,22 @@ export function CoveragePage() {
 
   return (
     <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
-      <div className="panel flex flex-wrap items-center gap-4 p-4">
-        <label className="flex items-center gap-2 text-sm" htmlFor="coverage-survey">
+      {/* A row of controls on a laptop; a stack on a phone. Wrapping alone was
+          not enough: a <select> keeps a minimum width from its longest option,
+          so a survey with a long name pushed its own label past the panel. Each
+          control is a full-width block below md, where that width is definite. */}
+      <div className="panel flex flex-col items-stretch gap-4 p-4 md:flex-row md:flex-wrap md:items-center">
+        <label
+          className="flex min-w-0 flex-wrap items-center gap-2 text-sm"
+          htmlFor="coverage-survey"
+        >
           <span className="kicker">{t('common:labels.survey')}</span>
           <select
             id="coverage-survey"
             value={surveyId ?? ''}
             disabled={surveys.length === 0}
             onChange={(event) => setSearchParams({ survey: event.target.value })}
-            className="rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary disabled:opacity-50"
+            className="w-full min-w-0 rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary disabled:opacity-50 md:w-auto md:max-w-full"
           >
             {surveyId !== undefined && !listed ? (
               <option value={surveyId}>{t('pages:coverage.notInList', { id: surveyId })}</option>
@@ -167,7 +174,10 @@ export function CoveragePage() {
         </label>
 
         {floors.length > 1 ? (
-          <label className="flex items-center gap-2 text-sm" htmlFor="coverage-floor">
+          <label
+            className="flex min-w-0 flex-wrap items-center gap-2 text-sm"
+            htmlFor="coverage-floor"
+          >
             <span className="kicker">{t('common:labels.floor')}</span>
             <select
               id="coverage-floor"
@@ -179,7 +189,7 @@ export function CoveragePage() {
                     : { survey: surveyId ?? '', floor: event.target.value },
                 )
               }
-              className="rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
+              className="w-full min-w-0 rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary md:w-auto md:max-w-full"
               data-testid="coverage-floor"
             >
               {/* The active floor by name rather than a blank row: "which floor
@@ -193,9 +203,9 @@ export function CoveragePage() {
           </label>
         ) : null}
 
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="kicker">{t('common:labels.metric')}</span>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
             {METRICS.map((option) => (
               <button
                 key={option.id}
@@ -219,7 +229,10 @@ export function CoveragePage() {
             layer they would answer a question nobody asked, and a control that
             appears to do nothing is worse than one that is not there. */}
         {analysable ? (
-          <label className="flex items-center gap-2 text-sm" htmlFor="coverage-threshold">
+          <label
+            className="flex min-w-0 flex-wrap items-center gap-2 text-sm"
+            htmlFor="coverage-threshold"
+          >
             <span className="kicker">{t('pages:coverage.deadZoneThreshold')}</span>
             <input
               id="coverage-threshold"
