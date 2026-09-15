@@ -8,15 +8,19 @@ source-available alternative to Ekahau / Hamina / iBwave. **Both Seed and Trelli
 Wi-Fi analysis; Trellis owns survey/planning** (decided 2026-09-03, superseding the
 2026-06-20 "Seed exits Wi-Fi" decision).
 
-> Status (2026-09-04): pre-alpha, one binary (`trellisd`). **Exists:** the measured-
+> Status (2026-09-14): pre-alpha, one binary (`trellisd`). **Exists:** the measured-
 > survey engine migrated from Seed (`core/survey`, ~92% covered), the survey Connect/gRPC
 > API (`proto/trellis/survey/v1`), a five-page UI (Surveys, Import, Coverage, Live, Reports)
 > wired to the live measured-survey workflow, and per-OS scan capture (macOS CoreWLAN,
-> Linux nl80211, Windows Native WiFi — passive/active scan, no monitor mode). **Does
-> not exist:** the predictive C++/GPU RF engine (Gate G1 has never run), licensing, and
-> the desktop shell (the macOS build is a hand-rolled bundle serving loopback HTTP, not
-> Wails). The product/architecture plan lives in `docs/`; see `docs/06-ROADMAP.md` for
-> a phase-by-phase status table.
+> Linux nl80211, Windows Native WiFi — passive/active scan on all three, plus opt-in
+> monitor-mode acquisition on Linux 2.4 GHz only; see `docs/10-WIFI-CAPTURE.md`).
+> **Does not exist:** the predictive C++/GPU RF engine — Gate G1 ran 2026-09-07 and
+> failed its original thresholds, and the owner re-scoped it on 2026-09-08 to 10 dB mean
+> error against the Link-Live oracle, a box that closes 2026-10-05 and a run that has
+> not been made (`docs/11-GATE-G1-RESULT.md`) — licensing, and the desktop shell (the
+> macOS build is a hand-rolled bundle serving loopback HTTP, not Wails). The product/
+> architecture plan lives in `docs/`; see `docs/06-ROADMAP.md` for a phase-by-phase
+> status table.
 
 ## Why "Trellis"
 
