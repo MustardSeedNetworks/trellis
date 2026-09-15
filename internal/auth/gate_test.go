@@ -55,6 +55,29 @@ func login(t *testing.T, mux *http.ServeMux, user, password string) (*httptest.R
 	return rec, session{cookies: rec.Result().Cookies(), csrf: out.CSRFToken}
 }
 
+// refresh sends the refresh request a browser holding s would send.
+func refresh(t *testing.T, mux *http.ServeMux, s session) *httptest.ResponseRecorder {
+	t.Helper()
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/auth/refresh", nil)
+	req.Header = s.header()
+	req.RemoteAddr = "10.0.0.1:54321"
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	return rec
+}
+
+// renewedSession reads the session a successful refresh handed back.
+func renewedSession(t *testing.T, rec *httptest.ResponseRecorder) session {
+	t.Helper()
+	var out struct {
+		CSRFToken string `json:"csrfToken"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
+		t.Fatalf("refresh response: %v", err)
+	}
+	return session{cookies: rec.Result().Cookies(), csrf: out.CSRFToken}
+}
+
 // header builds the request headers a browser would send carrying s.
 func (s session) header() http.Header {
 	h := http.Header{}
@@ -243,6 +266,41 @@ func TestRefreshRenewsTheAccessToken(t *testing.T) {
 	next := session{cookies: []*http.Cookie{renewed}, csrf: out.CSRFToken}
 	if _, err := g.Authenticate(next.header(), "10.0.0.1"); err != nil {
 		t.Fatalf("the renewed session does not authenticate: %v", err)
+	}
+}
+
+// Refresh shares the login budget: it is the other unauthenticated route that
+// validates a caller-supplied token, so without a limiter a peer on a routable
+// bind can hammer it with a bad cookie for free.
+func TestRefreshIsRateLimited(t *testing.T) {
+	t.Parallel()
+	_, mux := newGateMux(t)
+	bad := session{raw: []string{auth.CookieRefresh + "=not-a-token"}}
+
+	var got int
+	for range auth.LoginAttemptLimit + 1 {
+		rec := refresh(t, mux, bad)
+		got = rec.Code
+	}
+	if got != http.StatusTooManyRequests {
+		t.Fatalf("the refresh past the limit returned %d, want 429", got)
+	}
+}
+
+// A browser refreshes on a timer, so the budget a bad refresh spends has to
+// come back when a good one succeeds — otherwise an ordinary session locks
+// itself out every quarter hour.
+func TestSuccessfulRefreshesAreNotRateLimited(t *testing.T) {
+	t.Parallel()
+	_, mux := newGateMux(t)
+	_, s := login(t, mux, "surveyor", testPassword)
+
+	for i := range auth.LoginAttemptLimit + 1 {
+		rec := refresh(t, mux, s)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("refresh %d returned %d, want 200: %s", i+1, rec.Code, rec.Body)
+		}
+		s = renewedSession(t, rec)
 	}
 }
 

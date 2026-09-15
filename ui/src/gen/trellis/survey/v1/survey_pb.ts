@@ -600,7 +600,9 @@ export type GetHeatmapRequest = Message<"trellis.survey.v1.GetHeatmapRequest"> &
   surveyId: string;
 
   /**
-   * Heatmap metric: "rssi" or "snr". Defaults to "rssi".
+   * Heatmap metric: "rssi", "snr", "density", "interference", "download" or
+   * "upload", with "signal" and "cochannel" accepted as aliases for the first
+   * and fourth. Unrecognised values fall back to "rssi", as does the default.
    *
    * @generated from field: string metric = 2;
    */

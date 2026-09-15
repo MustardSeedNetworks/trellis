@@ -1,10 +1,17 @@
+# The plugins are LOCAL binaries, not BSR `remote:` plugins, and their versions
+# are pinned in the Makefile (PROTOC_GEN_GO_INSTALL, PROTOC_GEN_CONNECT_GO_INSTALL)
+# next to the reasoning. In short: a remote plugin is a BSR RPC serving whatever
+# was released last, which makes generation — and the drift gate in ci.yml that
+# depends on it — non-reproducible, bypasses the min-release-age embargo that
+# guards the npm side, and is rate-limited for anonymous callers such as a
+# GitHub-hosted runner. `make generate` puts the pinned binaries on PATH.
 version: v2
 inputs:
   - directory: proto
 plugins:
-  - remote: buf.build/protocolbuffers/go
+  - local: protoc-gen-go
     out: gen
     opt: paths=source_relative
-  - remote: buf.build/connectrpc/go
+  - local: protoc-gen-connect-go
     out: gen
     opt: paths=source_relative

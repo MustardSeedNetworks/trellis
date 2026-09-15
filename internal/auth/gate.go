@@ -17,8 +17,11 @@ import (
 // name Seed, Stem and NIAC use.
 const HeaderCSRFToken = "X-CSRF-Token"
 
-// Login attempt budget: five tries per quarter hour per client, matching the
-// fleet's auth limiter.
+// Authentication attempt budget: five tries per quarter hour per client,
+// matching the fleet's auth limiter. Login and refresh share it — they are the
+// two unauthenticated routes that validate a caller-supplied secret, and the
+// invariant covers both. A successful authentication returns the budget
+// (issueSession), so a browser refreshing on a timer never spends it.
 const (
 	LoginAttemptLimit  = 5
 	LoginAttemptWindow = 15 * time.Minute
@@ -125,6 +128,11 @@ func (g *Gate) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 func (g *Gate) handleRefresh(w http.ResponseWriter, r *http.Request) {
 	client := clientAddr(r)
+	if !g.limiter.Allow(client) {
+		writeAuthError(w, http.StatusTooManyRequests, "too many refresh attempts")
+		return
+	}
+
 	token := cookieValue(r.Header, CookieRefresh)
 	user, err := g.sessions.Validate(token, TokenRefresh)
 	if err != nil {

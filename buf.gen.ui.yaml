@@ -1,3 +1,8 @@
+# Local plugin, pinned as a devDependency in ui/package.json — see buf.gen.yaml
+# for why nothing here is a BSR `remote:` plugin. The version must equal the
+# @bufbuild/protobuf runtime it generates against, and being an npm dependency
+# is what puts it under .npmrc's min-release-age embargo and Renovate's npm
+# manager. `npm ci` in ui/ is a prerequisite of `make generate-ts`.
 version: v2
 inputs:
   - directory: proto
@@ -6,7 +11,7 @@ plugins:
   # GenService descriptor from a single plugin — no separate connect-es
   # plugin is needed; @connectrpc/connect's createClient() consumes the
   # GenService directly.
-  - remote: buf.build/bufbuild/es
+  - local: ui/node_modules/.bin/protoc-gen-es
     out: ui/src/gen
     opt:
       - target=ts
