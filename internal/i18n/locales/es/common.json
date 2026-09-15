@@ -5,6 +5,8 @@
     "expandSidebar": "Expandir la barra lateral",
     "openHelp": "Abrir la ayuda de {{title}}",
     "sections": "Secciones de Trellis",
+    "switchToDarkTheme": "Cambiar al tema oscuro",
+    "switchToLightTheme": "Cambiar al tema claro",
     "whatIs": "¿Qué es {{title}}?"
   },
   "buttons": {
