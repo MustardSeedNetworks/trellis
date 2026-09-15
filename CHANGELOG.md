@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.64](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.63...v0.2.64) (2026-09-15)
+
+
+### Bug Fixes
+
+* **deps:** update module connectrpc.com/connect to v1.21.0 ([#481](https://github.com/MustardSeedNetworks/trellis/issues/481)) ([2dce52d](https://github.com/MustardSeedNetworks/trellis/commit/2dce52d4833916ad84f2357af8399e58ec23ccff))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#466](https://github.com/MustardSeedNetworks/trellis/issues/466)) ([b1cfb30](https://github.com/MustardSeedNetworks/trellis/commit/b1cfb30b6ea21a0504c5436aa813e9bf814c5907))
+
 ## [0.2.63](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.62...v0.2.63) (2026-09-15)
 
 
