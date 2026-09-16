@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.69](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.68...v0.2.69) (2026-09-16)
+
+
+### Bug Fixes
+
+* **ui:** complete page help and accessible tooltips ([#497](https://github.com/MustardSeedNetworks/trellis/issues/497)) ([a9c1761](https://github.com/MustardSeedNetworks/trellis/commit/a9c17617fb08fdb876f9e63bccae7070d21bee4d))
+
 ## [0.2.68](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.67...v0.2.68) (2026-09-16)
 
 
