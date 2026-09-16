@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.68](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.67...v0.2.68) (2026-09-16)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#495](https://github.com/MustardSeedNetworks/trellis/issues/495)) ([d5ec16c](https://github.com/MustardSeedNetworks/trellis/commit/d5ec16c0567cf80d00e19f196c3db7bfebe81064))
+* **deps:** update node.js to v26.8.2 ([#494](https://github.com/MustardSeedNetworks/trellis/issues/494)) ([1fcd5af](https://github.com/MustardSeedNetworks/trellis/commit/1fcd5af289cbe4ee7dbcc9319b8145401c178d0a))
+
 ## [0.2.67](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.66...v0.2.67) (2026-09-15)
 
 
