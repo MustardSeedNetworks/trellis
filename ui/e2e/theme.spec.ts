@@ -15,7 +15,7 @@ import { expect, type Page, test } from '@playwright/test';
 
 /** The `--color-surface-base` each palette defines, as rgb. */
 const LIGHT_SURFACE = 'rgb(251, 250, 245)';
-const DARK_SURFACE = 'rgb(6, 13, 19)';
+const DARK_SURFACE = 'rgb(24, 22, 17)';
 
 async function surfaceColour(page: Page): Promise<string> {
   return page.evaluate(() =>
@@ -71,12 +71,12 @@ test.describe('with a light desktop', () => {
 
     await page.getByTestId('theme-toggle').click();
     expect(await rootIsDark(page)).toBe(true);
-    expect(await surfaceColour(page)).toBe('#060d13');
+    expect(await surfaceColour(page)).toBe('#181611');
 
     // The reload is the assertion: an in-memory toggle passes every line above.
     await page.reload();
     expect(await rootIsDark(page)).toBe(true);
-    expect(await surfaceColour(page)).toBe('#060d13');
+    expect(await surfaceColour(page)).toBe('#181611');
 
     // And back, so the control is not one-way.
     await page.getByTestId('theme-toggle').click();

@@ -5,11 +5,11 @@
        as a favicon gets no stylesheet, and the media query gives the dark-mode
        step rather than leaving a dark tab strip holding a dark mark. -->
   <style>
-    rect { fill: #0f6f68 }
+    rect { fill: #b94689 }
     text { fill: #ffffff }
     @media (prefers-color-scheme: dark) {
-      rect { fill: #5ec8c0 }
-      text { fill: #08312e }
+      rect { fill: #cd5199 }
+      text { fill: #181611 }
     }
   </style>
   <rect width="32" height="32" rx="9" />
