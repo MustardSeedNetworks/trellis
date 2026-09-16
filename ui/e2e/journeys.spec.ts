@@ -261,7 +261,7 @@ test('measures throughput at a point and maps it as its own layer', async ({ pag
   // The download layer holds the one measured point, not both: a passive scan
   // measured no throughput, and rendering its signal on this layer would put
   // dBm on a map of Mbps.
-  await page.getByRole('button', { name: 'Download' }).click();
+  await page.getByRole('button', { name: 'Download speed' }).click();
   await expect(page.getByTestId('surface-meta')).toContainText('download');
   await expect(page.getByTestId('surface-meta')).toContainText('1 sample');
 
@@ -307,7 +307,7 @@ test('keeps a failed measurement on the map as an attempt', async ({ page }) => 
   await page.getByTestId('survey-complete').click();
   await page.getByTestId('plot-coverage').click();
   await expect(page.getByTestId('heatmap-image')).toBeVisible();
-  await page.getByRole('button', { name: 'Download' }).click();
+  await page.getByRole('button', { name: 'Download speed' }).click();
   await expect(page.getByTestId('surface-message')).toContainText('no samples found');
   await expect(page.getByTestId('heatmap-image')).toHaveCount(0);
 });

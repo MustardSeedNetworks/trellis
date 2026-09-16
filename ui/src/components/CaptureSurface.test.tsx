@@ -119,7 +119,7 @@ describe('CaptureSurface', () => {
 
     expect(await screen.findAllByTestId('capture-pin')).toHaveLength(3);
     expect(listSamples).toHaveBeenCalledWith({ surveyId: 'svy-9' });
-    expect(screen.getByText('3 points on this floor')).toBeInTheDocument();
+    expect(screen.getByText('3 samples on this floor')).toBeInTheDocument();
     expect(screen.getByText('-52.0 dBm')).toBeInTheDocument();
     expect(screen.getByText('-81.0 dBm')).toBeInTheDocument();
     // A point where nothing was heard is still a point; it is not 0 dBm.
@@ -131,10 +131,10 @@ describe('CaptureSurface', () => {
     const surface = screen.getByTestId('capture-surface');
     expect(surface).toBeDisabled();
     expect(
-      screen.getByText('The points stored on this floor. Start the walk to capture more.'),
+      screen.getByText('The samples stored on this floor. Start the walk to capture more.'),
     ).toBeInTheDocument();
     fireEvent.click(surface, { clientX: 10, clientY: 10, detail: 1 });
-    await screen.findByText('No points yet. The first click starts the map.');
+    await screen.findByText('No samples yet. The first click starts the map.');
     expect(capturePoint).not.toHaveBeenCalled();
   });
 
@@ -160,7 +160,7 @@ describe('CaptureSurface', () => {
     renderSurface();
 
     expect(
-      await screen.findByText('No points yet. The first click starts the map.'),
+      await screen.findByText('No samples yet. The first click starts the map.'),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('capture-surface'), {
       clientX: 200,
@@ -171,7 +171,7 @@ describe('CaptureSurface', () => {
     expect(await screen.findAllByTestId('capture-pin')).toHaveLength(1);
     expect(listSamples).toHaveBeenCalledTimes(2);
     expect(screen.getByText('2 networks at (400, 200), strongest -41.0 dBm')).toBeInTheDocument();
-    expect(screen.getByText('1 point on this floor')).toBeInTheDocument();
+    expect(screen.getByText('1 sample on this floor')).toBeInTheDocument();
   });
 
   it('ignores clicks while a scan is in flight rather than queueing them', async () => {

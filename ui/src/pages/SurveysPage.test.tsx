@@ -8,7 +8,7 @@
  * say which. A test that only counted rows could not tell them apart either.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -90,6 +90,24 @@ describe('SurveysPage', () => {
     expect(screen.getByText('importing · 1 floor · 5 samples')).toBeInTheDocument();
   });
 
+  /* trellis#476: the band said "2 surveys available" and carried a "2 SURVEYS"
+     figure beside it — the same number twice, which reads as two quantities
+     that happen to agree. The headline keeps it; the figure is gone. */
+  it('states the survey count once in the status band', async () => {
+    listSurveys.mockResolvedValue({ surveys: [everett, vegas] });
+    renderPage();
+
+    // The headline, not the band: the band renders immediately in its loading
+    // state and would be asserted against "Loading surveys".
+    await screen.findByText('2 surveys available');
+    const band = screen.getByTestId('status-rollup');
+    expect(within(band).queryAllByRole('definition')).toHaveLength(0);
+    // Every number the band prints, not just the one in the headline: the
+    // defect was a second "2" in a figure face, so counting digit runs is what
+    // distinguishes one count from the same count twice.
+    expect(band.textContent?.match(/\d+/g) ?? []).toEqual(['2']);
+  });
+
   it('distinguishes an empty list from a failed load', async () => {
     listSurveys.mockResolvedValue({ surveys: [] });
     const { unmount } = renderPage();
@@ -97,7 +115,7 @@ describe('SurveysPage', () => {
     expect(await screen.findByText('No surveys captured yet')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Create a survey to walk a floor, or import an AirMapper archive to analyse one.',
+        'Create a survey to walk a floor, or import an AirMapper or AirMagnet capture to analyse one.',
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText('Survey data is not arriving')).not.toBeInTheDocument();
@@ -223,7 +241,7 @@ describe('SurveyList empty state', () => {
 
     expect(
       await screen.findByText(
-        'No surveys yet. Create one to walk a floor, or import an AirMapper file.',
+        'No surveys yet. Create one to walk a floor, or import an AirMapper or AirMagnet capture.',
       ),
     ).toBeInTheDocument();
   });

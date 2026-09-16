@@ -40,7 +40,10 @@ export interface PageConfig {
   /** Kicker above the title naming the product domain. */
   eyebrow?: string;
   title: string;
-  description?: string;
+  /** Subtitle under the title. Required: Surveys was the one page without one
+   *  and wore a shorter header than the rest of the product (trellis#476), and
+   *  a type that permits the gap is what let it happen. */
+  description: string;
   help: string;
   icon: LucideIcon;
   component: ComponentType;
@@ -54,6 +57,7 @@ export function usePages(): PageConfig[] {
       path: '/',
       eyebrow: t('common:nav.capture'),
       title: t('pages:surveys.title'),
+      description: t('pages:surveys.description'),
       help: t('pages:help.surveys'),
       icon: Waypoints,
       component: SurveysPage,

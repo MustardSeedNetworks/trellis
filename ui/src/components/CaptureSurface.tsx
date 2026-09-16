@@ -259,7 +259,7 @@ export function CaptureSurface({
                           signal: signalText(captured.networks[0]?.signalDbm),
                         })
                       : pins.length === 0
-                        ? t('pages:surveys.noPoints')
+                        ? t('pages:surveys.noSamples')
                         : '';
   const failed =
     throughputMutation.isError ||
@@ -277,7 +277,7 @@ export function CaptureSurface({
         </h3>
         <div className="flex items-center gap-3">
           <span className="text-xs text-text-muted" data-testid="capture-count">
-            {t('pages:surveys.pointsOnFloor', { count: pins.length })}
+            {t('pages:surveys.samplesOnFloor', { count: pins.length })}
           </span>
           {/* Only offered while the survey is walking: continuous capture on a
               paused or completed survey has nothing to write into. */}
@@ -357,7 +357,7 @@ export function CaptureSurface({
                  dot in any colour would read as coverage. Shape, not colour, so
                  a reader who cannot use colour sees the same distinction. */
               <g key={pinKey(pin)} data-testid="capture-pin" data-failure={pin.failure}>
-                <title>{t('pages:surveys.measurementFailedHere', { error: pin.failure })}</title>
+                <title>{t('pages:surveys.sampleFailedHere', { error: pin.failure })}</title>
                 <g className="stroke-status-error" strokeWidth={2}>
                   <line x1={pin.x - 7} y1={pin.y - 7} x2={pin.x + 7} y2={pin.y + 7} />
                   <line x1={pin.x - 7} y1={pin.y + 7} x2={pin.x + 7} y2={pin.y - 7} />
