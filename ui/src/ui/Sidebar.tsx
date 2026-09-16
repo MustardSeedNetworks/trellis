@@ -14,7 +14,7 @@
  * four unused surfaces, and the rule this family keeps is that the shell is
  * shared while each product's own contents are not.
  */
-import { ChevronsLeft, ChevronsRight, LogOut, Moon, Settings, Sun } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, LogOut, Moon, Sun } from 'lucide-react';
 import { type FC, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
@@ -24,15 +24,15 @@ import { useNarrowViewport } from '../hooks/useNarrowViewport';
 import { useTheme } from '../hooks/useTheme';
 import { useNavGroups } from '../navGroups';
 import { MsnMark } from './MsnMark';
+import { Tooltip } from './Tooltip';
 
 const STORAGE_KEY = 'trellis-sidebar-collapsed';
 
 interface SidebarProps {
   version?: string;
-  onOpenSettings?: () => void;
 }
 
-export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
+export const Sidebar: FC<SidebarProps> = ({ version }) => {
   const { t } = useTranslation('common');
   const navGroups = useNavGroups();
   const narrow = useNarrowViewport();
@@ -53,7 +53,7 @@ export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
   return (
     <aside
       data-testid="sidebar"
-      className={`flex h-full flex-col border-r border-hairline bg-gradient-to-b from-rail-from to-rail-to transition-all duration-300 ease-in-out ${
+      className={`flex h-full flex-col border-r border-hairline bg-gradient-to-b from-rail-from to-rail-to transition-all duration-300 ease-in-out motion-reduce:transition-none ${
         collapsed ? 'w-16 shrink-0' : 'w-[252px] shrink-0'
       }`}
     >
@@ -80,35 +80,41 @@ export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
             <ul className="space-y-1">
               {group.items.map((item) => (
                 <li key={item.path}>
-                  <NavLink
-                    to={item.path}
-                    end={item.path === '/'}
-                    title={collapsed ? item.label : undefined}
-                    className={({ isActive }) =>
-                      `group relative flex min-h-11 w-full items-center gap-3 rounded-[11px] px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-                        isActive
-                          ? 'bg-[color-mix(in_oklab,var(--color-brand-primary)_16%,transparent)] text-text-primary'
-                          : 'text-text-muted hover:bg-surface-hover hover:text-text-primary'
-                      }`
-                    }
-                  >
-                    {({ isActive }) => (
-                      <>
-                        {isActive ? (
-                          <span
-                            aria-hidden="true"
-                            className="absolute inset-y-1 left-0 w-[3px] rounded-full bg-brand-primary"
-                          />
-                        ) : null}
-                        <item.icon
-                          className={`${iconSizes.lg} shrink-0 ${
-                            isActive ? 'text-brand-primary' : 'text-text-muted'
-                          }`}
-                        />
-                        {!collapsed ? <span className="truncate">{item.label}</span> : null}
-                      </>
+                  <Tooltip content={item.label} enabled={collapsed}>
+                    {(tooltip) => (
+                      <NavLink
+                        {...tooltip}
+                        to={item.path}
+                        end={item.path === '/'}
+                        aria-label={item.label}
+                        data-testid={`nav-${item.path === '/' ? 'surveys' : item.path.slice(1)}`}
+                        className={({ isActive }) =>
+                          `group relative flex min-h-11 w-full items-center gap-3 rounded-[11px] px-3 py-2.5 text-sm font-medium transition-all duration-200 motion-reduce:transition-none ${
+                            isActive
+                              ? 'bg-[color-mix(in_oklab,var(--color-brand-primary)_16%,transparent)] text-text-primary'
+                              : 'text-text-muted hover:bg-surface-hover hover:text-text-primary'
+                          }`
+                        }
+                      >
+                        {({ isActive }) => (
+                          <>
+                            {isActive ? (
+                              <span
+                                aria-hidden="true"
+                                className="absolute inset-y-1 left-0 w-[3px] rounded-full bg-brand-primary"
+                              />
+                            ) : null}
+                            <item.icon
+                              className={`${iconSizes.lg} shrink-0 ${
+                                isActive ? 'text-brand-primary' : 'text-text-muted'
+                              }`}
+                            />
+                            {!collapsed ? <span className="truncate">{item.label}</span> : null}
+                          </>
+                        )}
+                      </NavLink>
                     )}
-                  </NavLink>
+                  </Tooltip>
                 </li>
               ))}
             </ul>
@@ -119,20 +125,6 @@ export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
       {/* The collapsed rail keeps a narrower gutter than the expanded one: at
           px-3 the version number is 43px of text in a 39px box and clips. */}
       <div className={`border-t border-hairline py-4 ${collapsed ? 'px-1 text-center' : 'px-3'}`}>
-        {onOpenSettings ? (
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            title={t('labels.settings')}
-            className={`mb-3 flex min-h-11 items-center gap-2 rounded-[11px] px-3 text-sm text-text-muted hover:bg-surface-hover hover:text-text-primary ${
-              collapsed ? 'w-full justify-center' : 'w-full'
-            }`}
-          >
-            <Settings className={iconSizes.md} />
-            {!collapsed ? <span>{t('labels.settings')}</span> : null}
-          </button>
-        ) : null}
-
         {version ? (
           <div
             className={`figure text-xs text-text-muted ${collapsed ? '' : 'flex items-center justify-between'}`}
@@ -153,21 +145,30 @@ export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
         {/* Not offered on a phone: expanding to 252px there leaves 138px of
             page, which is the defect this rail was fixed for. */}
         {!narrow ? (
-          <button
-            type="button"
-            onClick={() => setChosenCollapsed((value) => !value)}
-            data-testid="sidebar-collapse"
-            aria-label={
+          <Tooltip
+            content={
               collapsed ? t('accessibility.expandSidebar') : t('accessibility.collapseSidebar')
             }
-            className="mt-3 flex min-h-11 w-full items-center justify-center rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary"
           >
-            {collapsed ? (
-              <ChevronsRight className={iconSizes.md} />
-            ) : (
-              <ChevronsLeft className={iconSizes.md} />
+            {(tooltip) => (
+              <button
+                {...tooltip}
+                type="button"
+                onClick={() => setChosenCollapsed((value) => !value)}
+                data-testid="sidebar-collapse"
+                aria-label={
+                  collapsed ? t('accessibility.expandSidebar') : t('accessibility.collapseSidebar')
+                }
+                className="mt-3 flex min-h-11 w-full items-center justify-center rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary"
+              >
+                {collapsed ? (
+                  <ChevronsRight className={iconSizes.md} />
+                ) : (
+                  <ChevronsLeft className={iconSizes.md} />
+                )}
+              </button>
             )}
-          </button>
+          </Tooltip>
         ) : null}
       </div>
     </aside>
@@ -178,8 +179,7 @@ export const Sidebar: FC<SidebarProps> = ({ version, onOpenSettings }) => {
  * Light / dark switch.
  *
  * It lives beside the collapse control because both change how the shell looks
- * rather than what it shows, and because trellis has no settings drawer to put
- * it in yet (that is UI-TRL-3's). niac carries the same control in its header
+ * rather than what it shows. niac carries the same control in its header
  * bar; the icon and the label-follows-the-destination wording match it.
  */
 function ThemeToggle({ collapsed }: { collapsed: boolean }) {
@@ -190,17 +190,21 @@ function ThemeToggle({ collapsed }: { collapsed: boolean }) {
     : t('accessibility.switchToDarkTheme');
 
   return (
-    <button
-      type="button"
-      onClick={toggleTheme}
-      data-testid="theme-toggle"
-      title={label}
-      aria-label={label}
-      className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary"
-    >
-      {isDark ? <Sun className={iconSizes.md} /> : <Moon className={iconSizes.md} />}
-      {!collapsed ? <span className="text-xs">{label}</span> : null}
-    </button>
+    <Tooltip content={label}>
+      {(tooltip) => (
+        <button
+          {...tooltip}
+          type="button"
+          onClick={toggleTheme}
+          data-testid="theme-toggle"
+          aria-label={label}
+          className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary"
+        >
+          {isDark ? <Sun className={iconSizes.md} /> : <Moon className={iconSizes.md} />}
+          {!collapsed ? <span className="text-xs">{label}</span> : null}
+        </button>
+      )}
+    </Tooltip>
   );
 }
 
@@ -217,18 +221,23 @@ function SignOutButton({ collapsed }: { collapsed: boolean }) {
     return null;
   }
   return (
-    <button
-      type="button"
-      onClick={signOut}
-      data-testid="sign-out"
-      aria-label={t('login.signOut')}
-      className="mt-3 flex min-h-11 w-full items-center justify-center rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary"
-    >
-      {collapsed ? (
-        <LogOut className={iconSizes.md} />
-      ) : (
-        <span className="text-xs">{t('login.signOut')}</span>
+    <Tooltip content={t('login.signOut')}>
+      {(tooltip) => (
+        <button
+          {...tooltip}
+          type="button"
+          onClick={signOut}
+          data-testid="sign-out"
+          aria-label={t('login.signOut')}
+          className="mt-3 flex min-h-11 w-full items-center justify-center rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary"
+        >
+          {collapsed ? (
+            <LogOut className={iconSizes.md} />
+          ) : (
+            <span className="text-xs">{t('login.signOut')}</span>
+          )}
+        </button>
       )}
-    </button>
+    </Tooltip>
   );
 }

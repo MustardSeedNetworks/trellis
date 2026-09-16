@@ -1,10 +1,13 @@
 {
   "accessibility": {
     "breadcrumb": "Ruta de navegación",
+    "closeHelp": "Cerrar ayuda",
     "collapseSidebar": "Contraer la barra lateral",
     "expandSidebar": "Expandir la barra lateral",
+    "helpTitle": "Ayuda: {{title}}",
     "openHelp": "Abrir la ayuda de {{title}}",
     "sections": "Secciones de Trellis",
+    "skipToContent": "Saltar al contenido",
     "switchToDarkTheme": "Cambiar al tema oscuro",
     "switchToLightTheme": "Cambiar al tema claro",
     "whatIs": "¿Qué es {{title}}?"
@@ -29,7 +32,6 @@
     "samples": "Muestras",
     "scale": "Escala",
     "sections": "Secciones",
-    "settings": "Configuración",
     "status": "Estado",
     "survey": "Estudio",
     "surveys": "Estudios",

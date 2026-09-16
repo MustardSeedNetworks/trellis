@@ -41,6 +41,7 @@ export interface PageConfig {
   eyebrow?: string;
   title: string;
   description?: string;
+  help: string;
   icon: LucideIcon;
   component: ComponentType;
 }
@@ -53,6 +54,7 @@ export function usePages(): PageConfig[] {
       path: '/',
       eyebrow: t('common:nav.capture'),
       title: t('pages:surveys.title'),
+      help: t('pages:help.surveys'),
       icon: Waypoints,
       component: SurveysPage,
     },
@@ -61,6 +63,7 @@ export function usePages(): PageConfig[] {
       eyebrow: t('common:nav.capture'),
       title: t('pages:import.title'),
       description: t('pages:import.description'),
+      help: t('pages:help.import'),
       icon: Upload,
       component: ImportPage,
     },
@@ -69,6 +72,7 @@ export function usePages(): PageConfig[] {
       eyebrow: t('common:nav.analysis'),
       title: t('pages:coverage.title'),
       description: t('pages:coverage.description'),
+      help: t('pages:help.coverage'),
       icon: Signal,
       component: CoveragePage,
     },
@@ -77,6 +81,7 @@ export function usePages(): PageConfig[] {
       eyebrow: t('common:nav.analysis'),
       title: t('pages:live.title'),
       description: t('pages:live.description'),
+      help: t('pages:live.description'),
       icon: Radar,
       component: LivePage,
     },
@@ -85,6 +90,7 @@ export function usePages(): PageConfig[] {
       eyebrow: t('common:nav.deliver'),
       title: t('pages:reports.title'),
       description: t('pages:reports.description'),
+      help: t('pages:reports.description'),
       icon: FileText,
       component: ReportsPage,
     },

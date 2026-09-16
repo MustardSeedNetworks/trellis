@@ -41,6 +41,26 @@ describe('App routing', () => {
 });
 
 describe('App shell', () => {
+  it('resolves a trailing-slash route to its page title', async () => {
+    renderAt('/import/');
+    expect(await screen.findByTestId('page-help-open')).toHaveAccessibleName(
+      'Open help for Import',
+    );
+    expect(document.title).toBe('Import | Trellis');
+  });
+
+  it('offers page help, sets the document title, and places skip navigation first', async () => {
+    const { container } = renderAt('/');
+    expect(await screen.findByTestId('page-help-open')).toHaveAccessibleName(
+      'Open help for Surveys',
+    );
+    expect(document.title).toBe('Surveys | Trellis');
+    const skip = screen.getByTestId('skip-to-content');
+    expect(container.querySelector('a,button,input,select,textarea')).toBe(skip);
+    expect(skip).toHaveAttribute('href', '#main-content');
+    expect(screen.getByRole('main')).toHaveAttribute('tabindex', '-1');
+  });
+
   it('wears the header the registry gives the route, above the page body', async () => {
     renderAt('/');
 
