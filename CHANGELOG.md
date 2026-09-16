@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.71](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.70...v0.2.71) (2026-09-16)
+
+
+### Miscellaneous
+
+* **deps:** update github/codeql-action action to v4.38.0 ([#505](https://github.com/MustardSeedNetworks/trellis/issues/505)) ([e885c02](https://github.com/MustardSeedNetworks/trellis/commit/e885c02917d3b080ddddb19577a5763e652a0c97))
+
 ## [0.2.70](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.69...v0.2.70) (2026-09-16)
 
 
