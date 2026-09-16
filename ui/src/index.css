@@ -17,7 +17,6 @@
 
   --color-brand-primary: var(--color-brand-primary);
   --color-brand-accent: var(--color-brand-accent);
-  --color-brand-gold: var(--color-brand-gold);
 
   --color-surface-base: var(--color-surface-base);
   --color-surface-raised: var(--color-surface-raised);
@@ -55,4 +54,64 @@
   --color-hairline-strong: var(--color-hairline-strong);
   --color-rail-from: var(--color-rail-from);
   --color-rail-to: var(--color-rail-to);
+}
+
+/* The semantic spacing and type scale the shared shell components are written
+ * against. This block lived in theme/msn-shared.css until the fleet theme
+ * became a hash-checked canonical copy (UI-TRL-8): a product's own type scale
+ * is explicitly not shared, and seed, stem and niac-go define these in their
+ * own index.css. It moves here unchanged.
+ *
+ * PageHeader was copied from the siblings using nine semantic classes while
+ * trellis defined one, so eight resolved to nothing and every page header
+ * rendered with no gaps and default type. scripts/check-theme-contract.py is
+ * the gate that now catches that; values match the siblings exactly, because
+ * index.css claims a component copied from a sibling compiles here unchanged
+ * and that claim has to be true rather than aspirational. */
+@layer components {
+  .heading-1 {
+    font-size: 1.5rem; /* 24px */
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.025em;
+    color: var(--color-text-primary);
+  }
+
+  .body-small {
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.625;
+    color: var(--color-text-secondary);
+  }
+
+  .gap-tight {
+    gap: 0.25rem; /* 4px */
+  }
+
+  .gap-default {
+    gap: 0.75rem; /* 12px */
+  }
+
+  .gap-comfortable {
+    gap: 1rem; /* 16px */
+  }
+
+  .mb-heading {
+    margin-bottom: 0.75rem; /* 12px — after a heading */
+  }
+
+  .mb-section {
+    margin-bottom: 1.5rem; /* 24px — between major sections */
+  }
+
+  .mt-tight {
+    margin-top: 0.25rem; /* 4px */
+  }
+}
+
+/* seed widens heading-1 at the sm breakpoint; kept out of the component layer
+ * above so the media query is visible rather than buried in a shared @apply. */
+@media (min-width: 40rem) {
+  .heading-1 {
+    font-size: 1.875rem; /* 30px */
+  }
 }
