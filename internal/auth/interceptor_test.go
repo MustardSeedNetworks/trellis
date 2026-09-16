@@ -86,3 +86,23 @@ func TestInterceptorRefusalIsOpaque(t *testing.T) {
 		}
 	}
 }
+
+// The interceptor is where a logged-out credential actually costs something:
+// every survey RPC goes through it. The session probe is the recovery path, so
+// the RPC under test carries what the probe hands a retained access cookie —
+// not the CSRF token logout already revoked, which proves nothing (#501).
+func TestInterceptorRefusesALoggedOutSession(t *testing.T) {
+	t.Parallel()
+	g, mux := newGateMux(t)
+	_, s := login(t, mux, "surveyor", testPassword)
+	logout(t, mux, s)
+
+	recovered := probeSession(t, mux, cookieByName(s, auth.CookieAccess))
+	reached, err := callWith(t, g, recovered.header())
+	if reached {
+		t.Fatal("an RPC from a logged-out session reached the handler")
+	}
+	if got := connect.CodeOf(err); got != connect.CodeUnauthenticated {
+		t.Fatalf("the logged-out RPC was refused with %v, want unauthenticated", got)
+	}
+}

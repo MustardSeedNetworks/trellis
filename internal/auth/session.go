@@ -4,9 +4,11 @@ package auth
 
 import (
 	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -19,6 +21,7 @@ const (
 	RefreshTokenDuration = 7 * 24 * time.Hour
 
 	jwtSecretLength = 32
+	sessionIDLength = 16
 	issuer          = "Trellis"
 )
 
@@ -45,20 +48,36 @@ var (
 	ErrInvalidToken = errors.New("invalid token")
 	// ErrTokenExpired indicates a well-formed token that is past its expiry.
 	ErrTokenExpired = errors.New("token expired")
+	// ErrTokenRevoked indicates a token whose session was ended — by a logout,
+	// or by the refresh that spent it — before it expired on its own.
+	ErrTokenRevoked = errors.New("token revoked")
 )
 
 // claims is Trellis's JWT payload. There is one principal, so there is no role,
-// scope or tenant here — only who and which kind of token.
+// scope or tenant here — only who, which kind of token, and which session.
+//
+// SessionID names the login, not the token: the access and refresh tokens of a
+// pair carry the same one. That is what lets a logout holding either cookie end
+// both, and a refresh end the pair it replaces. It is deliberately not jti,
+// which RFC 7519 requires to be unique per token.
 type claims struct {
 	jwt.RegisteredClaims
 
 	Username  string    `json:"username"`
 	TokenType TokenType `json:"token_type"`
+	SessionID string    `json:"sid"`
 }
 
 // SessionManager issues and validates the operator's session tokens.
+//
+// Signed tokens are self-contained, so ending a session early takes state the
+// signature cannot carry: revoked holds the sessions that must stop being
+// honoured, against the moment nothing carrying them can still parse.
 type SessionManager struct {
 	secret []byte
+
+	mu      sync.Mutex
+	revoked map[string]time.Time
 }
 
 // NewSessionManager returns a manager signing with secret. A nil or empty
@@ -71,28 +90,45 @@ func NewSessionManager(secret []byte) (*SessionManager, error) {
 			return nil, fmt.Errorf("generate session secret: %w", err)
 		}
 	}
-	return &SessionManager{secret: secret}, nil
+	return &SessionManager{secret: secret, revoked: map[string]time.Time{}}, nil
 }
 
-// Issue returns a new access and refresh token pair for username.
+// Issue returns a new access and refresh token pair for username. Both carry
+// one session id, so revoking the session revokes the pair.
 func (m *SessionManager) Issue(username string) (access, refresh string, err error) {
 	now := time.Now()
-	if access, err = m.issue(username, TokenAccess, now); err != nil {
+	session, err := newSessionID()
+	if err != nil {
 		return "", "", err
 	}
-	if refresh, err = m.issue(username, TokenRefresh, now); err != nil {
+	if access, err = m.issue(username, TokenAccess, now, session); err != nil {
+		return "", "", err
+	}
+	if refresh, err = m.issue(username, TokenRefresh, now, session); err != nil {
 		return "", "", err
 	}
 	return access, refresh, nil
 }
 
-// IssueAt returns one token of kind, issued as if at issuedAt. Tests use it to
-// produce an already-expired token without waiting for one.
+// IssueAt returns one token of kind, issued as if at issuedAt, in a session of
+// its own. Tests use it to produce an already-expired token without waiting.
 func (m *SessionManager) IssueAt(username string, kind TokenType, issuedAt time.Time) (string, error) {
-	return m.issue(username, kind, issuedAt)
+	session, err := newSessionID()
+	if err != nil {
+		return "", err
+	}
+	return m.issue(username, kind, issuedAt, session)
 }
 
-func (m *SessionManager) issue(username string, kind TokenType, issuedAt time.Time) (string, error) {
+func newSessionID() (string, error) {
+	id := make([]byte, sessionIDLength)
+	if _, err := rand.Read(id); err != nil {
+		return "", fmt.Errorf("generate session id: %w", err)
+	}
+	return hex.EncodeToString(id), nil
+}
+
+func (m *SessionManager) issue(username string, kind TokenType, issuedAt time.Time, session string) (string, error) {
 	lifetime := AccessTokenDuration
 	if kind == TokenRefresh {
 		lifetime = RefreshTokenDuration
@@ -106,6 +142,7 @@ func (m *SessionManager) issue(username string, kind TokenType, issuedAt time.Ti
 		},
 		Username:  username,
 		TokenType: kind,
+		SessionID: session,
 	})
 	signed, err := token.SignedString(m.secret)
 	if err != nil {
@@ -138,7 +175,50 @@ func (m *SessionManager) Validate(token string, want TokenType) (string, error) 
 	if c.Username == "" {
 		return "", fmt.Errorf("%w: token carries no username", ErrInvalidToken)
 	}
+	if c.SessionID == "" {
+		return "", fmt.Errorf("%w: token carries no session id", ErrInvalidToken)
+	}
+	if m.isRevoked(c.SessionID) {
+		return "", ErrTokenRevoked
+	}
 	return c.Username, nil
+}
+
+// Revoke ends the session token belongs to, so neither it nor the other token
+// of its pair is honoured again.
+//
+// It is called with whatever cookies a caller still has, which on a logout may
+// be one, none, or something that never was a token, so anything unusable is
+// simply nothing to revoke: a token that does not parse is already refused.
+func (m *SessionManager) Revoke(token string) {
+	var c claims
+	if _, err := jwt.ParseWithClaims(token, &c, func(*jwt.Token) (any, error) {
+		return m.secret, nil
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}), jwt.WithIssuer(issuer)); err != nil {
+		return
+	}
+	if c.SessionID == "" || c.IssuedAt == nil {
+		return
+	}
+	// An entry has to outlive everything it could be asked about. The refresh
+	// token is the longer-lived half of the pair and shares the issue time, so
+	// its expiry is when the session stops being able to present itself at all.
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	now := time.Now()
+	for session, until := range m.revoked {
+		if now.After(until) {
+			delete(m.revoked, session)
+		}
+	}
+	m.revoked[c.SessionID] = c.IssuedAt.Add(RefreshTokenDuration)
+}
+
+func (m *SessionManager) isRevoked(session string) bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	until, found := m.revoked[session]
+	return found && time.Now().Before(until)
 }
 
 // NewSessionCookie returns the cookie carrying a session token.
