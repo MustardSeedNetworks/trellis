@@ -140,9 +140,12 @@ func (g *Gate) handleRefresh(w http.ResponseWriter, r *http.Request) {
 		writeAuthError(w, http.StatusUnauthorized, "invalid refresh token")
 		return
 	}
-	// The old session's CSRF token is revoked with the tokens it was minted
-	// against, so a refreshed session cannot be driven by the previous one.
+	// Refreshing rotates: the pair that was presented is spent, so a copied
+	// refresh cookie is usable once rather than for its whole week. Revoking
+	// the session ends the access token with it, and the CSRF token it was
+	// minted against goes too, so the old session cannot drive the new one.
 	g.csrf.Revoke(csrf.SessionKey(cookieValue(r.Header, CookieAccess)))
+	g.sessions.Revoke(token)
 	g.issueSession(w, user, client)
 }
 
@@ -172,8 +175,17 @@ func (g *Gate) handleSession(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// handleLogout ends the session rather than only the browser's copy of it.
+//
+// Clearing the cookies is what the operator's own browser needs; revoking the
+// session is what everything else does. The tokens are signed and stateless, so
+// a retained access cookie otherwise recovers a CSRF token from /auth/session
+// and a retained refresh cookie mints a whole new session (#501). Both cookies
+// are offered because a caller may hold either.
 func (g *Gate) handleLogout(w http.ResponseWriter, r *http.Request) {
 	g.csrf.Revoke(csrf.SessionKey(cookieValue(r.Header, CookieAccess)))
+	g.sessions.Revoke(cookieValue(r.Header, CookieAccess))
+	g.sessions.Revoke(cookieValue(r.Header, CookieRefresh))
 	http.SetCookie(w, ClearSessionCookie(CookieAccess))
 	http.SetCookie(w, ClearSessionCookie(CookieRefresh))
 	w.WriteHeader(http.StatusNoContent)

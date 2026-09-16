@@ -66,6 +66,36 @@ func refresh(t *testing.T, mux *http.ServeMux, s session) *httptest.ResponseReco
 	return rec
 }
 
+// probeSession returns the session /auth/session hands back to a caller
+// holding s — the reload path, and the recovery path a logout has to close.
+func probeSession(t *testing.T, mux *http.ServeMux, s session) session {
+	t.Helper()
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/auth/session", nil)
+	req.Header = s.header()
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	var out struct {
+		Authenticated bool   `json:"authenticated"`
+		CSRFToken     string `json:"csrfToken"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
+		t.Fatalf("session probe response: %v", err)
+	}
+	return session{cookies: s.cookies, csrf: out.CSRFToken}
+}
+
+// logout sends the logout request a browser holding s would send.
+func logout(t *testing.T, mux *http.ServeMux, s session) {
+	t.Helper()
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/auth/logout", nil)
+	req.Header = s.header()
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("logout returned %d, want 204: %s", rec.Code, rec.Body)
+	}
+}
+
 // renewedSession reads the session a successful refresh handed back.
 func renewedSession(t *testing.T, rec *httptest.ResponseRecorder) session {
 	t.Helper()
@@ -91,6 +121,18 @@ func (s session) header() http.Header {
 		h.Set(auth.HeaderCSRFToken, s.csrf)
 	}
 	return h
+}
+
+// cookieByName returns the session a browser would still hold if it kept only
+// one of the two cookies. The retained-cookie cases below each start from one.
+func cookieByName(s session, name string) session {
+	var kept []*http.Cookie
+	for _, c := range s.cookies {
+		if c.Name == name {
+			kept = append(kept, c)
+		}
+	}
+	return session{cookies: kept}
 }
 
 func TestLoginIssuesASession(t *testing.T) {
@@ -379,5 +421,100 @@ func TestSessionProbe(t *testing.T) {
 	recovered := session{cookies: s.cookies, csrf: token}
 	if _, err := g.Authenticate(recovered.header(), "10.0.0.1"); err != nil {
 		t.Fatalf("the token the probe returned does not authenticate: %v", err)
+	}
+}
+
+// Logout has to end the credentials, not only the cookies. A caller who kept
+// the access cookie reaches /auth/session, which mints a CSRF token for any
+// access token that still parses — handing back exactly the pair Authenticate
+// wants (#501).
+func TestLogoutRevokesTheAccessToken(t *testing.T) {
+	t.Parallel()
+	g, mux := newGateMux(t)
+	_, s := login(t, mux, "surveyor", testPassword)
+	logout(t, mux, s)
+
+	retained := cookieByName(s, auth.CookieAccess)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/auth/session", nil)
+	req.Header = retained.header()
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	var out struct {
+		Authenticated bool   `json:"authenticated"`
+		CSRFToken     string `json:"csrfToken"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
+		t.Fatalf("session probe response: %v", err)
+	}
+	if out.Authenticated {
+		t.Error("the probe called a logged-out access cookie authenticated")
+	}
+	if out.CSRFToken != "" {
+		t.Error("the probe minted a CSRF token for a logged-out access cookie")
+	}
+	recovered := session{cookies: retained.cookies, csrf: out.CSRFToken}
+	if _, err := g.Authenticate(recovered.header(), "10.0.0.1"); err == nil {
+		t.Fatal("a logged-out access cookie authenticated through the session probe")
+	}
+}
+
+// The refresh cookie outlives the access cookie by a week, so a logout that
+// leaves it usable leaves the session usable for that week (#501).
+func TestLogoutRevokesTheRefreshToken(t *testing.T) {
+	t.Parallel()
+	g, mux := newGateMux(t)
+	_, s := login(t, mux, "surveyor", testPassword)
+	logout(t, mux, s)
+
+	rec := refresh(t, mux, cookieByName(s, auth.CookieRefresh))
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("refresh with a logged-out cookie returned %d, want 401: %s", rec.Code, rec.Body)
+	}
+	if len(rec.Result().Cookies()) != 0 {
+		t.Fatal("the refused refresh still issued cookies")
+	}
+	restored := renewedSession(t, rec)
+	if _, err := g.Authenticate(restored.header(), "10.0.0.1"); err == nil {
+		t.Fatal("a logged-out refresh cookie minted a working session")
+	}
+}
+
+// The access token lasts fifteen minutes and the refresh cookie a week, so an
+// operator who logs out after an idle spell presents only the refresh cookie.
+// Revoking what that request actually carries is the difference between ending
+// the session and ending nothing (#501).
+func TestLogoutWithOnlyTheRefreshCookie(t *testing.T) {
+	t.Parallel()
+	_, mux := newGateMux(t)
+	_, s := login(t, mux, "surveyor", testPassword)
+	logout(t, mux, cookieByName(s, auth.CookieRefresh))
+
+	rec := refresh(t, mux, cookieByName(s, auth.CookieRefresh))
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("refresh after a refresh-cookie-only logout returned %d, want 401: %s", rec.Code, rec.Body)
+	}
+}
+
+// Exchanging a refresh token spends it. Without rotation a copied refresh
+// cookie stays usable for its whole lifetime alongside the operator's own
+// session, and each exchange extends it again (#501).
+func TestRefreshRotatesTheRefreshToken(t *testing.T) {
+	t.Parallel()
+	g, mux := newGateMux(t)
+	_, s := login(t, mux, "surveyor", testPassword)
+
+	first := refresh(t, mux, s)
+	if first.Code != http.StatusOK {
+		t.Fatalf("first refresh returned %d, want 200: %s", first.Code, first.Body)
+	}
+	renewed := renewedSession(t, first)
+	if _, err := g.Authenticate(renewed.header(), "10.0.0.1"); err != nil {
+		t.Fatalf("the renewed session does not authenticate: %v", err)
+	}
+
+	replay := refresh(t, mux, cookieByName(s, auth.CookieRefresh))
+	if replay.Code != http.StatusUnauthorized {
+		t.Fatalf("the spent refresh token returned %d, want 401: %s", replay.Code, replay.Body)
 	}
 }

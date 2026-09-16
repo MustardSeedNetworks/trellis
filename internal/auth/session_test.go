@@ -105,6 +105,70 @@ func TestSessionRefusesAnExpiredToken(t *testing.T) {
 
 // A session cookie only ever travels over the TLS listener a configured
 // credential turns on, so every flag is unconditional.
+// Revoking either token of a pair ends both: they carry one session id, so a
+// logout holding whichever cookie survived closes the whole session.
+func TestRevokeEndsBothTokensOfAPair(t *testing.T) {
+	t.Parallel()
+	for name, revokeRefresh := range map[string]bool{"via the access token": false, "via the refresh token": true} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			m := newSessions(t)
+			access, refresh, err := m.Issue("surveyor")
+			if err != nil {
+				t.Fatalf("Issue: %v", err)
+			}
+			if revokeRefresh {
+				m.Revoke(refresh)
+			} else {
+				m.Revoke(access)
+			}
+			if _, err := m.Validate(access, auth.TokenAccess); !errors.Is(err, auth.ErrTokenRevoked) {
+				t.Errorf("the access token validates with %v, want revoked", err)
+			}
+			if _, err := m.Validate(refresh, auth.TokenRefresh); !errors.Is(err, auth.ErrTokenRevoked) {
+				t.Errorf("the refresh token validates with %v, want revoked", err)
+			}
+		})
+	}
+}
+
+// A revocation has to outlive everything it could be asked about. The refresh
+// token is the long half of the pair, so an entry kept only for an access
+// token's lifetime stops blocking the cookie that matters after fifteen
+// minutes — while the cookie itself is good for a week.
+func TestRevocationOutlivesTheAccessTokenLifetime(t *testing.T) {
+	t.Parallel()
+	m := newSessions(t)
+	stale, err := m.IssueAt("surveyor", auth.TokenRefresh, time.Now().Add(-2*auth.AccessTokenDuration))
+	if err != nil {
+		t.Fatalf("IssueAt: %v", err)
+	}
+	if _, err := m.Validate(stale, auth.TokenRefresh); err != nil {
+		t.Fatalf("the refresh token is not valid to begin with: %v", err)
+	}
+	m.Revoke(stale)
+	if _, err := m.Validate(stale, auth.TokenRefresh); !errors.Is(err, auth.ErrTokenRevoked) {
+		t.Fatalf("a refresh token issued before the access lifetime validates with %v, want revoked", err)
+	}
+}
+
+// Logout is called with whatever the browser still holds, which may be nothing
+// or something that never was a token. Nothing to revoke is not an error.
+func TestRevokeIgnoresWhatIsNotAToken(t *testing.T) {
+	t.Parallel()
+	m := newSessions(t)
+	access, _, err := m.Issue("surveyor")
+	if err != nil {
+		t.Fatalf("Issue: %v", err)
+	}
+	for _, token := range []string{"", "not.a.token", access + "tampered"} {
+		m.Revoke(token)
+	}
+	if _, err := m.Validate(access, auth.TokenAccess); err != nil {
+		t.Fatalf("a live session was revoked by unusable input: %v", err)
+	}
+}
+
 func TestSessionCookiesCarryTheSecurityFlags(t *testing.T) {
 	t.Parallel()
 	c := auth.NewSessionCookie(auth.CookieAccess, "token-value", auth.AccessTokenDuration)
