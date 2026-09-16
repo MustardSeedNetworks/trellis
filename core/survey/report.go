@@ -114,6 +114,25 @@ type ReportOptions struct {
 	IncludeExecutiveSummary bool   `json:"includeExecutiveSummary"`
 	CompanyName             string `json:"companyName,omitempty"`
 	CompanyLogo             []byte `json:"companyLogo,omitempty"`
+
+	// Metric and Threshold are the layer and level the findings are analysed
+	// against, the same pair the Coverage page uses. Zero values are not
+	// meaningful for either, so [ReportOptions.withAnalysisDefaults] fills
+	// them in for a caller that has no opinion.
+	Metric    HeatmapType `json:"metric,omitempty"`
+	Threshold int         `json:"threshold,omitempty"`
+}
+
+// withAnalysisDefaults supplies the analysis layer and level when the caller
+// named neither.
+func (o ReportOptions) withAnalysisDefaults() ReportOptions {
+	if o.Metric == "" {
+		o.Metric = HeatmapRSSI
+	}
+	if o.Threshold == 0 {
+		o.Threshold = DefaultThresholdFor(o.Metric)
+	}
+	return o
 }
 
 // DefaultReportOptions returns sensible defaults for report generation.
@@ -123,6 +142,8 @@ func DefaultReportOptions() ReportOptions {
 		IncludeRawData:          false,
 		IncludeRecommendations:  true,
 		IncludeExecutiveSummary: true,
+		Metric:                  HeatmapRSSI,
+		Threshold:               DefaultThreshold,
 	}
 }
 
@@ -137,7 +158,7 @@ type ReportGenerator struct {
 func NewReportGenerator(survey *Survey, options ReportOptions) *ReportGenerator {
 	return &ReportGenerator{
 		survey:  survey,
-		options: options,
+		options: options.withAnalysisDefaults(),
 	}
 }
 

@@ -26,7 +26,7 @@ func (g *ReportGenerator) addCoverPage() {
 	g.pdf.Ln(pdfSpacingCover)
 	g.pdf.SetFont("Arial", "B", pdfFontSizeTitle)
 	g.pdf.SetTextColor(0, 0, 0)
-	g.pdf.CellFormat(0, pdfSpacingTitle, "WiFi Site Survey Report", "", 1, "C", false, 0, "")
+	g.pdf.CellFormat(0, pdfSpacingTitle, "Wi-Fi Site Survey Report", "", 1, "C", false, 0, "")
 
 	// Survey name
 	g.pdf.Ln(pdfSpacingSection)
@@ -238,7 +238,7 @@ func (g *ReportGenerator) addFloorSection(floor *Floor) {
 		if len(channels) > 0 {
 			g.pdf.Ln(pdfSpacingSmall)
 			g.pdf.SetFont("Arial", "B", pdfFontSizeNormal)
-			g.pdf.CellFormat(0, pdfSpacingLarge, "WiFi Channels Detected", "", 1, "L", false, 0, "")
+			g.pdf.CellFormat(0, pdfSpacingLarge, "Wi-Fi Channels Detected", "", 1, "L", false, 0, "")
 
 			g.pdf.SetFont("Arial", "", pdfFontSizeSmall)
 			for _, ch := range channels {
@@ -386,15 +386,24 @@ func (g *ReportGenerator) addFloorHeatmapUnavailable(cause error) {
 	)
 }
 
+// recommendations is the findings the report prints: the same analysis the
+// Coverage page shows, against the operator's metric and threshold. The report
+// used to run a parallel generator of its own that never saw a threshold, so
+// every PDF said "-85 dBm" however the survey had actually been analysed.
+func (g *ReportGenerator) recommendations() []Recommendation {
+	analysis, err := DetectDeadZones(g.survey, g.options.Metric, g.options.Threshold, nil)
+	if err != nil {
+		return nil
+	}
+	return analysis.advice
+}
+
 // addRecommendations adds the recommendations section.
 func (g *ReportGenerator) addRecommendations() {
 	g.pdf.AddPage()
 	g.addSectionHeader("Recommendations")
 
-	allSamples := g.survey.GetAllMeasuredSamples()
-	stats := calculateSurveyStats(allSamples)
-
-	recommendations := generateSurveyRecommendations(&stats)
+	recommendations := g.recommendations()
 
 	if len(recommendations) == 0 {
 		g.pdf.SetFont("Arial", "I", pdfFontSizeSmall)
@@ -402,7 +411,7 @@ func (g *ReportGenerator) addRecommendations() {
 		g.pdf.CellFormat(
 			0,
 			pdfSpacingLarge,
-			"No specific recommendations - WiFi coverage meets quality standards.",
+			"No specific recommendations - Wi-Fi coverage meets quality standards.",
 			"",
 			1,
 			"L",
@@ -446,7 +455,7 @@ func (g *ReportGenerator) addRecommendations() {
 	g.pdf.SetFont("Arial", "", pdfFontSizeSmall)
 	notes := []string{
 		"High priority items should be addressed within 1-2 weeks",
-		"Consider WiFi 6/6E access points for improved capacity",
+		"Consider Wi-Fi 6/6E access points for improved capacity",
 		"Verify power levels and channel assignments after changes",
 		"Re-survey affected areas after implementing changes",
 	}

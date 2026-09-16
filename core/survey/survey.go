@@ -11,7 +11,7 @@ import (
 // Type indicates the type of survey being conducted.
 type Type string
 
-// WiFi survey type constants.
+// Wi-Fi survey type constants.
 const (
 	TypePassive    Type = "passive"    // Passive scan (all visible networks)
 	TypeActive     Type = "active"     // Active monitoring (current connection)
@@ -21,7 +21,7 @@ const (
 // Status indicates the current status of a survey.
 type Status string
 
-// WiFi survey status constants.
+// Wi-Fi survey status constants.
 const (
 	StatusCreated    Status = "created"
 	StatusInProgress Status = "in_progress"
@@ -41,9 +41,9 @@ const (
 	maxTestDurationSec = 60
 )
 
-// WiFi frequency band constants.
+// Wi-Fi frequency band constants.
 const (
-	// wifi6eMinFrequencyMHz is the minimum frequency in MHz for WiFi 6E band (6 GHz).
+	// wifi6eMinFrequencyMHz is the minimum frequency in MHz for Wi-Fi 6E band (6 GHz).
 	wifi6eMinFrequencyMHz = 5900
 )
 
@@ -66,7 +66,7 @@ type Floor struct {
 	UpdatedAt time.Time      `json:"updatedAt"`
 }
 
-// PassiveSample contains data from a passive WiFi scan.
+// PassiveSample contains data from a passive Wi-Fi scan.
 type PassiveSample struct {
 	Networks []*wifi.ScannedNetwork `json:"networks"` // All visible APs
 
@@ -228,7 +228,7 @@ type Attempt struct {
 	Reason string `json:"reason"`
 }
 
-// Survey represents a WiFi site survey.
+// Survey represents a Wi-Fi site survey.
 type Survey struct {
 	ID          string    `json:"id"`
 	Name        string    `json:"name"`
@@ -248,7 +248,7 @@ type Survey struct {
 	Samples   []*SamplePoint `json:"samples,omitempty"`
 
 	// Configuration
-	Interface    string `json:"interface"`              // WiFi interface to use
+	Interface    string `json:"interface"`              // Wi-Fi interface to use
 	IperfServer  string `json:"iperfServer,omitempty"`  // For throughput surveys
 	TestDuration int    `json:"testDuration,omitempty"` // seconds, for throughput tests
 
