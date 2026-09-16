@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.70](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.69...v0.2.70) (2026-09-16)
+
+
+### Bug Fixes
+
+* **ui:** adopt the canonical fleet theme and hue set C ([#504](https://github.com/MustardSeedNetworks/trellis/issues/504)) ([ca8d602](https://github.com/MustardSeedNetworks/trellis/commit/ca8d602b0ff380d49ec23eceb5e212048180f027)), closes [#479](https://github.com/MustardSeedNetworks/trellis/issues/479)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#499](https://github.com/MustardSeedNetworks/trellis/issues/499)) ([b185e5f](https://github.com/MustardSeedNetworks/trellis/commit/b185e5fc26886932cbf1d94750ecd6563a3b8a24))
+
 ## [0.2.69](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.68...v0.2.69) (2026-09-16)
 
 
