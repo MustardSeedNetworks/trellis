@@ -9,7 +9,7 @@ import (
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
 )
 
-// DeadZone represents a detected area of poor WiFi coverage.
+// DeadZone represents a detected area of poor Wi-Fi coverage.
 //
 // Min and Avg carry the analysed metric's own unit — dBm under [HeatmapRSSI],
 // dB under [HeatmapSNR] — which is why they are not named for either.
@@ -35,6 +35,11 @@ type DeadZoneAnalysis struct {
 	CoverageScore   float64        `json:"coverage_score"` // 0-100
 	Recommendations []string       `json:"recommendations"`
 	Anomalies       []wifi.Anomaly `json:"anomalies"` // Wi-Fi anomalies detected from the survey's passive AP observations
+
+	// advice is the same findings carrying the urgency each was written with.
+	// The wire keeps plain sentences; the PDF prints a priority badge beside
+	// each, and used to build its own drifted copies of them to get one.
+	advice []Recommendation
 }
 
 // Coverage level thresholds in dBm.
@@ -61,11 +66,16 @@ const DefaultThreshold = -75
 // signal strength says.
 const DefaultSNRThreshold = 20
 
-// SNR severity bands, in dB of margin. Unlike the RSSI bands these are not
-// levels of a received signal but of the room left above the noise floor.
+// A zone's severity is how far its average falls below the threshold the
+// operator chose, not a fixed level. Both metrics used to carry these two
+// offsets written out as absolutes — -85 and -80 dBm against the default -75
+// threshold, 10 and 15 dB against the default 20 — which is this same pair
+// hard-coded at one threshold each, and wrong at every other. They are
+// offsets, so they subtract in the metric's own unit: a signal level and a
+// noise margin are still never compared to each other.
 const (
-	snrSevereDB   = 10
-	snrModerateDB = 15
+	severeBandOffset   = 10
+	moderateBandOffset = 5
 )
 
 // DefaultThresholdFor is the dead-zone threshold to use when a caller names a
@@ -106,6 +116,10 @@ const (
 	// deadZoneThresholdGood indicates good coverage with only minor improvements needed.
 	deadZoneThresholdGood = 95
 
+	// deadZoneThresholdClean is the score at or above which a floor with no
+	// dead zone at all is reported as clean rather than left without a verdict.
+	deadZoneThresholdClean = 90
+
 	// deadZoneMinSamples is the minimum number of samples needed for reliable dead zone analysis.
 	deadZoneMinSamples = 20
 )
@@ -122,7 +136,7 @@ const (
 //  6. Generates recommendations in that metric's terms
 //
 // Parameters:
-//   - survey: The WiFi survey to analyze
+//   - survey: The Wi-Fi survey to analyze
 //   - metric: [HeatmapRSSI] or [HeatmapSNR]; see [SupportsCoverageAnalysis]
 //   - threshold: in the metric's unit; see [DefaultThresholdFor]
 //
@@ -191,8 +205,9 @@ func analyzeCoverage(
 
 	weakSamples := filterWeakSamples(samples, float64(threshold))
 	coverageScore := calculateCoverageScore(samples, weakSamples)
-	deadZones := clusterDeadZones(weakSamples, floorPlan, metric)
-	recommendations := generateRecommendations(metric, deadZones, coverageScore, len(samples))
+	edges := edgesFor(threshold)
+	deadZones := clusterDeadZones(weakSamples, floorPlan, edges)
+	recommendations := generateRecommendations(metric, deadZones, coverageScore, len(samples), edges)
 
 	// Surface Wi-Fi anomalies (security/RF/standards) from the same passive AP
 	// observations, alongside the coverage analysis.
@@ -207,9 +222,19 @@ func analyzeCoverage(
 		Threshold:       threshold,
 		DeadZones:       deadZones,
 		CoverageScore:   coverageScore,
-		Recommendations: recommendations,
+		Recommendations: recommendationTexts(recommendations),
 		Anomalies:       anomalies,
+		advice:          recommendations,
 	}, nil
+}
+
+// recommendationTexts is the wire form: the sentences without their urgency.
+func recommendationTexts(recs []Recommendation) []string {
+	texts := make([]string, 0, len(recs))
+	for _, rec := range recs {
+		texts = append(texts, rec.Text)
+	}
+	return texts
 }
 
 // DetectDeadZones provides dead zone detection through the survey manager,
@@ -249,7 +274,7 @@ func calculateCoverageScore(allSamples, weakSamples []SampleValue) float64 {
 }
 
 // clusterDeadZones groups nearby weak samples into dead zones using distance-based clustering.
-func clusterDeadZones(weakSamples []SampleValue, floorPlan *FloorPlan, metric HeatmapType) []DeadZone {
+func clusterDeadZones(weakSamples []SampleValue, floorPlan *FloorPlan, edges bandEdges) []DeadZone {
 	if len(weakSamples) == 0 {
 		return []DeadZone{}
 	}
@@ -282,7 +307,7 @@ func clusterDeadZones(weakSamples []SampleValue, floorPlan *FloorPlan, metric He
 		}
 
 		// Create dead zone from cluster
-		deadZone := createDeadZone(cluster, zoneID, floorPlan, metric)
+		deadZone := createDeadZone(cluster, zoneID, floorPlan, edges)
 		deadZones = append(deadZones, deadZone)
 		zoneID++
 	}
@@ -291,7 +316,7 @@ func clusterDeadZones(weakSamples []SampleValue, floorPlan *FloorPlan, metric He
 }
 
 // createDeadZone creates a dead zone from a cluster of weak samples.
-func createDeadZone(cluster []SampleValue, id int, floorPlan *FloorPlan, metric HeatmapType) DeadZone {
+func createDeadZone(cluster []SampleValue, id int, floorPlan *FloorPlan, edges bandEdges) DeadZone {
 	// Calculate center point
 	var sumX, sumY, sumValue float64
 	minValue := math.MaxFloat64
@@ -332,29 +357,35 @@ func createDeadZone(cluster []SampleValue, id int, floorPlan *FloorPlan, metric 
 		Min:         int(minValue),
 		Avg:         int(avgValue),
 		SampleCount: len(cluster),
-		Severity:    determineSeverity(metric, avgValue),
+		Severity:    determineSeverity(avgValue, edges),
 	}
 }
 
-// determineSeverity classifies a zone from its average, against the bands of
-// the metric it was measured in. A signal level and a noise margin are not
-// comparable numbers, so neither metric may read the other's bands.
-func determineSeverity(metric HeatmapType, avg float64) string {
-	if metric == HeatmapSNR {
-		switch {
-		case avg <= snrSevereDB:
-			return SeveritySevere
-		case avg <= snrModerateDB:
-			return SeverityModerate
-		default:
-			return SeverityMinor
-		}
-	}
+// bandEdges are the severity boundaries one threshold implies, in that
+// threshold's own unit.
+type bandEdges struct {
+	severe    int
+	moderate  int
+	threshold int
+}
 
+// edgesFor derives the bands from the only level the operator chose.
+func edgesFor(threshold int) bandEdges {
+	return bandEdges{
+		severe:    threshold - severeBandOffset,
+		moderate:  threshold - moderateBandOffset,
+		threshold: threshold,
+	}
+}
+
+// determineSeverity classifies a zone from its average against the bands its
+// own metric's threshold implies. A signal level and a noise margin are not
+// comparable numbers, so neither metric may read the other's threshold.
+func determineSeverity(avg float64, edges bandEdges) string {
 	switch {
-	case avg <= -85:
+	case avg <= float64(edges.severe):
 		return SeveritySevere
-	case avg <= -80:
+	case avg <= float64(edges.moderate):
 		return SeverityModerate
 	default:
 		return SeverityMinor
@@ -380,18 +411,18 @@ type coverageAdvice struct {
 }
 
 var rssiAdvice = coverageAdvice{
-	critical:  "Critical coverage issues detected. Consider a complete WiFi infrastructure redesign with additional access points.",
+	critical:  "Critical coverage issues detected. Consider a complete Wi-Fi infrastructure redesign with additional access points.",
 	poor:      "Poor overall coverage. Add 2-3 additional access points in strategic locations.",
 	moderate:  "Moderate coverage. Consider adding 1-2 access points to improve coverage in weak areas.",
 	good:      "Good coverage overall. Minor improvements may be beneficial in identified weak spots.",
 	excellent: "Excellent coverage. Maintain current access point placement and configuration.",
-	severeZones: "Found %d severe dead zone(s) with signal below -85 dBm. " +
+	severeZones: "Found %d severe dead zone(s) with %s. " +
 		"Prioritize these areas for immediate AP placement.",
-	moderateZones: "Found %d moderate dead zone(s) with signal between -80 and -85 dBm. " +
+	moderateZones: "Found %d moderate dead zone(s) with %s. " +
 		"These areas need attention to ensure reliable connectivity.",
-	minorZones: "Found %d minor weak area(s) with signal between -75 and -80 dBm. " +
+	minorZones: "Found %d minor weak area(s) with %s. " +
 		"Monitor these areas during peak usage times.",
-	clean: "No significant dead zones detected. WiFi coverage meets quality standards.",
+	clean: "No significant dead zones detected. Wi-Fi coverage meets quality standards.",
 }
 
 var snrAdvice = coverageAdvice{
@@ -403,21 +434,33 @@ var snrAdvice = coverageAdvice{
 		"onto a quieter channel.",
 	good:      "Good signal-to-noise. A few areas sit close to the margin; re-check them under load.",
 	excellent: "Excellent signal-to-noise. The noise floor stays well clear of the signal across this floor.",
-	severeZones: "Found %d area(s) at or below " + snrSevereDBText + " of margin. " +
+	severeZones: "Found %d area(s) with %s. " +
 		"A link this close to the noise floor drops even where the signal is strong — locate the interferer.",
-	moderateZones: "Found %d area(s) between " + snrSevereDBText + " and " + snrModerateDBText + " of margin. " +
+	moderateZones: "Found %d area(s) with %s. " +
 		"Voice and video will suffer here and data will retry; identify what shares the channel.",
-	minorZones: "Found %d area(s) with a thin noise margin. " +
+	minorZones: "Found %d area(s) with %s. " +
 		"Watch these during the hours the interference appears.",
 	clean: "No significant noise problems detected. The signal-to-noise margin holds across this floor.",
 }
 
-// The band edges as they are written into the advice, so the sentences cannot
-// drift from the classification above.
-var (
-	snrSevereDBText   = fmt.Sprintf("%d dB", snrSevereDB)
-	snrModerateDBText = fmt.Sprintf("%d dB", snrModerateDB)
-)
+// band describes one severity's measured range in the metric's own unit. The
+// sentences take it as a parameter rather than stating a range of their own,
+// which is how they used to name a band no sample could be in.
+func (e bandEdges) band(metric HeatmapType, severity string) string {
+	noun, unit := "signal", "dBm"
+	if metric == HeatmapSNR {
+		noun, unit = "a margin", "dB"
+	}
+
+	switch severity {
+	case SeveritySevere:
+		return fmt.Sprintf("%s at or below %d %s", noun, e.severe, unit)
+	case SeverityModerate:
+		return fmt.Sprintf("%s between %d and %d %s", noun, e.severe, e.moderate, unit)
+	default:
+		return fmt.Sprintf("%s between %d and %d %s", noun, e.moderate, e.threshold, unit)
+	}
+}
 
 func adviceFor(metric HeatmapType) coverageAdvice {
 	if metric == HeatmapSNR {
@@ -432,22 +475,23 @@ func generateRecommendations(
 	deadZones []DeadZone,
 	coverageScore float64,
 	totalSamples int,
-) []string {
+	edges bandEdges,
+) []Recommendation {
 	advice := adviceFor(metric)
-	recommendations := make([]string, 0)
+	recommendations := make([]Recommendation, 0)
 
 	// Coverage-based recommendations
 	switch {
 	case coverageScore < deadZoneThresholdCritical:
-		recommendations = append(recommendations, advice.critical)
+		recommendations = append(recommendations, Recommendation{advice.critical, PriorityHigh})
 	case coverageScore < deadZoneThresholdPoor:
-		recommendations = append(recommendations, advice.poor)
+		recommendations = append(recommendations, Recommendation{advice.poor, PriorityHigh})
 	case coverageScore < deadZoneThresholdModerate:
-		recommendations = append(recommendations, advice.moderate)
+		recommendations = append(recommendations, Recommendation{advice.moderate, PriorityMedium})
 	case coverageScore < deadZoneThresholdGood:
-		recommendations = append(recommendations, advice.good)
+		recommendations = append(recommendations, Recommendation{advice.good, PriorityLow})
 	default:
-		recommendations = append(recommendations, advice.excellent)
+		recommendations = append(recommendations, Recommendation{advice.excellent, PriorityLow})
 	}
 
 	// Dead zone-specific recommendations
@@ -467,28 +511,37 @@ func generateRecommendations(
 	}
 
 	if severeCount > 0 {
-		recommendations = append(recommendations, fmt.Sprintf(advice.severeZones, severeCount))
+		recommendations = append(recommendations, Recommendation{
+			fmt.Sprintf(advice.severeZones, severeCount, edges.band(metric, SeveritySevere)),
+			PriorityHigh,
+		})
 	}
 
 	if moderateCount > 0 {
-		recommendations = append(recommendations, fmt.Sprintf(advice.moderateZones, moderateCount))
+		recommendations = append(recommendations, Recommendation{
+			fmt.Sprintf(advice.moderateZones, moderateCount, edges.band(metric, SeverityModerate)),
+			PriorityMedium,
+		})
 	}
 
 	if minorCount > 0 {
-		recommendations = append(recommendations, fmt.Sprintf(advice.minorZones, minorCount))
+		recommendations = append(recommendations, Recommendation{
+			fmt.Sprintf(advice.minorZones, minorCount, edges.band(metric, SeverityMinor)),
+			PriorityLow,
+		})
 	}
 
 	// Sample density recommendations
 	if totalSamples < deadZoneMinSamples {
-		recommendations = append(
-			recommendations,
+		recommendations = append(recommendations, Recommendation{
 			"Limited sample data. Collect more samples for accurate analysis, especially in edge areas.",
-		)
+			PriorityLow,
+		})
 	}
 
 	// No dead zones found
-	if len(deadZones) == 0 && coverageScore >= 90 {
-		recommendations = append(recommendations, advice.clean)
+	if len(deadZones) == 0 && coverageScore >= deadZoneThresholdClean {
+		recommendations = append(recommendations, Recommendation{advice.clean, PriorityLow})
 	}
 
 	return recommendations

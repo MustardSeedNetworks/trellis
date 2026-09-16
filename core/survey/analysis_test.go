@@ -470,7 +470,7 @@ func TestDetermineSeverity(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		result := survey.ExportDetermineSeverity(survey.HeatmapRSSI, tt.rssi)
+		result := survey.ExportDetermineSeverity(survey.DefaultThreshold, tt.rssi)
 		if result != tt.severity {
 			t.Errorf("RSSI %.2f: expected '%s', got '%s'", tt.rssi, tt.severity, result)
 		}
@@ -514,7 +514,8 @@ func TestGenerateRecommendations(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			recs := survey.ExportGenerateRecommendations(
-				survey.HeatmapRSSI, tt.deadZones, tt.coverageScore, tt.totalSamples)
+				survey.HeatmapRSSI, tt.deadZones, tt.coverageScore, tt.totalSamples,
+				survey.DefaultThreshold)
 
 			if len(recs) < tt.minRecCount {
 				t.Errorf("Expected at least %d recommendations, got %d", tt.minRecCount, len(recs))

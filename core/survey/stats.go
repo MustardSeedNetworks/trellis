@@ -1,7 +1,6 @@
 package survey
 
 import (
-	"fmt"
 	"sort"
 )
 
@@ -118,7 +117,7 @@ func calculateFloorStats(samples []*SamplePoint) SurveyStats {
 	return calculateSurveyStats(samples)
 }
 
-// ChannelInfo represents WiFi channel usage information.
+// ChannelInfo represents Wi-Fi channel usage information.
 type ChannelInfo struct {
 	Channel int
 	Count   int
@@ -170,67 +169,4 @@ const (
 type Recommendation struct {
 	Text     string
 	Priority RecommendationPriority
-}
-
-func generateSurveyRecommendations(stats *SurveyStats) []Recommendation {
-	var recommendations []Recommendation
-
-	// Coverage-based recommendations
-	switch {
-	case stats.CoverageScore < coverageScoreCritical:
-		recommendations = append(recommendations, Recommendation{
-			Text:     "Critical coverage issues detected. Consider a complete WiFi infrastructure redesign with additional access points.",
-			Priority: PriorityHigh,
-		})
-	case stats.CoverageScore < coverageScorePoor:
-		recommendations = append(recommendations, Recommendation{
-			Text:     "Poor overall coverage. Add 2-3 additional access points in strategic locations to improve connectivity.",
-			Priority: PriorityHigh,
-		})
-	case stats.CoverageScore < coverageScoreModerate:
-		recommendations = append(recommendations, Recommendation{
-			Text:     "Moderate coverage detected. Consider adding 1-2 access points to strengthen weak areas.",
-			Priority: PriorityMedium,
-		})
-	}
-
-	// Dead zone recommendations
-	if stats.DeadZones > 0 {
-		recommendations = append(recommendations, Recommendation{
-			Text: fmt.Sprintf(
-				"Found %d dead zone(s) with signal below -85 dBm. Prioritize these areas for immediate AP placement.",
-				stats.DeadZones,
-			),
-			Priority: PriorityHigh,
-		})
-	}
-
-	// Weak area recommendations
-	if stats.WeakAreas > 0 {
-		recommendations = append(recommendations, Recommendation{
-			Text: fmt.Sprintf(
-				"Found %d weak area(s) with poor signal. Consider power adjustments or additional coverage.",
-				stats.WeakAreas,
-			),
-			Priority: PriorityMedium,
-		})
-	}
-
-	// Sample density recommendations
-	if stats.TotalSamples < minSampleThreshold {
-		recommendations = append(recommendations, Recommendation{
-			Text:     "Limited sample data. Collect more samples for accurate analysis, especially in edge areas and around obstacles.",
-			Priority: PriorityLow,
-		})
-	}
-
-	// No issues found
-	if len(recommendations) == 0 && stats.CoverageScore >= coverageScoreGood {
-		recommendations = append(recommendations, Recommendation{
-			Text:     "WiFi coverage meets quality standards. Continue monitoring for any future degradation.",
-			Priority: PriorityLow,
-		})
-	}
-
-	return recommendations
 }

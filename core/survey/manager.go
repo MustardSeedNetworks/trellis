@@ -42,7 +42,7 @@ type ThroughputMeter interface {
 	Measure(ctx context.Context, iface, server string, durationSec int) (ThroughputSample, error)
 }
 
-// Manager manages WiFi site surveys.
+// Manager manages Wi-Fi site surveys.
 type Manager struct {
 	mu sync.RWMutex
 	// scanMu serialises access to the one radio; see Manager.scan.

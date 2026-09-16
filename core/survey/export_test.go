@@ -21,9 +21,10 @@ func ExportCalculateCoverageScore(allSamples, weakSamples []SampleValue) float64
 	return calculateCoverageScore(allSamples, weakSamples)
 }
 
-// ExportDetermineSeverity exports determineSeverity for testing.
-func ExportDetermineSeverity(metric HeatmapType, avg float64) string {
-	return determineSeverity(metric, avg)
+// ExportDetermineSeverity exports determineSeverity for testing, against the
+// bands the given threshold implies in that metric's unit.
+func ExportDetermineSeverity(threshold int, avg float64) string {
+	return determineSeverity(avg, edgesFor(threshold))
 }
 
 // ExportGenerateRecommendations exports generateRecommendations for testing.
@@ -32,8 +33,11 @@ func ExportGenerateRecommendations(
 	deadZones []DeadZone,
 	coverageScore float64,
 	totalSamples int,
+	threshold int,
 ) []string {
-	return generateRecommendations(metric, deadZones, coverageScore, totalSamples)
+	return recommendationTexts(
+		generateRecommendations(metric, deadZones, coverageScore, totalSamples, edgesFor(threshold)),
+	)
 }
 
 // SetSurvey sets a survey in the manager for testing.
@@ -162,14 +166,15 @@ func ExportGetStatusColor(status Status) []int {
 	return getStatusColor(status)
 }
 
+// ExportReportRecommendations exports the findings the PDF report prints, so a
+// test can assert on them without decoding a compressed PDF.
+func ExportReportRecommendations(s *Survey, opts ReportOptions) []Recommendation {
+	return NewReportGenerator(s, opts).recommendations()
+}
+
 // ExportGetPriorityLabel exports getPriorityLabel for testing.
 func ExportGetPriorityLabel(p RecommendationPriority) string {
 	return getPriorityLabel(p)
-}
-
-// ExportGenerateSurveyRecommendations exports generateSurveyRecommendations for testing.
-func ExportGenerateSurveyRecommendations(stats *SurveyStats) []Recommendation {
-	return generateSurveyRecommendations(stats)
 }
 
 // ExportCalculateSurveyStats exports calculateSurveyStats for testing.
