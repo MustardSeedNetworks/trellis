@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.67](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.66...v0.2.67) (2026-09-15)
+
+
+### Miscellaneous
+
+* **auth,ci:** rate-limit refresh, gate generated-code drift, fix two stale comments ([#492](https://github.com/MustardSeedNetworks/trellis/issues/492)) ([88ae30e](https://github.com/MustardSeedNetworks/trellis/commit/88ae30ec0a3b9e9162d3e2db7327afe522e3b542))
+
 ## [0.2.66](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.65...v0.2.66) (2026-09-15)
 
 
