@@ -37,7 +37,7 @@ export function HelpDrawer({
       className="fixed inset-y-0 left-auto right-0 m-0 h-dvh max-h-none w-full max-w-md border-l border-hairline bg-surface-base p-6 text-text-primary shadow-xl backdrop:bg-scrim/60"
     >
       <div className="flex items-start justify-between gap-4">
-        <h2 id={titleId} className="heading-2 font-display">
+        <h2 id={titleId} className="font-display text-lg font-semibold">
           {t('accessibility.helpTitle', { title })}
         </h2>
         <button
