@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, Route, Routes } from 'react-router';
+import { Link, Route, Routes, useLocation } from 'react-router';
 import { type PageConfig, usePages } from '@/pageRegistry';
+import { HelpDrawer } from '@/ui/HelpDrawer';
 import { PageHeader } from '@/ui/PageHeader';
 import { Sidebar } from '@/ui/Sidebar';
 
@@ -18,18 +19,39 @@ import { Sidebar } from '@/ui/Sidebar';
  */
 export function App() {
   const pages = usePages();
+  const { t } = useTranslation('common');
+  const { pathname } = useLocation();
+  const path = pathname.replace(/\/+$/, '') || '/';
+  const page = pages.find((entry) => entry.path === path);
+  const [helpPath, setHelpPath] = useState<string | null>(null);
+  const title = page?.title ?? t('emptyState.notFoundTitle');
+
+  useEffect(() => {
+    setHelpPath((openPath) => (openPath === path ? openPath : null));
+  }, [path]);
+
+  useEffect(() => {
+    document.title = `${title} | Trellis`;
+  }, [title]);
 
   return (
     <div className="flex h-screen bg-surface-base text-text-primary">
+      <a
+        href="#main-content"
+        data-testid="skip-to-content"
+        className="fixed left-2 top-0 z-50 -translate-y-full rounded bg-surface-raised p-3 focus:translate-y-2"
+      >
+        {t('accessibility.skipToContent')}
+      </a>
       <Sidebar version={__APP_VERSION__} />
-      <main className="flex flex-1 flex-col overflow-hidden">
+      <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col overflow-hidden">
         <Routes>
           {pages.map((page) => (
             <Route
               key={page.path}
               path={page.path}
               element={
-                <PageWithHeader page={page}>
+                <PageWithHeader page={page} onHelp={() => setHelpPath(page.path)}>
                   <page.component />
                 </PageWithHeader>
               }
@@ -38,6 +60,9 @@ export function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
+      {page && helpPath === path ? (
+        <HelpDrawer title={page.title} content={page.help} onClose={() => setHelpPath(null)} />
+      ) : null}
     </div>
   );
 }
@@ -48,7 +73,15 @@ export function App() {
  * band above the scrolling content, which is why trellis wraps the header
  * rather than stacking it with the page like the siblings do.
  */
-function PageWithHeader({ page, children }: { page: PageConfig; children: ReactNode }) {
+function PageWithHeader({
+  page,
+  children,
+  onHelp,
+}: {
+  page: PageConfig;
+  children: ReactNode;
+  onHelp: () => void;
+}) {
   return (
     <>
       <div className="border-b border-hairline px-6 pt-6">
@@ -57,6 +90,7 @@ function PageWithHeader({ page, children }: { page: PageConfig; children: ReactN
           eyebrow={page.eyebrow}
           title={page.title}
           description={page.description}
+          onHelp={onHelp}
         />
       </div>
       <Suspense fallback={<PageLoading />}>{children}</Suspense>

@@ -28,6 +28,19 @@ beforeEach(() => localStorage.clear());
 afterEach(() => setViewportNarrow(false));
 
 describe('Sidebar at phone width', () => {
+  it('names every collapsed link without relying on a native title tooltip', async () => {
+    const user = userEvent.setup();
+    setViewportNarrow(true);
+    renderSidebar();
+    for (const name of ['Surveys', 'Import', 'Coverage', 'Live', 'Reports']) {
+      const link = screen.getByRole('link', { name });
+      expect(link).not.toHaveAttribute('title');
+      await user.hover(link);
+      expect(screen.getByRole('tooltip')).toHaveTextContent(name);
+      await user.unhover(link);
+    }
+  });
+
   it('collapses without recording a preference the operator never set', () => {
     setViewportNarrow(true);
 

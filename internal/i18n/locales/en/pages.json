@@ -36,6 +36,11 @@
     "zoomOut": "Zoom out",
     "zoomReset": "Reset zoom to fit"
   },
+  "help": {
+    "coverage": "RSSI measures signal strength; SNR measures how far the signal is above the noise. The threshold marks measured regions below the selected signal or noise-margin level.",
+    "import": "Import an AirMapper archive to create a survey ready to plot.",
+    "surveys": "A survey holds one or more floors. Walk a floor and mark your position on its plan to capture Wi-Fi samples. Coverage and Reports use those samples to show what you measured."
+  },
   "import": {
     "archive": "Survey file",
     "chooseDifferentFile": "Choose a different file",

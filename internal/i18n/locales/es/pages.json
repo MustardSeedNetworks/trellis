@@ -36,6 +36,11 @@
     "zoomOut": "Alejar",
     "zoomReset": "Restablecer el zoom para ajustar"
   },
+  "help": {
+    "coverage": "RSSI mide la intensidad de la señal; SNR mide cuánto supera la señal al ruido. El umbral marca las regiones medidas que están por debajo del nivel de señal o margen sobre el ruido seleccionado.",
+    "import": "Importe un archivo AirMapper para crear un estudio listo para representar.",
+    "surveys": "Un estudio contiene una o más plantas. Recorra una planta y marque su posición en el plano para capturar muestras de Wi-Fi. Cobertura e Informes usan esas muestras para mostrar lo que midió."
+  },
   "import": {
     "archive": "Archivo del estudio",
     "chooseDifferentFile": "Elegir un archivo distinto",

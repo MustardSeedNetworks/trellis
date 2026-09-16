@@ -22,6 +22,7 @@ import { createElement, type FC, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { iconSizes } from '../constants/sizes';
+import { Tooltip } from './Tooltip';
 
 interface BreadcrumbItem {
   label: string;
@@ -103,7 +104,7 @@ export const PageHeader: FC<PageHeaderProps> = ({
   const { t } = useTranslation('common');
 
   return (
-    <div className={`mb-section animate-fade-in ${className}`}>
+    <div className={`mb-section ${className}`}>
       {breadcrumbs && breadcrumbs.length > 0 && (
         <Breadcrumb items={breadcrumbs} className="mb-heading" />
       )}
@@ -130,15 +131,23 @@ export const PageHeader: FC<PageHeaderProps> = ({
           ) : null}
           {actions}
           {onHelp ? (
-            <button
-              type="button"
-              onClick={onHelp}
-              aria-label={t('accessibility.openHelp', { title })}
-              title={t('accessibility.whatIs', { title })}
-              className="rounded-full p-1.5 text-text-muted hover:bg-surface-hover hover:text-text-primary"
-            >
-              <HelpCircle className={iconSizes.lg} />
-            </button>
+            <Tooltip content={t('accessibility.whatIs', { title })}>
+              {(tooltip) => (
+                <button
+                  {...tooltip}
+                  type="button"
+                  data-testid="page-help-open"
+                  onClick={(event) => {
+                    event.currentTarget.focus();
+                    onHelp();
+                  }}
+                  aria-label={t('accessibility.openHelp', { title })}
+                  className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-text-muted hover:bg-surface-hover hover:text-text-primary"
+                >
+                  <HelpCircle aria-hidden="true" className={iconSizes.lg} />
+                </button>
+              )}
+            </Tooltip>
           ) : null}
         </div>
       </div>
