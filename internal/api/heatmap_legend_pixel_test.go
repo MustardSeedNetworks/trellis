@@ -97,9 +97,13 @@ func TestLegendSwatchIsTheColourOnTheMap(t *testing.T) {
 	b := decoded.Bounds()
 	// Inside the sampled region but clear of the sample markers, which the
 	// default config draws and which paint their own colour.
-	px, ok := decoded.At(b.Min.X+b.Dx()/4, b.Min.Y+b.Dy()/4).(color.NRGBA)
+	//
+	// Converted rather than asserted: png.Encode writes a no-alpha chunk when
+	// every pixel is opaque, which decodes to *image.RGBA, so a future opacity
+	// of 255 would fail this on a type rather than on a colour.
+	px, ok := color.NRGBAModel.Convert(decoded.At(b.Min.X+b.Dx()/4, b.Min.Y+b.Dy()/4)).(color.NRGBA)
 	if !ok {
-		t.Fatalf("heatmap pixel is %T, want color.NRGBA", decoded.At(b.Min.X+b.Dx()/4, b.Min.Y+b.Dy()/4))
+		t.Fatal("colour model conversion did not yield color.NRGBA")
 	}
 	if px.A == 0 {
 		t.Fatal("probed heatmap pixel is fully transparent — nothing was painted there")

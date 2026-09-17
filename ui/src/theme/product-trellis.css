@@ -17,7 +17,7 @@
  * The heatmap ramp is deliberately NOT here. It is data, not brand, and the
  * server paints it: core/survey/colorscale.go colours every cell of the PNG
  * and the same scale travels to the client as GetHeatmapResponse.legend, so
- * the map and its key are one object. A --color-rssi-* set in this file could
+ * the map and its key are one object. An RSSI token set in this file could
  * only ever be a second copy free to drift, and a copy that varies by theme
  * could not even be the live one, because the PNG is painted before anything
  * knows whether it will be shown light or dark. The ramp's own colours are
