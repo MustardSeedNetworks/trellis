@@ -40,7 +40,7 @@ i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    resources: resources as Parameters<typeof i18n.init>[0]['resources'],
+    resources,
     fallbackLng: 'en',
     defaultNS: defaultNs,
     ns: namespaces,
