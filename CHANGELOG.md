@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.74](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.73...v0.2.74) (2026-09-17)
+
+
+### Bug Fixes
+
+* **deps:** update frontend toolchain ([#517](https://github.com/MustardSeedNetworks/trellis/issues/517)) ([7625698](https://github.com/MustardSeedNetworks/trellis/commit/7625698c5748ae1c7f775d532779dd997aa919ec))
+* **ui:** desktop clarity and density pass ([#515](https://github.com/MustardSeedNetworks/trellis/issues/515)) ([#516](https://github.com/MustardSeedNetworks/trellis/issues/516)) ([270a632](https://github.com/MustardSeedNetworks/trellis/commit/270a63296ad8f9cb643c719063a55d07a684e09e))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#518](https://github.com/MustardSeedNetworks/trellis/issues/518)) ([ac4fcf1](https://github.com/MustardSeedNetworks/trellis/commit/ac4fcf184a5208d49b7d0eab7df4849ecaec16e5))
+
 ## [0.2.73](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.72...v0.2.73) (2026-09-17)
 
 
