@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.75](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.74...v0.2.75) (2026-09-17)
+
+
+### Bug Fixes
+
+* **ci:** only arm the release PR when it still describes main ([#525](https://github.com/MustardSeedNetworks/trellis/issues/525)) ([8ab4027](https://github.com/MustardSeedNetworks/trellis/commit/8ab40273297b5f87f8db5e490ecdcd11cf582118)), closes [#524](https://github.com/MustardSeedNetworks/trellis/issues/524)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#526](https://github.com/MustardSeedNetworks/trellis/issues/526)) ([2182478](https://github.com/MustardSeedNetworks/trellis/commit/218247814930cd2a4f71859feaf693621c98067a))
+* **deps:** update dependency @babel/core to v8.0.5 ([#527](https://github.com/MustardSeedNetworks/trellis/issues/527)) ([1c1ce40](https://github.com/MustardSeedNetworks/trellis/commit/1c1ce405f36fe552174e7df122c39cc54bde7b27))
+
 ## [0.2.74](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.73...v0.2.74) (2026-09-17)
 
 
