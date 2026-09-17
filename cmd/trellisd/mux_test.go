@@ -51,7 +51,7 @@ func procedurePath(service protoreflect.ServiceDescriptor, method protoreflect.M
 func callAnonymously(t *testing.T, mux *http.ServeMux, procedure string) (int, string) {
 	t.Helper()
 
-	req := httptest.NewRequest(http.MethodPost, procedure, strings.NewReader("{}"))
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, procedure, strings.NewReader("{}"))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
@@ -135,7 +135,7 @@ func TestGatedMuxLeavesTheUnauthenticatedRoutesOpen(t *testing.T) {
 		{http.MethodGet, "/healthz"},
 	} {
 		rec := httptest.NewRecorder()
-		mux.ServeHTTP(rec, httptest.NewRequest(route.method, route.path, nil))
+		mux.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), route.method, route.path, nil))
 		if rec.Code != http.StatusOK {
 			t.Errorf("anonymous %s %s = %d, want 200", route.method, route.path, rec.Code)
 		}
@@ -144,7 +144,7 @@ func TestGatedMuxLeavesTheUnauthenticatedRoutesOpen(t *testing.T) {
 	// /auth/login is reachable without a session; it refuses these credentials
 	// rather than the caller's lack of one.
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/auth/login", strings.NewReader(`{"username":"surveyor","password":"wrong"}`))
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/auth/login", strings.NewReader(`{"username":"surveyor","password":"wrong"}`))
 	mux.ServeHTTP(rec, req)
 	if rec.Code != http.StatusUnauthorized {
 		t.Errorf("anonymous POST /auth/login with a bad password = %d, want 401", rec.Code)
