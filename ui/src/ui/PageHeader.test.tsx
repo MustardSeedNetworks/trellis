@@ -46,8 +46,11 @@ describe('PageHeader', () => {
     expect(screen.getByRole('button', { name: 'Pause' })).toBeInTheDocument();
     expect(screen.getByText('Neighbour APs in range')).toBeInTheDocument();
     // The icon is decorative; it is the one prop with no accessible name, so
-    // it is checked as the drawing it is.
-    expect(container.querySelector('svg.h-8')).not.toBeNull();
+    // it is checked as the drawing it is. h-6 since the density pass stepped
+    // the header down a rung (UI-TRL-13); the size is asserted rather than
+    // just the presence of an svg because the header also draws the help and
+    // chevron glyphs, and matching any svg would pass with the icon gone.
+    expect(container.querySelector('svg.h-6')).not.toBeNull();
   });
 
   it('links the breadcrumbs that have somewhere to go and not the one that does not', () => {

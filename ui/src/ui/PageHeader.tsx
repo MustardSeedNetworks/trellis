@@ -104,13 +104,13 @@ export const PageHeader: FC<PageHeaderProps> = ({
   const { t } = useTranslation('common');
 
   return (
-    <div className={`mb-section ${className}`}>
+    <div className={`mb-content ${className}`} data-testid="page-header">
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <Breadcrumb items={breadcrumbs} className="mb-heading" />
+        <Breadcrumb items={breadcrumbs} className="mb-tight" />
       )}
-      <div className="flex flex-wrap items-start justify-between gap-comfortable">
+      <div className="flex flex-wrap items-start justify-between gap-default">
         <div className="flex items-center gap-default">
-          {icon ? createElement(icon, { className: `h-8 w-8 ${iconColorClass}` }) : null}
+          {icon ? createElement(icon, { className: `h-6 w-6 ${iconColorClass}` }) : null}
           <div>
             {eyebrow ? (
               <p className="kicker mb-1" data-testid="page-header-eyebrow">

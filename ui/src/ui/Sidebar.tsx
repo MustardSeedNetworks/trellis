@@ -3,7 +3,7 @@
  *
  * Shared shell pattern, kept visually and behaviourally consistent across
  * seed / stem / niac / trellis by convention; each repo owns its own copy (no
- * master, no sync). SHELL.md carries the conventions this implements: 252px on
+ * master, no sync). SHELL.md carries the conventions this implements: 224px on
  * the rail gradient, a two-character monogram chip, .kicker group labels, and
  * nav items at 44px with an 11px radius and a 3px active bar.
  *
@@ -54,7 +54,7 @@ export const Sidebar: FC<SidebarProps> = ({ version }) => {
     <aside
       data-testid="sidebar"
       className={`flex h-full flex-col border-r border-hairline bg-gradient-to-b from-rail-from to-rail-to transition-all duration-300 ease-in-out motion-reduce:transition-none ${
-        collapsed ? 'w-16 shrink-0' : 'w-[252px] shrink-0'
+        collapsed ? 'w-16 shrink-0' : 'w-56 shrink-0'
       }`}
     >
       {/* Brand lockup. Two characters, never one: "T" for Stem and "R" for
@@ -142,7 +142,7 @@ export const Sidebar: FC<SidebarProps> = ({ version }) => {
 
         <SignOutButton collapsed={collapsed} />
 
-        {/* Not offered on a phone: expanding to 252px there leaves 138px of
+        {/* Not offered on a phone: expanding to 224px there leaves 166px of
             page, which is the defect this rail was fixed for. */}
         {!narrow ? (
           <Tooltip

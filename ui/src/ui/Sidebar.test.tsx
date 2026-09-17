@@ -61,7 +61,7 @@ describe('Sidebar at phone width', () => {
   it('keeps an expanded rail on a desktop that has never been collapsed', () => {
     renderSidebar();
 
-    expect(screen.getByTestId('sidebar').className).toContain('w-[252px]');
+    expect(screen.getByTestId('sidebar').className).toContain('w-56');
     expect(screen.getByTestId('sidebar-collapse')).toBeInTheDocument();
   });
 

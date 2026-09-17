@@ -94,7 +94,13 @@ export function SurveysPage() {
         {selectedSurvey ? (
           <SurveyDetail survey={selectedSurvey} onDeleted={() => setSelectedId(undefined)} />
         ) : (
-          <div className="panel flex flex-1 items-center justify-center text-sm text-text-muted">
+          /* Not stretched to the full height of the row. With nothing
+             selected there is one sentence to show, and a full-height bordered
+             box holding it reads as a pane that failed to load rather than as
+             an invitation — the same dead-panel shape the density pass removed
+             from stem's idle results card (UI-TRL-13). `md:self-start` lets it
+             size to its content; the space below is page, not an empty box. */
+          <div className="panel flex flex-1 items-center justify-center p-6 text-sm text-text-muted md:self-start">
             {t('pages:surveys.selectPrompt')}
           </div>
         )}
