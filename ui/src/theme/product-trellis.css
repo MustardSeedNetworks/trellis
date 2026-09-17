@@ -14,10 +14,14 @@
  * light #983970 carries white at 6.66:1, dark #d774ad carries the dark ink at
  * 6.02:1 and reads 6.02:1 against the page.
  *
- * The heatmap ramp is data, not brand: it must stay a single perceptual
- * sequence and must never be re-skinned to the anchor. Named here so the
- * scale has one definition rather than one per chart. (The ramp itself is
- * UI-TRL-9's; this file only moved the anchor.)
+ * The heatmap ramp is deliberately NOT here. It is data, not brand, and the
+ * server paints it: core/survey/colorscale.go colours every cell of the PNG
+ * and the same scale travels to the client as GetHeatmapResponse.legend, so
+ * the map and its key are one object. An RSSI token set in this file could
+ * only ever be a second copy free to drift, and a copy that varies by theme
+ * could not even be the live one, because the PNG is painted before anything
+ * knows whether it will be shown light or dark. The ramp's own colours are
+ * UI-TRL-9's; this file only carries the anchor.
  *
  * brand-gold is gone: the canonical shared theme owns it as --color-accent-gold
  * now, so the value is one fleet decision rather than four identical copies.
@@ -30,15 +34,6 @@
   --color-on-brand: #ffffff;
   --color-on-danger: #ffffff;
   --color-on-success: #ffffff;
-
-  /* RSSI ramp, strong → weak. −40 dBm to −85 dBm. */
-  --color-rssi-1: #2f7d4f;
-  --color-rssi-2: #4f9a5c;
-  --color-rssi-3: #86bd6e;
-  --color-rssi-4: #c9c268;
-  --color-rssi-5: #d99b3f;
-  --color-rssi-6: #c65a3f;
-  --color-rssi-gap: #b93a3a;
 }
 
 .dark {
@@ -48,12 +43,4 @@
   --color-on-brand: #08100c;
   --color-on-danger: #08100c;
   --color-on-success: #08100c;
-
-  --color-rssi-1: #3f9a5c;
-  --color-rssi-2: #62c48d;
-  --color-rssi-3: #b9d47a;
-  --color-rssi-4: #f5c451;
-  --color-rssi-5: #e88a4e;
-  --color-rssi-6: #e0704f;
-  --color-rssi-gap: #ef6b73;
 }
