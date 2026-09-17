@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.77](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.76...v0.2.77) (2026-09-17)
+
+
+### Features
+
+* **i18n:** type trellis translation keys via CustomTypeOptions ([#533](https://github.com/MustardSeedNetworks/trellis/issues/533)) ([dd5358d](https://github.com/MustardSeedNetworks/trellis/commit/dd5358d9d072d72c730d76e9096d2b87bc56dcbb))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#534](https://github.com/MustardSeedNetworks/trellis/issues/534)) ([1355e8d](https://github.com/MustardSeedNetworks/trellis/commit/1355e8d2f94af42c41cb486723894e91ba81fa02))
+
 ## [0.2.76](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.75...v0.2.76) (2026-09-17)
 
 
