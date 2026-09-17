@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.73](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.72...v0.2.73) (2026-09-17)
+
+
+### Bug Fixes
+
+* **ui:** one RSSI ramp definition — delete the dead token set ([#512](https://github.com/MustardSeedNetworks/trellis/issues/512)) ([d2525dd](https://github.com/MustardSeedNetworks/trellis/commit/d2525dd9126f53cc4133eef5c088029b456febc4))
+* **ui:** put the legend on screen with the map, and say what it plots ([#511](https://github.com/MustardSeedNetworks/trellis/issues/511)) ([a261447](https://github.com/MustardSeedNetworks/trellis/commit/a26144742b29fa4957776031605d3a768afd7563)), closes [#476](https://github.com/MustardSeedNetworks/trellis/issues/476)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#513](https://github.com/MustardSeedNetworks/trellis/issues/513)) ([1712dd0](https://github.com/MustardSeedNetworks/trellis/commit/1712dd06ae086fb51475519f458a1157e44e6875))
+
 ## [0.2.72](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.71...v0.2.72) (2026-09-16)
 
 
