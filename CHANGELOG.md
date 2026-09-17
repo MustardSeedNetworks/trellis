@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.76](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.75...v0.2.76) (2026-09-17)
+
+
+### Code Refactoring
+
+* **trellisd:** extract newMux and assert the auth composition ([#530](https://github.com/MustardSeedNetworks/trellis/issues/530)) ([2e72a54](https://github.com/MustardSeedNetworks/trellis/commit/2e72a54ea5b496173d4ba9527473052ad2339a9d))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#529](https://github.com/MustardSeedNetworks/trellis/issues/529)) ([e4691a6](https://github.com/MustardSeedNetworks/trellis/commit/e4691a6446e7235da38151a1eaa2dcbac01c725c))
+
 ## [0.2.75](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.74...v0.2.75) (2026-09-17)
 
 
