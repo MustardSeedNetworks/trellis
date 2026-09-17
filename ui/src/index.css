@@ -69,8 +69,13 @@
  * index.css claims a component copied from a sibling compiles here unchanged
  * and that claim has to be true rather than aspirational. */
 @layer components {
+  /* Stepped down one rung (was 24px, 30px at sm) in the desktop density pass:
+   * a 30px bold title above a 14px description read as a banner rather than a
+   * heading, and cost the page a line of height on every route (UI-TRL-13).
+   * stem and NIAC took the same step, so the fleet keeps one page-title scale.
+   * Weight, tracking and colour are the design language and are unchanged. */
   .heading-1 {
-    font-size: 1.5rem; /* 24px */
+    font-size: 1.25rem; /* 20px */
     font-weight: 700;
     line-height: 1.25;
     letter-spacing: -0.025em;
@@ -95,8 +100,16 @@
     gap: 1rem; /* 16px */
   }
 
+  .mb-tight {
+    margin-bottom: 0.25rem; /* 4px — labels and breadcrumbs */
+  }
+
   .mb-heading {
     margin-bottom: 0.75rem; /* 12px — after a heading */
+  }
+
+  .mb-content {
+    margin-bottom: 1rem; /* 16px — after a content block */
   }
 
   .mb-section {
@@ -108,10 +121,12 @@
   }
 }
 
-/* seed widens heading-1 at the sm breakpoint; kept out of the component layer
- * above so the media query is visible rather than buried in a shared @apply. */
+/* The siblings widen heading-1 at the sm breakpoint; kept out of the component
+ * layer above so the media query is visible rather than buried in a shared
+ * @apply. Both figures stepped down one rung with the density pass, matching
+ * stem's and NIAC's text-xl sm:text-2xl (UI-TRL-13). */
 @media (min-width: 40rem) {
   .heading-1 {
-    font-size: 1.875rem; /* 30px */
+    font-size: 1.5rem; /* 24px */
   }
 }
