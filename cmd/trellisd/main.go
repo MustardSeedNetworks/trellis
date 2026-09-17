@@ -15,9 +15,7 @@ import (
 	"syscall"
 	"time"
 
-	"connectrpc.com/connect"
 	"github.com/MustardSeedNetworks/trellis/core/survey"
-	"github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1/surveyv1connect"
 	"github.com/MustardSeedNetworks/trellis/internal/api"
 	"github.com/MustardSeedNetworks/trellis/internal/apppaths"
 	"github.com/MustardSeedNetworks/trellis/internal/auth"
@@ -120,32 +118,19 @@ func run() error {
 	// devices: every RPC is authenticated and CSRF-checked, and the listener
 	// gets TLS below. Without one the handler is registered bare and the bind
 	// gate has already confined it to loopback.
-	options := []connect.HandlerOption{connect.WithReadMaxBytes(maxUploadBytes)}
 	var gate *auth.Gate
 	if credential.Configured() {
 		if gate, err = auth.NewGate(credential); err != nil {
 			return err
 		}
 		defer gate.Close()
-		options = append(options, connect.WithInterceptors(gate.Interceptor()))
 	}
-
-	mux := http.NewServeMux()
-	path, handler := surveyv1connect.NewSurveyServiceHandler(surveyHandler, options...)
-	mux.Handle(path, handler)
-	if gate != nil {
-		gate.RegisterRoutes(mux)
-	}
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-	mux.HandleFunc("/__version", api.HandleBuildVersion)
 
 	uiHandler, err := api.UIHandler()
 	if err != nil {
 		return err
 	}
-	mux.Handle("/", uiHandler)
+	mux := newMux(muxDeps{survey: surveyHandler, gate: gate, ui: uiHandler})
 
 	// Serve HTTP/2 over plain-text (h2c) so local/dev clients can speak
 	// gRPC or Connect without TLS, alongside HTTP/1.1 for connect-web/JSON.
