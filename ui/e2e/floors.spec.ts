@@ -42,7 +42,7 @@ test('adds a floor, walks it, and lists both floors on Coverage', async ({ page 
   await expect(page.getByTestId('capture-pin')).toHaveCount(1);
 
   // The point is on the mezzanine, not on the floor the survey opened with.
-  await expect(page.getByTestId('capture-count')).toHaveText('1 point on this floor');
+  await expect(page.getByTestId('capture-count')).toHaveText('1 sample on this floor');
   await expect(rows.nth(1)).toContainText('1 sample');
   await expect(rows.nth(0)).toContainText('0 samples');
 

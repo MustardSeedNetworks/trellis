@@ -25,12 +25,15 @@ import type { RollupState } from '@/ui/StatusRollup';
  * but no RPC reaches them, so offering them here would promise a picture the
  * product cannot draw.
  */
-/* Not translated, and not an oversight: RSSI, SNR, dBm and dB are glossary
-   terms the gate requires verbatim in every locale. */
+/* RSSI, SNR, dBm, dB and Mbps are glossary terms the gate requires verbatim in
+   every locale, so they are not translated and that is not an oversight. The
+   throughput layer has no glossary name: "Download" alone read as a file
+   action rather than as the layer being plotted (trellis#476), so it carries
+   ordinary English copy from the catalogue instead. */
 const METRICS = [
-  { id: 'rssi', label: 'RSSI', unit: 'dBm' },
-  { id: 'snr', label: 'SNR', unit: 'dB' },
-  { id: 'download', label: 'Download', unit: 'Mbps' },
+  { id: 'rssi', glossary: 'RSSI', unit: 'dBm' },
+  { id: 'snr', glossary: 'SNR', unit: 'dB' },
+  { id: 'download', glossary: undefined, unit: 'Mbps' },
 ] as const;
 
 /**
@@ -144,7 +147,16 @@ export function CoveragePage() {
   );
 
   return (
-    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
+    /* Bounded where the findings sit BESIDE the map, scrolling everywhere else.
+       Bounded is what keeps the colour key on screen with the map it explains:
+       the surface grew to whatever the floor plan needed and pushed the legend
+       past the fold (trellis#476), and inside a bound the surface is the one
+       thing that gives way. The breakpoint is xl rather than md because below
+       it the findings panel stacks UNDER the map — bounding there only moves
+       the clipping from the legend onto the findings, which was measured at
+       1024x768: their panel ended 118 px past the fold with nothing to
+       scroll. */
+    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6 xl:min-h-0 xl:overflow-hidden">
       {/* A row of controls on a laptop; a stack on a phone. Wrapping alone was
           not enough: a <select> keeps a minimum width from its longest option,
           so a survey with a long name pushed its own label past the panel. Each
@@ -218,7 +230,7 @@ export function CoveragePage() {
                     : 'text-text-secondary hover:bg-surface-hover'
                 }`}
               >
-                {option.label}
+                {option.glossary ?? t('pages:coverage.metricDownload')}
               </button>
             ))}
           </div>
@@ -268,8 +280,8 @@ export function CoveragePage() {
         ) : null}
       </div>
 
-      <div className="grid flex-1 grid-cols-1 items-start gap-6 xl:grid-cols-[1fr_320px]">
-        <section className="panel flex flex-col gap-4 p-5">
+      <div className="grid flex-1 grid-cols-1 items-start gap-6 xl:min-h-0 xl:grid-cols-[1fr_320px]">
+        <section className="panel flex flex-col gap-4 p-5 xl:min-h-0 xl:self-stretch">
           {renderSurface(
             {
               hasSurveys: surveys.length > 0,

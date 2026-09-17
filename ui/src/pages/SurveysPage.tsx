@@ -70,12 +70,10 @@ export function SurveysPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-6 overflow-hidden p-6">
-      <StatusRollup
-        state={state}
-        headline={headline}
-        body={body}
-        figures={[{ label: t('common:labels.surveys'), value: String(surveys.length) }]}
-      />
+      {/* No figures: the headline already counts the surveys, and a "2 SURVEYS"
+          face beside "2 surveys available" read as two quantities that happen
+          to agree rather than as one stated twice (trellis#476). */}
+      <StatusRollup state={state} headline={headline} body={body} />
 
       <CaptureCapabilityNotice />
 

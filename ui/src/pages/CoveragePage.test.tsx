@@ -189,7 +189,7 @@ describe('CoveragePage', () => {
     renderPage();
     await screen.findByTestId('coverage-findings');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Download' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Download speed' }));
 
     await waitFor(() =>
       expect(getHeatmap).toHaveBeenCalledWith(expect.objectContaining({ metric: 'download' })),

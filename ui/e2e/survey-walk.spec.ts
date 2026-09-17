@@ -25,7 +25,7 @@ test('walks a survey and plots coverage from its stored points', async ({ page }
   const row = page.getByTestId('survey-row').filter({ hasText: name });
   await row.click();
   await expect(page.getByTestId('capture-pin')).toHaveCount(3);
-  await expect(page.getByTestId('capture-count')).toHaveText('3 points on this floor');
+  await expect(page.getByTestId('capture-count')).toHaveText('3 samples on this floor');
 
   await page.getByTestId('survey-complete').click();
   await expect(row).toContainText('Completed · 1 floor · 3 samples');

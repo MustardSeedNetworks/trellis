@@ -73,6 +73,18 @@ describe('pageRegistry <-> navGroups', () => {
     }
   });
 
+  /* trellis#476: Surveys was the one page with no subtitle, so its header sat
+     a line shorter than every other page's. The type now requires one, which
+     is the real guard; this asserts the copy behind it resolves. */
+  it('gives every page a subtitle that is copy rather than a raw key', () => {
+    const { result: pages } = renderHook(() => usePages());
+    for (const page of pages.current) {
+      expect(page.description, `${page.path} description`).not.toBe('');
+      expect(page.description, `${page.path} description`).not.toContain('.json');
+      expect(page.description, `${page.path} description`).not.toMatch(/^pages:/);
+    }
+  });
+
   it('resolves titles to copy rather than to raw keys', () => {
     const { result: pages } = renderHook(() => usePages());
     for (const page of pages.current) {
