@@ -46,7 +46,7 @@ GOLANGCI_LINT := $(shell go env GOPATH)/bin/golangci-lint
 # `go install <module>@<version>` form is tracked; `@$(BUF_VERSION)` would be an
 # invisible pin, which the preset's own description calls worse than a floating
 # one. One literal means a Renovate bump cannot leave a stale copy behind.
-BUF_INSTALL := go install github.com/bufbuild/buf/cmd/buf@v1.72.0
+BUF_INSTALL := go install github.com/bufbuild/buf/cmd/buf@v1.73.0
 BUF_VERSION := $(lastword $(subst @, ,$(BUF_INSTALL)))
 BUF := $(shell go env GOPATH)/bin/buf
 
