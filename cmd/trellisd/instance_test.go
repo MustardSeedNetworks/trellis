@@ -81,7 +81,7 @@ func TestSecondDaemonNamesTheFirstDaemonsPort(t *testing.T) {
 	dataDir := t.TempDir()
 	bin := buildDaemon(t)
 
-	first := exec.Command(bin)
+	first := exec.CommandContext(t.Context(), bin)
 	first.Env = daemonEnv(dataDir)
 	stdout, err := first.StdoutPipe()
 	if err != nil {
@@ -142,7 +142,7 @@ func buildDaemon(t *testing.T) string {
 	t.Helper()
 
 	bin := filepath.Join(t.TempDir(), "trellisd")
-	build := exec.Command("go", "build", "-o", bin, ".")
+	build := exec.CommandContext(t.Context(), "go", "build", "-o", bin, ".")
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build trellisd: %v\n%s", err, out)
 	}
