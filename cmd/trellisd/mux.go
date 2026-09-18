@@ -31,13 +31,8 @@ type muxDeps struct {
 // and which routes are deliberately outside it. Inline, nothing could assert
 // any of that without starting the whole daemon, so nothing did (#520).
 func newMux(deps muxDeps) *http.ServeMux {
-	options := []connect.HandlerOption{connect.WithReadMaxBytes(maxUploadBytes)}
-	if deps.gate != nil {
-		options = append(options, connect.WithInterceptors(deps.gate.Interceptor()))
-	}
-
 	mux := http.NewServeMux()
-	path, handler := surveyv1connect.NewSurveyServiceHandler(deps.survey, options...)
+	path, handler := surveyv1connect.NewSurveyServiceHandler(deps.survey, handlerOptions(deps.gate)...)
 	mux.Handle(path, handler)
 	if deps.gate != nil {
 		deps.gate.RegisterRoutes(mux)
@@ -53,4 +48,20 @@ func newMux(deps muxDeps) *http.ServeMux {
 	mux.Handle("/", deps.ui)
 
 	return mux
+}
+
+// handlerOptions is every Connect handler option the daemon serves an RPC
+// with: the upload cap, and the gate's interceptor when there is a gate.
+//
+// It is named rather than inline so that a test can register a test-only
+// procedure behind the same options production uses. That is deliberately the
+// only seam: a test still cannot supply an option set of its own (#520), and a
+// procedure registered through anything else would assert nothing about what
+// the daemon actually serves.
+func handlerOptions(gate *auth.Gate) []connect.HandlerOption {
+	options := []connect.HandlerOption{connect.WithReadMaxBytes(maxUploadBytes)}
+	if gate != nil {
+		options = append(options, connect.WithInterceptors(gate.Interceptor()))
+	}
+	return options
 }

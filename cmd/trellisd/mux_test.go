@@ -3,16 +3,20 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"connectrpc.com/connect"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
 	"github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1/surveyv1connect"
 	"github.com/MustardSeedNetworks/trellis/internal/auth"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // The RPCs are read out of the compiled descriptor rather than listed here, so
@@ -67,6 +71,14 @@ func callAnonymously(t *testing.T, mux *http.ServeMux, procedure string) (int, s
 
 func gatedMux(t *testing.T) *http.ServeMux {
 	t.Helper()
+	mux, _ := gatedMuxAndGate(t)
+	return mux
+}
+
+// gatedMuxAndGate also hands back the gate, which the streaming tests need to
+// register a test-only procedure behind the same options.
+func gatedMuxAndGate(t *testing.T) (*http.ServeMux, *auth.Gate) {
+	t.Helper()
 
 	credential, err := auth.NewCredential("surveyor", "correct-horse-battery-staple")
 	if err != nil {
@@ -82,7 +94,7 @@ func gatedMux(t *testing.T) *http.ServeMux {
 		survey: surveyv1connect.UnimplementedSurveyServiceHandler{},
 		gate:   gate,
 		ui:     http.NotFoundHandler(),
-	})
+	}), gate
 }
 
 // TestGatedMuxRefusesEveryRPCAnonymously is the composition test: it asserts
@@ -148,5 +160,80 @@ func TestGatedMuxLeavesTheUnauthenticatedRoutesOpen(t *testing.T) {
 	mux.ServeHTTP(rec, req)
 	if rec.Code != http.StatusUnauthorized {
 		t.Errorf("anonymous POST /auth/login with a bad password = %d, want 401", rec.Code)
+	}
+}
+
+// testStreamProcedure is a procedure no proto declares. survey.proto is unary
+// throughout, so the streaming half of the composition has nothing to assert
+// against until one exists — and adding a streaming RPC to the product proto
+// to test it would ship an RPC nobody asked for. The message type is
+// google.protobuf.Empty, which needs no generation.
+const testStreamProcedure = "/trellis.test.v1.StreamService/Stream"
+
+// handleTestStream registers that procedure on mux behind handlerOptions, the
+// option set newMux serves the survey service with. Registering it any other
+// way would prove only that an interceptor handed to a handler runs.
+func handleTestStream(mux *http.ServeMux, gate *auth.Gate) {
+	handler := connect.NewServerStreamHandler(
+		testStreamProcedure,
+		func(context.Context, *connect.Request[emptypb.Empty], *connect.ServerStream[emptypb.Empty]) error {
+			// The same oracle the unary control uses: reaching the handler is
+			// what "unimplemented" proves.
+			return connect.NewError(connect.CodeUnimplemented, errors.New("test stream"))
+		},
+		handlerOptions(gate)...,
+	)
+	mux.Handle(testStreamProcedure, handler)
+}
+
+// callStreamAnonymously calls it with a real Connect client over a real
+// server. A streaming RPC answers HTTP 200 and carries its error in the
+// end-stream envelope, so the unary helper's status assertion does not
+// transfer and neither does its hand-written JSON body.
+func callStreamAnonymously(t *testing.T, mux *http.ServeMux) error {
+	t.Helper()
+
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
+
+	client := connect.NewClient[emptypb.Empty, emptypb.Empty](server.Client(), server.URL+testStreamProcedure)
+	stream, err := client.CallServerStream(t.Context(), connect.NewRequest(&emptypb.Empty{}))
+	if err != nil {
+		return err
+	}
+	defer func() { _ = stream.Close() }()
+	// Drain it; the stream error is what is asserted.
+	for stream.Receive() {
+	}
+	return stream.Err()
+}
+
+// TestGatedMuxRefusesAStreamingRPCAnonymously is the streaming half of the
+// composition test. connect.UnaryInterceptorFunc implements the streaming
+// halves of connect.Interceptor as no-ops, so a gate built from one leaves the
+// first streaming RPC served with no authentication at all (#521).
+func TestGatedMuxRefusesAStreamingRPCAnonymously(t *testing.T) {
+	mux, gate := gatedMuxAndGate(t)
+	handleTestStream(mux, gate)
+
+	err := callStreamAnonymously(t, mux)
+	if got := connect.CodeOf(err); got != connect.CodeUnauthenticated {
+		t.Errorf("anonymous streaming RPC = %v (%v), want unauthenticated", got, err)
+	}
+}
+
+// TestUngatedMuxServesAStreamingRPCAnonymously is its control: without it the
+// assertion above could hold because the procedure is unreachable rather than
+// because the gate refused it.
+func TestUngatedMuxServesAStreamingRPCAnonymously(t *testing.T) {
+	mux := newMux(muxDeps{
+		survey: surveyv1connect.UnimplementedSurveyServiceHandler{},
+		ui:     http.NotFoundHandler(),
+	})
+	handleTestStream(mux, nil)
+
+	err := callStreamAnonymously(t, mux)
+	if got := connect.CodeOf(err); got != connect.CodeUnimplemented {
+		t.Errorf("streaming RPC on the loopback daemon = %v (%v), want unimplemented", got, err)
 	}
 }

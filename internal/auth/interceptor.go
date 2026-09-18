@@ -20,15 +20,49 @@ import (
 // CSRF is checked on every RPC, not only on the mutating ones. Connect carries
 // reads and writes over the same POST, so there is no method to discriminate on
 // and no reason to leave the read path as the exception.
-func (g *Gate) Interceptor() connect.UnaryInterceptorFunc {
-	return func(next connect.UnaryFunc) connect.UnaryFunc {
-		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
-			if _, err := g.Authenticate(req.Header(), req.Peer().Addr); err != nil {
-				return nil, refusal(err)
-			}
-			return next(ctx, req)
+// It implements the whole of connect.Interceptor rather than returning a
+// connect.UnaryInterceptorFunc, whose streaming halves are no-ops: survey.proto
+// is unary throughout today, so such a gate looks correct and would serve the
+// first streaming RPC with no authentication at all (#521). The check belongs
+// to the transport, not to the shape of the call.
+func (g *Gate) Interceptor() connect.Interceptor {
+	return interceptor{gate: g}
+}
+
+// interceptor is the gate as a connect.Interceptor.
+type interceptor struct {
+	gate *Gate
+}
+
+// WrapUnary authenticates a unary RPC before its handler runs.
+func (i interceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
+	return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
+		if _, err := i.gate.Authenticate(req.Header(), req.Peer().Addr); err != nil {
+			return nil, refusal(err)
 		}
+		return next(ctx, req)
 	}
+}
+
+// WrapStreamingHandler authenticates a streaming RPC from the headers of the
+// request that opened the stream, before any message is read or the handler
+// runs. A stream is authenticated once, at that point: its credentials cannot
+// change mid-stream, and a session that expires while it is open is a lifetime
+// question this gate does not answer for unary calls either.
+func (i interceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
+	return func(ctx context.Context, conn connect.StreamingHandlerConn) error {
+		if _, err := i.gate.Authenticate(conn.RequestHeader(), conn.Peer().Addr); err != nil {
+			return refusal(err)
+		}
+		return next(ctx, conn)
+	}
+}
+
+// WrapStreamingClient passes through. The gate authenticates callers of this
+// daemon; nothing here is a Connect client, and a server-side credential check
+// has no meaning on an outbound call.
+func (i interceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
+	return next
 }
 
 // refusal maps an authentication failure to a Connect code, without saying
