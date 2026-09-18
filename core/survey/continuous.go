@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/MustardSeedNetworks/foundation/pkg/supervise"
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
 )
 
@@ -65,12 +66,22 @@ type CaptureStatus struct {
 // about once a second until somebody reads the log.
 const captureFailureLimit = 3
 
+// captureRestartLimit is how many times a panicking capture loop is restarted
+// before the walk is given up on.
+//
+// A panic is a bug, not a radio that was busy, so this is not captureFailureLimit
+// by another name: the point is that one faulting sweep does not end a building
+// walk or take the daemon with it, while a loop that cannot get through a sweep
+// at all stops and says so instead of restarting forever.
+const captureRestartLimit = 3
+
 // continuousCapture is one survey's running capture loop.
+//
+// The loop runs under its own supervisor rather than a bare goroutine: it is
+// the longest-lived goroutine in the product, and a panic beneath Scan used to
+// take the daemon down mid-walk (D-TRL-6).
 type continuousCapture struct {
-	cancel context.CancelFunc
-	// done closes when the goroutine has returned, so a stop is observable
-	// rather than merely requested.
-	done chan struct{}
+	group *supervise.Group
 
 	mu        sync.Mutex
 	pos       Position
@@ -179,10 +190,8 @@ func (m *Manager) StartContinuousCapture(surveyID string, x, y int) error {
 		return m.persistSurvey(s)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
 	capture := &continuousCapture{
-		cancel:   cancel,
-		done:     make(chan struct{}),
+		group:    supervise.New(nil),
 		pos:      Position{X: x, Y: y},
 		markedAt: time.Now(),
 		running:  true,
@@ -192,8 +201,30 @@ func (m *Manager) StartContinuousCapture(surveyID string, x, y int) error {
 	}
 	m.captures[surveyID] = capture
 
-	go m.captureLoop(ctx, surveyID, capture)
+	capture.group.Add("capture-"+surveyID, supervise.RestartN(captureRestartLimit),
+		func(ctx context.Context) error {
+			m.captureLoop(ctx, surveyID, capture)
+			return nil
+		})
+	capture.group.Start(context.Background())
+	go m.recordSupervisorGaveUp(surveyID, capture)
 	return nil
+}
+
+// recordSupervisorGaveUp marks a capture stopped when the supervisor ran out of
+// restarts, so the walk reads the same as one the radio killed.
+//
+// Without it the loop is gone and the survey still reports Running: pins stop
+// appearing and nothing on screen says why, which this package already names as
+// the worst of the outcomes.
+func (m *Manager) recordSupervisorGaveUp(surveyID string, capture *continuousCapture) {
+	err := capture.group.Wait()
+	if err == nil {
+		return
+	}
+	slog.Error("continuous capture stopped: the capture loop kept panicking",
+		"survey", surveyID, "restarts", captureRestartLimit, "error", err)
+	m.captureEnded(capture, err.Error())
 }
 
 // StopContinuousCapture ends a survey's capture loop and waits for it to
@@ -214,8 +245,12 @@ func (m *Manager) StopContinuousCapture(surveyID string) {
 	if !ok {
 		return
 	}
-	capture.cancel()
-	<-capture.done
+	// Background rather than a deadline: the caller's next act is usually to
+	// complete the survey or close the store, and a sweep still in flight would
+	// write into it afterwards.
+	if err := capture.group.Stop(context.Background()); err != nil {
+		slog.Warn("stopping continuous capture", "survey", surveyID, "error", err)
+	}
 }
 
 // CapturingAt reports a survey's capture loop — where it is sampling, whether
@@ -258,8 +293,6 @@ func (m *Manager) stopEveryCapture() {
 // *sample* is different: it means the survey stopped accepting them, and there
 // is nothing left for the loop to do.
 func (m *Manager) captureLoop(ctx context.Context, surveyID string, capture *continuousCapture) {
-	defer close(capture.done)
-
 	failures := 0
 	for {
 		at := capture.position()
