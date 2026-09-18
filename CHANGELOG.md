@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.79](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.78...v0.2.79) (2026-09-18)
+
+
+### Features
+
+* **trellisd:** adopt foundation pkg/httpserver for the listener ([#540](https://github.com/MustardSeedNetworks/trellis/issues/540)) ([2edcfc7](https://github.com/MustardSeedNetworks/trellis/commit/2edcfc753fb7d8192b5ecabeb130cba893e77f5c))
+
+
+### Continuous Integration
+
+* run the Windows and macOS backend jobs once per change, in the merge group ([#543](https://github.com/MustardSeedNetworks/trellis/issues/543)) ([d3d64f5](https://github.com/MustardSeedNetworks/trellis/commit/d3d64f5abb00aec9081c179fca7ba4bf3e891e73)), closes [#542](https://github.com/MustardSeedNetworks/trellis/issues/542)
+
 ## [0.2.78](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.77...v0.2.78) (2026-09-18)
 
 
