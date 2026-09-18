@@ -283,11 +283,18 @@ jobs:
   # allocated. A wrong struct offset there does not fail loudly — every field
   # after it is read from the wrong bytes — so the layout test has to run on a
   # real Windows ABI, not be inferred from a cross-compile.
+  #
+  # Not run on `pull_request`: the merge queue rebuilds every PR before it
+  # lands, so a PR push and the merge group ran this same job twice for one
+  # change. `CI Complete` is the required check and reports on both events, so
+  # the merge-group run is the one that gates a merge.
   backend-windows:
     name: Backend (Windows)
     runs-on: windows-latest
     needs: [changes]
-    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.ci_infra == 'true'
+    if: >-
+      github.event_name != 'pull_request' &&
+      (needs.changes.outputs.backend == 'true' || needs.changes.outputs.ci_infra == 'true')
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -319,11 +326,18 @@ jobs:
   #
   # This job is also the only place docs/07-RISKS R5 can be enforced: cgo is
   # part of the build on no other runner.
+  #
+  # Not run on `pull_request`: the merge queue rebuilds every PR before it
+  # lands, so a PR push and the merge group ran this same job twice for one
+  # change. `CI Complete` is the required check and reports on both events, so
+  # the merge-group run is the one that gates a merge.
   backend-darwin:
     name: Backend (macOS)
     runs-on: macos-latest
     needs: [changes]
-    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.ci_infra == 'true'
+    if: >-
+      github.event_name != 'pull_request' &&
+      (needs.changes.outputs.backend == 'true' || needs.changes.outputs.ci_infra == 'true')
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
