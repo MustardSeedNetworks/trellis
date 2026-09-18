@@ -18,8 +18,11 @@ package main
 // serves instead of exiting, which is the failure this test exists to catch.
 
 import (
+	"bufio"
 	"context"
 	"errors"
+	"io"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -51,7 +54,7 @@ func TestSecondDaemonRefusesAHeldDataDir(t *testing.T) {
 		t.Fatalf("publish the holder's port: %v", err)
 	}
 
-	out, exitCode := runDaemon(t, dataDir)
+	out, exitCode := runDaemon(t, dataDir, buildDaemon(t))
 
 	if exitCode != 1 {
 		t.Errorf("second trellisd exit code = %d, want 1\noutput:\n%s", exitCode, out)
@@ -64,10 +67,78 @@ func TestSecondDaemonRefusesAHeldDataDir(t *testing.T) {
 	}
 }
 
-// runDaemon builds trellisd and runs it against dataDir, returning everything
-// it wrote and its exit code. A daemon that does not exit on its own is killed
-// and the test fails naming that: starting successfully is the defect.
-func runDaemon(t *testing.T, dataDir string) (output string, exitCode int) {
+// TestSecondDaemonNamesTheFirstDaemonsPort is the row's acceptance with a real
+// first daemon, which is what makes it the acceptance: the test above holds the
+// lock itself and so publishes the port itself, and passes on a trellisd that
+// takes the lock and never calls SetPort. Only a first daemon can prove the
+// port a second one reads was published by the first.
+//
+// The cost is a race the test above does not have -- the port only reaches the
+// lock file after the fallback has settled -- so the second daemon is not
+// started until the first has logged the address it bound, and that address is
+// what the refusal is checked against.
+func TestSecondDaemonNamesTheFirstDaemonsPort(t *testing.T) {
+	dataDir := t.TempDir()
+	bin := buildDaemon(t)
+
+	first := exec.Command(bin)
+	first.Env = daemonEnv(dataDir)
+	stdout, err := first.StdoutPipe()
+	if err != nil {
+		t.Fatalf("pipe the first daemon's output: %v", err)
+	}
+	first.Stderr = first.Stdout
+	if err := first.Start(); err != nil {
+		t.Fatalf("start the first daemon: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = first.Process.Kill()
+		_ = first.Wait()
+	})
+
+	port := waitForListeningPort(t, stdout)
+
+	out, exitCode := runDaemon(t, dataDir, bin)
+	if exitCode != 1 {
+		t.Errorf("second trellisd exit code = %d, want 1\noutput:\n%s", exitCode, out)
+	}
+	if pid := strconv.Itoa(first.Process.Pid); !strings.Contains(out, pid) {
+		t.Errorf("refusal does not name the first daemon's pid %s\noutput:\n%s", pid, out)
+	}
+	if !strings.Contains(out, port) {
+		t.Errorf("refusal does not name the port the first daemon bound (%s)\noutput:\n%s", port, out)
+	}
+}
+
+// waitForListeningPort reads the first daemon's log until it says what it bound.
+func waitForListeningPort(t *testing.T, out io.Reader) string {
+	t.Helper()
+
+	scanner := bufio.NewScanner(out)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if !strings.Contains(line, "trellisd listening") {
+			continue
+		}
+		_, addr, found := strings.Cut(line, "addr=")
+		if !found {
+			t.Fatalf("the listening line names no address: %s", line)
+		}
+		addr, _, _ = strings.Cut(addr, " ")
+		_, port, err := net.SplitHostPort(addr)
+		if err != nil {
+			t.Fatalf("parse the bound address %q: %v", addr, err)
+		}
+		return port
+	}
+	t.Fatalf("the first daemon never logged an address: %v", scanner.Err())
+	return ""
+}
+
+// buildDaemon builds trellisd once per test. Go's build cache makes the second
+// call cheap; building in-test is what keeps the binary under test the one the
+// package's own source produces.
+func buildDaemon(t *testing.T) string {
 	t.Helper()
 
 	bin := filepath.Join(t.TempDir(), "trellisd")
@@ -75,16 +146,28 @@ func runDaemon(t *testing.T, dataDir string) (output string, exitCode int) {
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build trellisd: %v\n%s", err, out)
 	}
+	return bin
+}
 
-	// Port 0 so a daemon that wrongly gets as far as binding cannot collide
-	// with anything on the host.
-	ctx, cancel := context.WithTimeout(t.Context(), daemonRefusalTimeout)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, bin)
-	cmd.Env = append(os.Environ(),
+// daemonEnv runs a daemon against dataDir on an ephemeral port, so a daemon that
+// wrongly gets as far as binding cannot collide with anything on the host.
+func daemonEnv(dataDir string) []string {
+	return append(os.Environ(),
 		"TRELLIS_DATA_DIR="+dataDir,
 		"TRELLIS_ADDR=127.0.0.1:0",
 	)
+}
+
+// runDaemon builds trellisd and runs it against dataDir, returning everything
+// it wrote and its exit code. A daemon that does not exit on its own is killed
+// and the test fails naming that: starting successfully is the defect.
+func runDaemon(t *testing.T, dataDir, bin string) (output string, exitCode int) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(t.Context(), daemonRefusalTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, bin)
+	cmd.Env = daemonEnv(dataDir)
 
 	out, err := cmd.CombinedOutput()
 	if ctx.Err() != nil {
