@@ -9,12 +9,15 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/MustardSeedNetworks/foundation/pkg/instance"
+	"github.com/MustardSeedNetworks/foundation/pkg/supervise"
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/internal/api"
 	"github.com/MustardSeedNetworks/trellis/internal/apppaths"
@@ -35,6 +38,17 @@ const (
 	// take a few seconds on large surveys.
 	writeTimeout = 120 * time.Second
 	idleTimeout  = 60 * time.Second
+	// captureReadinessRestarts is how many times a panicking readiness scan is
+	// retried. It is a single scan against a driver that may fault once, not a
+	// loop, so one retry is the whole of the recovery worth attempting.
+	captureReadinessRestarts = 1
+	// readinessStopGrace is how long shutdown waits for the readiness scan, and
+	// it is deliberately not shutdownGracePeriod. The scan asks the OS for
+	// capture permission through a call that ignores its context and takes
+	// several seconds on macOS, and it writes nothing durable -- before it was
+	// supervised, shutdown abandoned it outright. Waiting the server's grace
+	// period on it would add most of that to every stop for nothing.
+	readinessStopGrace = time.Second
 	// maxUploadBytes bounds a single Connect request message so an oversized
 	// AirMapper upload can't exhaust memory. 64 MiB comfortably covers a
 	// floor-plan-bearing .amp while capping the blast radius.
@@ -80,6 +94,16 @@ func run() error {
 		return err
 	}
 
+	// One daemon per data directory, taken before anything under it is opened.
+	// The +1..+9 port fallback means a second trellisd does not collide on the
+	// port: it binds a neighbour and opens the same SQLite file and the same
+	// config underneath the first one (foundation#46).
+	lock, err := instance.Acquire(dataDir)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = lock.Release() }()
+
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
@@ -108,10 +132,18 @@ func run() error {
 	// something the constructor could not — a permission the OS has not
 	// granted, for instance.
 	surveyHandler := api.NewSurveyServiceHandler(manager)
+	var readiness *supervise.Group
 	if scannerErr != nil {
 		surveyHandler.SetCaptureCapability(api.CaptureCapability{Reason: scannerErr.Error()})
 	} else {
-		go reportCaptureReadiness(ctx, scanner, surveyHandler)
+		readiness = superviseCaptureReadiness(ctx, scanner, surveyHandler)
+		defer func() {
+			stopCtx, cancel := context.WithTimeout(context.Background(), readinessStopGrace)
+			defer cancel()
+			if err := readiness.Stop(stopCtx); err != nil {
+				slog.Debug("readiness scan outlived its stop grace", "error", err)
+			}
+		}()
 	}
 
 	// A credential turns the daemon from a desktop app into one serving other
@@ -141,6 +173,13 @@ func run() error {
 	ln, boundAddr, err := listen(ctx, addr, explicitAddr)
 	if err != nil {
 		return err
+	}
+	// Published now rather than at Acquire: the port is not known until the
+	// fallback has settled, and a second daemon can only name it once it is.
+	if tcp, ok := ln.Addr().(*net.TCPAddr); ok {
+		if err := lock.SetPort(tcp.Port); err != nil {
+			return err
+		}
 	}
 	scheme := "http"
 	if gate != nil {

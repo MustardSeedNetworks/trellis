@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log/slog"
 
+	"github.com/MustardSeedNetworks/foundation/pkg/supervise"
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/internal/api"
 	"github.com/MustardSeedNetworks/trellis/internal/capture"
@@ -51,4 +52,37 @@ func reportCaptureReadiness(ctx context.Context, scanner survey.Scanner, h *api.
 		slog.Info("capture ready", "networks", len(networks))
 		h.SetCaptureCapability(api.CaptureCapability{Available: true})
 	}
+}
+
+// superviseCaptureReadiness runs the readiness scan under foundation's
+// supervisor and returns the group so the caller can stop it.
+//
+// The scan reaches a Wi-Fi driver through an OS permission check, which is
+// exactly the kind of call that faults rather than returning an error. Run bare
+// it was one panic away from taking the daemon down before it had served a
+// request (D-TRL-6).
+//
+// Giving up is not fatal. A host with no backend still serves imported surveys,
+// which is why a missing backend is already reported and not fatal above; a
+// backend that panicked is the same answer for the operator, said the same way.
+func superviseCaptureReadiness(
+	ctx context.Context,
+	scanner survey.Scanner,
+	h *api.SurveyServiceHandler,
+) *supervise.Group {
+	group := supervise.New(nil)
+	group.Add("capture-readiness", supervise.RestartN(captureReadinessRestarts),
+		func(ctx context.Context) error {
+			reportCaptureReadiness(ctx, scanner, h)
+			return nil
+		})
+	group.Start(ctx)
+
+	go func() {
+		if err := group.Wait(); err != nil {
+			slog.Error("capture readiness gave up; this host reports no capture backend", "error", err)
+			h.SetCaptureCapability(api.CaptureCapability{Reason: err.Error()})
+		}
+	}()
+	return group
 }
