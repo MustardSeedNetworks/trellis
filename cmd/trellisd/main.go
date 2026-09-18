@@ -42,6 +42,13 @@ const (
 	// retried. It is a single scan against a driver that may fault once, not a
 	// loop, so one retry is the whole of the recovery worth attempting.
 	captureReadinessRestarts = 1
+	// readinessStopGrace is how long shutdown waits for the readiness scan, and
+	// it is deliberately not shutdownGracePeriod. The scan asks the OS for
+	// capture permission through a call that ignores its context and takes
+	// several seconds on macOS, and it writes nothing durable -- before it was
+	// supervised, shutdown abandoned it outright. Waiting the server's grace
+	// period on it would add most of that to every stop for nothing.
+	readinessStopGrace = time.Second
 	// maxUploadBytes bounds a single Connect request message so an oversized
 	// AirMapper upload can't exhaust memory. 64 MiB comfortably covers a
 	// floor-plan-bearing .amp while capping the blast radius.
@@ -131,10 +138,10 @@ func run() error {
 	} else {
 		readiness = superviseCaptureReadiness(ctx, scanner, surveyHandler)
 		defer func() {
-			stopCtx, cancel := context.WithTimeout(context.Background(), shutdownGracePeriod)
+			stopCtx, cancel := context.WithTimeout(context.Background(), readinessStopGrace)
 			defer cancel()
 			if err := readiness.Stop(stopCtx); err != nil {
-				slog.Warn("stopping the readiness scan", "error", err)
+				slog.Debug("readiness scan outlived its stop grace", "error", err)
 			}
 		}()
 	}
