@@ -5,7 +5,6 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -170,9 +169,19 @@ func run() error {
 	protocols.SetHTTP1(true)
 	protocols.SetUnencryptedHTTP2(true)
 
-	ln, boundAddr, err := listen(ctx, addr, explicitAddr)
+	ln, err := listen(ctx, listenConfig{
+		addr:      addr,
+		explicit:  explicitAddr,
+		protected: gate != nil,
+		dataDir:   dataDir,
+	})
 	if err != nil {
 		return err
+	}
+	boundAddr := ln.Addr().String()
+	scheme := "http"
+	if gate != nil {
+		scheme = "https"
 	}
 	// Published now rather than at Acquire: the port is not known until the
 	// fallback has settled, and a second daemon can only name it once it is.
@@ -180,14 +189,6 @@ func run() error {
 		if err := lock.SetPort(tcp.Port); err != nil {
 			return err
 		}
-	}
-	scheme := "http"
-	if gate != nil {
-		tlsConfig, err := tlsConfigFor(dataDir)
-		if err != nil {
-			return err
-		}
-		ln, scheme = tls.NewListener(ln, tlsConfig), "https"
 	}
 
 	srv := &http.Server{
