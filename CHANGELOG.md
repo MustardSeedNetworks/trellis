@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.78](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.77...v0.2.78) (2026-09-18)
+
+
+### Bug Fixes
+
+* **auth:** authenticate streaming RPCs, not only unary ones ([#536](https://github.com/MustardSeedNetworks/trellis/issues/536)) ([f20529d](https://github.com/MustardSeedNetworks/trellis/commit/f20529d378a8f7f30f315f15f8325c009e5232fa))
+* **trellisd:** supervise the capture goroutines and take the instance lock ([#538](https://github.com/MustardSeedNetworks/trellis/issues/538)) ([42c0a1d](https://github.com/MustardSeedNetworks/trellis/commit/42c0a1d70ccf3b1c9b6b0d19acc5dc438e3fd250))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#539](https://github.com/MustardSeedNetworks/trellis/issues/539)) ([530d759](https://github.com/MustardSeedNetworks/trellis/commit/530d759bfc737db75b8777163b2840a5909fbdba))
+
 ## [0.2.77](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.76...v0.2.77) (2026-09-17)
 
 
