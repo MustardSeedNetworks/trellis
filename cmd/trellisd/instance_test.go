@@ -26,6 +26,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -141,7 +142,14 @@ func waitForListeningPort(t *testing.T, out io.Reader) string {
 func buildDaemon(t *testing.T) string {
 	t.Helper()
 
-	bin := filepath.Join(t.TempDir(), "trellisd")
+	// The suffix is not decoration on Windows: exec resolves an extensionless
+	// file through %PATHEXT% and does not find it, so the build lands somewhere
+	// the test cannot run.
+	name := "trellisd"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	bin := filepath.Join(t.TempDir(), name)
 	build := exec.CommandContext(t.Context(), "go", "build", "-o", bin, ".")
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build trellisd: %v\n%s", err, out)
