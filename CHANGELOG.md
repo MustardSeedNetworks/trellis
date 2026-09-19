@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.81](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.80...v0.2.81) (2026-09-19)
+
+
+### Bug Fixes
+
+* **deps:** update dependency tailwind-merge to v3.7.0 ([#551](https://github.com/MustardSeedNetworks/trellis/issues/551)) ([dc2d28a](https://github.com/MustardSeedNetworks/trellis/commit/dc2d28ac636c4b7e083a73035082a7ea726ffb1b))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#549](https://github.com/MustardSeedNetworks/trellis/issues/549)) ([5532858](https://github.com/MustardSeedNetworks/trellis/commit/5532858f04b93c0e3794e56a10ab7b8a3d8b0c3b))
+
 ## [0.2.80](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.79...v0.2.80) (2026-09-19)
 
 
