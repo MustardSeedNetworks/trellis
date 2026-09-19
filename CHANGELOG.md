@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.80](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.79...v0.2.80) (2026-09-19)
+
+
+### Miscellaneous
+
+* **deps:** update dependency @biomejs/biome to v2.5.14 ([#548](https://github.com/MustardSeedNetworks/trellis/issues/548)) ([99c3dba](https://github.com/MustardSeedNetworks/trellis/commit/99c3dbaba5f430e79afc4240a81afe3ca15118ff))
+* **deps:** update module github.com/bufbuild/buf/cmd/buf to v1.73.0 ([#545](https://github.com/MustardSeedNetworks/trellis/issues/545)) ([ff078a0](https://github.com/MustardSeedNetworks/trellis/commit/ff078a098469676a6c363319c868db9dca51238a))
+
 ## [0.2.79](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.78...v0.2.79) (2026-09-18)
 
 
