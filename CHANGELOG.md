@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.83](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.82...v0.2.83) (2026-09-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency react-i18next to v17.0.14 ([#555](https://github.com/MustardSeedNetworks/trellis/issues/555)) ([414ff50](https://github.com/MustardSeedNetworks/trellis/commit/414ff5012fbfa8443955815595872408dd86b227))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#556](https://github.com/MustardSeedNetworks/trellis/issues/556)) ([9fa4434](https://github.com/MustardSeedNetworks/trellis/commit/9fa4434a3c3d646d487798af26733025ae8059fd))
+
 ## [0.2.82](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.81...v0.2.82) (2026-09-20)
 
 
