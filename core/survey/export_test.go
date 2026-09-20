@@ -110,9 +110,10 @@ func ExportMapHeatmapTypeToValueType(ht HeatmapType) string {
 	return mapHeatmapTypeToValueType(ht)
 }
 
-// ExportGetColorScaleForType exports getColorScaleForType for testing.
+// ExportGetColorScaleForType exports getColorScaleForType for testing. A zero
+// threshold is the metric's own default, as it is for a caller.
 func ExportGetColorScaleForType(ht HeatmapType) ColorScale {
-	return getColorScaleForType(ht)
+	return getColorScaleForType(ht, 0)
 }
 
 // ExportRenderHeatmapToImage exports renderHeatmapToImage for testing.

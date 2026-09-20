@@ -61,7 +61,7 @@ func TestHeatmapPixelsMatchTheScale(t *testing.T) {
 		t.Fatalf("decode heatmap png: %v", err)
 	}
 
-	scale := survey.GetRSSIColorScale()
+	scale := survey.CoverageScale(survey.HeatmapRSSI, float64(survey.DefaultThreshold))
 	want := scale.GetColor(rssi)
 	got := color.NRGBAModel.Convert(decoded.At(sampledPixel(decoded))).(color.NRGBA)
 

@@ -213,6 +213,9 @@ func (h *SurveyServiceHandler) GetHeatmap(
 	// handed a signal one labelled Mbps — the values looked plausible and were
 	// in the wrong unit.
 	config.Type = survey.ParseHeatmapType(req.Msg.GetMetric())
+	// Zero is "the metric's default", resolved in the domain rather than here
+	// so the heatmap and the dead-zone analysis cannot disagree about it.
+	config.Threshold = req.Msg.GetThreshold()
 
 	floor, err := floorOf(svy, req.Msg.GetFloorId())
 	if err != nil {

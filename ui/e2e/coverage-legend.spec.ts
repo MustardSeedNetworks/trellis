@@ -15,6 +15,8 @@ import { createSurvey, uniqueName, walkThreePoints } from './helpers';
 const WIDE = { width: 1440, height: 900 };
 /** Below xl the findings panel stacks under the map instead of beside it. */
 const NARROW = { width: 1024, height: 768 };
+/** The phone width the fleet keeps full parity at (owner 2026-09-15). */
+const PHONE = { width: 390, height: 844 };
 
 /** A floor-plan survey, plotted and left on Coverage. */
 async function plotAPlannedFloor(page: Page, label: string) {
@@ -80,3 +82,48 @@ test.describe('where the findings stack under the map', () => {
     );
   });
 });
+
+/**
+ * The key stays on screen where the layout scrolls (UI-TRL-9, trellis#484).
+ *
+ * The bound above only holds at xl. Below it the page scrolls, and a tall
+ * floor plan carried the legend past the fold again — so the one thing that
+ * says what the colours mean was gone exactly while an operator was reading
+ * them. The ramp now steps at their own threshold, which is a boundary they
+ * cannot guess from the picture, so the key matters more than it did.
+ *
+ * Asserted after scrolling the map, not on arrival: a legend that is only on
+ * screen before you touch the page is the defect.
+ */
+for (const viewport of [NARROW, PHONE]) {
+  test.describe(`the key at ${viewport.width}x${viewport.height}`, () => {
+    test.use({ viewport });
+
+    test('stays with the map while the map is scrolled', async ({ page }) => {
+      await plotAPlannedFloor(page, 'Sticky');
+
+      const image = page.getByTestId('heatmap-image');
+      await image.scrollIntoViewIfNeeded();
+      await page.mouse.wheel(0, 400);
+
+      const legend = page.getByTestId('heatmap-legend');
+      const box = await legend.boundingBox();
+      if (!box) {
+        throw new Error('legend has no layout box');
+      }
+      expect(box.y, 'legend scrolled off the top').toBeGreaterThanOrEqual(0);
+      expect(box.y + box.height, 'legend scrolled past the fold').toBeLessThanOrEqual(
+        viewport.height,
+      );
+
+      // And it is the map's key, not a floating bar over nothing: the surface
+      // has to still be on screen with it.
+      const imageBox = await image.boundingBox();
+      if (!imageBox) {
+        throw new Error('heatmap image has no layout box');
+      }
+      expect(imageBox.y, 'map is entirely below the fold').toBeLessThan(viewport.height);
+      expect(imageBox.y + imageBox.height, 'map is entirely above the viewport').toBeGreaterThan(0);
+    });
+  });
+}

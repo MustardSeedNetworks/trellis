@@ -295,7 +295,18 @@ export function CoveragePage() {
             },
             t,
           )}
-          {heatmap ? <HeatmapLegend stops={heatmap.legend} unit={unit} /> : null}
+          {/* Pinned to the foot of the surface panel. Bounding the layout keeps
+              the key beside the map at xl (trellis#476); below that breakpoint
+              the page scrolls and a tall floor plan still carried the key past
+              the fold, so the one thing that says what the colours mean was
+              off screen exactly while an operator was reading them (#484).
+              Sticky rather than fixed: it belongs to this panel, and on a short
+              plan it simply sits where it always did. */}
+          {heatmap ? (
+            <div className="sticky bottom-0 -mx-5 -mb-5 mt-auto bg-surface-raised px-5 pb-5 pt-3">
+              <HeatmapLegend stops={heatmap.legend} unit={unit} />
+            </div>
+          ) : null}
         </section>
 
         {analysable ? (

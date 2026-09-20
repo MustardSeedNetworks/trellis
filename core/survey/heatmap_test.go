@@ -380,7 +380,7 @@ func TestRenderHeatmapToImage(t *testing.T) {
 		{-65, -55},
 	}
 	img := survey.CreateTestImage(40, 40)
-	rssiScale := survey.GetRSSIColorScale()
+	rssiScale := survey.CoverageScale(survey.HeatmapRSSI, float64(survey.DefaultThreshold))
 	scale := &rssiScale
 
 	// Should not panic.
@@ -401,7 +401,7 @@ func TestRenderHeatmapToImage(t *testing.T) {
 func TestRenderHeatmapToImage_EmptyGrid(t *testing.T) {
 	img := survey.CreateTestImage(100, 100)
 	grid := [][]float64{}
-	rssiScale := survey.GetRSSIColorScale()
+	rssiScale := survey.CoverageScale(survey.HeatmapRSSI, float64(survey.DefaultThreshold))
 	scale := &rssiScale
 
 	// Should not panic.

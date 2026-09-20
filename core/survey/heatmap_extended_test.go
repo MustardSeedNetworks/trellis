@@ -145,7 +145,7 @@ func TestManager_GenerateHeatmap_NotFound(t *testing.T) {
 }
 
 func TestColorScale_GetColor_Interpolation(t *testing.T) {
-	scale := survey.GetRSSIColorScale()
+	scale := survey.CoverageScale(survey.HeatmapRSSI, float64(survey.DefaultThreshold))
 
 	tests := []struct {
 		name  string
