@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.82](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.81...v0.2.82) (2026-09-20)
+
+
+### Features
+
+* **survey:** one coverage ramp, diverging around the operator's threshold ([#552](https://github.com/MustardSeedNetworks/trellis/issues/552)) ([e651312](https://github.com/MustardSeedNetworks/trellis/commit/e651312c982a33e1a111462aa363af18086615ec)), closes [#484](https://github.com/MustardSeedNetworks/trellis/issues/484)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#554](https://github.com/MustardSeedNetworks/trellis/issues/554)) ([f26cb23](https://github.com/MustardSeedNetworks/trellis/commit/f26cb2344b18da95ef4018f276c1c5a0f86d07f2))
+
 ## [0.2.81](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.80...v0.2.81) (2026-09-19)
 
 
