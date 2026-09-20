@@ -302,6 +302,13 @@ func (g *ReportGenerator) addFloorLayers(floor *Floor) {
 	for _, layer := range reportLayers {
 		config := DefaultHeatmapConfig()
 		config.Type = layer.kind
+		// The operator's floor belongs to the metric they analysed, so only
+		// that layer's ramp steps at it; the others keep their own default.
+		// Painting an SNR map stepped at -70 dBm is the "parallel generator
+		// that never saw a threshold" defect in a second costume.
+		if layer.kind == g.options.Metric {
+			config.Threshold = float64(g.options.Threshold)
+		}
 		result, err := GenerateFloorHeatmap(floor, config)
 		if err != nil {
 			if layer.baseline {
@@ -356,6 +363,9 @@ func (g *ReportGenerator) addFloorHeatmapPage(
 	)
 
 	g.pdf.Ln(pdfSpacingSmall)
+	g.addHeatmapKey(result.Scale, unit)
+
+	g.pdf.Ln(pdfSpacingTiny)
 	g.pdf.SetFont("Arial", "I", pdfFontSizeTiny)
 	g.pdf.SetTextColor(pdfColorGrayMedium, pdfColorGrayMedium, pdfColorGrayMedium)
 	g.pdf.CellFormat(
@@ -366,6 +376,38 @@ func (g *ReportGenerator) addFloorHeatmapPage(
 		),
 		"", 1, "L", false, 0, "",
 	)
+}
+
+// addHeatmapKey prints the scale that painted the map above it.
+//
+// A printed map had no key at all: on screen the legend comes from the same
+// reply as the image, and the PDF simply left it out. That was survivable
+// while the ramp was a traffic light everyone could guess; a ramp that steps
+// at the operator's own threshold has to say where the step is (#484).
+//
+// The swatches are read from the result's own scale, not from a copy, so this
+// cannot drift from the pixels beside it.
+func (g *ReportGenerator) addHeatmapKey(scale ColorScale, unit string) {
+	const (
+		swatch = 4.0 // mm
+		gap    = 2.0
+		label  = 22.0
+	)
+
+	g.pdf.SetFont("Arial", "", pdfFontSizeTiny)
+	g.pdf.SetTextColor(pdfColorGrayMedium, pdfColorGrayMedium, pdfColorGrayMedium)
+	y := g.pdf.GetY()
+	left, _, _, _ := g.pdf.GetMargins()
+	x := left
+
+	for _, stop := range scale.Stops {
+		g.pdf.SetFillColor(int(stop.Color.R), int(stop.Color.G), int(stop.Color.B))
+		g.pdf.Rect(x, y, swatch, swatch, "F")
+		g.pdf.SetXY(x+swatch+gap, y-1)
+		g.pdf.CellFormat(label, swatch+2, fmt.Sprintf("%.0f %s", stop.Value, unit), "", 0, "L", false, 0, "")
+		x += swatch + gap + label
+	}
+	g.pdf.SetXY(left, y+swatch+gap)
 }
 
 // addFloorHeatmapUnavailable says why the map is missing, in place of it.

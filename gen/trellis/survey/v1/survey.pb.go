@@ -1317,7 +1317,15 @@ type GetHeatmapRequest struct {
 	// it a multi-floor survey interpolates every floor's measurements onto
 	// whichever plan happens to be active, which is only right when there is
 	// one floor.
-	FloorId       string `protobuf:"bytes,3,opt,name=floor_id,json=floorId,proto3" json:"floor_id,omitempty"`
+	FloorId string `protobuf:"bytes,3,opt,name=floor_id,json=floorId,proto3" json:"floor_id,omitempty"`
+	// The operator's coverage floor, in the metric's own unit, and where the
+	// ramp's step falls: below it the map is orange, at and above it teal.
+	//
+	// Zero means the metric's own default, which is the number the dead-zone
+	// analysis would use — so the map and the findings under it fail the same
+	// cells. Ignored by the metrics that have no floor (density, interference,
+	// throughput), which are sequential scales with nothing to diverge around.
+	Threshold     float64 `protobuf:"fixed64,4,opt,name=threshold,proto3" json:"threshold,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1371,6 +1379,13 @@ func (x *GetHeatmapRequest) GetFloorId() string {
 		return x.FloorId
 	}
 	return ""
+}
+
+func (x *GetHeatmapRequest) GetThreshold() float64 {
+	if x != nil {
+		return x.Threshold
+	}
+	return 0
 }
 
 type GetHeatmapResponse struct {
@@ -3992,11 +4007,12 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\x12\x19\n" +
 	"\bfloor_id\x18\x02 \x01(\tR\afloorId\"G\n" +
 	"\x13DeleteFloorResponse\x120\n" +
-	"\x06floors\x18\x01 \x03(\v2\x18.trellis.survey.v1.FloorR\x06floors\"c\n" +
+	"\x06floors\x18\x01 \x03(\v2\x18.trellis.survey.v1.FloorR\x06floors\"\x81\x01\n" +
 	"\x11GetHeatmapRequest\x12\x1b\n" +
 	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\x12\x16\n" +
 	"\x06metric\x18\x02 \x01(\tR\x06metric\x12\x19\n" +
-	"\bfloor_id\x18\x03 \x01(\tR\afloorId\"\xd5\x02\n" +
+	"\bfloor_id\x18\x03 \x01(\tR\afloorId\x12\x1c\n" +
+	"\tthreshold\x18\x04 \x01(\x01R\tthreshold\"\xd5\x02\n" +
 	"\x12GetHeatmapResponse\x12\x10\n" +
 	"\x03png\x18\x01 \x01(\fR\x03png\x12\x14\n" +
 	"\x05width\x18\x02 \x01(\x05R\x05width\x12\x16\n" +

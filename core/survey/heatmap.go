@@ -90,6 +90,12 @@ type HeatmapConfig struct {
 	ShowGrid      bool                // Overlay grid lines
 	ShowSamples   bool                // Show sample point markers
 	BlendWithPlan bool                // Blend with floor plan image
+	// Threshold is the operator's coverage floor, in the metric's own unit,
+	// and is where the ramp's step falls. Zero means the metric's default
+	// (DefaultThresholdFor), which is the same number the dead-zone analysis
+	// uses — so the map and the findings below it fail the same cells.
+	// Ignored by the metrics that have no floor.
+	Threshold float64
 }
 
 // HeatmapResult contains the generated heatmap.
@@ -203,7 +209,7 @@ func renderHeatmap(
 	stats := CalculateGridStats(grid)
 
 	// Get color scale
-	colorScale := getColorScaleForType(config.Type)
+	colorScale := getColorScaleForType(config.Type, config.Threshold)
 
 	// Create image
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
@@ -324,12 +330,14 @@ func mapHeatmapTypeToValueType(ht HeatmapType) string {
 }
 
 // getColorScaleForType returns the appropriate color scale for a heatmap type.
-func getColorScaleForType(ht HeatmapType) ColorScale {
+//
+// The two metrics the coverage analysis has a rule for are painted with the
+// diverging ramp around the operator's threshold; the rest have no floor to
+// diverge around and keep their own sequential scales.
+func getColorScaleForType(ht HeatmapType, threshold float64) ColorScale {
 	switch ht {
-	case HeatmapRSSI:
-		return GetRSSIColorScale()
-	case HeatmapSNR:
-		return GetSNRColorScale()
+	case HeatmapRSSI, HeatmapSNR:
+		return CoverageScale(ht, coverageThreshold(ht, threshold))
 	case HeatmapDensity:
 		return GetAPDensityColorScale()
 	case HeatmapInterference:
@@ -374,8 +382,17 @@ func getColorScaleForType(ht HeatmapType) ColorScale {
 			},
 		}
 	default:
-		return GetRSSIColorScale()
+		return CoverageScale(HeatmapRSSI, coverageThreshold(HeatmapRSSI, threshold))
 	}
+}
+
+// coverageThreshold resolves an unset threshold to the metric's default, which
+// is the one the dead-zone analysis would have used.
+func coverageThreshold(ht HeatmapType, threshold float64) float64 {
+	if threshold == 0 {
+		return float64(DefaultThresholdFor(ht))
+	}
+	return threshold
 }
 
 // floorPlanOf returns the plan the heatmap is drawn on, preferring the active

@@ -8,8 +8,10 @@ import (
 )
 
 func TestColorScale_GetColor(t *testing.T) {
-	rssiScale := survey.GetRSSIColorScale()
-	snrScale := survey.GetSNRColorScale()
+	// RSSI and SNR moved to the diverging coverage ramp and are asserted in
+	// coveragescale_test.go, by the properties that ramp exists for rather
+	// than by its hex. These two have no operator threshold to diverge
+	// around and keep their own sequential scales.
 	apDensityScale := survey.GetAPDensityColorScale()
 	interferenceScale := survey.GetInterferenceColorScale()
 
@@ -20,58 +22,29 @@ func TestColorScale_GetColor(t *testing.T) {
 		expected color.RGBA
 	}{
 		{
-			name:     "RSSI at minimum",
-			scale:    &rssiScale,
-			value:    -100,
-			expected: color.RGBA{R: 128, G: 128, B: 128, A: 255}, // Gray
-		},
-		{
-			name:     "RSSI below minimum (clamped)",
-			scale:    &rssiScale,
-			value:    -120,
-			expected: color.RGBA{R: 128, G: 128, B: 128, A: 255}, // Gray
-		},
-		{
-			name:     "RSSI at maximum",
-			scale:    &rssiScale,
-			value:    -30,
-			expected: color.RGBA{R: 40, G: 167, B: 69, A: 255}, // Green
-		},
-		{
-			name:     "RSSI above maximum (clamped)",
-			scale:    &rssiScale,
-			value:    0,
-			expected: color.RGBA{R: 40, G: 167, B: 69, A: 255}, // Green
-		},
-		{
-			name:  "RSSI interpolated between stops",
-			scale: &rssiScale,
-			value: -70, // Between -75 (orange) and -67 (yellow)
-			// Should be somewhere between orange and yellow
-		},
-		{
-			name:     "SNR at zero",
-			scale:    &snrScale,
-			value:    0,
-			expected: color.RGBA{R: 220, G: 53, B: 69, A: 255}, // Red
-		},
-		{
-			name:     "SNR at max",
-			scale:    &snrScale,
-			value:    50,
-			expected: color.RGBA{R: 40, G: 167, B: 69, A: 255}, // Green
-		},
-		{
 			name:     "AP density at zero",
 			scale:    &apDensityScale,
 			value:    0,
 			expected: color.RGBA{R: 240, G: 240, B: 255, A: 255}, // Very light blue
 		},
 		{
+			name:     "AP density below minimum (clamped)",
+			scale:    &apDensityScale,
+			value:    -5,
+			expected: color.RGBA{R: 240, G: 240, B: 255, A: 255},
+		},
+		{
 			name:     "Interference at zero",
 			scale:    &interferenceScale,
 			value:    0,
 			expected: color.RGBA{R: 40, G: 167, B: 69, A: 255}, // Green
+		},
+		{
+			name:  "Interference interpolated between stops",
+			scale: &interferenceScale,
+			value: 3,
+			// No exact expectation: the assertion is that a value between two
+			// stops still comes back as an opaque colour.
 		},
 	}
 
@@ -135,72 +108,9 @@ func TestInterpolateColor(t *testing.T) {
 	}
 }
 
-func TestGetColorScaleByName(t *testing.T) {
-	tests := []struct {
-		name         string
-		input        string
-		expectedName string
-	}{
-		{
-			name:         "rssi",
-			input:        "rssi",
-			expectedName: "rssi",
-		},
-		{
-			name:         "signal alias",
-			input:        "signal",
-			expectedName: "rssi",
-		},
-		{
-			name:         "snr",
-			input:        "snr",
-			expectedName: "snr",
-		},
-		{
-			name:         "density",
-			input:        "density",
-			expectedName: "ap_density",
-		},
-		{
-			name:         "ap_density alias",
-			input:        "ap_density",
-			expectedName: "ap_density",
-		},
-		{
-			name:         "interference",
-			input:        "interference",
-			expectedName: "interference",
-		},
-		{
-			name:         "cochannel alias",
-			input:        "cochannel",
-			expectedName: "interference",
-		},
-		{
-			name:         "unknown defaults to RSSI",
-			input:        "unknown",
-			expectedName: "rssi",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := survey.GetColorScaleByName(tt.input)
-			if got.Name != tt.expectedName {
-				t.Errorf(
-					"GetColorScaleByName(%q) = %s, want %s",
-					tt.input,
-					got.Name,
-					tt.expectedName,
-				)
-			}
-		})
-	}
-}
-
 func TestColorScaleProperties(t *testing.T) {
-	rssiScale := survey.GetRSSIColorScale()
-	snrScale := survey.GetSNRColorScale()
+	rssiScale := survey.CoverageScale(survey.HeatmapRSSI, float64(survey.DefaultThreshold))
+	snrScale := survey.CoverageScale(survey.HeatmapSNR, float64(survey.DefaultSNRThreshold))
 	apDensityScale := survey.GetAPDensityColorScale()
 	interferenceScale := survey.GetInterferenceColorScale()
 

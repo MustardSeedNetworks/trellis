@@ -122,93 +122,6 @@ type ColorStop struct {
 	Color color.RGBA // The color at this stop.
 }
 
-// GetRSSIColorScale returns the RSSI color scale.
-// Maps signal strength (-100 to -30 dBm) to colors.
-// Red (weak) -> Yellow (fair) -> Green (strong).
-func GetRSSIColorScale() ColorScale {
-	return ColorScale{
-		Name:   "rssi",
-		MinVal: rssiNoSignal,
-		MaxVal: rssiExcellent,
-		Stops: []ColorStop{
-			// Gray (no signal)
-			{Value: rssiNoSignal, Color: color.RGBA{
-				R: colorChannelMidGray, G: colorChannelMidGray, B: colorChannelMidGray, A: colorChannelOpaque,
-			}},
-			// Red (very poor)
-			{Value: rssiVeryPoor, Color: color.RGBA{
-				R: colorChannelDarkRed,
-				G: colorChannelWarningOrange,
-				B: colorChannelBootstrapRed,
-				A: colorChannelOpaque,
-			}},
-			// Orange (poor)
-			{Value: rssiPoor, Color: color.RGBA{
-				R: colorChannelFull, G: colorChannelMidGray, B: 0, A: colorChannelOpaque,
-			}},
-			// Yellow (fair)
-			{Value: rssiFair, Color: color.RGBA{
-				R: colorChannelFull, G: colorChannelYellowGreen, B: colorChannelYellowBlue, A: colorChannelOpaque,
-			}},
-			// Light green (good)
-			{Value: rssiGood, Color: color.RGBA{
-				R: colorChannelMediumGreen,
-				G: colorChannelLightGreen,
-				B: colorChannelMediumGreen,
-				A: colorChannelOpaque,
-			}},
-			// Green (excellent)
-			{Value: rssiExcellent, Color: color.RGBA{
-				R: colorChannelAccentGreen,
-				G: colorChannelDarkGreen,
-				B: colorChannelBootstrapRed,
-				A: colorChannelOpaque,
-			}},
-		},
-	}
-}
-
-// GetSNRColorScale returns the SNR color scale.
-// Maps signal-to-noise ratio (0 to 50 dB) to colors.
-func GetSNRColorScale() ColorScale {
-	return ColorScale{
-		Name:   "snr",
-		MinVal: snrMinimum,
-		MaxVal: snrExcellent,
-		Stops: []ColorStop{
-			// Red
-			{Value: snrMinimum, Color: color.RGBA{
-				R: colorChannelDarkRed,
-				G: colorChannelWarningOrange,
-				B: colorChannelBootstrapRed,
-				A: colorChannelOpaque,
-			}},
-			// Orange
-			{Value: snrPoor, Color: color.RGBA{
-				R: colorChannelFull, G: colorChannelMidGray, B: 0, A: colorChannelOpaque,
-			}},
-			// Yellow
-			{Value: snrFair, Color: color.RGBA{
-				R: colorChannelFull, G: colorChannelYellowGreen, B: colorChannelYellowBlue, A: colorChannelOpaque,
-			}},
-			// Light green
-			{Value: snrGood, Color: color.RGBA{
-				R: colorChannelMediumGreen,
-				G: colorChannelLightGreen,
-				B: colorChannelMediumGreen,
-				A: colorChannelOpaque,
-			}},
-			// Green
-			{Value: snrExcellent, Color: color.RGBA{
-				R: colorChannelAccentGreen,
-				G: colorChannelDarkGreen,
-				B: colorChannelBootstrapRed,
-				A: colorChannelOpaque,
-			}},
-		},
-	}
-}
-
 // GetAPDensityColorScale returns the AP density color scale.
 // Maps AP count (0 to 20+) to colors.
 // Blue (few) -> Purple (moderate) -> Red (many/congested).
@@ -322,23 +235,4 @@ func interpolateColor(stop1, stop2 ColorStop, value float64) color.RGBA {
 		B: uint8(float64(stop1.Color.B) + t*(float64(stop2.Color.B)-float64(stop1.Color.B))),
 		A: colorChannelOpaque,
 	}
-}
-
-// GetColorScaleByName returns a predefined color scale by name.
-// Accepts both constant values and user-friendly aliases.
-func GetColorScaleByName(name string) *ColorScale {
-	var scale ColorScale
-	switch name {
-	case string(HeatmapRSSI), HeatmapAliasSignal:
-		scale = GetRSSIColorScale()
-	case string(HeatmapSNR):
-		scale = GetSNRColorScale()
-	case string(HeatmapDensity), "ap_density":
-		scale = GetAPDensityColorScale()
-	case string(HeatmapInterference), HeatmapAliasCochannel:
-		scale = GetInterferenceColorScale()
-	default:
-		scale = GetRSSIColorScale()
-	}
-	return &scale
 }

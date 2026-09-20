@@ -25,7 +25,7 @@ import (
 // together: the swatch a client paints from GetHeatmapResponse.legend is the
 // colour that same reply's PNG has at that value.
 //
-// The existing tests each assert against GetRSSIColorScale() — the image in
+// The existing tests each assert against the scale constructor — the image in
 // core/survey, the legend here — so they agree only as long as both keep
 // reading the same constructor. This one names no scale at all. It asserts a
 // property of the response, which is what a client actually has, and it holds

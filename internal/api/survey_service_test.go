@@ -193,7 +193,7 @@ func TestSurveyServiceEndToEnd(t *testing.T) {
 	// copy of it: a client draws its key from these stops, so a legend that
 	// merely resembles the renderer's scale mislabels every colour on screen
 	// the first time a threshold moves.
-	wantScale := survey.GetRSSIColorScale()
+	wantScale := survey.CoverageScale(survey.HeatmapRSSI, float64(survey.DefaultThreshold))
 	if len(hm.GetLegend()) != len(wantScale.Stops) {
 		t.Fatalf("legend has %d stops, want %d", len(hm.GetLegend()), len(wantScale.Stops))
 	}

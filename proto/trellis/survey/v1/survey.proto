@@ -320,6 +320,14 @@ message GetHeatmapRequest {
   // whichever plan happens to be active, which is only right when there is
   // one floor.
   string floor_id = 3;
+  // The operator's coverage floor, in the metric's own unit, and where the
+  // ramp's step falls: below it the map is orange, at and above it teal.
+  //
+  // Zero means the metric's own default, which is the number the dead-zone
+  // analysis would use — so the map and the findings under it fail the same
+  // cells. Ignored by the metrics that have no floor (density, interference,
+  // throughput), which are sequential scales with nothing to diverge around.
+  double threshold = 4;
 }
 
 message GetHeatmapResponse {
