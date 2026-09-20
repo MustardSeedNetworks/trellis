@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.84](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.83...v0.2.84) (2026-09-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @bufbuild/protobuf to v2.15.0 ([#546](https://github.com/MustardSeedNetworks/trellis/issues/546)) ([5bf64a2](https://github.com/MustardSeedNetworks/trellis/commit/5bf64a2c91da1e50e32f867ee3f6eaf1611067d4))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#559](https://github.com/MustardSeedNetworks/trellis/issues/559)) ([04824db](https://github.com/MustardSeedNetworks/trellis/commit/04824db3fc8a63d2bbba99c5e48bb36a3954ab48))
+* **deps:** update dependency @testing-library/dom to v10.4.2 ([#558](https://github.com/MustardSeedNetworks/trellis/issues/558)) ([b78d8a7](https://github.com/MustardSeedNetworks/trellis/commit/b78d8a727d6e3aefcbfccd7727902fabcf702375))
+
 ## [0.2.83](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.82...v0.2.83) (2026-09-20)
 
 
