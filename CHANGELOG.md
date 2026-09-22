@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.86](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.85...v0.2.86) (2026-09-22)
+
+
+### Bug Fixes
+
+* **ci:** verify bootstrap dependencies ([#566](https://github.com/MustardSeedNetworks/trellis/issues/566)) ([57b3161](https://github.com/MustardSeedNetworks/trellis/commit/57b3161baa931a581b9efdc2e34f594876bfa09b))
+* **deps:** update dependency react-router to v8.4.0 ([#567](https://github.com/MustardSeedNetworks/trellis/issues/567)) ([f2c65eb](https://github.com/MustardSeedNetworks/trellis/commit/f2c65ebc9b77e616a6bf8cacb4fe12a4bacf7ad3))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#568](https://github.com/MustardSeedNetworks/trellis/issues/568)) ([4fbdcc7](https://github.com/MustardSeedNetworks/trellis/commit/4fbdcc797c134e286305955d8763a46ad646617a))
+
 ## [0.2.85](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.84...v0.2.85) (2026-09-22)
 
 
