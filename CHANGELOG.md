@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.85](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.84...v0.2.85) (2026-09-22)
+
+
+### Bug Fixes
+
+* **deps:** update module modernc.org/sqlite to v1.59.0 ([#564](https://github.com/MustardSeedNetworks/trellis/issues/564)) ([6f53c73](https://github.com/MustardSeedNetworks/trellis/commit/6f53c73179869d3bd7a3c9f8fb5912dd4f2c0d18))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#562](https://github.com/MustardSeedNetworks/trellis/issues/562)) ([7353022](https://github.com/MustardSeedNetworks/trellis/commit/73530226e31abbea96b629bc3e11225a73ea3381))
+* **deps:** lock file maintenance ([#565](https://github.com/MustardSeedNetworks/trellis/issues/565)) ([516286c](https://github.com/MustardSeedNetworks/trellis/commit/516286c76c4528043b29a032c95ae94b3b981878))
+
 ## [0.2.84](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.83...v0.2.84) (2026-09-20)
 
 
