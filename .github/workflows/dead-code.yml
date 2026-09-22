@@ -122,9 +122,6 @@ jobs:
         working-directory: ui
         run: npm ci
 
-      - name: Install ts-prune
-        run: npm install -g ts-prune@0.10.3
-
       - name: Check for unused exports
         working-directory: ui
         run: |
@@ -132,7 +129,7 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
 
           # Run ts-prune to find unused exports
-          ts-prune --error 2>&1 | tee ts-prune-output.txt || true
+          npm exec -- ts-prune --error 2>&1 | tee ts-prune-output.txt || true
 
           UNUSED_COUNT=$(grep -c "unused" ts-prune-output.txt || echo "0")
           echo "Found $UNUSED_COUNT potentially unused exports" >> "$GITHUB_STEP_SUMMARY"

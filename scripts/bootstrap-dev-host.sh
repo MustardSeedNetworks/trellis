@@ -11,8 +11,9 @@
 # Usage: ssh dev-srv-ubuntu 'bash -s' < scripts/bootstrap-dev-host.sh
 set -euo pipefail
 
-NODE_VER=26.8.1
+NODE_VER=26.8.2
 NPM_VER=12.0.2
+NPM_INTEGRITY='sha512-uIXokLlBj6FpNUTQX1PmT5pz7BlIN9QlixX+zdaSNHsd0qUXsbDLr50xzY6Sw7cJVr0uzHKDOle0swmPW/p5Qw=='
 # The goreleaser inside goreleaser-cross v1.27.0, which release.yml runs.
 GORELEASER_VER=2.17.1
 
@@ -44,7 +45,14 @@ if ! node --version >/dev/null 2>&1 && command -v dnf >/dev/null; then
 fi
 
 if [ "$(npm --version 2>/dev/null)" != "$NPM_VER" ]; then
-  sudo /usr/local/bin/npm install -g "npm@${NPM_VER}"
+  npm_tarball="npm-${NPM_VER}.tgz"
+  curl -fsSLo "$npm_tarball" "https://registry.npmjs.org/npm/-/${npm_tarball}"
+  actual="sha512-$(openssl dgst -sha512 -binary "$npm_tarball" | openssl base64 -A)"
+  if [ "$actual" != "$NPM_INTEGRITY" ]; then
+    echo "npm ${NPM_VER} integrity check failed" >&2
+    exit 1
+  fi
+  sudo /usr/local/bin/npm install -g "./${npm_tarball}"
 fi
 
 if ! goreleaser --version 2>/dev/null | grep -q "GitVersion:    ${GORELEASER_VER}"; then
