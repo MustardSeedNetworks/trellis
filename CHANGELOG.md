@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.88](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.87...v0.2.88) (2026-09-23)
+
+
+### Bug Fixes
+
+* **auth:** require the CSRF token on logout from a live session ([#581](https://github.com/MustardSeedNetworks/trellis/issues/581)) ([b10d897](https://github.com/MustardSeedNetworks/trellis/commit/b10d8979957082cc2018167af4fca19efe06a10b)), closes [#576](https://github.com/MustardSeedNetworks/trellis/issues/576)
+* **deps:** update dependency @tanstack/react-query to v5.103.0 ([#584](https://github.com/MustardSeedNetworks/trellis/issues/584)) ([b1d8d0e](https://github.com/MustardSeedNetworks/trellis/commit/b1d8d0e93a9036aedb04213883b20c8b7d637f80))
+* **deps:** update dependency lucide-react to v1.46.0 ([#585](https://github.com/MustardSeedNetworks/trellis/issues/585)) ([71ba680](https://github.com/MustardSeedNetworks/trellis/commit/71ba680251705f46838d304804c625516b4d2997))
+
+
+### Miscellaneous
+
+* **deps:** update frontend toolchain ([#583](https://github.com/MustardSeedNetworks/trellis/issues/583)) ([b66afe2](https://github.com/MustardSeedNetworks/trellis/commit/b66afe2067c4b1c9d78924fc3055b6cf12e37583))
+
 ## [0.2.87](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.86...v0.2.87) (2026-09-23)
 
 
