@@ -985,6 +985,27 @@ jobs:
           fi
           echo "uiBuildHash ${expected} is embedded in bin/trellisd"
 
+  # The fleet's 390x844 check (owner 2026-09-15: everything works at phone
+  # width). Trellis is the one product whose routes render without a session,
+  # so it serves the built bundle statically instead of booting trellisd.
+  # `routes` is every pageRegistry path; pageRegistry.test.tsx fails when the
+  # two lists diverge, so a new page cannot ship unchecked.
+  #
+  # Pinned to the commit that landed the gate (.github#78), not v1.13.0: no
+  # .github tag contains it yet, and tags there are never cut by hand. Move to
+  # the next tag once one exists.
+  phone-width:
+    needs: [changes]
+    if: needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci_infra == 'true'
+    permissions:
+      contents: read
+      id-token: write
+    uses: MustardSeedNetworks/.github/.github/workflows/phone-width.yml@fb62919cfea3709a22d203a8acaf34795e3b9aff # .github#78, untagged
+    with:
+      dist-dir: internal/api/ui
+      routes: '["/", "/import", "/coverage", "/live", "/reports"]'
+      rail-testid: sidebar
+
   ci-conformance:
     uses: MustardSeedNetworks/.github/.github/workflows/ci-conformance.yml@048d173dd72ca0f9e5fa832fb5b9fd2a6447e5e9 # v1.13.0
     permissions:
@@ -1044,6 +1065,7 @@ jobs:
       - codeql-alert-gate
       - docs-quality
       - build
+      - phone-width
     if: always()
     steps:
       - name: Verify upstream results

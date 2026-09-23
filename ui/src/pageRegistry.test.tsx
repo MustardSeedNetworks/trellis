@@ -9,6 +9,9 @@
  * one: a page whose title key is missing from the locale files renders as the
  * raw key and no longer matches its rail entry.
  */
+
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, renderHook, screen, waitFor } from '@testing-library/react';
 import { Suspense } from 'react';
@@ -91,6 +94,25 @@ describe('pageRegistry <-> navGroups', () => {
       expect(page.title, `${page.path} title`).not.toContain('.');
       expect(page.title, `${page.path} title`).not.toBe('');
     }
+  });
+});
+
+/**
+ * CI's phone-width job visits a hand-listed set of routes: the reusable
+ * workflow cannot read this registry. A page added here but not there would
+ * ship without ever being checked at 390px, with the job still green.
+ */
+describe('pageRegistry <-> phone-width routes', () => {
+  it('checks every registered page at phone width', () => {
+    const ci = readFileSync(resolve(import.meta.dirname, '../../.github/workflows/ci.yml'), 'utf8');
+    const job = ci.slice(ci.indexOf('\n  phone-width:\n'));
+    const routes = /^ {6}routes: '(.+)'$/m.exec(job)?.[1];
+    expect(routes, 'phone-width job has no routes input').toBeDefined();
+
+    const { result: pages } = renderHook(() => usePages());
+    expect((JSON.parse(routes ?? '[]') as string[]).sort()).toEqual(
+      pages.current.map((page) => page.path).sort(),
+    );
   });
 });
 
