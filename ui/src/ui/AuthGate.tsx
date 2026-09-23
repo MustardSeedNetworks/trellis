@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { createContext, use, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { fetchSession, logout } from '@/lib/auth';
+import { fetchSession, logout, onSessionLost } from '@/lib/auth';
 import { LoginPage } from '@/pages/LoginPage';
 
 interface AuthState {
@@ -23,7 +23,8 @@ export function useAuth(): AuthState {
  * A daemon bound to loopback registers no auth routes, the probe 404s, and this
  * renders children immediately — the desktop app is unchanged by this feature.
  * A daemon serving other devices answers the probe and the shell waits behind
- * the form.
+ * the form. A session the daemon later refuses to renew sends the operator
+ * back to the form.
  */
 export function AuthGate({ children }: { children: ReactNode }) {
   const { t } = useTranslation('pages');
@@ -34,6 +35,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
     void logout().finally(() => setAuthenticated(false));
   }, []);
   const state = useMemo<AuthState>(() => ({ required, signOut }), [required, signOut]);
+
+  useEffect(() => onSessionLost(() => setAuthenticated(false)), []);
 
   useEffect(() => {
     let live = true;
