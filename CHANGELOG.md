@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.89](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.88...v0.2.89) (2026-09-23)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @tanstack/react-query to v5.103.1 ([#588](https://github.com/MustardSeedNetworks/trellis/issues/588)) ([44753d6](https://github.com/MustardSeedNetworks/trellis/commit/44753d65f6e9d829c2773b81512e6c6e5a5d3abf))
+* **ui:** renew the session when an RPC is refused as unauthenticated ([#587](https://github.com/MustardSeedNetworks/trellis/issues/587)) ([74e6abc](https://github.com/MustardSeedNetworks/trellis/commit/74e6abcb8a658d162ccf40fd5e0ec1b4e1b5ec11)), closes [#586](https://github.com/MustardSeedNetworks/trellis/issues/586)
+
 ## [0.2.88](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.87...v0.2.88) (2026-09-23)
 
 
