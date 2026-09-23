@@ -11,7 +11,7 @@
 # Keep in lockstep with:
 #   .github/workflows/ci.yml   markdownlint-cli2-action (bundles this version)
 #   .pre-commit-config.yaml    markdownlint-cli2 rev
-MARKDOWNLINT_CLI2_VERSION := 0.23.2
+MARKDOWNLINT_CLI2_VERSION := 0.23.3
 
 # --yes with no PATH fallback and no SKIP: an absent or differently-versioned
 # local copy must fail loudly, not quietly lint with the wrong rule set.
