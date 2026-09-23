@@ -9,10 +9,16 @@
  * The CSRF token lives in memory rather than in storage. It is re-fetched from
  * the session probe on every load, so keeping a copy on disk would add a way
  * for it to be stale or stolen without adding a way for it to be useful.
+ *
+ * The access token lasts fifteen minutes. The transport renews it through
+ * refreshSession when an RPC is refused as unauthenticated, and a renewal the
+ * daemon refuses is reported to onSessionLost, which puts the operator back
+ * on the sign-in form.
  */
 const SESSION_URL = '/auth/session';
 const LOGIN_URL = '/auth/login';
 const LOGOUT_URL = '/auth/logout';
+const REFRESH_URL = '/auth/refresh';
 
 export interface Session {
   /** False only when this daemon wants a login and we do not have one. */
@@ -56,6 +62,53 @@ export async function fetchSession(): Promise<Session> {
     return { authenticated: false };
   }
   return readSession(response);
+}
+
+const sessionLost = new Set<() => void>();
+
+/** onSessionLost calls listener when the daemon refuses to renew the session. */
+export function onSessionLost(listener: () => void): () => void {
+  sessionLost.add(listener);
+  return () => {
+    sessionLost.delete(listener);
+  };
+}
+
+let refreshing: Promise<boolean> | null = null;
+
+/**
+ * refreshSession exchanges the refresh cookie for a new session and resolves
+ * true once the new CSRF token is in hand.
+ *
+ * Callers share one attempt. The daemon rotates on every refresh, revoking the
+ * session it spends, so a second refresh racing the first would revoke the
+ * session the first caller is about to retry with.
+ */
+export function refreshSession(): Promise<boolean> {
+  refreshing ??= renew().finally(() => {
+    refreshing = null;
+  });
+  return refreshing;
+}
+
+async function renew(): Promise<boolean> {
+  let response: Response;
+  try {
+    response = await fetch(REFRESH_URL, { method: 'POST', credentials: 'same-origin' });
+  } catch {
+    // An unreachable daemon has not refused the session; as in AuthGate, the
+    // page's own error state says what is wrong, not a sign-in form.
+    return false;
+  }
+  if (response.ok) {
+    await readSession(response);
+    return true;
+  }
+  csrfToken = '';
+  for (const listener of sessionLost) {
+    listener();
+  }
+  return false;
 }
 
 /** LoginFailure distinguishes the two answers the form must word differently. */

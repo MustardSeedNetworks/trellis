@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"connectrpc.com/connect"
 	"github.com/MustardSeedNetworks/trellis/internal/auth"
 )
 
@@ -24,9 +25,9 @@ import (
 // unconditional on these cookies, so the server has to be a TLS one: a jar
 // withholds a Secure cookie from an http:// request and the test would pass
 // having sent nothing.
-func newBrowser(t *testing.T) (*httptest.Server, *http.Client) {
+func newBrowser(t *testing.T) (*auth.Gate, *httptest.Server, *http.Client) {
 	t.Helper()
-	_, mux := newGateMux(t)
+	g, mux := newGateMux(t)
 	srv := httptest.NewTLSServer(mux)
 	t.Cleanup(srv.Close)
 
@@ -36,7 +37,7 @@ func newBrowser(t *testing.T) (*httptest.Server, *http.Client) {
 		t.Fatalf("cookiejar: %v", err)
 	}
 	client.Jar = jar
-	return srv, client
+	return g, srv, client
 }
 
 // do sends one request the way the browser would: with the jar's cookies, and
@@ -109,7 +110,7 @@ func browserProbe(t *testing.T, srv *httptest.Server, client *http.Client) (auth
 
 func TestBrowserLogoutLeavesNothingUsable(t *testing.T) {
 	t.Parallel()
-	srv, client := newBrowser(t)
+	_, srv, client := newBrowser(t)
 	site, err := url.Parse(srv.URL)
 	if err != nil {
 		t.Fatalf("server URL: %v", err)
@@ -167,7 +168,7 @@ func TestBrowserLogoutLeavesNothingUsable(t *testing.T) {
 // the jar and the session exactly as they were (#576).
 func TestBrowserLogoutWithoutTheCSRFTokenChangesNothing(t *testing.T) {
 	t.Parallel()
-	srv, client := newBrowser(t)
+	_, srv, client := newBrowser(t)
 	site, err := url.Parse(srv.URL)
 	if err != nil {
 		t.Fatalf("server URL: %v", err)
@@ -183,5 +184,68 @@ func TestBrowserLogoutWithoutTheCSRFTokenChangesNothing(t *testing.T) {
 	}
 	if authenticated, token := browserProbe(t, srv, client); !authenticated || token == "" {
 		t.Fatalf("after a refused logout the session probes as authenticated=%v with token %q", authenticated, token)
+	}
+}
+
+// The UI renews a session when an RPC is refused as unauthenticated
+// (UI-TRL-14). That path rests on three answers, taken here the way the
+// browser sees them once the fifteen-minute access cookie has lapsed: an RPC
+// is unauthenticated, not permission_denied (which the UI deliberately leaves
+// alone); the refresh cookie on its own renews the session; and only the CSRF
+// token the refresh returned admits the retry, because the refresh revoked the
+// one the RPC was first sent with.
+func TestBrowserRefreshAfterTheAccessCookieLapses(t *testing.T) {
+	t.Parallel()
+	g, srv, client := newBrowser(t)
+	site, err := url.Parse(srv.URL)
+	if err != nil {
+		t.Fatalf("server URL: %v", err)
+	}
+	first := browserLogin(t, srv, client)
+
+	var kept []*http.Cookie
+	for _, c := range client.Jar.Cookies(site) {
+		if c.Name == auth.CookieRefresh {
+			kept = append(kept, c)
+		}
+	}
+	if len(kept) != 1 {
+		t.Fatalf("the jar holds %d refresh cookies, want 1", len(kept))
+	}
+	lapsed, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatalf("cookiejar: %v", err)
+	}
+	lapsed.SetCookies(site, kept)
+	client.Jar = lapsed
+
+	rpc := func(csrfToken string) (bool, error) {
+		h := http.Header{auth.HeaderCSRFToken: []string{csrfToken}}
+		for _, c := range client.Jar.Cookies(site) {
+			h.Add("Cookie", c.String())
+		}
+		return callWith(t, g, h)
+	}
+
+	if _, err := rpc(first); connect.CodeOf(err) != connect.CodeUnauthenticated {
+		t.Fatalf("an RPC after the access cookie lapsed was refused with %v, want unauthenticated", connect.CodeOf(err))
+	}
+
+	code, payload := do(t, client, http.MethodPost, srv.URL+"/auth/refresh", "", nil)
+	if code != http.StatusOK {
+		t.Fatalf("refresh with only the refresh cookie returned %d, want 200", code)
+	}
+	var out struct {
+		CSRFToken string `json:"csrfToken"`
+	}
+	if err := json.Unmarshal(payload, &out); err != nil || out.CSRFToken == "" {
+		t.Fatalf("refresh returned no CSRF token: %v", err)
+	}
+
+	if _, err := rpc(first); connect.CodeOf(err) != connect.CodePermissionDenied {
+		t.Errorf("a retry with the spent CSRF token was refused with %v, want permission_denied", connect.CodeOf(err))
+	}
+	if reached, err := rpc(out.CSRFToken); err != nil || !reached {
+		t.Fatalf("a retry with the renewed CSRF token was refused: %v", err)
 	}
 }

@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { refreshSession } from '@/lib/auth';
 import { AuthGate } from './AuthGate';
 
 describe('AuthGate', () => {
@@ -46,5 +47,33 @@ describe('AuthGate', () => {
       </AuthGate>,
     );
     expect(await screen.findByTestId('shell')).toBeInTheDocument();
+  });
+
+  // A refresh the daemon refuses (revoked, or past its week) means the session
+  // is over; the operator must see the sign-in form, not a page of errors.
+  it('returns to the login form when the session cannot be renewed', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) =>
+        url === '/auth/refresh'
+          ? new Response(JSON.stringify({ error: 'invalid refresh token' }), { status: 401 })
+          : new Response(
+              JSON.stringify({ authenticated: true, username: 'surveyor', csrfToken: 'tok-1' }),
+              { status: 200, headers: { 'Content-Type': 'application/json' } },
+            ),
+      ),
+    );
+    render(
+      <AuthGate>
+        <div data-testid="shell" />
+      </AuthGate>,
+    );
+    expect(await screen.findByTestId('shell')).toBeInTheDocument();
+
+    await act(async () => {
+      await refreshSession();
+    });
+    expect(screen.getByTestId('login-form')).toBeInTheDocument();
+    expect(screen.queryByTestId('shell')).not.toBeInTheDocument();
   });
 });
