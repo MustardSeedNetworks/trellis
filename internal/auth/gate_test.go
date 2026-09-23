@@ -496,6 +496,65 @@ func TestLogoutWithOnlyTheRefreshCookie(t *testing.T) {
 	}
 }
 
+// Logout is a state change like any RPC, so a request carrying the session
+// has to prove it came from the page holding that session's CSRF token. A
+// refused logout must change nothing: not the credentials, and not the
+// browser's cookies either, since clearing them is the forged request's whole
+// effect (#576).
+func TestLogoutRefusesARequestWithoutTheCSRFToken(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name string
+		// strip builds the forged request's session from the operator's.
+		strip func(session) session
+		want  int
+	}{
+		{"both cookies, no token", func(s session) session { return session{cookies: s.cookies} }, http.StatusForbidden},
+		{"both cookies, wrong token", func(s session) session { return session{cookies: s.cookies, csrf: "not-the-token"} }, http.StatusForbidden},
+		{"access cookie only, no token", func(s session) session { return cookieByName(s, auth.CookieAccess) }, http.StatusForbidden},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			g, mux := newGateMux(t)
+			_, s := login(t, mux, "surveyor", testPassword)
+
+			req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/auth/logout", nil)
+			req.Header = tc.strip(s).header()
+			rec := httptest.NewRecorder()
+			mux.ServeHTTP(rec, req)
+			if rec.Code != tc.want {
+				t.Fatalf("forged logout returned %d, want %d: %s", rec.Code, tc.want, rec.Body)
+			}
+			if cookies := rec.Result().Cookies(); len(cookies) != 0 {
+				t.Errorf("the refused logout set %d cookies", len(cookies))
+			}
+			if _, err := g.Authenticate(s.header(), "10.0.0.1"); err != nil {
+				t.Fatalf("the operator's session stopped authenticating after a refused logout: %v", err)
+			}
+			if rec := refresh(t, mux, s); rec.Code != http.StatusOK {
+				t.Fatalf("the operator's refresh cookie returned %d after a refused logout, want 200", rec.Code)
+			}
+		})
+	}
+}
+
+// An access cookie the daemon no longer honours — a restart changed the
+// signing key, or it outlived its token by a second — is not a session to prove
+// anything about, so it must not stop the refresh cookie beside it being ended.
+func TestLogoutWithADeadAccessCookie(t *testing.T) {
+	t.Parallel()
+	_, mux := newGateMux(t)
+	_, s := login(t, mux, "surveyor", testPassword)
+	dead := cookieByName(s, auth.CookieRefresh)
+	dead.raw = []string{auth.CookieAccess + "=not-a-token"}
+	logout(t, mux, dead)
+
+	if rec := refresh(t, mux, cookieByName(s, auth.CookieRefresh)); rec.Code != http.StatusUnauthorized {
+		t.Fatalf("refresh after a logout beside a dead access cookie returned %d, want 401: %s", rec.Code, rec.Body)
+	}
+}
+
 // Exchanging a refresh token spends it. Without rotation a copied refresh
 // cookie stays usable for its whole lifetime alongside the operator's own
 // session, and each exchange extends it again (#501).
