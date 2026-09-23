@@ -182,7 +182,21 @@ func (g *Gate) handleSession(w http.ResponseWriter, r *http.Request) {
 // a retained access cookie otherwise recovers a CSRF token from /auth/session
 // and a retained refresh cookie mints a whole new session (#501). Both cookies
 // are offered because a caller may hold either.
+//
+// A request whose access token is live must pass the same CSRF check as any
+// RPC: a page on another origin can get the browser to post here, and only the
+// page holding the session's token can add it (#576). A refused logout sets no
+// cookies, because clearing them is itself what a forged request is after. A
+// request with no live access token — the operator's own after an idle spell,
+// once the browser has dropped the fifteen-minute access cookie and holds only
+// the refresh one — has no session key to check a token against, and it can
+// only end a session, never obtain one, so it is honoured.
 func (g *Gate) handleLogout(w http.ResponseWriter, r *http.Request) {
+	if _, err := g.Authenticate(r.Header, clientAddr(r)); errors.Is(err, ErrCSRF) {
+		slog.Warn("logout refused", "event", "auth.forbidden", "reason", "csrf", "client", clientAddr(r))
+		writeAuthError(w, http.StatusForbidden, "request not permitted")
+		return
+	}
 	g.csrf.Revoke(csrf.SessionKey(cookieValue(r.Header, CookieAccess)))
 	g.sessions.Revoke(cookieValue(r.Header, CookieAccess))
 	g.sessions.Revoke(cookieValue(r.Header, CookieRefresh))

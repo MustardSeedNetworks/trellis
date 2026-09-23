@@ -161,3 +161,27 @@ func TestBrowserLogoutLeavesNothingUsable(t *testing.T) {
 		t.Fatal("the session after a fresh login is not authenticated")
 	}
 }
+
+// The browser's own sign-out carries the token; a page on another origin that
+// gets the browser to post the same request cannot. That request must leave
+// the jar and the session exactly as they were (#576).
+func TestBrowserLogoutWithoutTheCSRFTokenChangesNothing(t *testing.T) {
+	t.Parallel()
+	srv, client := newBrowser(t)
+	site, err := url.Parse(srv.URL)
+	if err != nil {
+		t.Fatalf("server URL: %v", err)
+	}
+	browserLogin(t, srv, client)
+
+	code, _ := do(t, client, http.MethodPost, srv.URL+"/auth/logout", "", nil)
+	if code != http.StatusForbidden {
+		t.Fatalf("logout without the CSRF token returned %d, want 403", code)
+	}
+	if held := client.Jar.Cookies(site); len(held) != 2 {
+		t.Errorf("the refused logout left %d session cookies in the jar, want 2", len(held))
+	}
+	if authenticated, token := browserProbe(t, srv, client); !authenticated || token == "" {
+		t.Fatalf("after a refused logout the session probes as authenticated=%v with token %q", authenticated, token)
+	}
+}
