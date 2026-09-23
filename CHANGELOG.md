@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.2.87](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.86...v0.2.87) (2026-09-23)
+
+
+### Documentation
+
+* add generated coverage ramp report sample ([#572](https://github.com/MustardSeedNetworks/trellis/issues/572)) ([b82a11d](https://github.com/MustardSeedNetworks/trellis/commit/b82a11d2d4a6e478e025ea3bf3cc39dd8843b420))
+
+
+### Continuous Integration
+
+* run the fleet phone-width gate against the built UI ([#577](https://github.com/MustardSeedNetworks/trellis/issues/577)) ([84f7381](https://github.com/MustardSeedNetworks/trellis/commit/84f7381f86cf0290665bafd94a15851ab250e214))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#574](https://github.com/MustardSeedNetworks/trellis/issues/574)) ([3031701](https://github.com/MustardSeedNetworks/trellis/commit/3031701290c99ae15c9afea8a0444c2fb28611ce))
+* **deps:** lock file maintenance ([#580](https://github.com/MustardSeedNetworks/trellis/issues/580)) ([eee1f7d](https://github.com/MustardSeedNetworks/trellis/commit/eee1f7d1a8da967d40fd9fb5bbc0902a60ab6080))
+* **deps:** update dependency markdownlint-cli2 to v0.23.3 ([#579](https://github.com/MustardSeedNetworks/trellis/issues/579)) ([1e7160a](https://github.com/MustardSeedNetworks/trellis/commit/1e7160aa0960c56e5546b45f41c5b38a91dedd76))
+* **deps:** update node.js to v26.9.0 ([#573](https://github.com/MustardSeedNetworks/trellis/issues/573)) ([dbc9116](https://github.com/MustardSeedNetworks/trellis/commit/dbc9116ea0f76489bd2d91188bae552ce769d15c))
+
 ## [0.2.86](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.85...v0.2.86) (2026-09-22)
 
 
