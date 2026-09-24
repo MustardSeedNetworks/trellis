@@ -69,10 +69,10 @@ func TestNetworkFromBSS(t *testing.T) {
 		if got.Channel != 36 || got.Frequency != 5180 {
 			t.Errorf("channel/frequency = %d/%d, want 36/5180", got.Channel, got.Frequency)
 		}
-		// nl80211 reports no noise with a scan, so the SNR is derived from the
-		// same assumed floor every backend uses.
-		if got.SNR != -50-defaultNoiseFloorDBm {
-			t.Errorf("snr = %d dB, want %d", got.SNR, -50-defaultNoiseFloorDBm)
+		// nl80211 reports no noise with a scan, so there is no floor to derive
+		// SNR from and both stay absent rather than assumed (#600).
+		if got.NoiseFloor != 0 || got.SNR != 0 {
+			t.Errorf("noise/snr = %d dBm/%d dB, want both absent (0)", got.NoiseFloor, got.SNR)
 		}
 		if got.ChannelUtilization == nil || *got.ChannelUtilization != 50 {
 			t.Errorf("utilization = %v, want 50%%", got.ChannelUtilization)

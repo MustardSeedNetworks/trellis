@@ -51,13 +51,10 @@ func TestNetworkFromFrame(t *testing.T) {
 	if got, want := network.Signal, -14; got != want {
 		t.Errorf("Signal = %d, want %d", got, want)
 	}
-	// No driver noise reading, so the shared assumed floor applies and SNR is
-	// derived from it rather than from 0 dBm.
-	if got, want := network.NoiseFloor, defaultNoiseFloorDBm; got != want {
-		t.Errorf("NoiseFloor = %d, want %d", got, want)
-	}
-	if got, want := network.SNR, -14-defaultNoiseFloorDBm; got != want {
-		t.Errorf("SNR = %d, want %d", got, want)
+	// No driver noise reading, so noise and SNR stay absent rather than being
+	// derived from an assumed floor (#600).
+	if network.NoiseFloor != 0 || network.SNR != 0 {
+		t.Errorf("NoiseFloor/SNR = %d/%d, want both absent (0)", network.NoiseFloor, network.SNR)
 	}
 	// 2.4 GHz has no DFS channels at all.
 	if network.IsDFS {

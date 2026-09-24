@@ -84,6 +84,44 @@ describe('LivePage', () => {
     expect(await screen.findByText(/only 11 dB of margin/)).toBeInTheDocument();
   });
 
+  it('claims no margin the adapter never measured', async () => {
+    // #600: the tester measured 18 dB here, a weak link. Trellis used to
+    // derive 27 dB from an assumed -95 dBm floor and call it healthy.
+    scan.mockResolvedValue({
+      networks: [
+        network({
+          associated: true,
+          signalDbm: -68,
+          noiseFloorDbm: undefined,
+          snrDb: undefined,
+        }),
+      ],
+    });
+    renderPage();
+
+    expect(await screen.findByText('Connected to Trellis Lab at -68 dBm')).toBeInTheDocument();
+    expect(screen.queryByText(/dB of margin/)).not.toBeInTheDocument();
+    expect(screen.getByText(/reports no noise floor/)).toBeInTheDocument();
+    const rollup = screen.getByTestId('status-rollup');
+    // Green on signal alone: -68 dBm clears the -75 dBm coverage line. The
+    // headline and body carry the missing margin, not the colour.
+    expect(rollup).toHaveAttribute('data-state', 'ok');
+    expect(rollup).toHaveTextContent('Not reported');
+    expect(rollup).not.toHaveTextContent('NaN');
+  });
+
+  it('judges on signal when the margin is unknown', async () => {
+    scan.mockResolvedValue({
+      networks: [
+        network({ associated: true, signalDbm: -80, noiseFloorDbm: undefined, snrDb: undefined }),
+      ],
+    });
+    renderPage();
+
+    expect(await screen.findByText('Trellis Lab is only -80 dBm')).toBeInTheDocument();
+    expect(screen.getByTestId('status-rollup')).toHaveAttribute('data-state', 'warn');
+  });
+
   it('flags a congested channel on an otherwise strong link', async () => {
     scan.mockResolvedValue({
       networks: [network({ associated: true, snrDb: 45, channelUtilizationPercent: 78 })],

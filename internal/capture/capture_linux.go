@@ -417,15 +417,11 @@ func networkFromBSS(data []byte, seen time.Time) (wifi.ScannedNetwork, bool, err
 		Frequency:    freqMHz,
 		Security:     securityFromElements(elements, capability),
 		ChannelWidth: width,
-		// nl80211 reports no noise measurement with scan results, so the SNR
-		// below is derived from the same assumed floor the macOS backend uses
-		// when CoreWLAN omits one. Keeping them consistent matters more than
-		// either being exact: a survey compares points, not absolutes.
-		NoiseFloor: defaultNoiseFloorDBm,
-		SNR:        signalDBm - defaultNoiseFloorDBm,
-		HTMode:     htModeForWidth(width),
-		IsDFS:      band == band5GHz && isDFSChannel(channel),
-		LastSeen:   seen,
+		// nl80211 reports no noise measurement with scan results, so
+		// NoiseFloor and SNR stay absent; see snrFor.
+		HTMode:   htModeForWidth(width),
+		IsDFS:    band == band5GHz && isDFSChannel(channel),
+		LastSeen: seen,
 
 		Associated:         associated,
 		ChannelUtilization: utilization,

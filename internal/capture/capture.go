@@ -41,12 +41,19 @@ const (
 	channel14          = 14
 )
 
-// defaultNoiseFloorDBm stands in when the driver reports no noise measurement:
-// CoreWLAN omits it for scanned networks on some adapters, and nl80211 never
-// reports one with scan results at all. Reporting 0 dBm would make the derived
-// SNR meaningless, and every backend using the same assumption keeps points
-// comparable across the hosts that walked them.
-const defaultNoiseFloorDBm = -95
+// snrFor derives signal-to-noise from a measured noise floor. A floor of 0 is
+// one the driver did not report -- nl80211 never does with scan results,
+// Native Wifi never does, CoreWLAN and radiotap only sometimes -- and then SNR
+// is absent (0) too, the convention core/survey already reads as "not
+// recorded". Substituting an assumed floor instead made every such SNR look
+// measured: the EtherScope oracle put the real floor 4-6 dB above the old
+// -95 dBm guess and Trellis called a weak link healthy (#600).
+func snrFor(signalDBm, noiseDBm int) int {
+	if noiseDBm == 0 {
+		return 0
+	}
+	return signalDBm - noiseDBm
+}
 
 // Bands, in GHz, as reported by a driver.
 const (

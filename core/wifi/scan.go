@@ -23,8 +23,8 @@ type ScannedNetwork struct {
 	Frequency    int       `json:"frequency"`    // MHz
 	Security     string    `json:"security"`     // e.g. "WPA3", "Open"
 	ChannelWidth int       `json:"channelWidth"` // 20, 40, 80, 160, 320 MHz
-	NoiseFloor   int       `json:"noiseFloor"`   // dBm (typically -90 to -100)
-	SNR          int       `json:"snr"`          // Signal-to-Noise Ratio (Signal - NoiseFloor)
+	NoiseFloor   int       `json:"noiseFloor"`   // dBm as measured; 0 when the driver reported none
+	SNR          int       `json:"snr"`          // Signal - NoiseFloor; 0 when there is no measured floor
 	HTMode       string    `json:"htMode"`       // HT20, HT40, VHT80, HE160, EHT320, etc.
 	IsDFS        bool      `json:"isDFS"`        // channel is DFS (Dynamic Frequency Selection)
 	LastSeen     time.Time `json:"lastSeen"`

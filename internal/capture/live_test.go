@@ -82,9 +82,10 @@ func TestLiveScan(t *testing.T) {
 		if n.Security == "" {
 			t.Errorf("networks[%d] (%s) has no security scheme", i, n.BSSID)
 		}
-		if n.SNR != n.Signal-n.NoiseFloor {
+		// SNR exists only where the driver measured a floor to derive it from.
+		if want := snrFor(n.Signal, n.NoiseFloor); n.SNR != want {
 			t.Errorf("networks[%d] (%s) SNR = %d, want %d (signal %d - noise %d)",
-				i, n.BSSID, n.SNR, n.Signal-n.NoiseFloor, n.Signal, n.NoiseFloor)
+				i, n.BSSID, n.SNR, want, n.Signal, n.NoiseFloor)
 		}
 		if n.LastSeen.IsZero() {
 			t.Errorf("networks[%d] (%s) has no observation time", i, n.BSSID)

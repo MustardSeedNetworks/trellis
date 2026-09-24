@@ -2475,8 +2475,13 @@ type ScannedNetwork struct {
 	FrequencyMhz    int32                  `protobuf:"varint,5,opt,name=frequency_mhz,json=frequencyMhz,proto3" json:"frequency_mhz,omitempty"`
 	Security        string                 `protobuf:"bytes,6,opt,name=security,proto3" json:"security,omitempty"`
 	ChannelWidthMhz int32                  `protobuf:"varint,7,opt,name=channel_width_mhz,json=channelWidthMhz,proto3" json:"channel_width_mhz,omitempty"`
-	NoiseFloorDbm   int32                  `protobuf:"varint,8,opt,name=noise_floor_dbm,json=noiseFloorDbm,proto3" json:"noise_floor_dbm,omitempty"`
-	SnrDb           int32                  `protobuf:"varint,9,opt,name=snr_db,json=snrDb,proto3" json:"snr_db,omitempty"`
+	// Noise floor the driver measured, and the signal-to-noise derived from it.
+	// Both are absent when the driver reports no noise figure -- nl80211 scans
+	// and Native Wifi never do, CoreWLAN and radiotap only on some adapters --
+	// because an assumed floor read as a measured one and turned a weak link
+	// into a healthy one (#600).
+	NoiseFloorDbm *int32 `protobuf:"varint,8,opt,name=noise_floor_dbm,json=noiseFloorDbm,proto3,oneof" json:"noise_floor_dbm,omitempty"`
+	SnrDb         *int32 `protobuf:"varint,9,opt,name=snr_db,json=snrDb,proto3,oneof" json:"snr_db,omitempty"`
 	// Widest PHY carrying this channel width: "HT20", "VHT80", "EHT320", ...
 	HtMode string `protobuf:"bytes,10,opt,name=ht_mode,json=htMode,proto3" json:"ht_mode,omitempty"`
 	// Channel requires radar detection (DFS).
@@ -2574,15 +2579,15 @@ func (x *ScannedNetwork) GetChannelWidthMhz() int32 {
 }
 
 func (x *ScannedNetwork) GetNoiseFloorDbm() int32 {
-	if x != nil {
-		return x.NoiseFloorDbm
+	if x != nil && x.NoiseFloorDbm != nil {
+		return *x.NoiseFloorDbm
 	}
 	return 0
 }
 
 func (x *ScannedNetwork) GetSnrDb() int32 {
-	if x != nil {
-		return x.SnrDb
+	if x != nil && x.SnrDb != nil {
+		return *x.SnrDb
 	}
 	return 0
 }
@@ -4085,7 +4090,7 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\rap_count_5ghz\x18\x05 \x01(\x05R\vapCount5ghz\x12\"\n" +
 	"\rap_count_6ghz\x18\x06 \x01(\x05R\vapCount6ghz\x12$\n" +
 	"\x0eco_channel_aps\x18\a \x01(\x05R\fcoChannelAps\x12&\n" +
-	"\x0fadj_channel_aps\x18\b \x01(\x05R\radjChannelAps\"\xd4\x03\n" +
+	"\x0fadj_channel_aps\x18\b \x01(\x05R\radjChannelAps\"\xfd\x03\n" +
 	"\x0eScannedNetwork\x12\x12\n" +
 	"\x04ssid\x18\x01 \x01(\tR\x04ssid\x12\x14\n" +
 	"\x05bssid\x18\x02 \x01(\tR\x05bssid\x12\x1d\n" +
@@ -4094,16 +4099,18 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\achannel\x18\x04 \x01(\x05R\achannel\x12#\n" +
 	"\rfrequency_mhz\x18\x05 \x01(\x05R\ffrequencyMhz\x12\x1a\n" +
 	"\bsecurity\x18\x06 \x01(\tR\bsecurity\x12*\n" +
-	"\x11channel_width_mhz\x18\a \x01(\x05R\x0fchannelWidthMhz\x12&\n" +
-	"\x0fnoise_floor_dbm\x18\b \x01(\x05R\rnoiseFloorDbm\x12\x15\n" +
-	"\x06snr_db\x18\t \x01(\x05R\x05snrDb\x12\x17\n" +
+	"\x11channel_width_mhz\x18\a \x01(\x05R\x0fchannelWidthMhz\x12+\n" +
+	"\x0fnoise_floor_dbm\x18\b \x01(\x05H\x00R\rnoiseFloorDbm\x88\x01\x01\x12\x1a\n" +
+	"\x06snr_db\x18\t \x01(\x05H\x01R\x05snrDb\x88\x01\x01\x12\x17\n" +
 	"\aht_mode\x18\n" +
 	" \x01(\tR\x06htMode\x12\x15\n" +
 	"\x06is_dfs\x18\v \x01(\bR\x05isDfs\x12\x1e\n" +
 	"\n" +
 	"associated\x18\f \x01(\bR\n" +
 	"associated\x12C\n" +
-	"\x1bchannel_utilization_percent\x18\r \x01(\x05H\x00R\x19channelUtilizationPercent\x88\x01\x01B\x1e\n" +
+	"\x1bchannel_utilization_percent\x18\r \x01(\x05H\x02R\x19channelUtilizationPercent\x88\x01\x01B\x12\n" +
+	"\x10_noise_floor_dbmB\t\n" +
+	"\a_snr_dbB\x1e\n" +
 	"\x1c_channel_utilization_percent\"R\n" +
 	"\x18GetFloorPlanImageRequest\x12\x1b\n" +
 	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\x12\x19\n" +
