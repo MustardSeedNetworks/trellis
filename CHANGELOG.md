@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.91](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.90...v0.2.91) (2026-09-24)
+
+
+### Bug Fixes
+
+* **report:** label the swatches either side of the threshold step ([#596](https://github.com/MustardSeedNetworks/trellis/issues/596)) ([880b919](https://github.com/MustardSeedNetworks/trellis/commit/880b919ae77b6b6d9c83a27a94f659b1263a6a17)), closes [#571](https://github.com/MustardSeedNetworks/trellis/issues/571)
+* **ui:** add -strong pill text tokens measured on their own wash ([#594](https://github.com/MustardSeedNetworks/trellis/issues/594)) ([0f298ed](https://github.com/MustardSeedNetworks/trellis/commit/0f298ed1682b2e6f43535c944a9569e21564bf48))
+
 ## [0.2.90](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.89...v0.2.90) (2026-09-24)
 
 
