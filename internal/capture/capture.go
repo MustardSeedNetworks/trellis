@@ -174,19 +174,28 @@ func withAssociation(
 		return networks
 	}
 
-	// Drivers do not agree on the case of a BSSID, and a case-sensitive compare
-	// would report the connection as a network of its own beside itself.
-	want := strings.ToLower(current.BSSID)
-	for i := range networks {
-		if strings.ToLower(networks[i].BSSID) == want {
-			networks[i].Associated = true
-			return networks
-		}
+	if markAssociated(networks, current.BSSID) {
+		return networks
 	}
 
 	associated := *current
 	associated.Associated = true
 	return append(networks, associated)
+}
+
+// markAssociated marks the scanned BSS with this BSSID as the one the host is
+// joined to, reporting whether the sweep saw it. Drivers do not agree on the
+// case of a BSSID, and a case-sensitive compare would report the connection as
+// a network of its own beside itself.
+func markAssociated(networks []wifi.ScannedNetwork, bssid string) bool {
+	want := strings.ToLower(bssid)
+	for i := range networks {
+		if strings.ToLower(networks[i].BSSID) == want {
+			networks[i].Associated = true
+			return true
+		}
+	}
+	return false
 }
 
 // dedupeBSSes collapses repeated observations of one BSS into a single entry.

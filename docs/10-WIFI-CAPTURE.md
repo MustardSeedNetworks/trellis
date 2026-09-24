@@ -206,15 +206,24 @@ cannot satisfy. That is structurally the same gate as macOS's TCC, reached by a
 different mechanism, and it means trellisd must run in the surveyor's own
 session on Windows too.
 
+**Verified live on 2026-09-24 (#152)**, Windows 11 Pro on Proxmox VM 200 with
+the Edimax EW-7611ULB passed through. With **Location services** and **Let
+desktop apps access your location** both on, and the user signed in over RDP,
+a process in that same user's SSH logon (session 0) scans: `TestLiveScan`
+passes (11 BSSs, 7 named) and `netsh wlan show networks` answers. This run
+does not separate "consent granted" from "a user is signed in", because both
+held at once.
+
 **Struct layout is a contract with the OS.** `WLAN_BSS_ENTRY` is read straight
 out of memory `wlanapi` allocated. One wrong offset does not fail loudly: every
 field after the mistake is read from the wrong bytes and the survey records
 plausible nonsense. `TestWLANBSSEntryLayout` pins all sixteen offsets and the
 360-byte size, and is run on real Windows rather than inferred.
 
-**Cadence is unmeasured.** Windows historically rate-limits scans more
-aggressively than Linux. That needs measuring on a host with a logged-in user,
-which is the same thing the live scan needs.
+**Cadence, measured (#152):** `TestLiveScanCadence` on that host ran 20 scans
+in 38.3 s, 1.7-3.3 s each (median 1.87 s), and 19 of 19 returned changed
+readings: about **0.5 fresh sweeps a second**, roughly twice the macOS rate,
+not rate-limited into serving its cache.
 
 ## Tier 2 — monitor mode, on Linux only
 
@@ -307,8 +316,10 @@ is linked into `trellisd` today rather than split out.
   walk and has no equivalent on the other two platforms.
 - Which BSS this host is joined to: **yes on macOS** (CoreWLAN reports the
   current network) and **on Linux** (nl80211 flags it on the scan dump
-  itself); **no on Windows**, whose current connection comes from
-  `WlanQueryInterface` rather than the BSS list and is not wired up — a
-  Windows live view lists the airspace without naming the joined BSS.
+  itself); **and on Windows**, where `WlanQueryInterface`
+  (`wlan_intf_opcode_current_connection`) names the joined BSSID separately
+  from the BSS list (#294). Native Wifi reports that connection's signal only
+  as a 0-100 quality, so a joined BSS the sweep missed is left unmarked rather
+  than listed with a signal nobody measured in dBm.
 - Anything requiring the radio to leave the network: **no**, and it would need
   to be an explicit mode rather than a background capability.
