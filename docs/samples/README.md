@@ -12,15 +12,12 @@ key is generated from the exact scale used to paint the map. The sample
 includes the cover, floor statistics and coverage map; optional summary and
 recommendations are off to keep this acceptance artifact focused.
 
-Generated against the report implementation at `50b0fbb` (v0.2.86), which
-includes the coverage-ramp change from PR #552. All three pages were rendered
-and inspected on September 22, 2026: text is readable and unclipped, the map
-is present, and its orange/teal boundary agrees with the key.
-
-The existing renderer rounds the two threshold-adjacent stops to the same
-`-60 dBm` label. Their different colors remain visible; the labeling ambiguity
-is tracked in [trellis#571](https://github.com/MustardSeedNetworks/trellis/issues/571).
-This sample does not fix that production behavior.
+Regenerated on September 24, 2026 with the key-label fix for
+[trellis#571](https://github.com/MustardSeedNetworks/trellis/issues/571). All
+three pages were rendered and inspected: text is readable and unclipped, the
+map is present, and its orange/teal boundary agrees with the key. The two
+stops either side of the threshold now read `< -60 dBm` (orange) and
+`-60 dBm` (teal); before the fix both read `-60 dBm`.
 
 Regenerate from the repository root:
 
