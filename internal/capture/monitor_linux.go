@@ -257,7 +257,7 @@ func networkFromFrame(frame []byte, seen time.Time) (wifi.ScannedNetwork, bool) 
 		freq = channelToFrequency(channel, band24GHz)
 	}
 
-	noise := defaultNoiseFloorDBm
+	var noise int
 	if rt.haveNoise {
 		noise = rt.noiseDBm
 	}
@@ -278,7 +278,7 @@ func networkFromFrame(frame []byte, seen time.Time) (wifi.ScannedNetwork, bool) 
 		Security:     securityFromElements(mgmt.elements, mgmt.capability),
 		ChannelWidth: width,
 		NoiseFloor:   noise,
-		SNR:          rt.signalDBm - noise,
+		SNR:          snrFor(rt.signalDBm, noise),
 		HTMode:       htModeForWidth(width),
 		// 2.4 GHz has no DFS channels, so this is false by construction
 		// rather than by omission. It becomes a real question when a 5 GHz

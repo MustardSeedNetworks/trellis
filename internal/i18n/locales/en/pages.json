@@ -81,6 +81,9 @@
     "healthy": "Connected to {{ssid}} with {{snr}} dB of margin",
     "healthyBody_one": "{{count}} BSS observed in this sweep.",
     "healthyBody_other": "{{count}} BSSs observed in this sweep.",
+    "healthyUnmeasured": "Connected to {{ssid}} at {{signal}} dBm",
+    "healthyUnmeasuredBody_one": "This adapter reports no noise floor, so the margin is not known. {{count}} BSS observed in this sweep.",
+    "healthyUnmeasuredBody_other": "This adapter reports no noise floor, so the margin is not known. {{count}} BSSs observed in this sweep.",
     "hiddenNetwork": "Hidden network",
     "neighbours_one": "{{count}} BSS heard",
     "neighbours_other": "{{count}} BSSs heard",
@@ -97,7 +100,9 @@
     "scanning": "Scanning…",
     "title": "Live",
     "weakLink": "{{ssid}} has only {{snr}} dB of margin",
-    "weakLinkBody": "Signal-to-noise this low is where rates drop and roams start. Signal alone can look fine here."
+    "weakLinkBody": "Signal-to-noise this low is where rates drop and roams start. Signal alone can look fine here.",
+    "weakSignal": "{{ssid}} is only {{signal}} dBm",
+    "weakSignalBody": "Signal this weak is where rates drop and roams start. This adapter reports no noise floor, so the margin is not known."
   },
   "login": {
     "title": "Sign in",

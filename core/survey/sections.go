@@ -534,6 +534,15 @@ func (g *ReportGenerator) addRecommendations() {
 }
 
 // addRawDataAppendix adds the raw data appendix section.
+// snrCell prints a point's SNR, or "-" when its capture measured no noise
+// floor and core carries the SNR as 0.
+func snrCell(snr int) string {
+	if snr == 0 {
+		return "-"
+	}
+	return strconv.Itoa(snr)
+}
+
 func (g *ReportGenerator) addRawDataAppendix() {
 	g.pdf.AddPage()
 	g.addSectionHeader("Appendix: Raw Sample Data")
@@ -583,7 +592,7 @@ func (g *ReportGenerator) addRawDataAppendix() {
 		if ps != nil && len(ps.Networks) > 0 {
 			net := ps.Networks[0]
 			rssi = strconv.Itoa(net.Signal)
-			snr = strconv.Itoa(net.SNR)
+			snr = snrCell(net.SNR)
 			ssid = truncateString(net.SSID, pdfSSIDMaxLength)
 			channel = strconv.Itoa(net.Channel)
 		}

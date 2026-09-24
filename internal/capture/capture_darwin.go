@@ -82,11 +82,6 @@ func currentNetwork(seen time.Time) *wifi.ScannedNetwork {
 
 // networkFrom maps a CoreWLAN observation onto Trellis's scan model.
 func networkFrom(n corewlan.Network, seen time.Time) wifi.ScannedNetwork {
-	noise := n.Noise
-	if noise == 0 {
-		noise = defaultNoiseFloorDBm
-	}
-
 	width := n.ChannelWidth
 	if width == 0 {
 		width = width20MHz
@@ -100,8 +95,8 @@ func networkFrom(n corewlan.Network, seen time.Time) wifi.ScannedNetwork {
 		Frequency:    channelToFrequency(n.Channel, int(n.Band)),
 		Security:     securityName(n.Security),
 		ChannelWidth: width,
-		NoiseFloor:   noise,
-		SNR:          n.RSSI - noise,
+		NoiseFloor:   n.Noise,
+		SNR:          snrFor(n.RSSI, n.Noise),
 		HTMode:       htModeForWidth(width),
 		IsDFS:        n.Band == corewlan.Band5GHz && isDFSChannel(n.Channel),
 		LastSeen:     seen,

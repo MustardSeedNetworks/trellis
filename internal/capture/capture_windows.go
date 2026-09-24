@@ -376,15 +376,11 @@ func networkFromEntry(entry *wlanBSSEntry, seen time.Time) wifi.ScannedNetwork {
 		Frequency:    freqMHz,
 		Security:     securityFromElements(elements, entry.CapabilityInformation),
 		ChannelWidth: width,
-		// Native Wifi reports no noise measurement, so the SNR below is derived
-		// from the same assumed floor the other backends use when the driver
-		// omits one. Consistency matters more than either being exact: a survey
-		// compares points, not absolutes.
-		NoiseFloor: defaultNoiseFloorDBm,
-		SNR:        signal - defaultNoiseFloorDBm,
-		HTMode:     htModeForWidth(width),
-		IsDFS:      band == band5GHz && isDFSChannel(channel),
-		LastSeen:   seen,
+		// Native Wifi reports no noise measurement, so NoiseFloor and SNR
+		// stay absent; see snrFor.
+		HTMode:   htModeForWidth(width),
+		IsDFS:    band == band5GHz && isDFSChannel(channel),
+		LastSeen: seen,
 
 		// Associated stays false: Native Wifi reports the current connection
 		// through WlanQueryInterface rather than on the BSS list, and that

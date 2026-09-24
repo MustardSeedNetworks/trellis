@@ -32,6 +32,12 @@ const pollMs = 5000;
 /** SNR below this reads as a connection worth looking at rather than a healthy one. */
 const weakSnrDb = 20;
 
+/**
+ * Signal below this is weak when the adapter measured no noise floor and SNR
+ * cannot decide: the survey's own RSSI dead-zone default, not a second rule.
+ */
+const weakSignalDbm = -75;
+
 /** Channel utilisation at or above this is congestion, not traffic. */
 const busyChannelPercent = 60;
 
@@ -157,7 +163,13 @@ function describeAirspace(
 
   const figures = [
     { label: t('pages:live.columns.signal'), value: formatSignal(connected.signalDbm, 'dBm') },
-    { label: t('pages:live.columns.snr'), value: formatSignal(connected.snrDb, 'dB') },
+    {
+      label: t('pages:live.columns.snr'),
+      value:
+        connected.snrDb === undefined
+          ? t('pages:live.notReported')
+          : formatSignal(connected.snrDb, 'dB'),
+    },
     {
       label: t('pages:live.columns.channel'),
       value: t('pages:live.channelCell', {
@@ -178,11 +190,22 @@ function describeAirspace(
 
   // SNR is what decides this, not signal: a strong signal on a noisy channel
   // performs worse than a weaker one in quiet air, and the derived margin is
-  // the number that says which of those an operator is standing in.
-  if (connected.snrDb < weakSnrDb) {
+  // the number that says which of those an operator is standing in. Where the
+  // adapter measured no noise floor there is no margin to judge, so signal
+  // decides and the verdict says the margin is unknown (#600).
+  const snr = connected.snrDb;
+  if (snr === undefined && connected.signalDbm < weakSignalDbm) {
     return {
       state: 'warn',
-      headline: t('pages:live.weakLink', { ssid, snr: connected.snrDb }),
+      headline: t('pages:live.weakSignal', { ssid, signal: connected.signalDbm }),
+      body: t('pages:live.weakSignalBody'),
+      figures,
+    };
+  }
+  if (snr !== undefined && snr < weakSnrDb) {
+    return {
+      state: 'warn',
+      headline: t('pages:live.weakLink', { ssid, snr }),
       body: t('pages:live.weakLinkBody'),
       figures,
     };
@@ -201,9 +224,17 @@ function describeAirspace(
       figures,
     };
   }
+  if (snr === undefined) {
+    return {
+      state: 'ok',
+      headline: t('pages:live.healthyUnmeasured', { ssid, signal: connected.signalDbm }),
+      body: t('pages:live.healthyUnmeasuredBody', { count: networks.length }),
+      figures,
+    };
+  }
   return {
     state: 'ok',
-    headline: t('pages:live.healthy', { ssid, snr: connected.snrDb }),
+    headline: t('pages:live.healthy', { ssid, snr }),
     body: t('pages:live.healthyBody', { count: networks.length }),
     figures,
   };

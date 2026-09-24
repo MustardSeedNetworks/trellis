@@ -81,6 +81,9 @@
     "healthy": "Conectado a {{ssid}} con {{snr}} dB de margen",
     "healthyBody_one": "{{count}} BSS observado en este barrido.",
     "healthyBody_other": "{{count}} BSS observados en este barrido.",
+    "healthyUnmeasured": "Conectado a {{ssid}} con {{signal}} dBm",
+    "healthyUnmeasuredBody_one": "Este adaptador no informa del ruido de fondo, así que el margen no se conoce. {{count}} BSS observado en este barrido.",
+    "healthyUnmeasuredBody_other": "Este adaptador no informa del ruido de fondo, así que el margen no se conoce. {{count}} BSS observados en este barrido.",
     "hiddenNetwork": "Red oculta",
     "neighbours_one": "{{count}} BSS detectado",
     "neighbours_other": "{{count}} BSS detectados",
@@ -97,7 +100,9 @@
     "scanning": "Explorando…",
     "title": "En vivo",
     "weakLink": "{{ssid}} solo tiene {{snr}} dB de margen",
-    "weakLinkBody": "Una relación señal/ruido tan baja es donde caen las tasas y empiezan los saltos. La señal por sí sola puede parecer correcta aquí."
+    "weakLinkBody": "Una relación señal/ruido tan baja es donde caen las tasas y empiezan los saltos. La señal por sí sola puede parecer correcta aquí.",
+    "weakSignal": "{{ssid}} solo llega a {{signal}} dBm",
+    "weakSignalBody": "Una señal tan débil es donde caen las tasas y empiezan los saltos. Este adaptador no informa del ruido de fondo, así que el margen no se conoce."
   },
   "login": {
     "title": "Iniciar sesión",

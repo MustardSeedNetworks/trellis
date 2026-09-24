@@ -311,16 +311,26 @@ func scannedNetworkOf(n *wifi.ScannedNetwork) *surveyv1.ScannedNetwork {
 		FrequencyMhz:    int32Of(n.Frequency),
 		Security:        n.Security,
 		ChannelWidthMhz: int32Of(n.ChannelWidth),
-		NoiseFloorDbm:   proto.Int32(int32Of(n.NoiseFloor)),
-		SnrDb:           proto.Int32(int32Of(n.SNR)),
-		HtMode:          n.HTMode,
-		IsDfs:           n.IsDFS,
-		Associated:      n.Associated,
+		// Left nil when the driver measured no floor, which core carries as 0.
+		NoiseFloorDbm: measuredDBOf(n.NoiseFloor),
+		SnrDb:         measuredDBOf(n.SNR),
+		HtMode:        n.HTMode,
+		IsDfs:         n.IsDFS,
+		Associated:    n.Associated,
 		// Left nil when the AP advertised no BSS Load element: 0% is a real
 		// reading for an idle channel, so a client has to be able to tell the
 		// two apart.
 		ChannelUtilizationPercent: utilizationOf(n.ChannelUtilization),
 	}
+}
+
+// measuredDBOf narrows a noise floor or SNR for the wire. Core carries an
+// unmeasured one as 0, a value no receiver hearing a real signal reports.
+func measuredDBOf(db int) *int32 {
+	if db == 0 {
+		return nil
+	}
+	return proto.Int32(int32Of(db))
 }
 
 // utilizationOf narrows an optional utilisation reading for the wire.

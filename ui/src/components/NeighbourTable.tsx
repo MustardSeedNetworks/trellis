@@ -103,7 +103,11 @@ function NeighbourRow({
         {network.isDfs ? ` ${t('pages:live.dfs')}` : ''}
       </td>
       <td className="py-2 pr-4 text-text-primary">{formatSignal(network.signalDbm, 'dBm')}</td>
-      <td className="py-2 pr-4 text-text-secondary">{formatSignal(network.snrDb, 'dB')}</td>
+      <td className="py-2 pr-4 text-text-secondary">
+        {network.snrDb === undefined
+          ? t('pages:live.notReported')
+          : formatSignal(network.snrDb, 'dB')}
+      </td>
       <td className="py-2 pr-4 text-text-secondary">{network.security}</td>
       <td className="py-2 text-text-secondary">
         {network.channelUtilizationPercent === undefined

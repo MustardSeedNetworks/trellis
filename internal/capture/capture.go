@@ -221,5 +221,3 @@ func dedupeBSSes(networks []wifi.ScannedNetwork) []wifi.ScannedNetwork {
 	}
 	return deduped
 }
-
-const defaultNoiseFloorDBm = -95 // RED-only, removed in GREEN

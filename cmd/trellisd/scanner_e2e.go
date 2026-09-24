@@ -107,8 +107,11 @@ func (s *scriptedScanner) Scan(ctx context.Context) ([]wifi.ScannedNetwork, erro
 		{SSID: "Trellis Lab", BSSID: "02:00:00:00:00:02", Signal: -62,
 			Channel: 6, Frequency: 2437, Security: "WPA2", ChannelWidth: 20,
 			NoiseFloor: -95, SNR: 33, HTMode: "HT20", LastSeen: seen},
+		// Heard without a noise figure, as every nl80211 scan and Native Wifi
+		// BSS is: no floor and no SNR (#600). It is never the strongest, so
+		// the survey's SNR layer is still decided by the measured APs above.
 		{SSID: "", BSSID: "02:00:00:00:00:03", Signal: -79,
 			Channel: 100, Frequency: 5500, Security: "WPA2", ChannelWidth: 40,
-			NoiseFloor: -95, SNR: 16, HTMode: "HT40", IsDFS: true, LastSeen: seen},
+			HTMode: "HT40", IsDFS: true, LastSeen: seen},
 	}, nil
 }

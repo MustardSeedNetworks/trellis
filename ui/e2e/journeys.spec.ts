@@ -212,8 +212,11 @@ test('reads the live airspace and stops taking the radio when paused', async ({ 
   // under every fade step, since it never moves.
   await expect(rows.last()).toContainText('Hidden network');
   await expect(rows.last()).toContainText('(DFS)');
-  // An AP that sent no BSS Load element must not read as an idle channel.
-  await expect(rows.last()).toContainText('Not reported');
+  // An AP that sent no BSS Load element must not read as an idle channel, and
+  // one heard without a noise figure must not read as a measured margin.
+  const lastCells = rows.last().locator('td');
+  await expect(lastCells.nth(6)).toHaveText('Not reported');
+  await expect(lastCells.nth(4)).toHaveText('Not reported');
 
   // Pausing has to stop the polling, not just relabel the button: the same
   // adapter is what a walk captures with. The joined AP is the one that fades,
