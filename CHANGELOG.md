@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.93](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.92...v0.2.93) (2026-09-24)
+
+
+### Bug Fixes
+
+* **capture:** report an unmeasured noise floor as absent, not an assumed -95 dBm ([#606](https://github.com/MustardSeedNetworks/trellis/issues/606)) ([49dbf68](https://github.com/MustardSeedNetworks/trellis/commit/49dbf684792322ab9b65cf09fcd6b7fca4c660b2))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#608](https://github.com/MustardSeedNetworks/trellis/issues/608)) ([0bb6fe5](https://github.com/MustardSeedNetworks/trellis/commit/0bb6fe5099034ce59396fe9324f3191e407172f0))
+
 ## [0.2.92](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.91...v0.2.92) (2026-09-24)
 
 
