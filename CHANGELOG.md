@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.2.92](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.91...v0.2.92) (2026-09-24)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.47.0 ([#597](https://github.com/MustardSeedNetworks/trellis/issues/597)) ([97ff501](https://github.com/MustardSeedNetworks/trellis/commit/97ff501fc039eb8589d9f81d527048f59b897526))
+* **ui:** re-copy canonical msn-shared.css with the status pill text tokens ([#605](https://github.com/MustardSeedNetworks/trellis/issues/605)) ([e7320cb](https://github.com/MustardSeedNetworks/trellis/commit/e7320cb77850d21c6dbdde72ea3fd27ad9906b4a)), closes [#604](https://github.com/MustardSeedNetworks/trellis/issues/604)
+
+
+### Documentation
+
+* **oracle:** EtherScope nXG live-view comparison for the Live page ([#601](https://github.com/MustardSeedNetworks/trellis/issues/601)) ([c20a3cf](https://github.com/MustardSeedNetworks/trellis/commit/c20a3cf8a39afbf8cf84827f3c0aa21939af9c9b))
+* **oracle:** scope the width comparison to the one width the EtherScope printed ([#603](https://github.com/MustardSeedNetworks/trellis/issues/603)) ([2d4b014](https://github.com/MustardSeedNetworks/trellis/commit/2d4b014c15ffabaaaf7a42442ce00ed5e78d0cb4))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#599](https://github.com/MustardSeedNetworks/trellis/issues/599)) ([65fc41d](https://github.com/MustardSeedNetworks/trellis/commit/65fc41d1a5d70f6349a1a30bff8dde00b39854b2))
+
 ## [0.2.91](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.90...v0.2.91) (2026-09-24)
 
 
