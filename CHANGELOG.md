@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.94](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.93...v0.2.94) (2026-09-24)
+
+
+### Bug Fixes
+
+* **capture:** mark the BSS Windows is joined to ([#610](https://github.com/MustardSeedNetworks/trellis/issues/610)) ([ea8937a](https://github.com/MustardSeedNetworks/trellis/commit/ea8937a7b8f8864399468f6081a45296b5b55500)), closes [#294](https://github.com/MustardSeedNetworks/trellis/issues/294)
+* **coverage:** read an unmeasured SNR layer as a fact about the survey ([#612](https://github.com/MustardSeedNetworks/trellis/issues/612)) ([2910a90](https://github.com/MustardSeedNetworks/trellis/commit/2910a907fae061d49f1fe83020452099bd9374e9)), closes [#607](https://github.com/MustardSeedNetworks/trellis/issues/607)
+
 ## [0.2.93](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.92...v0.2.93) (2026-09-24)
 
 
