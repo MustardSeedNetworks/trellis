@@ -12,6 +12,7 @@ const answered = new Set<Code>([
   Code.PermissionDenied,
   Code.Unauthenticated,
   Code.AlreadyExists,
+  Code.FailedPrecondition,
 ]);
 
 /**

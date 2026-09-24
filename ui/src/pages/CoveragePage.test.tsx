@@ -6,6 +6,7 @@
  * instead of rendering an empty floor, and each metric's dead-zone threshold
  * stays in that metric's own unit.
  */
+import { Code, ConnectError } from '@connectrpc/connect';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
@@ -183,6 +184,49 @@ describe('CoveragePage', () => {
         expect(call[0].threshold).toBeGreaterThan(0);
       }
     }
+  });
+
+  /*
+   * A walk on a radio that reports no noise floor has signal and no SNR
+   * (#600). The service says so with FailedPrecondition, and the page must
+   * read that as a fact about the survey rather than as the service failing
+   * (#607) — on both the findings panel and the surface.
+   */
+  it('reads an unmeasured SNR layer as a fact about the survey, not a failure', async () => {
+    renderPage();
+    await screen.findByTestId('coverage-findings');
+    const unmeasured = new ConnectError(
+      'the survey did not measure this metric: snr',
+      Code.FailedPrecondition,
+    );
+    getHeatmap.mockRejectedValue(unmeasured);
+    getCoverage.mockRejectedValue(unmeasured);
+
+    fireEvent.click(screen.getByRole('button', { name: 'SNR' }));
+
+    const findings = screen.getByTestId('coverage-findings');
+    await waitFor(() => expect(findings).toHaveTextContent('No SNR measured on this floor'));
+    expect(findings).toHaveTextContent('reports no noise floor');
+    expect(findings).not.toHaveTextContent('not arriving');
+    expect(findings).toHaveAttribute('data-state', 'unknown');
+
+    const surface = screen.getByTestId('surface-message');
+    expect(surface).toHaveTextContent('No SNR measured on this floor');
+    expect(surface).not.toHaveTextContent('did not render');
+    expect(surface).not.toHaveClass('text-status-error');
+  });
+
+  it('keeps a real heatmap failure an error on the SNR layer', async () => {
+    renderPage();
+    await screen.findByTestId('coverage-findings');
+    getHeatmap.mockRejectedValue(new ConnectError('boom', Code.Internal));
+
+    fireEvent.click(screen.getByRole('button', { name: 'SNR' }));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('surface-message')).toHaveTextContent('The heatmap did not render'),
+    );
+    expect(screen.getByTestId('surface-message')).toHaveClass('text-status-error');
   });
 
   it('drops the threshold and the findings on a layer the analysis cannot speak about', async () => {

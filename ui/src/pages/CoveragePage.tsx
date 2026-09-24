@@ -1,3 +1,4 @@
+import { Code, ConnectError } from '@connectrpc/connect';
 import { useQuery } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
 import { useState } from 'react';
@@ -131,10 +132,13 @@ export function CoveragePage() {
   });
 
   const heatmap = heatmapQuery.data;
-  const unit = METRICS.find((m) => m.id === metric)?.unit ?? '';
+  const metricOption = METRICS.find((m) => m.id === metric);
+  const unit = metricOption?.unit ?? '';
+  const metricLabel = metricOption?.glossary ?? t('pages:coverage.metricDownload');
   const findings = describeCoverage(
     {
       metric,
+      metricLabel,
       threshold,
       unit,
       hasSurvey: surveyId !== undefined,
@@ -291,6 +295,7 @@ export function CoveragePage() {
               heatmapError: heatmapQuery.error,
               heatmap,
               metric,
+              metricLabel,
               unit,
             },
             t,
@@ -346,7 +351,26 @@ interface SurfaceState {
       }
     | undefined;
   metric: Metric;
+  metricLabel: string;
   unit: string;
+}
+
+/**
+ * FailedPrecondition on a layer is the service saying the walk never measured
+ * that metric — SNR from a radio that reports no noise floor (#600). It is a
+ * fact about the survey, told apart by its code rather than its message
+ * (#607), and never a failure to render or analyse.
+ */
+function isUnmeasured(error: unknown): boolean {
+  return error != null && ConnectError.from(error).code === Code.FailedPrecondition;
+}
+
+/** What an unmeasured layer says, on the surface and in the findings alike. */
+function unmeasuredCopy(metric: Metric, metricLabel: string, t: TFunction<['common', 'pages']>) {
+  return {
+    headline: t('pages:coverage.layerUnmeasured', { metric: metricLabel }),
+    body: metric === 'snr' ? t('pages:coverage.snrUnmeasuredBody') : undefined,
+  };
 }
 
 /**
@@ -362,6 +386,7 @@ function renderSurface(
     heatmapError,
     heatmap,
     metric,
+    metricLabel,
     unit,
   }: SurfaceState,
   t: TFunction<['common', 'pages']>,
@@ -385,6 +410,15 @@ function renderSurface(
       <p className="text-sm text-text-muted" data-testid="surface-message">
         {t('pages:coverage.noSurveys')}
       </p>
+    );
+  }
+  if (isUnmeasured(heatmapError)) {
+    const copy = unmeasuredCopy(metric, metricLabel, t);
+    return (
+      <div className="flex flex-col gap-1 text-sm text-text-muted" data-testid="surface-message">
+        <p className="font-medium text-text-primary">{copy.headline}</p>
+        {copy.body ? <p>{copy.body}</p> : null}
+      </div>
     );
   }
   if (heatmapError) {
@@ -420,6 +454,7 @@ function renderSurface(
 
 interface CoverageState {
   metric: Metric;
+  metricLabel: string;
   threshold: number;
   unit: string;
   hasSurvey: boolean;
@@ -439,7 +474,17 @@ interface CoverageVerdict {
 
 /** Turns the analysis into the sentence the findings panel leads with. */
 function describeCoverage(
-  { metric, threshold, unit, hasSurvey, loading, error, coverage, sampleCount }: CoverageState,
+  {
+    metric,
+    metricLabel,
+    threshold,
+    unit,
+    hasSurvey,
+    loading,
+    error,
+    coverage,
+    sampleCount,
+  }: CoverageState,
   t: TFunction<['common', 'pages']>,
 ): CoverageVerdict {
   if (!hasSurvey) {
@@ -447,6 +492,14 @@ function describeCoverage(
       state: 'unknown',
       headline: t('pages:coverage.noSurveySelected'),
       body: t('pages:coverage.noSurveySelectedBody'),
+      figures: [],
+      recommendations: [],
+    };
+  }
+  if (isUnmeasured(error)) {
+    return {
+      state: 'unknown',
+      ...unmeasuredCopy(metric, metricLabel, t),
       figures: [],
       recommendations: [],
     };

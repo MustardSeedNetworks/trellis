@@ -311,7 +311,10 @@ test('keeps a failed measurement on the map as an attempt', async ({ page }) => 
   await page.getByTestId('plot-coverage').click();
   await expect(page.getByTestId('heatmap-image')).toBeVisible();
   await page.getByRole('button', { name: 'Download speed' }).click();
-  await expect(page.getByTestId('surface-message')).toContainText('no samples found');
+  await expect(page.getByTestId('surface-message')).toContainText(
+    'No Download speed measured on this floor',
+  );
+  await expect(page.getByTestId('surface-message')).not.toContainText('did not render');
   await expect(page.getByTestId('heatmap-image')).toHaveCount(0);
 });
 

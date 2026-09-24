@@ -149,11 +149,11 @@ func GenerateHeatmap(survey *Survey, config HeatmapConfig) (*HeatmapResult, erro
 		return nil, errors.New("invalid dimensions: floor plan required")
 	}
 
-	valueType := mapHeatmapTypeToValueType(config.Type)
-	return renderHeatmap(
-		ExtractSamplesFromSurvey(survey, valueType), floorPlanOf(survey),
-		width, height, config,
-	)
+	samples := ExtractSamplesFromSurvey(survey, mapHeatmapTypeToValueType(config.Type))
+	if len(samples) == 0 && len(survey.GetAllSamples()) > 0 {
+		return nil, fmt.Errorf("%w: %s", ErrMetricUnmeasured, config.Type)
+	}
+	return renderHeatmap(samples, floorPlanOf(survey), width, height, config)
 }
 
 // GenerateFloorHeatmap renders one floor's coverage from that floor's own
@@ -169,11 +169,11 @@ func GenerateFloorHeatmap(floor *Floor, config HeatmapConfig) (*HeatmapResult, e
 		return nil, errors.New("invalid dimensions: floor plan or samples required")
 	}
 
-	valueType := mapHeatmapTypeToValueType(config.Type)
-	return renderHeatmap(
-		ExtractSamplesFromFloor(floor, valueType), floor.FloorPlan,
-		width, height, config,
-	)
+	samples := ExtractSamplesFromFloor(floor, mapHeatmapTypeToValueType(config.Type))
+	if len(samples) == 0 && len(floor.Samples) > 0 {
+		return nil, fmt.Errorf("%w: %s", ErrMetricUnmeasured, config.Type)
+	}
+	return renderHeatmap(samples, floor.FloorPlan, width, height, config)
 }
 
 // renderHeatmap is the drawing itself, once both callers have decided which

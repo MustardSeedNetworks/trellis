@@ -29,4 +29,10 @@ var (
 	// blank name. Floors are listed and picked by name, and a blank one is a
 	// row nothing can identify.
 	ErrFloorNameEmpty = errors.New("floor name is required")
+	// ErrMetricUnmeasured is returned when a floor holds samples and none of
+	// them carries the requested metric: a walk on a radio that reports no
+	// noise figure has signal and no SNR. It is a fact about the survey, not a
+	// fault in the request, and a floor with no samples at all does not
+	// return it.
+	ErrMetricUnmeasured = errors.New("the survey did not measure this metric")
 )
