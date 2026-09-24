@@ -23,6 +23,14 @@
  * knows whether it will be shown light or dark. The ramp's own colours are
  * UI-TRL-9's; this file only carries the anchor.
  *
+ * Pill text (UI-FLEET-3, .github#74). A hue's own wash pulls the ground toward
+ * it, so the bare hue drops under 4.5:1 as 12px text on a /20 wash. Each
+ * -strong value is the same hue moved by the smallest lightness step to 4.6:1
+ * on its /5-/20 wash over every surface; pillText.test.ts measures it. The
+ * status four are the fleet's values and move to msn-shared.css once all four
+ * products use them. brand-primary-strong is measured on brand-primary's wash
+ * only, never brand-accent's.
+ *
  * brand-gold is gone: the canonical shared theme owns it as --color-accent-gold
  * now, so the value is one fleet decision rather than four identical copies.
  */
@@ -34,6 +42,12 @@
   --color-on-brand: #ffffff;
   --color-on-danger: #ffffff;
   --color-on-success: #ffffff;
+
+  --color-status-success-strong: #235e3a;
+  --color-status-warning-strong: #6d4e07;
+  --color-status-error-strong: #932e2e;
+  --color-status-info-strong: #0f548f;
+  --color-brand-primary-strong: #8a3466;
 }
 
 .dark {
@@ -43,4 +57,10 @@
   --color-on-brand: #08100c;
   --color-on-danger: #08100c;
   --color-on-success: #08100c;
+
+  --color-status-success-strong: #56c785;
+  --color-status-warning-strong: #deab34;
+  --color-status-error-strong: #e5a2a2;
+  --color-status-info-strong: #7eb8ea;
+  --color-brand-primary-strong: #df90be;
 }
