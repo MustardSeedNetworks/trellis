@@ -103,6 +103,9 @@ describe('LivePage', () => {
     expect(screen.queryByText(/dB of margin/)).not.toBeInTheDocument();
     expect(screen.getByText(/reports no noise floor/)).toBeInTheDocument();
     const rollup = screen.getByTestId('status-rollup');
+    // Green on signal alone: -68 dBm clears the -75 dBm coverage line. The
+    // headline and body carry the missing margin, not the colour.
+    expect(rollup).toHaveAttribute('data-state', 'ok');
     expect(rollup).toHaveTextContent('Not reported');
     expect(rollup).not.toHaveTextContent('NaN');
   });
@@ -116,6 +119,7 @@ describe('LivePage', () => {
     renderPage();
 
     expect(await screen.findByText('Trellis Lab is only -80 dBm')).toBeInTheDocument();
+    expect(screen.getByTestId('status-rollup')).toHaveAttribute('data-state', 'warn');
   });
 
   it('flags a congested channel on an otherwise strong link', async () => {
