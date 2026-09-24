@@ -70,3 +70,28 @@ func TestSupportingStructLayout(t *testing.T) {
 		t.Errorf("alignof(WLAN_BSS_ENTRY) = %d, want 8 — the array would not start at offset 8", got)
 	}
 }
+
+// The offsets Microsoft's headers give WLAN_CONNECTION_ATTRIBUTES: two enums,
+// WCHAR strProfileName[256], then WLAN_ASSOCIATION_ATTRIBUTES opening with
+// DOT11_SSID, DOT11_BSS_TYPE and DOT11_MAC_ADDRESS. A wrong offset reads some
+// other six bytes as the joined BSSID and marks nothing, or the wrong BSS.
+func TestWLANConnectionAttributesLayout(t *testing.T) {
+	t.Parallel()
+
+	for _, f := range []struct {
+		name string
+		got  uintptr
+		want uintptr
+	}{
+		{"isState", unsafe.Offsetof(wlanConnectionAttributes{}.State), 0},
+		{"wlanConnectionMode", unsafe.Offsetof(wlanConnectionAttributes{}.ConnectionMode), 4},
+		{"strProfileName", unsafe.Offsetof(wlanConnectionAttributes{}.ProfileName), 8},
+		{"dot11Ssid", unsafe.Offsetof(wlanConnectionAttributes{}.SSID), 520},
+		{"dot11BssType", unsafe.Offsetof(wlanConnectionAttributes{}.BSSType), 556},
+		{"dot11Bssid", unsafe.Offsetof(wlanConnectionAttributes{}.BSSID), 560},
+	} {
+		if f.got != f.want {
+			t.Errorf("offsetof(%s) = %d, want %d", f.name, f.got, f.want)
+		}
+	}
+}

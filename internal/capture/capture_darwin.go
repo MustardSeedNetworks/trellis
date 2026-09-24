@@ -69,8 +69,8 @@ func (coreWLANScanner) Scan(ctx context.Context) ([]wifi.ScannedNetwork, error) 
 // floor, and a radio that cannot answer is no reason to fail a scan that
 // already succeeded, so every failure here means "no association" rather than
 // an error. CoreWLAN is the only one of the three platforms that has to be
-// asked separately: nl80211 flags the joined BSS on the scan dump itself, and
-// Native Wifi's equivalent query is not wired up yet (see docs/10-WIFI-CAPTURE).
+// asked separately on the scan path: nl80211 flags the joined BSS on the scan
+// dump itself. Windows asks too, through WlanQueryInterface.
 func currentNetwork(seen time.Time) *wifi.ScannedNetwork {
 	current, err := corewlan.Current()
 	if err != nil || current == nil {

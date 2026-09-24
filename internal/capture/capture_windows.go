@@ -46,6 +46,7 @@ var (
 	procWlanGetNetworkBssList = wlanapi.NewProc("WlanGetNetworkBssList")
 	procWlanRegisterNotif     = wlanapi.NewProc("WlanRegisterNotification")
 	procWlanFreeMemory        = wlanapi.NewProc("WlanFreeMemory")
+	procWlanQueryInterface    = wlanapi.NewProc("WlanQueryInterface")
 )
 
 const (
@@ -60,6 +61,11 @@ const (
 	notificationSourceACM = 0x00000008
 	acmScanComplete       = 7
 	acmScanFail           = 8
+
+	// wlanIntfOpcodeCurrentConnection asks WlanQueryInterface for the
+	// WLAN_CONNECTION_ATTRIBUTES of the interface's current association.
+	wlanIntfOpcodeCurrentConnection = 7
+	wlanInterfaceStateConnected     = 1
 
 	// kHzPerMHz converts WLAN_BSS_ENTRY's centre frequency, which Windows
 	// reports in kHz where every other platform uses MHz.
@@ -115,6 +121,19 @@ type wlanInterfaceInfo struct {
 	InterfaceGUID        windows.GUID
 	InterfaceDescription [256]uint16
 	State                uint32
+}
+
+// wlanConnectionAttributes mirrors the leading fields of
+// WLAN_CONNECTION_ATTRIBUTES, through the joined BSSID. Only this prefix is
+// read, and only from a buffer wlanapi reports as at least this long.
+// TestWLANConnectionAttributesLayout pins the offsets.
+type wlanConnectionAttributes struct {
+	State          uint32
+	ConnectionMode uint32
+	ProfileName    [256]uint16
+	SSID           dot11SSID
+	BSSType        uint32
+	BSSID          [6]byte
 }
 
 // wlanNotificationData mirrors WLAN_NOTIFICATION_DATA.
@@ -207,7 +226,48 @@ func (nativeWifiScanner) Scan(ctx context.Context) ([]wifi.ScannedNetwork, error
 	if err := scanAndWait(ctx, handle, guid); err != nil {
 		return nil, err
 	}
-	return bssList(handle, guid)
+	networks, err := bssList(handle, guid)
+	if err != nil {
+		return nil, err
+	}
+
+	// Native Wifi reports the association through WlanQueryInterface, not on
+	// the BSS list (#294). It gives signal only as a 0-100 quality, not dBm,
+	// so a joined BSS the sweep missed is left unmarked rather than appended
+	// with a signal nobody measured.
+	if bssid, ok := joinedBSSID(handle, guid); ok {
+		markAssociated(networks, bssid)
+	}
+	return networks, nil
+}
+
+// joinedBSSID returns the BSSID this interface is associated with. Not being
+// associated is a survey laptop's ordinary state, and WlanQueryInterface
+// answers it with ERROR_INVALID_STATE, so every failure here means "none"
+// rather than failing a scan that already succeeded.
+func joinedBSSID(handle windows.Handle, guid windows.GUID) (string, bool) {
+	var size uint32
+	var data unsafe.Pointer
+	ret, _, _ := procWlanQueryInterface.Call(
+		uintptr(handle), uintptr(unsafe.Pointer(&guid)),
+		uintptr(wlanIntfOpcodeCurrentConnection), 0,
+		uintptr(unsafe.Pointer(&size)),
+		uintptr(unsafe.Pointer(&data)),
+		0,
+	)
+	if ret != 0 {
+		return "", false
+	}
+	defer freeMemory(data)
+
+	if uintptr(size) < unsafe.Sizeof(wlanConnectionAttributes{}) {
+		return "", false
+	}
+	attrs := (*wlanConnectionAttributes)(data)
+	if attrs.State != wlanInterfaceStateConnected {
+		return "", false
+	}
+	return net.HardwareAddr(attrs.BSSID[:]).String(), true
 }
 
 // openHandle opens a WLAN client handle and checks the service negotiated the
@@ -382,10 +442,7 @@ func networkFromEntry(entry *wlanBSSEntry, seen time.Time) wifi.ScannedNetwork {
 		IsDFS:    band == band5GHz && isDFSChannel(channel),
 		LastSeen: seen,
 
-		// Associated stays false: Native Wifi reports the current connection
-		// through WlanQueryInterface rather than on the BSS list, and that
-		// query is not wired up yet (#294). A Windows live view therefore
-		// lists the airspace without naming the joined BSS.
+		// Associated is set by Scan, from WlanQueryInterface.
 		ChannelUtilization: utilization,
 	}
 }

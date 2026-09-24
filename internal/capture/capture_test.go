@@ -90,6 +90,29 @@ func TestIsDFSChannel(t *testing.T) {
 
 // TestWithAssociation covers marking the BSS a host is joined to, the fact a
 // live view needs and a scan alone does not carry on every platform.
+func TestMarkAssociated(t *testing.T) {
+	t.Parallel()
+
+	networks := []wifi.ScannedNetwork{
+		{BSSID: "02:00:00:00:00:01"},
+		{BSSID: "02:00:00:00:00:02"},
+	}
+	// Windows reports the BSSID lower-case and a driver may not; the match
+	// must not care.
+	if !markAssociated(networks, "02:00:00:00:00:02") {
+		t.Fatal("markAssociated: want true for a BSS the sweep saw")
+	}
+	if networks[0].Associated || !networks[1].Associated {
+		t.Errorf("associated = %v/%v, want only the second", networks[0].Associated, networks[1].Associated)
+	}
+	if markAssociated(networks, "02:00:00:00:00:09") {
+		t.Error("markAssociated: want false for a BSS the sweep did not see")
+	}
+	if !markAssociated([]wifi.ScannedNetwork{{BSSID: "AA:BB:CC:00:00:01"}}, "aa:bb:cc:00:00:01") {
+		t.Error("markAssociated: a case difference must still match")
+	}
+}
+
 func TestWithAssociation(t *testing.T) {
 	t.Parallel()
 

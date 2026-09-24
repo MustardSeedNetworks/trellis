@@ -102,6 +102,32 @@ func TestLiveScan(t *testing.T) {
 	if named == 0 {
 		t.Error("no network carried an SSID; every AP in range being hidden is not credible")
 	}
+
+	// The joined BSS comes from a different OS call than the scan on macOS and
+	// Windows, so only a real association proves it is wired up (#294). The
+	// operator names the BSSID the OS reports (netsh wlan show interfaces,
+	// iw dev <if> link, the Wi-Fi menu) in TRELLIS_LIVE_JOINED_BSSID, or
+	// "none" on a host that is not joined, where nothing may be marked.
+	var associated []string
+	for _, n := range networks {
+		if n.Associated {
+			associated = append(associated, strings.ToLower(n.BSSID))
+		}
+	}
+	if len(associated) > 1 {
+		t.Errorf("%d networks marked associated (%v); a host joins at most one", len(associated), associated)
+	}
+	switch want := strings.ToLower(os.Getenv("TRELLIS_LIVE_JOINED_BSSID")); want {
+	case "":
+	case "none":
+		if len(associated) != 0 {
+			t.Errorf("associated = %v on a host joined to nothing, want none", associated)
+		}
+	default:
+		if len(associated) != 1 || associated[0] != want {
+			t.Errorf("associated = %v, want exactly the joined BSS %s", associated, want)
+		}
+	}
 }
 
 // TestLiveScanCadence measures how fast the host's radio can actually be
