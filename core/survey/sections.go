@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"time"
@@ -400,14 +401,37 @@ func (g *ReportGenerator) addHeatmapKey(scale ColorScale, unit string) {
 	left, _, _, _ := g.pdf.GetMargins()
 	x := left
 
-	for _, stop := range scale.Stops {
+	labels := heatmapKeyLabels(scale.Stops)
+	for i, stop := range scale.Stops {
 		g.pdf.SetFillColor(int(stop.Color.R), int(stop.Color.G), int(stop.Color.B))
 		g.pdf.Rect(x, y, swatch, swatch, "F")
 		g.pdf.SetXY(x+swatch+gap, y-1)
-		g.pdf.CellFormat(label, swatch+2, fmt.Sprintf("%.0f %s", stop.Value, unit), "", 0, "L", false, 0, "")
+		g.pdf.CellFormat(label, swatch+2, labels[i]+" "+unit, "", 0, "L", false, 0, "")
 		x += swatch + gap + label
 	}
 	g.pdf.SetXY(left, y+swatch+gap)
+}
+
+// heatmapKeyLabels names each stop of the key, to a tenth of a unit.
+//
+// The coverage ramp's step is two stops thresholdStepEpsilon apart, which no
+// printed precision separates: at whole decibels the orange and teal swatches
+// either side of a -60 dBm threshold both read "-60 dBm" (#571). A stop whose
+// label would repeat the next one's is the top of the band below that stop, so
+// it reads "< -60". A tenth, not a whole unit, because a threshold clamped
+// inside the range lands on a half (-33.5 dBm) and rounding it would print a
+// step that is not where the map steps.
+func heatmapKeyLabels(stops []ColorStop) []string {
+	labels := make([]string, len(stops))
+	for i, stop := range stops {
+		labels[i] = strconv.FormatFloat(math.Round(stop.Value*10)/10, 'f', -1, 64)
+	}
+	for i := range len(labels) - 1 {
+		if labels[i] == labels[i+1] {
+			labels[i] = "< " + labels[i+1]
+		}
+	}
+	return labels
 }
 
 // addFloorHeatmapUnavailable says why the map is missing, in place of it.
