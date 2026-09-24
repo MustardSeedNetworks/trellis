@@ -47,9 +47,9 @@ func TestNetworkFrom(t *testing.T) {
 			},
 		},
 		{
-			// The driver omits a noise measurement on some adapters. Falling
-			// back keeps SNR meaningful instead of reporting it against 0 dBm.
-			name: "unreported noise falls back to the estimate",
+			// The driver omits a noise measurement on some adapters. Noise and
+			// SNR then stay absent: an assumed floor reads as a measured one.
+			name: "unreported noise leaves noise and SNR absent",
 			in: corewlan.Network{
 				SSID: "NoNoise", BSSID: "aa:bb:cc:dd:ee:02", RSSI: -50,
 				Channel: 36, ChannelWidth: 80, Band: corewlan.Band5GHz,
@@ -57,8 +57,7 @@ func TestNetworkFrom(t *testing.T) {
 			},
 			want: ScannedNetworkFields{
 				SSID: "NoNoise", BSSID: "aa:bb:cc:dd:ee:02", Signal: -50, Channel: 36,
-				Frequency: 5180, Security: "WPA2", ChannelWidth: 80, NoiseFloor: -95,
-				SNR: 45, HTMode: "VHT80",
+				Frequency: 5180, Security: "WPA2", ChannelWidth: 80, HTMode: "VHT80",
 			},
 		},
 		{

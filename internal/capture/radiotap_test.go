@@ -51,8 +51,8 @@ func TestParseRadiotapRealFrame(t *testing.T) {
 	if !rt.haveFreq || rt.freqMHz != 2437 {
 		t.Errorf("freq = %d (have %v), want 2437", rt.freqMHz, rt.haveFreq)
 	}
-	// rtl8xxxu reports no noise measurement, which is why the backend falls
-	// back to defaultNoiseFloorDBm rather than recording 0 dBm as a reading.
+	// rtl8xxxu reports no noise measurement, which is why the backend reports
+	// no floor and no SNR for this adapter rather than an assumed one.
 	if rt.haveNoise {
 		t.Error("haveNoise = true, want false for this adapter")
 	}
