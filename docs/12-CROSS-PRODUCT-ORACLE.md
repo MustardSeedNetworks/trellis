@@ -135,27 +135,30 @@ and the digit is the BSS on that radio.
 | BSS | Channel ES / TR | SSID ES / TR | Signal ES / TR (dBm) | Width ES / TR | Security ES / TR | Utilization ES / TR |
 | --- | --- | --- | --- | --- | --- | --- |
 | C | 1 / 1 | named / same | −13 / −8 | 40 / 40 | WPA3-P + WPA2-P / WPA3 | 12 % / 12 % |
-| A1 | 6 / 6 | hidden / hidden | −18 / −18 | 20 / 20 | WPA2-P / WPA2 | 18 % / 17 % |
-| A2 | 6 / 6 | named / same | −18 / −18 | 20 / 20 | — / WPA2 | — / 17 % |
-| A3 | 6 / 6 | named / same | −19 / −18 | 20 / 20 | — / WPA2 | — / 17 % |
-| A4 | 6 / 6 | hidden / hidden | −19 / −18 | 20 / 20 | — / WPA2 | — / 17 % |
-| A6 | 6 / 6 | named / same | −18 / −18 | 20 / 20 | — / WPA3 | — / 17 % |
-| B1 | 11 / 11 | named / same | −72 / −64 | 20 / 20 | — / WPA2 | — / 18 % |
-| B2 | 11 / 11 | hidden / hidden | −72 / −64 | 20 / 20 | WPA2-P / WPA2 | 18 % / 18 % |
-| B3 | 11 / 11 | named / same | −72 / −62 | 20 / 20 | — / WPA2 | — / 18 % |
-| B4 | 11 / 11 | hidden / hidden | −70 / −64 | 20 / 20 | — / WPA2 | — / 18 % |
-| B6 | 11 / 11 | named / same | −71 / −68 | 20 / 20 | — / WPA3 | — / 18 % |
+| A1 | 6 / 6 | hidden / hidden | −18 / −18 | not shown / 20 | WPA2-P / WPA2 | 18 % / 17 % |
+| A2 | 6 / 6 | named / same | −18 / −18 | — / 20 | — / WPA2 | — / 17 % |
+| A3 | 6 / 6 | named / same | −19 / −18 | — / 20 | — / WPA2 | — / 17 % |
+| A4 | 6 / 6 | hidden / hidden | −19 / −18 | — / 20 | — / WPA2 | — / 17 % |
+| A6 | 6 / 6 | named / same | −18 / −18 | — / 20 | — / WPA3 | — / 17 % |
+| B1 | 11 / 11 | named / same | −72 / −64 | — / 20 | — / WPA2 | — / 18 % |
+| B2 | 11 / 11 | hidden / hidden | −72 / −64 | not shown / 20 | WPA2-P / WPA2 | 18 % / 18 % |
+| B3 | 11 / 11 | named / same | −72 / −62 | — / 20 | — / WPA2 | — / 18 % |
+| B4 | 11 / 11 | hidden / hidden | −70 / −64 | — / 20 | — / WPA2 | — / 18 % |
+| B6 | 11 / 11 | named / same | −71 / −68 | — / 20 | — / WPA3 | — / 18 % |
 
 Signal is the EtherScope's BSSID list at 10:56 against the `Scan` at
 10:56:06. Width, security and utilization come from the EtherScope's
 per-BSSID detail page, opened for C, A1 and B2 (a dash means that page was not
-opened); Trellis's values are from its scans at 10:58:32 and 10:59:42, whose
+opened). Only C's page prints a width, `1 (40 MHz, 1 - 5)`; the A1 and B2 pages
+print the channel alone, so no EtherScope width is recorded for them.
+Trellis's values are from its scans at 10:58:32 and 10:59:42, whose
 utilization ranged 12–13 % on channel 1 and 17–20 % on channels 6 and 11.
 
 **Agreement.** The EtherScope's channel filter counts 1, 5 and 5 BSSIDs on
 channels 1, 6 and 11; Trellis heard the same eleven and no others. Every
-channel, SSID, hidden-SSID flag and channel width agrees, and so does the
-QBSS channel utilization on every BSS whose detail was opened. Signal agrees
+channel, SSID and hidden-SSID flag agrees. The one width the EtherScope
+printed (C, 40 MHz) agrees, and so does the QBSS channel utilization on
+every BSS whose detail was opened. Signal agrees
 to within 1 dB on channel 6. On channels 1 and 11 Trellis reads 3–10 dB
 stronger. The two radios were not side by side and their antennas differ,
 and the gap follows the transmitting AP rather than any one field of the
