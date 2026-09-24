@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.90](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.89...v0.2.90) (2026-09-24)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#591](https://github.com/MustardSeedNetworks/trellis/issues/591)) ([1bc2a84](https://github.com/MustardSeedNetworks/trellis/commit/1bc2a84b2bdf103adc6f7166ca32e7bc84b8fd65))
+* **deps:** update dependency jsdom to v30.1.0 ([#590](https://github.com/MustardSeedNetworks/trellis/issues/590)) ([4708f36](https://github.com/MustardSeedNetworks/trellis/commit/4708f36588c64523be239ecf658707ddc1021421))
+
 ## [0.2.89](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.88...v0.2.89) (2026-09-23)
 
 
