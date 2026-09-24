@@ -200,7 +200,7 @@ func analyzeCoverage(
 
 	samples := extractSamples(points, string(metric))
 	if len(samples) == 0 {
-		return nil, fmt.Errorf("no %s samples found in survey", metric)
+		return nil, fmt.Errorf("%w: %s", ErrMetricUnmeasured, metric)
 	}
 
 	weakSamples := filterWeakSamples(samples, float64(threshold))

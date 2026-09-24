@@ -224,7 +224,7 @@ func (h *SurveyServiceHandler) GetHeatmap(
 
 	result, err := survey.GenerateFloorHeatmap(floor, config)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		return nil, layerError(err)
 	}
 
 	return connect.NewResponse(&surveyv1.GetHeatmapResponse{
@@ -302,6 +302,17 @@ func coverageMetric(name string) (survey.HeatmapType, error) {
 	return metric, nil
 }
 
+// layerError maps a failure to draw or analyse one layer of a floor. A metric
+// the walk never measured — SNR from a radio that reports no noise figure — is
+// a true statement about the survey, which is what FailedPrecondition is for,
+// and lets a client say so without reading the message (#607).
+func layerError(err error) error {
+	if errors.Is(err, survey.ErrMetricUnmeasured) {
+		return connect.NewError(connect.CodeFailedPrecondition, err)
+	}
+	return connect.NewError(connect.CodeInvalidArgument, err)
+}
+
 // GetCoverage runs dead-zone detection over one floor's measured samples.
 func (h *SurveyServiceHandler) GetCoverage(
 	_ context.Context,
@@ -340,7 +351,7 @@ func (h *SurveyServiceHandler) GetCoverage(
 
 	analysis, err := survey.DetectFloorDeadZones(svy.ID, floor, metric, threshold, nil)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		return nil, layerError(err)
 	}
 
 	return connect.NewResponse(&surveyv1.GetCoverageResponse{

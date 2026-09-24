@@ -12,6 +12,7 @@ describe('retryQuery', () => {
     ['permission_denied', Code.PermissionDenied],
     ['unauthenticated', Code.Unauthenticated],
     ['already_exists', Code.AlreadyExists],
+    ['failed_precondition', Code.FailedPrecondition],
   ])('does not retry %s', (_name, code) => {
     expect(retryQuery(0, new ConnectError('answered', code))).toBe(false);
   });

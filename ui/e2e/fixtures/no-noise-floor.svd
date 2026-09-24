@@ -1,0 +1,10 @@
+@AirMagnet Survey Data
+#Type: passive
+#App Version: 8.0 	 Build: 23503
+#Created on: 10:37:30 10/07/2010
+#dim_X, dim_Y, GPS Map
+&,300.000000,200.000000, 0
+#Time,Xpos,Ypos,Channel,SSID,AP,SignalDBM,Signal,MediaType,NodeName
+1286473050,40.000000,40.000000,6,'trellis-lab','02:00:00:00:10:01',-52,58,'802.11n','lab-ap-1'
+1286473061,150.000000,100.000000,6,'trellis-lab','02:00:00:00:10:01',-63,47,'802.11n','lab-ap-1'
+1286473072,260.000000,160.000000,6,'trellis-lab','02:00:00:00:10:01',-71,39,'802.11n','lab-ap-1'
