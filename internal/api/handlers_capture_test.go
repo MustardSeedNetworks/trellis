@@ -116,6 +116,30 @@ func TestCapturePointReturnsTheScan(t *testing.T) {
 // A missing Location Services grant is the one capture failure an operator
 // fixes by doing something, so it must arrive as a precondition with the
 // remedy attached rather than as an opaque internal error.
+// A driver that measured no floor must reach the client as absent, not as
+// 0 dBm: the Live verdict reads a present snr_db as measured (#600).
+func TestCapturePointLeavesAnUnmeasuredFloorAbsent(t *testing.T) {
+	t.Parallel()
+
+	handler, id := walkedSurvey(t, scriptedScanner{networks: []wifi.ScannedNetwork{
+		{SSID: "Unmeasured", BSSID: "aa:bb:cc:00:00:03", Signal: -68, Channel: 11, Frequency: 2462,
+			Security: "WPA2", ChannelWidth: 20, HTMode: "HT20"},
+	}})
+
+	resp, err := handler.CapturePoint(context.Background(),
+		connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: 1, Y: 1}))
+	if err != nil {
+		t.Fatalf("CapturePoint: %v", err)
+	}
+	got := resp.Msg.GetNetworks()
+	if len(got) != 1 {
+		t.Fatalf("networks = %d, want 1", len(got))
+	}
+	if got[0].NoiseFloorDbm != nil || got[0].SnrDb != nil {
+		t.Errorf("noise_floor_dbm/snr_db = %v/%v, want both unset", got[0].NoiseFloorDbm, got[0].SnrDb)
+	}
+}
+
 func TestCapturePointPermissionDeniedCarriesTheRemedy(t *testing.T) {
 	t.Parallel()
 

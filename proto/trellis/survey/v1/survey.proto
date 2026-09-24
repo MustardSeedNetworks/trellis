@@ -497,8 +497,13 @@ message ScannedNetwork {
   int32 frequency_mhz = 5;
   string security = 6;
   int32 channel_width_mhz = 7;
-  int32 noise_floor_dbm = 8;
-  int32 snr_db = 9;
+  // Noise floor the driver measured, and the signal-to-noise derived from it.
+  // Both are absent when the driver reports no noise figure -- nl80211 scans
+  // and Native Wifi never do, CoreWLAN and radiotap only on some adapters --
+  // because an assumed floor read as a measured one and turned a weak link
+  // into a healthy one (#600).
+  optional int32 noise_floor_dbm = 8;
+  optional int32 snr_db = 9;
   // Widest PHY carrying this channel width: "HT20", "VHT80", "EHT320", ...
   string ht_mode = 10;
   // Channel requires radar detection (DFS).
