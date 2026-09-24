@@ -16,6 +16,7 @@
   --font-family-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
   --color-brand-primary: var(--color-brand-primary);
+  --color-brand-primary-strong: var(--color-brand-primary-strong);
   --color-brand-accent: var(--color-brand-accent);
 
   --color-surface-base: var(--color-surface-base);
@@ -35,6 +36,12 @@
   --color-status-warning: var(--color-status-warning);
   --color-status-error: var(--color-status-error);
   --color-status-info: var(--color-status-info);
+
+  /* Pill text: the hue's text on its own wash (see product-trellis.css). */
+  --color-status-success-strong: var(--color-status-success-strong);
+  --color-status-warning-strong: var(--color-status-warning-strong);
+  --color-status-error-strong: var(--color-status-error-strong);
+  --color-status-info-strong: var(--color-status-info-strong);
 
   --color-on-brand: var(--color-on-brand);
   --color-on-danger: var(--color-on-danger);
