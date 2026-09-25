@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.97](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.96...v0.2.97) (2026-09-25)
+
+
+### Bug Fixes
+
+* **ui:** link form errors to their controls with aria-describedby ([#619](https://github.com/MustardSeedNetworks/trellis/issues/619)) ([20ddeae](https://github.com/MustardSeedNetworks/trellis/commit/20ddeae0d23fb5e0b721201b08b5ca69a6b07ea3)), closes [#478](https://github.com/MustardSeedNetworks/trellis/issues/478)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#620](https://github.com/MustardSeedNetworks/trellis/issues/620)) ([465b5a1](https://github.com/MustardSeedNetworks/trellis/commit/465b5a1945e6044df77435d6c09b60ed362cbe69))
+
 ## [0.2.96](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.95...v0.2.96) (2026-09-25)
 
 
