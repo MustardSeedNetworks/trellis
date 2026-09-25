@@ -153,6 +153,42 @@ describe('FloorRail', () => {
     expect(screen.getByTestId('delete-floor-confirm-flr-2')).toBeInTheDocument();
   });
 
+  it('links a failed add to the fields that made it', async () => {
+    createFloor.mockRejectedValue(new Error('floor name taken'));
+    renderRail();
+
+    const nameInput = screen.getByTestId('floor-name-input');
+    expect(nameInput).not.toHaveAttribute('aria-describedby');
+
+    fireEvent.change(nameInput, { target: { value: 'Floor 1' } });
+    fireEvent.click(screen.getByTestId('create-floor'));
+
+    await screen.findByTestId('floor-rail-error');
+    expect(nameInput).toHaveAccessibleDescription(/floor name taken/);
+    expect(screen.getByTestId('floor-level-input')).toHaveAccessibleDescription(/floor name taken/);
+  });
+
+  it("links a failed rename to the rename fields, not the add form's", async () => {
+    updateFloor.mockRejectedValue(new Error('level out of range'));
+    renderRail();
+
+    fireEvent.click(screen.getByTestId('rename-floor-flr-2'));
+    fireEvent.click(screen.getByTestId('floor-rename-save-flr-2'));
+
+    await screen.findByTestId('floor-rail-error');
+    // A refused rename closes the editor (the rail redraws what the server
+    // holds); reopening it to try again is when the operator needs the reason.
+    fireEvent.click(screen.getByTestId('rename-floor-flr-2'));
+    expect(screen.getByTestId('floor-rename-input-flr-2')).toHaveAccessibleDescription(
+      /level out of range/,
+    );
+    expect(screen.getByTestId('floor-relevel-input-flr-2')).toHaveAccessibleDescription(
+      /level out of range/,
+    );
+    // The add form did nothing wrong; pointing it at this error would say so.
+    expect(screen.getByTestId('floor-name-input')).not.toHaveAttribute('aria-describedby');
+  });
+
   it('offers no delete on the last floor', () => {
     renderRail([ground]);
 

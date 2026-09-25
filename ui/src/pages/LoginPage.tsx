@@ -41,11 +41,15 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (username: str
   const errorMessage = useErrorMessage();
   const usernameId = useId();
   const passwordId = useId();
+  const errorId = useId();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [failure, setFailure] = useState<Failure | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Only the two failures about what was typed mark the fields invalid; a
+  // daemon that is down or rate-limiting has nothing wrong with the input.
+  const invalid = failure === 'empty' || failure === 'invalid';
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -91,6 +95,8 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (username: str
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           autoComplete="username"
+          aria-invalid={invalid}
+          aria-describedby={failure ? errorId : undefined}
         />
 
         <label htmlFor={passwordId} className="mt-4 block text-sm text-text-secondary">
@@ -104,10 +110,17 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (username: str
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="current-password"
+          aria-invalid={invalid}
+          aria-describedby={failure ? errorId : undefined}
         />
 
         {failure && (
-          <p className="mt-4 text-sm text-status-error" role="alert" data-testid="login-error">
+          <p
+            id={errorId}
+            className="mt-4 text-sm text-status-error"
+            role="alert"
+            data-testid="login-error"
+          >
             {errorMessage(failure)}
           </p>
         )}

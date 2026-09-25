@@ -77,5 +77,7 @@ describe('ThroughputTarget', () => {
     expect(await screen.findByTestId('throughput-target-error')).toHaveTextContent(
       'survey not found',
     );
+    // Linked, not merely adjacent: a screen reader on the field hears why.
+    expect(screen.getByTestId('throughput-target')).toHaveAccessibleDescription(/survey not found/);
   });
 });

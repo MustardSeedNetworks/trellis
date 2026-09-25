@@ -43,6 +43,40 @@ describe('LoginPage', () => {
     expect(screen.getByTestId('login-username')).toHaveValue('surveyor');
   });
 
+  it('links the failure to both fields so a screen reader hears why', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(401, { error: 'no' })));
+    render(<LoginPage onAuthenticated={vi.fn()} />);
+
+    const username = screen.getByTestId('login-username');
+    const password = screen.getByTestId('login-password');
+    expect(username).not.toHaveAttribute('aria-describedby');
+
+    await userEvent.type(username, 'surveyor');
+    await userEvent.type(password, 'wrong');
+    await userEvent.click(screen.getByTestId('login-submit'));
+
+    const message = (await screen.findByTestId('login-error')).textContent ?? '';
+    expect(message).not.toBe('');
+    expect(username).toHaveAccessibleDescription(message);
+    expect(password).toHaveAccessibleDescription(message);
+    expect(username).toHaveAttribute('aria-invalid', 'true');
+    expect(password).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('describes a rate-limited refusal without marking the fields invalid', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(429, { error: 'slow down' })));
+    render(<LoginPage onAuthenticated={vi.fn()} />);
+
+    await userEvent.type(screen.getByTestId('login-username'), 'surveyor');
+    await userEvent.type(screen.getByTestId('login-password'), 'correct-horse-battery');
+    await userEvent.click(screen.getByTestId('login-submit'));
+
+    const message = (await screen.findByTestId('login-error')).textContent ?? '';
+    expect(screen.getByTestId('login-password')).toHaveAccessibleDescription(message);
+    // Nothing typed was wrong; the daemon asked the operator to wait.
+    expect(screen.getByTestId('login-password')).toHaveAttribute('aria-invalid', 'false');
+  });
+
   it('words a rate-limited refusal differently from a wrong password', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(429, { error: 'slow down' })));
     render(<LoginPage onAuthenticated={vi.fn()} />);

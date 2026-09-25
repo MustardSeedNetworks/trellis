@@ -36,6 +36,7 @@ export function ThroughputTarget({ surveyId, server }: { surveyId: string; serve
           value={draft}
           placeholder={t('pages:surveys.throughputTargetPlaceholder')}
           onChange={(event) => setDraft(event.target.value)}
+          aria-describedby={saveMutation.isError ? 'throughput-target-error' : undefined}
           className="rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
           data-testid="throughput-target"
         />
@@ -50,7 +51,11 @@ export function ThroughputTarget({ surveyId, server }: { surveyId: string; serve
         {t('pages:surveys.saveTarget')}
       </button>
       {saveMutation.isError ? (
-        <p className="text-sm text-status-error" data-testid="throughput-target-error">
+        <p
+          id="throughput-target-error"
+          className="text-sm text-status-error"
+          data-testid="throughput-target-error"
+        >
           {String(saveMutation.error)}
         </p>
       ) : null}

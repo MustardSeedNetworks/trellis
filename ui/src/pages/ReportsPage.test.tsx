@@ -107,6 +107,7 @@ describe('ReportsPage', () => {
     await waitFor(() =>
       expect(screen.getByTestId('report-error')).toHaveTextContent('no floor plan'),
     );
+    expect(screen.getByTestId('generate-report')).toHaveAccessibleDescription(/no floor plan/);
   });
 
   it('reports on the survey the URL names', async () => {

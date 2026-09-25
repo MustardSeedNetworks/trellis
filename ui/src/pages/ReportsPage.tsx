@@ -154,6 +154,7 @@ export function ReportsPage() {
             type="button"
             onClick={() => generate.mutate()}
             disabled={surveyId === undefined || generate.isPending}
+            aria-describedby={generate.isError ? 'report-error' : undefined}
             className="rounded bg-brand-primary px-3 py-2 text-sm font-medium text-on-brand hover:bg-brand-accent disabled:opacity-50"
             data-testid="generate-report"
           >
@@ -165,7 +166,7 @@ export function ReportsPage() {
         </div>
 
         {generate.isError ? (
-          <p className="text-sm text-status-error" data-testid="report-error">
+          <p id="report-error" className="text-sm text-status-error" data-testid="report-error">
             {t('pages:reports.generateFailed', { error: String(generate.error) })}
           </p>
         ) : null}

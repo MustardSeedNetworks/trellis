@@ -85,6 +85,9 @@ export function FloorRail({ surveyId, floors }: { surveyId: string; floors: Floo
   // The last floor cannot be deleted — the handler refuses it, and a button
   // that can only fail is worse than no button.
   const deletable = floors.length > 1;
+  // A field points at the error only while the error shown is its own save's.
+  const createFailed = error !== null && error === createMutation.error;
+  const renameFailed = error !== null && error === renameMutation.error;
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="floor-rail-title">
@@ -115,6 +118,7 @@ export function FloorRail({ surveyId, floors }: { surveyId: string; floors: Floo
                   id={`floor-rename-${floor.id}`}
                   value={editName}
                   onChange={(event) => setEditName(event.target.value)}
+                  aria-describedby={renameFailed ? 'floor-rail-error' : undefined}
                   data-testid={`floor-rename-input-${floor.id}`}
                   className="rounded border border-hairline bg-surface-raised px-2 py-1 text-sm text-text-primary"
                 />
@@ -126,6 +130,7 @@ export function FloorRail({ surveyId, floors }: { surveyId: string; floors: Floo
                   type="number"
                   value={editLevel}
                   onChange={(event) => setEditLevel(event.target.value)}
+                  aria-describedby={renameFailed ? 'floor-rail-error' : undefined}
                   data-testid={`floor-relevel-input-${floor.id}`}
                   className="w-20 rounded border border-hairline bg-surface-raised px-2 py-1 text-sm text-text-primary"
                 />
@@ -230,6 +235,7 @@ export function FloorRail({ surveyId, floors }: { surveyId: string; floors: Floo
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
+            aria-describedby={createFailed ? 'floor-rail-error' : undefined}
             data-testid="floor-name-input"
             className="rounded border border-hairline bg-surface-raised px-3 py-2 text-sm text-text-primary"
           />
@@ -240,6 +246,7 @@ export function FloorRail({ surveyId, floors }: { surveyId: string; floors: Floo
             type="number"
             value={level}
             onChange={(event) => setLevel(event.target.value)}
+            aria-describedby={createFailed ? 'floor-rail-error' : undefined}
             data-testid="floor-level-input"
             className="w-24 rounded border border-hairline bg-surface-raised px-3 py-2 text-sm text-text-primary"
           />
@@ -261,7 +268,11 @@ export function FloorRail({ surveyId, floors }: { surveyId: string; floors: Floo
       </div>
 
       {error ? (
-        <p className="text-sm text-status-error" data-testid="floor-rail-error">
+        <p
+          id="floor-rail-error"
+          className="text-sm text-status-error"
+          data-testid="floor-rail-error"
+        >
           {String(error)}
         </p>
       ) : null}
