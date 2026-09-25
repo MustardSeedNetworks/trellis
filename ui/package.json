@@ -46,7 +46,7 @@
     "tailwind-merge": "3.7.0"
   },
   "devDependencies": {
-    "@babel/core": "8.0.5",
+    "@babel/core": "8.0.6",
     "@biomejs/biome": "2.5.14",
     "@bufbuild/protoc-gen-es": "2.15.0",
     "@playwright/test": "1.63.0",
