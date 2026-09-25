@@ -54,6 +54,7 @@ export function SurveyCreateForm({ onCreated }: SurveyCreateFormProps) {
           type="text"
           value={name}
           onChange={(event) => setName(event.target.value)}
+          aria-describedby={createMutation.isError ? 'new-survey-error' : undefined}
           className="rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
           data-testid="new-survey-name"
         />
@@ -66,7 +67,11 @@ export function SurveyCreateForm({ onCreated }: SurveyCreateFormProps) {
           type="text"
           value={iface}
           onChange={(event) => setIface(event.target.value)}
-          aria-describedby="new-survey-interface-hint"
+          aria-describedby={
+            createMutation.isError
+              ? 'new-survey-interface-hint new-survey-error'
+              : 'new-survey-interface-hint'
+          }
           className="figure rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
           data-testid="new-survey-interface"
         />
@@ -85,7 +90,11 @@ export function SurveyCreateForm({ onCreated }: SurveyCreateFormProps) {
       </button>
 
       {createMutation.isError ? (
-        <p className="text-sm text-status-error" data-testid="create-survey-error">
+        <p
+          id="new-survey-error"
+          className="text-sm text-status-error"
+          data-testid="create-survey-error"
+        >
           {t('pages:surveys.createFailed', { error: String(createMutation.error) })}
         </p>
       ) : null}

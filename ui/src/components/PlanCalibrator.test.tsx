@@ -14,7 +14,7 @@ import { PlanCalibrator } from './PlanCalibrator';
 const plan = { width: 800, height: 600, imageUrl: 'data:image/png;base64,AAA' };
 
 function renderCalibrator(onApply = vi.fn()) {
-  render(<PlanCalibrator plan={plan} onApply={onApply} pending={false} />);
+  render(<PlanCalibrator plan={plan} onApply={onApply} pending={false} errorId={undefined} />);
   const surface = screen.getByTestId('calibration-surface');
   // jsdom gives every element a zero-sized box, so the click mapping needs a
   // real one to divide by.

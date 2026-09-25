@@ -148,6 +148,10 @@ export function FloorPlanPanel({
   // point is a pixel coordinate on the plan it was walked against.
   const stranded =
     uploadMutation.error !== null && /strand the measurements/i.test(String(uploadMutation.error));
+  // Each control points at the status line only while it reports that control's
+  // own failure.
+  const describedByFailure = (failure: Error | null) =>
+    failure !== null && failure === error ? 'floor-plan-status' : undefined;
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="floor-plan-title">
@@ -168,6 +172,7 @@ export function FloorPlanPanel({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploadMutation.isPending}
+          aria-describedby={describedByFailure(uploadMutation.error)}
           data-testid="upload-floor-plan"
           className="rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-raised disabled:opacity-50"
         >
@@ -181,6 +186,7 @@ export function FloorPlanPanel({
         <PlanCalibrator
           plan={planImage}
           pending={calibrateMutation.isPending}
+          errorId={describedByFailure(calibrateMutation.error)}
           onApply={(line) => calibrateMutation.mutate(line)}
         />
       ) : null}
@@ -191,6 +197,7 @@ export function FloorPlanPanel({
           The calibration result is worth hearing for the same reason the
           refusal is — both are the answer to something the operator just did. */}
       <p
+        id="floor-plan-status"
         aria-live="polite"
         className={`text-sm ${error ? 'text-status-error' : 'text-text-secondary'}`}
         data-testid="floor-plan-status"
@@ -224,6 +231,7 @@ export function FloorPlanPanel({
               <input
                 value={newFloorName}
                 onChange={(event) => setNewFloorName(event.target.value)}
+                aria-describedby={describedByFailure(newFloorMutation.error)}
                 data-testid="strand-new-floor-name"
                 className="rounded border border-hairline bg-surface-raised px-3 py-2 text-sm text-text-primary"
               />

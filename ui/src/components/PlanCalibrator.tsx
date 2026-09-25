@@ -11,6 +11,8 @@ interface PlanCalibratorProps {
   /** Applies the line the operator marked. Pixels are the plan's own. */
   onApply: (line: { from: Point; to: Point; metres: number }) => void;
   pending: boolean;
+  /** The element reporting why the last calibration failed, if one did. */
+  errorId: string | undefined;
 }
 
 /** Arrow keys move the cursor by this much; with Shift, five times it. */
@@ -38,7 +40,7 @@ const KEY_STEP_FAST = 25;
  * pointer can perform would leave the scale — and every distance derived from
  * it — out of reach of an operator who cannot use one.
  */
-export function PlanCalibrator({ plan, onApply, pending }: PlanCalibratorProps) {
+export function PlanCalibrator({ plan, onApply, pending, errorId }: PlanCalibratorProps) {
   const { t } = useTranslation(['common', 'pages']);
   const [from, setFrom] = useState<Point | undefined>();
   const [to, setTo] = useState<Point | undefined>();
@@ -171,6 +173,7 @@ export function PlanCalibrator({ plan, onApply, pending }: PlanCalibratorProps) 
             step={0.1}
             value={metres}
             onChange={(event) => setMetres(event.target.value)}
+            aria-describedby={errorId}
             className="figure w-28 rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
             data-testid="calibration-metres"
           />

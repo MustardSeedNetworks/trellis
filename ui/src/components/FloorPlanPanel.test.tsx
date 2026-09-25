@@ -112,6 +112,37 @@ describe('FloorPlanPanel', () => {
     });
   });
 
+  it('links a refused calibration to the distance field', async () => {
+    calibrateFloorPlan.mockRejectedValue(new Error('the two points are the same point'));
+    renderPanel(true);
+
+    const surface = await screen.findByTestId('calibration-surface');
+    vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      width: 800,
+      height: 600,
+      right: 800,
+      bottom: 600,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    const metres = screen.getByTestId('calibration-metres');
+    expect(metres).not.toHaveAttribute('aria-describedby');
+
+    fireEvent.click(surface, { clientX: 100, clientY: 100, detail: 1 });
+    fireEvent.click(surface, { clientX: 500, clientY: 100, detail: 1 });
+    fireEvent.change(metres, { target: { value: '20' } });
+    fireEvent.click(screen.getByTestId('calibrate-floor-plan'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('calibration-metres')).toHaveAccessibleDescription(
+        /the two points are the same point/,
+      ),
+    );
+  });
+
   it('says a plan is uncalibrated rather than implying a scale nobody set', async () => {
     renderPanel(true, 0);
 
@@ -150,6 +181,10 @@ describe('FloorPlanPanel', () => {
        with the error is announced unreliably, because a screen reader has to
        be watching the region before the text changes. */
     expect(status).toHaveAttribute('aria-live', 'polite');
+    // And linked to the control that caused it, so it is heard on return too.
+    expect(screen.getByTestId('upload-floor-plan')).toHaveAccessibleDescription(
+      /not a PNG or JPEG image/,
+    );
     // An ordinary refusal gets no hint: there is nothing to explain beyond
     // "that was not an image".
     expect(screen.queryByTestId('floor-plan-stranded-hint')).toBeNull();
@@ -235,6 +270,11 @@ describe('FloorPlanPanel', () => {
     await waitFor(() =>
       expect(screen.getByTestId('floor-plan-status')).toHaveTextContent('the daemon went away'),
     );
+    // The name field owns this failure now; the upload's refusal is not shown.
+    expect(screen.getByTestId('strand-new-floor-name')).toHaveAccessibleDescription(
+      /the daemon went away/,
+    );
+    expect(screen.getByTestId('upload-floor-plan')).not.toHaveAttribute('aria-describedby');
     // And the offer survives with the file already chosen: making the operator
     // re-pick it is the thing this route exists to avoid.
     expect(screen.getByTestId('strand-new-floor')).toBeInTheDocument();
