@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.96](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.95...v0.2.96) (2026-09-25)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#617](https://github.com/MustardSeedNetworks/trellis/issues/617)) ([84894db](https://github.com/MustardSeedNetworks/trellis/commit/84894db17f798edf209047a362600af8cbb57c0f))
+* **deps:** update dependency @babel/core to v8.0.6 ([#615](https://github.com/MustardSeedNetworks/trellis/issues/615)) ([f4ab314](https://github.com/MustardSeedNetworks/trellis/commit/f4ab314da2d1b5e73014b40d475de83ffd8251f6))
+* **deps:** update github/codeql-action action to v4.38.1 ([#616](https://github.com/MustardSeedNetworks/trellis/issues/616)) ([5199741](https://github.com/MustardSeedNetworks/trellis/commit/5199741d14328f9596e79f90799d50d90c7cbd66))
+
 ## [0.2.95](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.94...v0.2.95) (2026-09-25)
 
 
