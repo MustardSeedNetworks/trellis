@@ -11,11 +11,11 @@
 # Usage: ssh dev-srv-ubuntu 'bash -s' < scripts/bootstrap-dev-host.sh
 set -euo pipefail
 
-NODE_VER=26.8.2
-NPM_VER=12.0.2
-NPM_INTEGRITY='sha512-uIXokLlBj6FpNUTQX1PmT5pz7BlIN9QlixX+zdaSNHsd0qUXsbDLr50xzY6Sw7cJVr0uzHKDOle0swmPW/p5Qw=='
-# The goreleaser inside goreleaser-cross v1.27.0, which release.yml runs.
-GORELEASER_VER=2.17.1
+NODE_VER=26.10.0
+NPM_VER=12.1.0
+NPM_INTEGRITY='sha512-Fyhu62pNx70YCs/5+dEmJQTFVmSKwvo5CA0qvBkGDRpob42MJ6G2RQ2tdxeKM4nYnIZDqkYAxEgqtoejn9QGtQ=='
+# The goreleaser inside goreleaser-cross v1.27.1-2, which release.yml runs.
+GORELEASER_VER=2.18.2
 
 case "$(uname -m)" in
   x86_64) node_arch=x64; gr_arch=x86_64 ;;
