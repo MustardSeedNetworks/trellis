@@ -11,28 +11,15 @@ package survey_test
 // Skips without TRELLIS_AMP_CORPUS, like the other corpus tests.
 
 import (
-	"os"
+	"io/fs"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 )
 
 func TestAnalysisRunsOnAnImportedSurvey(t *testing.T) {
-	dir := os.Getenv(corpusEnv)
-	if dir == "" {
-		t.Skipf("set %s to a directory of .amp files to run this", corpusEnv)
-	}
-	if strings.HasPrefix(dir, "~/") {
-		if home, err := os.UserHomeDir(); err == nil {
-			dir = filepath.Join(home, dir[2:])
-		}
-	}
-	files, err := filepath.Glob(filepath.Join(dir, "*.amp"))
-	if err != nil || len(files) == 0 {
-		t.Fatalf("no .amp files under %s (err=%v)", dir, err)
-	}
+	root, files := ampCorpus(t)
 
 	// One passive capture is enough: the analysis path reads passive samples,
 	// and running all twelve would just repeat the same code with more rows.
@@ -41,7 +28,7 @@ func TestAnalysisRunsOnAnImportedSurvey(t *testing.T) {
 	// only watch the analysis refuse, which proves nothing about the numbers.
 	var candidates []string
 	for _, f := range files {
-		parts := readAMP(t, f)
+		parts := readAMP(t, root, f)
 		if parts.surveyResult != nil && parts.declaredPoints > 50 {
 			candidates = append(candidates, f)
 		}
@@ -56,7 +43,7 @@ func TestAnalysisRunsOnAnImportedSurvey(t *testing.T) {
 		svy    *survey.Survey
 	)
 	for _, f := range candidates {
-		raw, readErr := os.ReadFile(filepath.Clean(f))
+		raw, readErr := fs.ReadFile(root, f)
 		if readErr != nil {
 			t.Fatalf("read archive: %v", readErr)
 		}

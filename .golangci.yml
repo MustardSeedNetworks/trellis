@@ -63,14 +63,6 @@ linters:
       - text: 'G101: Potential hardcoded credentials'
         path: 'internal/auth/'
         linters: [ gosec ]
-      # G703 taint analysis on the TLS paths. TRELLIS_TLS_CERT and
-      # TRELLIS_TLS_KEY are operator-supplied file paths — naming a file
-      # anywhere on their own disk is the whole point of the setting, so there
-      # is no root to confine them to. They are filepath.Clean'd, and the only
-      # actor who can set them already runs the daemon. Scoped to the one file.
-      - text: 'G703: Path traversal via taint analysis'
-        path: 'cmd/trellisd/tls\.go'
-        linters: [ gosec ]
       # int8(b[offset]) reading a radiotap field. NL80211/radiotap define the
       # dBm antenna signal and noise as SIGNED 8-bit values delivered in a
       # byte, so reinterpreting the sign is the whole point of the conversion
@@ -97,14 +89,6 @@ linters:
       # controls — not user input. The call site documents the same.
       - text: 'G304: Potential file inclusion via variable'
         path: 'core/survey/store\.go'
-        linters: [ gosec ]
-      # G703 taint analysis on the AirMapper corpus tests. All three read
-      # files from filepath.Glob over TRELLIS_AMP_CORPUS, an operator-supplied
-      # directory (see corpusEnv) — the same shape as the TLS cert path above,
-      # not user input. The corpus is not committed and every test here skips
-      # without the env var, so this path never runs in CI or production.
-      - text: 'G703: Path traversal via taint analysis'
-        path: 'core/survey/(heatmap|import|surveyresult)_corpus_test\.go'
         linters: [ gosec ]
     # gen/ is buf-generated protobuf code — not ours to lint.
     # This lives under linters.exclusions in schema v2; the v1 spelling was
