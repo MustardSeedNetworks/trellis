@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.99](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.98...v0.2.99) (2026-09-26)
+
+
+### Continuous Integration
+
+* **conformance:** pin the policy repo past the OIDC fix ([#628](https://github.com/MustardSeedNetworks/trellis/issues/628)) ([456eeb1](https://github.com/MustardSeedNetworks/trellis/commit/456eeb198553ae93dc01564f1357af78cd7fa9e5)), closes [#627](https://github.com/MustardSeedNetworks/trellis/issues/627)
+
+
+### Miscellaneous
+
+* **release:** bump minor for feat: while below 1.0 ([#631](https://github.com/MustardSeedNetworks/trellis/issues/631)) ([e70a28b](https://github.com/MustardSeedNetworks/trellis/commit/e70a28b6c488d40be0b201c7421fc5557315eb74)), closes [#630](https://github.com/MustardSeedNetworks/trellis/issues/630)
+
 ## [0.2.98](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.97...v0.2.98) (2026-09-26)
 
 
