@@ -13,36 +13,24 @@ package survey_test
 // assertion is arithmetic rather than a fixture someone tuned until it passed.
 
 import (
-	"os"
+	"io/fs"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 )
 
 func TestImportAirMapperLandsMeasurementsInTheStore(t *testing.T) {
-	dir := os.Getenv(corpusEnv)
-	if dir == "" {
-		t.Skipf("set %s to a directory of .amp files to run this", corpusEnv)
-	}
-	if strings.HasPrefix(dir, "~/") {
-		if home, err := os.UserHomeDir(); err == nil {
-			dir = filepath.Join(home, dir[2:])
-		}
-	}
-	files, err := filepath.Glob(filepath.Join(dir, "*.amp"))
-	if err != nil || len(files) == 0 {
-		t.Fatalf("no .amp files under %s (err=%v)", dir, err)
-	}
+	root, files := ampCorpus(t)
 
 	for _, path := range files {
 		t.Run(filepath.Base(path), func(t *testing.T) {
-			parts := readAMP(t, path)
-			// The path comes from filepath.Glob over an operator-supplied
-			// directory, not from anything untrusted; Clean satisfies the
-			// taint check without pretending the input is hostile.
-			raw, readErr := os.ReadFile(filepath.Clean(path))
+			parts := readAMP(t, root, path)
+			// path is a name from ampCorpus's fs.WalkDir over the operator's
+			// corpus directory, so reading it through that same rooted FS —
+			// rather than joining it onto a path built from the environment —
+			// keeps the read confined to the directory the operator named.
+			raw, readErr := fs.ReadFile(root, path)
 			if readErr != nil {
 				t.Fatalf("read archive: %v", readErr)
 			}

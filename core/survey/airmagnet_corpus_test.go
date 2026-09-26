@@ -18,8 +18,6 @@ package survey_test
 
 import (
 	"io/fs"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -28,37 +26,11 @@ import (
 
 const svdCorpusEnv = "TRELLIS_SVD_CORPUS"
 
-// svdCorpus opens the corpus directory as a filesystem rooted at itself and
-// lists the .svd files under it. Reading through the rooted FS rather than
-// joining names onto a path taken from the environment keeps every read inside
-// the directory the operator named — the AirMagnet demo projects are nested a
-// level deep, so this walks rather than globs.
+// svdCorpus is corpus (surveyresult_corpus_test.go) scoped to TRELLIS_SVD_CORPUS
+// and .svd files — the AirMagnet demo projects are nested a level deep, so
+// corpus walks rather than globs.
 func svdCorpus(t *testing.T) (fs.FS, []string) {
-	t.Helper()
-	dir := os.Getenv(svdCorpusEnv)
-	if dir == "" {
-		t.Skipf("set %s to a directory of AirMagnet .svd files to run this", svdCorpusEnv)
-	}
-	if strings.HasPrefix(dir, "~/") {
-		if home, err := os.UserHomeDir(); err == nil {
-			dir = filepath.Join(home, dir[2:])
-		}
-	}
-	root := os.DirFS(dir)
-	var files []string
-	err := fs.WalkDir(root, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if !d.IsDir() && strings.EqualFold(filepath.Ext(path), ".svd") {
-			files = append(files, path)
-		}
-		return nil
-	})
-	if err != nil || len(files) == 0 {
-		t.Fatalf("no .svd files under %s (err=%v)", dir, err)
-	}
-	return root, files
+	return corpus(t, svdCorpusEnv, ".svd")
 }
 
 // TestParseAirMagnetReadsTheAPPlacements is separate from the survey walk

@@ -22,6 +22,7 @@ package survey_test
 // yield measurements — they just have no declared count to be checked against.
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -39,21 +40,71 @@ type ampParts struct {
 	surveyResult   []byte
 }
 
+// corpus opens the directory named by the env var as a filesystem rooted at
+// itself and lists the files under it whose extension matches ext, walking
+// rather than joining a name taken from the environment onto a path.
+//
+// Confinement here is real, not lexical: dir is opened once with
+// os.OpenRoot (Go 1.24+), whose FS refuses to follow a symlink or a ".."
+// name out of the root, which is the shape gosec's own G703 autofix
+// suggests in place of filepath.Clean (Clean only normalises a path
+// lexically; it does not confine one — see pathtraversal.go's sanitizer
+// list, which is deliberately just filepath.Base/Rel and path.Base).
+// Shared by ampCorpus here and svdCorpus in airmagnet_corpus_test.go.
+func corpus(t *testing.T, env, ext string) (fs.FS, []string) {
+	t.Helper()
+	dir := os.Getenv(env)
+	if dir == "" {
+		t.Skipf("set %s to a directory of %s files to run this", env, ext)
+	}
+	if strings.HasPrefix(dir, "~/") {
+		if home, err := os.UserHomeDir(); err == nil {
+			dir = filepath.Join(home, dir[2:])
+		}
+	}
+	r, err := os.OpenRoot(dir)
+	if err != nil {
+		t.Fatalf("open corpus root %s: %v", dir, err)
+	}
+	t.Cleanup(func() { _ = r.Close() })
+	root := r.FS()
+	var files []string
+	err = fs.WalkDir(root, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() && strings.EqualFold(filepath.Ext(path), ext) {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil || len(files) == 0 {
+		t.Fatalf("no %s files under %s (err=%v)", ext, dir, err)
+	}
+	return root, files
+}
+
+// ampCorpus is corpus scoped to TRELLIS_AMP_CORPUS and .amp files.
+func ampCorpus(t *testing.T) (fs.FS, []string) {
+	return corpus(t, corpusEnv, ".amp")
+}
+
 // readAMP pulls the declared point count and the measurement member out of an
-// AirMapper archive. It goes through ParseAirMapperFile rather than reading the
+// AirMapper archive named within root, the filesystem ampCorpus rooted at the
+// corpus directory. It goes through ParseAirMapperFile rather than reading the
 // members itself, so "does this archive declare a count" is answered by the
 // same code the daemon runs — including its refusal of a sidecar written for
 // another survey's floor plan.
-func readAMP(t *testing.T, path string) ampParts {
+func readAMP(t *testing.T, root fs.FS, name string) ampParts {
 	t.Helper()
 
-	data, err := os.ReadFile(filepath.Clean(path))
+	data, err := fs.ReadFile(root, name)
 	if err != nil {
-		t.Fatalf("read %s: %v", filepath.Base(path), err)
+		t.Fatalf("read %s: %v", filepath.Base(name), err)
 	}
 	file, err := survey.ParseAirMapperFile(data)
 	if err != nil {
-		t.Fatalf("ParseAirMapperFile %s: %v", filepath.Base(path), err)
+		t.Fatalf("ParseAirMapperFile %s: %v", filepath.Base(name), err)
 	}
 	out := ampParts{declaredPoints: -1, surveyResult: file.SurveyResult}
 	if file.Serial != nil {
@@ -66,25 +117,12 @@ func readAMP(t *testing.T, path string) ampParts {
 }
 
 func TestParseSurveyResultAgainstRealCaptures(t *testing.T) {
-	dir := os.Getenv(corpusEnv)
-	if dir == "" {
-		t.Skipf("set %s to a directory of .amp files to run this", corpusEnv)
-	}
-	if strings.HasPrefix(dir, "~/") {
-		home, err := os.UserHomeDir()
-		if err == nil {
-			dir = filepath.Join(home, dir[2:])
-		}
-	}
-	files, err := filepath.Glob(filepath.Join(dir, "*.amp"))
-	if err != nil || len(files) == 0 {
-		t.Fatalf("no .amp files under %s (err=%v)", dir, err)
-	}
+	root, files := ampCorpus(t)
 
 	totalPoints, totalObs, totalActive := 0, 0, 0
 	for _, path := range files {
 		t.Run(filepath.Base(path), func(t *testing.T) {
-			parts := readAMP(t, path)
+			parts := readAMP(t, root, path)
 			// Skipping here turned a corpus of unreadable archives into a
 			// passing run. Every .amp in the corpus carries measurements.
 			if parts.surveyResult == nil {
