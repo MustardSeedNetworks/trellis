@@ -395,6 +395,14 @@ jobs:
       - name: Theme contract (semantic classes resolve)
         run: python3 scripts/check-theme-contract.py
 
+      # Tailwind emits variants only for utilities, so `sm:` on a class from
+      # `@layer components` compiles to nothing (.github#80). Trellis has no
+      # such use today; the gate keeps it that way, as in its three siblings.
+      - name: Variants on @layer components classes
+        run: |
+          python3 scripts/test-check-component-variants.py
+          python3 scripts/check-component-variants.py
+
       # The four products each own their tsconfig, so the strictness flags
       # drift silently — a missing one never announces itself, it just checks
       # less than its sibling does.
