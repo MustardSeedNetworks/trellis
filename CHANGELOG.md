@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.98](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.97...v0.2.98) (2026-09-26)
+
+
+### Miscellaneous
+
+* **deps:** update dependency @types/node to v26.6.2 ([#624](https://github.com/MustardSeedNetworks/trellis/issues/624)) ([2b48322](https://github.com/MustardSeedNetworks/trellis/commit/2b48322078500185dcfe1de7934d32bec752dd00))
+* **toolchain:** bump Go, Node, golangci-lint, zizmor, goreleaser-cross ([#623](https://github.com/MustardSeedNetworks/trellis/issues/623)) ([aae1241](https://github.com/MustardSeedNetworks/trellis/commit/aae124162416902db48768c3ce19f0846d60ff75))
+
 ## [0.2.97](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.96...v0.2.97) (2026-09-25)
 
 
