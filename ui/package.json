@@ -5,10 +5,10 @@
   "type": "module",
   "description": "Trellis Wi-Fi survey UI - Mustard Seed Networks",
   "engines": {
-    "node": "26.9.0",
-    "npm": "12.0.2"
+    "node": "26.10.0",
+    "npm": "12.1.0"
   },
-  "packageManager": "npm@12.0.2",
+  "packageManager": "npm@12.1.0",
   "scripts": {
     "dev": "vite",
     "gen": "cd .. && buf generate --template buf.gen.ui.yaml",
@@ -59,7 +59,7 @@
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
     "@types/babel__core": "7.20.5",
-    "@types/node": "26.6.1",
+    "@types/node": "26.6.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.1",

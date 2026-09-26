@@ -75,7 +75,7 @@ zizmor --min-severity high .github/workflows/
 - **actionlint** — syntax, expression and shell errors inside `run:` blocks.
   `SC2129` is ignored as a pure style preference; every correctness rule
   stays on.
-- **zizmor** (pinned 1.29.0) — Actions security scanner. **Blocks on High
+- **zizmor** (pinned 1.30.1) — Actions security scanner. **Blocks on High
   findings.** `release-please.yml` carries one `# zizmor: ignore[...]`
   comment (workflow_run trigger, justified inline) mirroring seed/stem/niac.
 

@@ -33,7 +33,7 @@ UI_SOURCES := $(shell find ui/src ui/public -type f 2>/dev/null) \
 # Must match the golangci-lint pin in .github/workflows/ci.yml. A copy on PATH
 # of any other version is a false clear: it passes what CI rejects or rejects
 # what CI passes.
-GOLANGCI_LINT_VERSION := v2.13.2
+GOLANGCI_LINT_VERSION := v2.14.0
 GOLANGCI_LINT := $(shell go env GOPATH)/bin/golangci-lint
 
 # Must match the buf pin in .github/workflows/ci.yml. Bare `buf` is the same
