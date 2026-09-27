@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.100](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.99...v0.2.100) (2026-09-27)
+
+
+### Continuous Integration
+
+* **ui:** gate variants on [@layer](https://github.com/layer) components classes ([#635](https://github.com/MustardSeedNetworks/trellis/issues/635)) ([ef9b869](https://github.com/MustardSeedNetworks/trellis/commit/ef9b869bf401cae6320f3623074069bb0bc1c0ba)), closes [#634](https://github.com/MustardSeedNetworks/trellis/issues/634)
+
+
+### Miscellaneous
+
+* **deps:** update pre-commit hook davidanson/markdownlint-cli2 to v0.23.3 ([#637](https://github.com/MustardSeedNetworks/trellis/issues/637)) ([0e4360c](https://github.com/MustardSeedNetworks/trellis/commit/0e4360cfed5ea84ac6ea4bfd258c9d6a8e286828))
+
 ## [0.2.99](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.98...v0.2.99) (2026-09-26)
 
 
