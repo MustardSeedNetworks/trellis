@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.102](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.101...v0.2.102) (2026-09-29)
+
+
+### Miscellaneous
+
+* **deps:** update dependency jsdom to v30.1.1 ([#642](https://github.com/MustardSeedNetworks/trellis/issues/642)) ([c4ffab0](https://github.com/MustardSeedNetworks/trellis/commit/c4ffab030811e3eb28038ba1ef287a5d12b87dc1))
+
 ## [0.2.101](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.100...v0.2.101) (2026-09-28)
 
 
