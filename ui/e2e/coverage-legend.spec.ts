@@ -59,6 +59,30 @@ test.describe('where the findings sit beside the map', () => {
 });
 
 /**
+ * The key names the threshold step, not two copies of it (trellis#602).
+ *
+ * The daemon's ramp steps at the operator's threshold with two stops a
+ * hundredth apart; printed raw the key read "-60.01 dBm" beside "-60 dBm".
+ * Read off the stops the real daemon sent, so a change to the scale that
+ * moved or removed the step would fail here rather than pass vacuously.
+ */
+test.describe('the threshold step in the key', () => {
+  test.use({ viewport: WIDE });
+
+  test('labels the band below the threshold "< threshold"', async ({ page }) => {
+    await plotAPlannedFloor(page, 'Step');
+
+    const labels = await page.getByTestId('legend-stop').allTextContents();
+    const step = labels.findIndex((label) => label.startsWith('< '));
+    expect(step, `no "<" label in ${JSON.stringify(labels)}`).toBeGreaterThan(-1);
+    expect(labels[step + 1]).toBe(labels[step]?.slice(2));
+    for (const label of labels) {
+      expect(label, 'a stop printed past a tenth').toMatch(/^(< )?-?\d+(\.\d)? dBm$/);
+    }
+  });
+});
+
+/**
  * The bound above must not travel below the breakpoint that earns it. Bounding
  * a stacked layout does not put the legend on screen — it moves the clipping
  * onto whatever is under it. Measured at 1024x768 while the bound started at
