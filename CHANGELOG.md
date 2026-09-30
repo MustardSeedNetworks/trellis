@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.103](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.102...v0.2.103) (2026-09-30)
+
+
+### Continuous Integration
+
+* **i18n:** adopt the shared hardcoded-copy gate held at zero ([#645](https://github.com/MustardSeedNetworks/trellis/issues/645)) ([c5b4105](https://github.com/MustardSeedNetworks/trellis/commit/c5b4105bcb6eccb9c593566581f3e4086cf1f8ed)), closes [#644](https://github.com/MustardSeedNetworks/trellis/issues/644)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#625](https://github.com/MustardSeedNetworks/trellis/issues/625)) ([af64ee0](https://github.com/MustardSeedNetworks/trellis/commit/af64ee0b29b3d52509ebff00249ae8c888904571))
+
 ## [0.2.102](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.101...v0.2.102) (2026-09-29)
 
 
