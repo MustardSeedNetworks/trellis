@@ -13,6 +13,21 @@ import type { LegendStop } from '@/gen/trellis/survey/v1/survey_pb';
  *
  * Every stop is labelled with its value, so the scale is never colour-alone.
  */
+
+/**
+ * stopLabels names each stop to a tenth, the way the PDF key does
+ * (core/survey `heatmapKeyLabels`). The coverage ramp steps at the threshold
+ * with two stops a hundredth apart; a stop whose label would repeat the next
+ * one's is the top of the band below it, so it reads "< -60" (#602). Halves
+ * round away from zero, as Go's math.Round does, so the two keys agree.
+ */
+function stopLabels(stops: LegendStop[]): string[] {
+  const labels = stops.map(({ value }) =>
+    String((Math.sign(value) * Math.round(Math.abs(value) * 10)) / 10),
+  );
+  return labels.map((label, i) => (label === labels[i + 1] ? `< ${label}` : label));
+}
+
 interface HeatmapLegendProps {
   stops: LegendStop[];
   /** Unit of the stop values — "dBm" for rssi, "dB" for snr. */
@@ -44,6 +59,7 @@ export function HeatmapLegend({ stops, unit }: HeatmapLegendProps) {
   const span = last - first;
 
   const position = (value: number) => (span === 0 ? 0 : ((value - first) / span) * 100);
+  const labels = stopLabels(stops);
   const gradient = `linear-gradient(90deg, ${stops
     .map((stop) => `${stop.color} ${position(stop.value).toFixed(1)}%`)
     .join(', ')})`;
@@ -58,15 +74,15 @@ export function HeatmapLegend({ stops, unit }: HeatmapLegendProps) {
         data-testid="legend-gradient"
       />
       <ul className="flex flex-wrap gap-x-5 gap-y-1">
-        {stops.map((stop) => (
-          <li key={stop.value} className="flex items-center gap-2">
+        {stops.map((stop, i) => (
+          <li key={stop.value} className="flex items-center gap-2" data-testid="legend-stop">
             <span
               aria-hidden="true"
               className="h-2.5 w-2.5 shrink-0 rounded-[3px] border border-hairline"
               style={{ background: stop.color }}
             />
             <span className="figure text-xs text-text-secondary">
-              {stop.value} {unit}
+              {labels[i]} {unit}
             </span>
           </li>
         ))}
