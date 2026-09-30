@@ -785,14 +785,15 @@ jobs:
   # ============================================================================
   # Internationalization (i18n) Validation
   # ============================================================================
-  # Blocking from day one: no --ratchet, no baseline file, no allow-list. The
-  # other three products retrofitted i18n and are still paying that down —
-  # trellis was localized at 22 files precisely so it never acquires the debt,
-  # and a gate that starts permissive is how the debt gets acquired.
+  # Blocking from day one: no --ratchet, no allow-list. The other three
+  # products retrofitted i18n and are still paying that down — trellis was
+  # localized at 22 files precisely so it never acquires the debt, and a gate
+  # that starts permissive is how the debt gets acquired.
   #
   # The checks live once in MustardSeedNetworks/.github; this repo keeps only
-  # its glossary, banned vocabulary, glossary exceptions and dynamic-prefix
-  # allow-list (which is empty, and meant to stay that way).
+  # its glossary, banned vocabulary, glossary exceptions, dynamic-prefix
+  # allow-list and hardcoded-copy baseline — the last two empty, and meant to
+  # stay that way.
   i18n:
     name: i18n Validation
     runs-on: ubuntu-latest
@@ -806,7 +807,7 @@ jobs:
           persist-credentials: false
 
       - name: Validate i18n (parity, glossary, banned vocab, etc.)
-        uses: MustardSeedNetworks/.github/.github/actions/i18n-validate@048d173dd72ca0f9e5fa832fb5b9fd2a6447e5e9 # v1.13.0
+        uses: MustardSeedNetworks/.github/.github/actions/i18n-validate@19e61bef9a6c9d3c15fc47c2bf144a62065617cc # .github#97, untagged
 
   # actionlint + zizmor over .github/workflows. Ported from seed, which has had
   # this since the fleet CI pass; trellis was the one repo where a workflow

@@ -1,0 +1,9 @@
+# Baseline for the shared i18n gate's copy check (check-copy.py in
+# MustardSeedNetworks/.github) — hardcoded English copy in shapes its JSX-text
+# check cannot see (a copy-bearing prop value, a prose string literal). The
+# siblings list the sites they had when the check was promoted and may only
+# shrink the list; a new site fails CI.
+#
+# Deliberately empty. Trellis had no such site when it adopted the check, and
+# this file exists only so the gate runs held at zero rather than reporting
+# itself "not run". Translate a new site; do not list it here.
