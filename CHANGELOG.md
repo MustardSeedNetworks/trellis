@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.104](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.103...v0.2.104) (2026-10-01)
+
+
+### Bug Fixes
+
+* **ui:** label the Coverage key either side of the threshold step ([#648](https://github.com/MustardSeedNetworks/trellis/issues/648)) ([166608d](https://github.com/MustardSeedNetworks/trellis/commit/166608dc25d7920c929675e6eab02c2b66be418a)), closes [#602](https://github.com/MustardSeedNetworks/trellis/issues/602)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#650](https://github.com/MustardSeedNetworks/trellis/issues/650)) ([2689352](https://github.com/MustardSeedNetworks/trellis/commit/2689352d4ee39e1ef5c21b14b90f4f04807595cb))
+
 ## [0.2.103](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.102...v0.2.103) (2026-09-30)
 
 
