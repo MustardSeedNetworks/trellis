@@ -145,7 +145,6 @@ class Step:
     label: str
     cmd: list[str]
     cwd: str = "."
-    env: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass
@@ -236,7 +235,7 @@ def lint_steps(golangci: str, dirs: list[str], host_goos: str) -> list[Step]:
     for goos in ("linux", "windows"):
         if split and goos != host_goos:
             steps.append(
-                Step(f"golangci-lint GOOS={goos}", [*run, *split], env=(("GOOS", goos),))
+                Step(f"golangci-lint GOOS={goos}", ["env", f"GOOS={goos}", *run, *split])
             )
     tagged = [d for d in dirs if under(d.removeprefix("./"), E2E_TAGGED)]
     if tagged:
@@ -359,13 +358,34 @@ def build_plan(
     return plan
 
 
+def make_pin(makefile: str, name: str) -> str:
+    """A `NAME := value` pin, read where Renovate and the lint targets read it."""
+    for line in (ROOT / makefile).read_text().splitlines():
+        key, _, value = line.partition(":=")
+        if key.strip() == name:
+            return value.strip()
+    sys.exit(f"validate-touched: {makefile} pins no {name}")
+
+
+def golangci_binary() -> str:
+    """The GOPATH golangci-lint, refused unless it is the version CI pins."""
+    want = make_pin("Makefile", "GOLANGCI_LINT_VERSION").removeprefix("v")
+    binary = str(Path(run_capture(["go", "env", "GOPATH"]).strip()) / "bin" / "golangci-lint")
+    try:
+        version = run_capture([binary, "version"])
+    except (OSError, subprocess.CalledProcessError):
+        version = ""
+    if f"version {want} " not in version:
+        sys.exit(
+            f"validate-touched: {binary} is not golangci-lint {want}; "
+            "`make golangci-lint` installs the pinned version"
+        )
+    return binary
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--dry-run", action="store_true", help="print the plan, run nothing")
-    # Passed by the make target, so the pins stay in one place: the Makefile
-    # installs and version-checks this golangci-lint before calling us.
-    parser.add_argument("--golangci-lint", default="golangci-lint")
-    parser.add_argument("--markdownlint-version", required=True)
     args = parser.parse_args()
 
     touched = touched_files()
@@ -375,8 +395,8 @@ def main() -> int:
     plan = build_plan(
         touched,
         go_packages(),
-        args.golangci_lint,
-        args.markdownlint_version,
+        "golangci-lint" if args.dry_run else golangci_binary(),
+        make_pin("mk/lint.mk", "MARKDOWNLINT_CLI2_VERSION"),
         run_capture(["go", "env", "GOOS"]).strip(),
     )
     for note in plan.notes:
@@ -386,14 +406,11 @@ def main() -> int:
     started_all = time.monotonic()
     for step in plan.steps:
         where = "" if step.cwd == "." else f"(cd {step.cwd}) "
-        env = "".join(f"{k}={v} " for k, v in step.env)
-        print(f"\n+ {where}{env}{' '.join(step.cmd)}", flush=True)
+        print(f"\n+ {where}{' '.join(step.cmd)}", flush=True)
         if args.dry_run:
             continue
         started = time.monotonic()
-        status = subprocess.run(
-            step.cmd, cwd=ROOT / step.cwd, env={**os.environ, **dict(step.env)}, check=False
-        ).returncode
+        status = subprocess.run(step.cmd, cwd=ROOT / step.cwd, check=False).returncode
         print(f"  [{step.label}: exit {status}, {time.monotonic() - started:.1f} s]")
         if status != 0:
             failed.append(step.label)

@@ -145,8 +145,7 @@ test: check-stale-tests
 # reverse dependencies and gates that change reaches; scripts/validate-touched.py
 # has the selection rules. `make test` still runs once before the PR.
 validate-touched: check-stale-tests golangci-lint
-	@./scripts/validate-touched.py --golangci-lint "$(GOLANGCI_LINT)" \
-		--markdownlint-version "$(MARKDOWNLINT_CLI2_VERSION)"
+	@./scripts/validate-touched.py
 
 fmt-check:
 	@fmt_out="$$(gofmt -l .)"; \
