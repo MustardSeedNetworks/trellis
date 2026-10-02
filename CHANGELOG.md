@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.2.105](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.104...v0.2.105) (2026-10-02)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.48.0 ([#653](https://github.com/MustardSeedNetworks/trellis/issues/653)) ([165f081](https://github.com/MustardSeedNetworks/trellis/commit/165f081e1c39f862d5f4632ad22c4dac93b1cc2d))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#654](https://github.com/MustardSeedNetworks/trellis/issues/654)) ([48ccb1a](https://github.com/MustardSeedNetworks/trellis/commit/48ccb1aaf67d6a74c51dc1828e209845be862e20))
+* **deps:** lock file maintenance ([#656](https://github.com/MustardSeedNetworks/trellis/issues/656)) ([319bbda](https://github.com/MustardSeedNetworks/trellis/commit/319bbda8506ccf2a645c149e17602c20ca601f4e))
+* **deps:** lock file maintenance ([#657](https://github.com/MustardSeedNetworks/trellis/issues/657)) ([af720ba](https://github.com/MustardSeedNetworks/trellis/commit/af720ba5ad139c3729231ab20f261be5ff04d1d7))
+* **deps:** update dependency vite to v8.3.1 ([#651](https://github.com/MustardSeedNetworks/trellis/issues/651)) ([f2869ef](https://github.com/MustardSeedNetworks/trellis/commit/f2869efbb1b9530add42b679782b4f6fd1cef818))
+* **deps:** update github/codeql-action action to v4.38.2 ([#652](https://github.com/MustardSeedNetworks/trellis/issues/652)) ([d5b1569](https://github.com/MustardSeedNetworks/trellis/commit/d5b15697791704a80f7bc5d44a4f186df47c0aed))
+
 ## [0.2.104](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.103...v0.2.104) (2026-10-01)
 
 
