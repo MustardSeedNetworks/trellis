@@ -409,6 +409,11 @@ jobs:
       - name: TypeScript strictness contract
         run: python3 scripts/check-tsconfig-flags.py
 
+      # The inner loop's selection: a reverse dependency it misses is a test
+      # that silently stops running between edits.
+      - name: validate-touched selection
+        run: python3 scripts/test-validate-touched.py
+
       # Source files are exempt from the name patterns: internal/auth/credential.go
       # is a Go file implementing a Credential type, not a committed credential.
       # A secret written INTO source is caught by gitleaks and gosec G101, which
