@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.105...v0.3.0) (2026-10-02)
+
+
+### Features
+
+* **make:** add validate-touched, the targeted inner loop ([#659](https://github.com/MustardSeedNetworks/trellis/issues/659)) ([24a8291](https://github.com/MustardSeedNetworks/trellis/commit/24a8291d4db8a04a62785efb8edaa172bf775ad2))
+
+
+### Continuous Integration
+
+* **layering:** gate Go packages to their ADR-0001 layer ([#662](https://github.com/MustardSeedNetworks/trellis/issues/662)) ([042951f](https://github.com/MustardSeedNetworks/trellis/commit/042951fa8dec91c0e92ba52ade27fa3438e4957c)), closes [#661](https://github.com/MustardSeedNetworks/trellis/issues/661)
+
 ## [0.2.105](https://github.com/MustardSeedNetworks/trellis/compare/v0.2.104...v0.2.105) (2026-10-02)
 
 
