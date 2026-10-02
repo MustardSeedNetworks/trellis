@@ -1,4 +1,4 @@
-.PHONY: generate generate-ts check-generated protoc-plugins ui build build-e2e ui-build-hash lint lint-md golangci-lint buf vet test fmt-check check-stale-tests packages
+.PHONY: generate generate-ts check-generated protoc-plugins ui build build-e2e ui-build-hash lint lint-md golangci-lint buf vet test fmt-check check-stale-tests validate-touched packages
 
 include mk/lint.mk
 
@@ -140,6 +140,12 @@ check-stale-tests:
 
 test: check-stale-tests
 	go test ./...
+
+# The inner loop: lint and test only what differs from origin/main, plus the
+# reverse dependencies and gates that change reaches; scripts/validate-touched.py
+# has the selection rules. `make test` still runs once before the PR.
+validate-touched: check-stale-tests golangci-lint
+	@./scripts/validate-touched.py
 
 fmt-check:
 	@fmt_out="$$(gofmt -l .)"; \
