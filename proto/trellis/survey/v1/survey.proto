@@ -419,6 +419,12 @@ message ReportOptions {
   // Printed on the cover page. This is what makes the PDF a deliverable
   // rather than a printout.
   string company_name = 5;
+  // The layer and level the findings are analysed against, the same pair
+  // GetCoverage takes: "rssi" (the default when empty) or "snr", and a
+  // threshold in that metric's unit. Zero means the metric's own default,
+  // -75 dBm or 20 dB; neither is a threshold anyone surveys to.
+  string metric = 6;
+  int32 threshold = 7;
 }
 
 message GenerateReportResponse {

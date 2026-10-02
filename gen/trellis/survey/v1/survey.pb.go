@@ -1816,7 +1816,13 @@ type ReportOptions struct {
 	IncludeExecutiveSummary bool `protobuf:"varint,4,opt,name=include_executive_summary,json=includeExecutiveSummary,proto3" json:"include_executive_summary,omitempty"`
 	// Printed on the cover page. This is what makes the PDF a deliverable
 	// rather than a printout.
-	CompanyName   string `protobuf:"bytes,5,opt,name=company_name,json=companyName,proto3" json:"company_name,omitempty"`
+	CompanyName string `protobuf:"bytes,5,opt,name=company_name,json=companyName,proto3" json:"company_name,omitempty"`
+	// The layer and level the findings are analysed against, the same pair
+	// GetCoverage takes: "rssi" (the default when empty) or "snr", and a
+	// threshold in that metric's unit. Zero means the metric's own default,
+	// -75 dBm or 20 dB; neither is a threshold anyone surveys to.
+	Metric        string `protobuf:"bytes,6,opt,name=metric,proto3" json:"metric,omitempty"`
+	Threshold     int32  `protobuf:"varint,7,opt,name=threshold,proto3" json:"threshold,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1884,6 +1890,20 @@ func (x *ReportOptions) GetCompanyName() string {
 		return x.CompanyName
 	}
 	return ""
+}
+
+func (x *ReportOptions) GetMetric() string {
+	if x != nil {
+		return x.Metric
+	}
+	return ""
+}
+
+func (x *ReportOptions) GetThreshold() int32 {
+	if x != nil {
+		return x.Threshold
+	}
+	return 0
 }
 
 type GenerateReportResponse struct {
@@ -4051,13 +4071,15 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\tthreshold\x18\x05 \x01(\x05R\tthreshold\"p\n" +
 	"\x15GenerateReportRequest\x12\x1b\n" +
 	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\x12:\n" +
-	"\aoptions\x18\x02 \x01(\v2 .trellis.survey.v1.ReportOptionsR\aoptions\"\xfc\x01\n" +
+	"\aoptions\x18\x02 \x01(\v2 .trellis.survey.v1.ReportOptionsR\aoptions\"\xb2\x02\n" +
 	"\rReportOptions\x12)\n" +
 	"\x10include_heatmaps\x18\x01 \x01(\bR\x0fincludeHeatmaps\x12(\n" +
 	"\x10include_raw_data\x18\x02 \x01(\bR\x0eincludeRawData\x127\n" +
 	"\x17include_recommendations\x18\x03 \x01(\bR\x16includeRecommendations\x12:\n" +
 	"\x19include_executive_summary\x18\x04 \x01(\bR\x17includeExecutiveSummary\x12!\n" +
-	"\fcompany_name\x18\x05 \x01(\tR\vcompanyName\"*\n" +
+	"\fcompany_name\x18\x05 \x01(\tR\vcompanyName\x12\x16\n" +
+	"\x06metric\x18\x06 \x01(\tR\x06metric\x12\x1c\n" +
+	"\tthreshold\x18\a \x01(\x05R\tthreshold\"*\n" +
 	"\x16GenerateReportResponse\x12\x10\n" +
 	"\x03pdf\x18\x01 \x01(\fR\x03pdf\"i\n" +
 	"\x13CreateSurveyRequest\x12\x12\n" +

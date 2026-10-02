@@ -378,7 +378,12 @@ func (h *SurveyServiceHandler) GenerateReport(
 		return nil, notFoundOrInternal(err)
 	}
 
-	pdf, err := survey.NewReportGenerator(svy, reportOptions(req.Msg.GetOptions())).Generate()
+	options, err := reportOptions(req.Msg.GetOptions())
+	if err != nil {
+		return nil, err
+	}
+
+	pdf, err := survey.NewReportGenerator(svy, options).Generate()
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
@@ -393,9 +398,16 @@ func (h *SurveyServiceHandler) GenerateReport(
 // caller does send them, they are taken literally: proto3 cannot distinguish
 // an unset bool from false, so a partially-filled options message would
 // otherwise silently re-enable sections the operator turned off.
-func reportOptions(opts *surveyv1.ReportOptions) survey.ReportOptions {
+//
+// The metric is refused, not defaulted, when the analysis has no rule for it,
+// for the reason [coverageMetric] gives.
+func reportOptions(opts *surveyv1.ReportOptions) (survey.ReportOptions, error) {
 	if opts == nil {
-		return survey.DefaultReportOptions()
+		return survey.DefaultReportOptions(), nil
+	}
+	metric, err := coverageMetric(opts.GetMetric())
+	if err != nil {
+		return survey.ReportOptions{}, err
 	}
 	return survey.ReportOptions{
 		IncludeHeatmaps:         opts.GetIncludeHeatmaps(),
@@ -403,7 +415,9 @@ func reportOptions(opts *surveyv1.ReportOptions) survey.ReportOptions {
 		IncludeRecommendations:  opts.GetIncludeRecommendations(),
 		IncludeExecutiveSummary: opts.GetIncludeExecutiveSummary(),
 		CompanyName:             opts.GetCompanyName(),
-	}
+		Metric:                  metric,
+		Threshold:               int(opts.GetThreshold()),
+	}, nil
 }
 
 // toSurveySummary maps a core survey.Survey onto the proto SurveySummary.

@@ -5,6 +5,7 @@ package api
 import (
 	"testing"
 
+	"connectrpc.com/connect"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
 )
 
@@ -21,7 +22,10 @@ func TestReportOptions(t *testing.T) {
 
 	t.Run("no options means the engine defaults", func(t *testing.T) {
 		t.Parallel()
-		got := reportOptions(nil)
+		got, err := reportOptions(nil)
+		if err != nil {
+			t.Fatalf("reportOptions(nil): %v", err)
+		}
 
 		if !got.IncludeExecutiveSummary || !got.IncludeRecommendations || !got.IncludeHeatmaps {
 			t.Errorf("defaults dropped a section that was on: %+v", got)
@@ -33,12 +37,15 @@ func TestReportOptions(t *testing.T) {
 
 	t.Run("sections the caller turned off stay off", func(t *testing.T) {
 		t.Parallel()
-		got := reportOptions(&surveyv1.ReportOptions{
+		got, err := reportOptions(&surveyv1.ReportOptions{
 			IncludeExecutiveSummary: true,
 			IncludeRecommendations:  false,
 			IncludeHeatmaps:         false,
 			IncludeRawData:          true,
 		})
+		if err != nil {
+			t.Fatalf("reportOptions: %v", err)
+		}
 
 		if got.IncludeRecommendations || got.IncludeHeatmaps {
 			t.Errorf("a section the operator turned off came back on: %+v", got)
@@ -50,10 +57,22 @@ func TestReportOptions(t *testing.T) {
 
 	t.Run("the company name reaches the cover page", func(t *testing.T) {
 		t.Parallel()
-		got := reportOptions(&surveyv1.ReportOptions{CompanyName: "Mustard Seed Networks"})
+		got, err := reportOptions(&surveyv1.ReportOptions{CompanyName: "Mustard Seed Networks"})
+		if err != nil {
+			t.Fatalf("reportOptions: %v", err)
+		}
 
 		if got.CompanyName != "Mustard Seed Networks" {
 			t.Errorf("CompanyName = %q, want it carried through", got.CompanyName)
+		}
+	})
+
+	t.Run("a metric with no dead-zone rule is refused", func(t *testing.T) {
+		t.Parallel()
+		_, err := reportOptions(&surveyv1.ReportOptions{Metric: "throughput"})
+
+		if connect.CodeOf(err) != connect.CodeInvalidArgument {
+			t.Errorf("err = %v, want InvalidArgument", err)
 		}
 	})
 }
