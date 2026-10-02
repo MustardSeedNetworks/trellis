@@ -26,6 +26,12 @@ therefore linked into the core, and **trellisd itself ships as the signed
 `Trellis.app`**. The `capture.Scanner` interface still hides host-NIC from external
 hardware; only the process boundary is gone.
 
+What the process boundary used to guarantee is now a package rule, checked by
+`scripts/check-layering.py` in CI: `core/**` (the engine side) imports nothing
+else from the module, `internal/capture` imports only the `core/wifi` values it
+returns, `gen/**` only itself, and only `internal/api` and `cmd/` compose the
+rest. A new package fails the gate until it is given a layer there.
+
 ```text
 ┌────────────────────────────────────────────────────────────────────┐
 │ UI process            React + TypeScript  (WebGL/WebGPU canvas)      │

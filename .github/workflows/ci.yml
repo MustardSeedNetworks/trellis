@@ -388,6 +388,15 @@ jobs:
       - name: File-size gate (baseline-ratchet)
         run: ./scripts/check-file-size.sh
 
+      # ADR-0006 linked capture into trellisd, so the process boundary that kept
+      # the engine and capture code away from the daemon became a package one.
+      # Read from source, so the darwin and windows capture files are checked
+      # here too, where neither builds.
+      - name: Go package layering (ADR-0001)
+        run: |
+          python3 scripts/test-check-layering.py
+          python3 scripts/check-layering.py
+
       # A theme that is defined but not rendered is the failure the design
       # rollout retired grep-based validation over. This checks the direction
       # that can actually fail: every semantic class the markup uses has a

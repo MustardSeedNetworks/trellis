@@ -121,6 +121,7 @@ GATES = (
     Gate("scripts/check-cgo-confinement.py", ("*.go", "go.mod"), only_on="darwin"),
     Gate("scripts/check-component-variants.py", ("ui/src/*",)),
     Gate("scripts/check-file-size.sh", ("*.go", "ui/src/*")),
+    Gate("scripts/check-layering.py", ("*.go",)),
     Gate("scripts/check-package-reachability.sh", ("*.go", "go.mod")),
     Gate("scripts/check-theme-contract.py", ("ui/src/*",)),
     Gate("scripts/check-token-discipline.sh", ("ui/src/*",)),
