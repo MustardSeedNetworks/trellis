@@ -174,9 +174,9 @@ type Recommendation struct {
 	Priority RecommendationPriority
 }
 
-// apSighting is one access point's record across a floor's walk: what it
+// APSighting is one access point's record across a floor's walk: what it
 // announced and how it was heard.
-type apSighting struct {
+type APSighting struct {
 	BSSID      string
 	SSID       string
 	Band       string
@@ -187,13 +187,13 @@ type apSighting struct {
 	MedianRSSI int
 }
 
-// floorAPInventory lists every BSSID heard across samples, most-heard first.
+// APInventory lists every BSSID heard across samples, most-heard first.
 //
 // A BSSID counts once per point, at its strongest reading there, so Samples is
 // "how much of the walk heard it" rather than how many scan entries named it.
 // SSID, band, channel and width come from the strongest reading overall: an AP
 // that moved channel mid-walk is reported where it was loudest.
-func floorAPInventory(samples []*SamplePoint) []apSighting {
+func APInventory(samples []*SamplePoint) []APSighting {
 	type tally struct {
 		strongest *wifi.ScannedNetwork
 		readings  []int
@@ -226,11 +226,11 @@ func floorAPInventory(samples []*SamplePoint) []apSighting {
 		}
 	}
 
-	aps := make([]apSighting, 0, len(byBSSID))
+	aps := make([]APSighting, 0, len(byBSSID))
 	for bssid, t := range byBSSID {
 		sort.Ints(t.readings)
 		n := t.strongest
-		aps = append(aps, apSighting{
+		aps = append(aps, APSighting{
 			BSSID:      bssid,
 			SSID:       n.SSID,
 			Band:       bandLabel(n.Frequency, n.Channel),

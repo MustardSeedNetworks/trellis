@@ -283,7 +283,7 @@ func (g *ReportGenerator) addFloorSection(floor *Floor) {
 // which is the part of a survey a customer acts on: the AP to move, re-power
 // or re-channel is named here by BSSID.
 func (g *ReportGenerator) addFloorAPTable(measured []*SamplePoint) {
-	aps := floorAPInventory(measured)
+	aps := APInventory(measured)
 	if len(aps) == 0 {
 		return
 	}

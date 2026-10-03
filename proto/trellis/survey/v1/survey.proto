@@ -328,6 +328,13 @@ message GetHeatmapRequest {
   // cells. Ignored by the metrics that have no floor (density, interference,
   // throughput), which are sequential scales with nothing to diverge around.
   double threshold = 4;
+  // Access point to draw. Absent means the strongest AP heard at each point,
+  // which is the floor's coverage; set, the map is interpolated from this
+  // BSSID's readings alone, which is where that one AP serves. Points that
+  // did not hear it carry no reading and are left out. Only "rssi" and "snr"
+  // have a per-AP reading; any other metric with a BSSID is refused, as is a
+  // BSSID no point on the floor heard.
+  optional string bssid = 5;
 }
 
 message GetHeatmapResponse {
@@ -359,6 +366,19 @@ message GetHeatmapResponse {
   // Cell edge in image pixels. A position (x, y) on the image is the cell at
   // (y / cell_size) * grid_cols + (x / cell_size).
   int32 cell_size = 12;
+  // Every access point heard on the floor, most-heard first, whether or not
+  // the request named one: what a caller offers as the choices for `bssid`.
+  repeated HeardAccessPoint access_points = 13;
+}
+
+// HeardAccessPoint is one BSSID heard on a floor, labelled as a surveyor tells
+// APs apart: by network name and channel. Channel is where the AP was loudest.
+message HeardAccessPoint {
+  string bssid = 1;
+  string ssid = 2;
+  int32 channel = 3;
+  // Points on the floor at which this BSSID was heard.
+  int32 samples = 4;
 }
 
 // LegendStop is one stop of a heatmap's colour scale: the metric value and
@@ -385,6 +405,11 @@ message GetCoverageRequest {
   // empty) or "snr". A metric the analysis has no rule for is refused rather
   // than answered about signal strength.
   string metric = 4;
+  // Access point to analyse, as GetHeatmapRequest.bssid: absent scores the
+  // strongest AP at each point, set scores this BSSID's readings alone, so
+  // the dead zones are this AP's. A BSSID no point on the floor heard is
+  // refused.
+  optional string bssid = 5;
 }
 
 message GetCoverageResponse {

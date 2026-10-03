@@ -96,6 +96,14 @@ func SupportsCoverageAnalysis(metric HeatmapType) bool {
 	return metric == HeatmapRSSI || metric == HeatmapSNR
 }
 
+// SupportsPerAPView reports whether a metric can be read from one access
+// point's readings alone. Signal and SNR are properties of one AP at one
+// point; density, co-channel count and throughput describe the airspace or the
+// connection, and over a single AP they would draw a constant.
+func SupportsPerAPView(metric HeatmapType) bool {
+	return metric == HeatmapRSSI || metric == HeatmapSNR
+}
+
 // ClusterRadius defines the maximum distance (in pixels) to consider samples as part of the same dead zone.
 const ClusterRadius = 50.0
 
