@@ -7,7 +7,7 @@
 # Checks:
 # - Go: unused functions, variables, types (staticcheck -checks="U*")
 # - Go: unused dependencies (go mod tidy)
-# - TypeScript: unused exports (ts-prune)
+# - TypeScript: unused npm dependencies (depcheck)
 # =============================================================================
 
 # Dead-code analysis.
@@ -17,10 +17,10 @@
 # recorded in scripts/package-reachability-baseline.txt.
 #
 # Every other step in this workflow is advisory by design — staticcheck's
-# unused checks and ts-prune both produce false positives on interfaces,
-# generated code and platform-gated files, so they write to the step summary
-# and do not fail. A green run on this workflow therefore means "no NEW
-# unreachable packages", not "no dead code".
+# unused checks produce false positives on interfaces, generated code and
+# platform-gated files, so they write to the step summary and do not fail. A
+# green run on this workflow therefore means "no NEW unreachable packages",
+# not "no dead code".
 name: Dead Code Detection
 
 on:
@@ -121,25 +121,6 @@ jobs:
       - name: Install dependencies
         working-directory: ui
         run: npm ci
-
-      - name: Check for unused exports
-        working-directory: ui
-        run: |
-          echo "### Frontend Dead Code Analysis" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-
-          # Run ts-prune to find unused exports
-          npm exec -- ts-prune --error 2>&1 | tee ts-prune-output.txt || true
-
-          UNUSED_COUNT=$(grep -c "unused" ts-prune-output.txt || echo "0")
-          echo "Found $UNUSED_COUNT potentially unused exports" >> "$GITHUB_STEP_SUMMARY"
-
-          if [ "$UNUSED_COUNT" -gt 0 ]; then
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
-            head -50 ts-prune-output.txt >> "$GITHUB_STEP_SUMMARY"
-            echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
-          fi
 
       - name: Check for unused npm dependencies
         working-directory: ui
