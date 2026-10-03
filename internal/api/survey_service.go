@@ -221,6 +221,20 @@ func (h *SurveyServiceHandler) GetHeatmap(
 	if err != nil {
 		return nil, err
 	}
+	// The choices for the selector come from the whole floor, so the list does
+	// not shrink to one entry once an AP is picked.
+	heard := survey.APInventory(floor.Samples)
+
+	if req.Msg.Bssid != nil {
+		if !survey.SupportsPerAPView(config.Type) {
+			return nil, connect.NewError(connect.CodeInvalidArgument,
+				fmt.Errorf("metric %q has no per-AP reading; use %q or %q",
+					config.Type, survey.HeatmapRSSI, survey.HeatmapSNR))
+		}
+		if floor, err = apView(floor, req.Msg.GetBssid()); err != nil {
+			return nil, err
+		}
+	}
 
 	result, err := survey.GenerateFloorHeatmap(floor, config)
 	if err != nil {
@@ -228,19 +242,43 @@ func (h *SurveyServiceHandler) GetHeatmap(
 	}
 
 	return connect.NewResponse(&surveyv1.GetHeatmapResponse{
-		Png:         result.Image,
-		Width:       int32(result.Width),
-		Height:      int32(result.Height),
-		Min:         result.Stats.Min,
-		Max:         result.Stats.Max,
-		SampleCount: int32(result.SampleCount),
-		Metric:      result.Type,
-		Legend:      legendStops(result.Scale),
-		Grid:        flattenGrid(result.Grid),
-		GridCols:    int32Of(gridCols(result.Grid)),
-		GridRows:    int32Of(len(result.Grid)),
-		CellSize:    int32Of(result.CellSize),
+		Png:          result.Image,
+		Width:        int32(result.Width),
+		Height:       int32(result.Height),
+		Min:          result.Stats.Min,
+		Max:          result.Stats.Max,
+		SampleCount:  int32(result.SampleCount),
+		Metric:       result.Type,
+		Legend:       legendStops(result.Scale),
+		Grid:         flattenGrid(result.Grid),
+		GridCols:     int32Of(gridCols(result.Grid)),
+		GridRows:     int32Of(len(result.Grid)),
+		CellSize:     int32Of(result.CellSize),
+		AccessPoints: heardAccessPoints(heard),
 	}), nil
+}
+
+// apView narrows a floor to one access point's readings. A BSSID nobody heard
+// is the caller's mistake, not a floor with no coverage from that AP.
+func apView(floor *survey.Floor, bssid string) (*survey.Floor, error) {
+	view, err := floor.ForBSSID(bssid)
+	if errors.Is(err, survey.ErrBSSIDNotHeard) {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+	return view, err
+}
+
+func heardAccessPoints(aps []survey.APSighting) []*surveyv1.HeardAccessPoint {
+	out := make([]*surveyv1.HeardAccessPoint, 0, len(aps))
+	for _, ap := range aps {
+		out = append(out, &surveyv1.HeardAccessPoint{
+			Bssid:   ap.BSSID,
+			Ssid:    ap.SSID,
+			Channel: int32Of(ap.Channel),
+			Samples: int32Of(ap.Samples),
+		})
+	}
+	return out
 }
 
 // flattenGrid lays the interpolated field out row-major for the wire.
@@ -347,6 +385,11 @@ func (h *SurveyServiceHandler) GetCoverage(
 	floor, err := floorOf(svy, req.Msg.GetFloorId())
 	if err != nil {
 		return nil, err
+	}
+	if req.Msg.Bssid != nil {
+		if floor, err = apView(floor, req.Msg.GetBssid()); err != nil {
+			return nil, err
+		}
 	}
 
 	analysis, err := survey.DetectFloorDeadZones(svy.ID, floor, metric, threshold, nil)

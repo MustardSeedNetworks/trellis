@@ -35,4 +35,9 @@ var (
 	// fault in the request, and a floor with no samples at all does not
 	// return it.
 	ErrMetricUnmeasured = errors.New("the survey did not measure this metric")
+	// ErrBSSIDNotHeard is returned when a per-AP view names an access point
+	// no point on the floor heard. An empty map would read as "this AP covers
+	// nothing here", which is a claim about the AP rather than about the
+	// request.
+	ErrBSSIDNotHeard = errors.New("no point on this floor heard the access point")
 )
