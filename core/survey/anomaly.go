@@ -22,7 +22,7 @@ const (
 //
 // Seed's equivalent (troubleshooting.AnalyzeBSSes, backed by
 // internal/anomaly's engine + internal/wifi/anomaly's ~20-rule catalog, ~3700
-// LOC total) has not been ported to Trellis yet — TODO(trellis-anomaly): port
+// LOC total) has not been ported to Trellis yet — TODO(#387): port
 // the catalog/detector/engine and wire a concrete implementation here. Until
 // then, callers that don't have a detector pass nil and AnalyzeAnomalies
 // degrades to "no anomalies" (dead-zone/coverage analysis is unaffected).

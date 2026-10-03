@@ -46,23 +46,32 @@ jobs:
           # Create output file
           TODOS_FILE=$(mktemp)
 
-          # Scan Go files
-          grep -rn "TODO\|FIXME\|HACK\|XXX" \
-            --include="*.go" \
-            --exclude-dir=vendor \
-            --exclude-dir=.git \
-            . >> "$TODOS_FILE" 2>/dev/null || true
+          # The marker must sit inside a comment, and `XXX` is not a marker
+          # (ported from seed#2092). A bare `TODO\|FIXME\|HACK\|XXX` matches
+          # Go's `context.TODO()` and every `XXXX` placeholder; anchoring on a
+          # comment opener and `\b` around the word removes both.
+          MARKER='(//|/\*|^[[:space:]]*\*|#).*\b(TODO|FIXME|HACK)\b'
+          # `TODO(#n)` / `FIXME(#n)` already name their tracking issue, so they
+          # are not reported. Without this the weekly issue re-filed the same
+          # two #387-tracked lines eight weeks running (#53 .. #638).
+          TRACKED='\b(TODO|FIXME|HACK)\(#[0-9]+\)'
 
-          # Scan TypeScript/JavaScript files
-          grep -rn "TODO\|FIXME\|HACK\|XXX" \
-            --include="*.ts" \
-            --include="*.tsx" \
-            --include="*.js" \
-            --include="*.jsx" \
-            --exclude-dir=node_modules \
-            --exclude-dir=dist \
-            --exclude-dir=.git \
-            . >> "$TODOS_FILE" 2>/dev/null || true
+          {
+            grep -rnE "$MARKER" \
+              --include="*.go" \
+              --exclude-dir=vendor \
+              --exclude-dir=.git \
+              . 2>/dev/null || true
+            grep -rnE "$MARKER" \
+              --include="*.ts" \
+              --include="*.tsx" \
+              --include="*.js" \
+              --include="*.jsx" \
+              --exclude-dir=node_modules \
+              --exclude-dir=dist \
+              --exclude-dir=.git \
+              . 2>/dev/null || true
+          } | { grep -vE "$TRACKED" || true; } > "$TODOS_FILE"
 
           # Count TODOs
           TODO_COUNT=$(wc -l < "$TODOS_FILE" | tr -d ' ')
@@ -100,7 +109,9 @@ jobs:
           git diff --name-only HEAD~1 HEAD 2>/dev/null | while read -r file; do
             if [[ "$file" =~ \.(go|ts|tsx|js|jsx)$ ]]; then
               # Check for TODOs in changed lines
-              git diff HEAD~1 HEAD -- "$file" | grep "^+" | grep -i "TODO\|FIXME" && \
+              git diff HEAD~1 HEAD -- "$file" | grep "^+" \
+                | grep -E '(//|/\*|^\+[[:space:]]*\*).*\b(TODO|FIXME|HACK)\b' \
+                | grep -vE '\b(TODO|FIXME|HACK)\(#[0-9]+\)' && \
                 echo "::warning file=$file::New TODO found in $file"
             fi
           done || true
