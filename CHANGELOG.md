@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.2](https://github.com/MustardSeedNetworks/trellis/compare/v0.3.1...v0.3.2) (2026-10-03)
+
+
+### Bug Fixes
+
+* **api:** carry the report's analysis metric and threshold over the wire ([#666](https://github.com/MustardSeedNetworks/trellis/issues/666)) ([53c0d1f](https://github.com/MustardSeedNetworks/trellis/commit/53c0d1f87a1b296857371c4ae0228310e77b74f4))
+
+
+### Miscellaneous
+
+* **deps:** update dependency @types/node to v26.6.3 ([#667](https://github.com/MustardSeedNetworks/trellis/issues/667)) ([cec0eda](https://github.com/MustardSeedNetworks/trellis/commit/cec0edabbe9d396da07ff841c59be96da721ae12))
+
 ## [0.3.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.3.0...v0.3.1) (2026-10-02)
 
 
