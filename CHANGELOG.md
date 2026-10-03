@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.4.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.3.3...v0.4.0) (2026-10-03)
+
+
+### Features
+
+* **survey:** draw the heatmap and dead zones for one access point ([#679](https://github.com/MustardSeedNetworks/trellis/issues/679)) ([2b8b4e0](https://github.com/MustardSeedNetworks/trellis/commit/2b8b4e01522d9a5258b4a602a21545fd0d2948ed)), closes [#678](https://github.com/MustardSeedNetworks/trellis/issues/678)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/mustardseednetworks/foundation to v0.6.3 ([#671](https://github.com/MustardSeedNetworks/trellis/issues/671)) ([7b006fe](https://github.com/MustardSeedNetworks/trellis/commit/7b006fe5020174e6eea74b1de3d2ed01d7eeb79b))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#681](https://github.com/MustardSeedNetworks/trellis/issues/681)) ([6db6aff](https://github.com/MustardSeedNetworks/trellis/commit/6db6aff003ce332a9226c9657b6c9f1146283307))
+
 ## [0.3.3](https://github.com/MustardSeedNetworks/trellis/compare/v0.3.2...v0.3.3) (2026-10-03)
 
 
