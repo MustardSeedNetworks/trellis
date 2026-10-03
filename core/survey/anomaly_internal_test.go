@@ -67,7 +67,7 @@ func TestBSSViewsDedupKeepsStrongest(t *testing.T) {
 
 // stubDetector is a test double for AnomalyDetector. Seed's real detection
 // rules (internal/anomaly + internal/wifi/anomaly) have not been ported to
-// Trellis yet (TODO(trellis-anomaly)), so these tests exercise the
+// Trellis yet (TODO(#387)), so these tests exercise the
 // survey-side plumbing — the BSS views AnalyzeAnomalies builds and hands to
 // the detector — rather than a real open-network detection rule.
 type stubDetector struct {
