@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.3](https://github.com/MustardSeedNetworks/trellis/compare/v0.3.2...v0.3.3) (2026-10-03)
+
+
+### Bug Fixes
+
+* **ci:** drop ts-prune, which pulls an unpatched braces advisory ([#673](https://github.com/MustardSeedNetworks/trellis/issues/673)) ([d35f615](https://github.com/MustardSeedNetworks/trellis/commit/d35f615095f9b2c41016e4657f9d3606315f5fea))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#675](https://github.com/MustardSeedNetworks/trellis/issues/675)) ([f9a59a9](https://github.com/MustardSeedNetworks/trellis/commit/f9a59a9ac0ba66ed1742e7ae98ffc84c482599bd))
+
 ## [0.3.2](https://github.com/MustardSeedNetworks/trellis/compare/v0.3.1...v0.3.2) (2026-10-03)
 
 
