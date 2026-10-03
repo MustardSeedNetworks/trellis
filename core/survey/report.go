@@ -55,6 +55,15 @@ const (
 	tableColChannelWidth = 20
 	tableColTimeWidth    = 35
 
+	// Table column widths for the per-floor access point table.
+	apColBSSIDWidth   = 32
+	apColSSIDWidth    = 40
+	apColBandWidth    = 18
+	apColChannelWidth = 16
+	apColWidthWidth   = 16
+	apColSamplesWidth = 18
+	apColRSSIWidth    = 22
+
 	// Miscellaneous layout constants.
 	pdfLineStartX        = 10  // Line drawing start X position
 	pdfLineEndX          = 200 // Line drawing end X position
