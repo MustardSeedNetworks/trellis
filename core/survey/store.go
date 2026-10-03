@@ -59,8 +59,13 @@ func (m *Manager) persistSurvey(survey *Survey) error {
 		`DELETE FROM pass_fail_criteria WHERE survey_id = ?`, survey.ID); err != nil {
 		return fmt.Errorf("clear criteria: %w", err)
 	}
+	points, err := newPointWriter(ctx, tx, survey.ID)
+	if err != nil {
+		return err
+	}
+	defer points.close()
 	for _, floor := range survey.Floors {
-		if err := insertFloor(ctx, tx, survey.ID, floor); err != nil {
+		if err := insertFloor(ctx, tx, points, floor); err != nil {
 			return err
 		}
 	}
@@ -102,7 +107,7 @@ func upsertSurvey(ctx context.Context, tx *sql.Tx, s *Survey) error {
 	return nil
 }
 
-func insertFloor(ctx context.Context, tx *sql.Tx, surveyID string, f *Floor) error {
+func insertFloor(ctx context.Context, tx *sql.Tx, points *pointWriter, f *Floor) error {
 	var w, h any
 	var scale, img any
 	if f.FloorPlan != nil {
@@ -112,21 +117,72 @@ func insertFloor(ctx context.Context, tx *sql.Tx, surveyID string, f *Floor) err
 		INSERT INTO floors (id, survey_id, name, level, created_at, updated_at,
 			fp_width, fp_height, fp_scale_m, fp_image)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		f.ID, surveyID, f.Name, f.Level,
+		f.ID, points.surveyID, f.Name, f.Level,
 		f.CreatedAt.UTC().Format(rfc3339Nano), f.UpdatedAt.UTC().Format(rfc3339Nano),
 		w, h, scale, img,
 	); err != nil {
 		return fmt.Errorf("insert floor %s: %w", f.ID, err)
 	}
 	for _, p := range f.Samples {
-		if err := insertPoint(ctx, tx, surveyID, f.ID, p); err != nil {
+		if err := points.insert(ctx, f.ID, p); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func insertPoint(ctx context.Context, tx *sql.Tx, surveyID, floorID string, p *SamplePoint) error {
+// pointWriter inserts points and their observations through statements
+// prepared once per transaction. SQLite parses SQL on every prepare, and a
+// point carries one statement per AP heard, so preparing per execution was
+// about a quarter of import time (#683).
+type pointWriter struct {
+	surveyID                           string
+	point, passive, active, throughput *sql.Stmt
+}
+
+func newPointWriter(ctx context.Context, tx *sql.Tx, surveyID string) (w *pointWriter, err error) {
+	w = &pointWriter{surveyID: surveyID}
+	defer func() {
+		if err != nil {
+			w.close()
+		}
+	}()
+	if w.point, err = tx.PrepareContext(ctx, `
+		INSERT INTO survey_points (floor_id, survey_id, x, y, recorded_at, sample_kind,
+			interpolated, failure)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`); err != nil {
+		return nil, fmt.Errorf("prepare point insert: %w", err)
+	}
+	if w.throughput, err = tx.PrepareContext(ctx, `
+		INSERT INTO throughput_samples (point_id, survey_id, ssid, bssid, rssi_dbm,
+			download_mbps, upload_mbps, latency_ms, jitter_ms, packet_loss_pct)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); err != nil {
+		return nil, fmt.Errorf("prepare throughput sample insert: %w", err)
+	}
+	if w.active, err = tx.PrepareContext(ctx, `
+		INSERT INTO active_samples (point_id, survey_id, ssid, bssid, rssi_dbm,
+			data_rate_mbps, roaming_event, previous_bssid, roam_count)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`); err != nil {
+		return nil, fmt.Errorf("prepare active sample insert: %w", err)
+	}
+	if w.passive, err = tx.PrepareContext(ctx, `
+		INSERT INTO samples (survey_id, point_id, ssid, bssid, signal_dbm, channel,
+			frequency_mhz, security, channel_width, noise_dbm, snr, ht_mode, is_dfs, last_seen)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`); err != nil {
+		return nil, fmt.Errorf("prepare sample insert: %w", err)
+	}
+	return w, nil
+}
+
+func (w *pointWriter) close() {
+	for _, stmt := range []*sql.Stmt{w.point, w.passive, w.active, w.throughput} {
+		if stmt != nil {
+			_ = stmt.Close()
+		}
+	}
+}
+
+func (w *pointWriter) insert(ctx context.Context, floorID string, p *SamplePoint) error {
 	kind, passive, active, tput := classifySample(p.SampleData)
 	var failure string
 	if p.Failed != nil {
@@ -136,11 +192,8 @@ func insertPoint(ctx context.Context, tx *sql.Tx, surveyID, floorID string, p *S
 		kind, failure = p.Failed.Kind, p.Failed.Reason
 		passive, active, tput = nil, nil, nil
 	}
-	res, err := tx.ExecContext(ctx, `
-		INSERT INTO survey_points (floor_id, survey_id, x, y, recorded_at, sample_kind,
-			interpolated, failure)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-		floorID, surveyID, p.X, p.Y, p.Timestamp.UTC().Format(rfc3339Nano), kind,
+	res, err := w.point.ExecContext(ctx,
+		floorID, w.surveyID, p.X, p.Y, p.Timestamp.UTC().Format(rfc3339Nano), kind,
 		boolToInt(p.Interpolated), failure,
 	)
 	if err != nil {
@@ -152,11 +205,8 @@ func insertPoint(ctx context.Context, tx *sql.Tx, surveyID, floorID string, p *S
 	}
 
 	if tput != nil {
-		if _, err := tx.ExecContext(ctx, `
-			INSERT INTO throughput_samples (point_id, survey_id, ssid, bssid, rssi_dbm,
-				download_mbps, upload_mbps, latency_ms, jitter_ms, packet_loss_pct)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			pointID, surveyID, tput.SSID, tput.BSSID, tput.RSSI,
+		if _, err := w.throughput.ExecContext(ctx,
+			pointID, w.surveyID, tput.SSID, tput.BSSID, tput.RSSI,
 			tput.DownloadMbps, tput.UploadMbps, tput.Latency, tput.Jitter, tput.PacketLoss,
 		); err != nil {
 			return fmt.Errorf("insert throughput sample: %w", err)
@@ -164,11 +214,8 @@ func insertPoint(ctx context.Context, tx *sql.Tx, surveyID, floorID string, p *S
 	}
 
 	if active != nil {
-		if _, err := tx.ExecContext(ctx, `
-			INSERT INTO active_samples (point_id, survey_id, ssid, bssid, rssi_dbm,
-				data_rate_mbps, roaming_event, previous_bssid, roam_count)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			pointID, surveyID, active.SSID, active.BSSID, active.RSSI,
+		if _, err := w.active.ExecContext(ctx,
+			pointID, w.surveyID, active.SSID, active.BSSID, active.RSSI,
 			active.DataRate, boolToInt(active.RoamingEvent), active.PreviousBSSID,
 			active.RoamCount,
 		); err != nil {
@@ -183,11 +230,8 @@ func insertPoint(ctx context.Context, tx *sql.Tx, surveyID, floorID string, p *S
 		if n == nil {
 			continue
 		}
-		if _, err := tx.ExecContext(ctx, `
-			INSERT INTO samples (survey_id, point_id, ssid, bssid, signal_dbm, channel,
-				frequency_mhz, security, channel_width, noise_dbm, snr, ht_mode, is_dfs, last_seen)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			surveyID, pointID, n.SSID, n.BSSID, n.Signal, n.Channel, n.Frequency,
+		if _, err := w.passive.ExecContext(ctx,
+			w.surveyID, pointID, n.SSID, n.BSSID, n.Signal, n.Channel, n.Frequency,
 			n.Security, n.ChannelWidth, n.NoiseFloor, n.SNR, n.HTMode, boolToInt(n.IsDFS),
 			n.LastSeen.UTC().Format(rfc3339Nano),
 		); err != nil {
@@ -522,17 +566,16 @@ func nullIfEmpty(s string) any {
 	return s
 }
 
-// appendPoint writes a single new point and its observations, and touches the
-// survey's updated_at.
+// appendPoints writes new points and their observations in one transaction,
+// and touches the survey's and floor's updated_at.
 //
 // It exists because persistSurvey rewrites the whole survey, and a walk adds
-// points one at a time: rewriting every prior point on each addition makes an
-// import quadratic. Measured on the largest reference survey (142 points,
-// 29,278 observations), the rewrite path took 43.8s; appending takes a fraction
-// of that, because each call writes one point instead of all of them.
+// points as it goes: rewriting every prior point on each addition makes an
+// import quadratic. A live walk passes one point; an import passes a batch, so
+// it pays one commit per batch rather than one per point.
 //
 // THE CALLER MUST HOLD m.mu, on the same terms as persistSurvey.
-func (m *Manager) appendPoint(surveyID, floorID string, s *Survey, p *SamplePoint) error {
+func (m *Manager) appendPoints(surveyID, floorID string, at time.Time, ps []*SamplePoint) error {
 	ctx := context.Background()
 	tx, err := m.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -540,21 +583,42 @@ func (m *Manager) appendPoint(surveyID, floorID string, s *Survey, p *SamplePoin
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	if err := insertPoint(ctx, tx, surveyID, floorID, p); err != nil {
+	points, err := newPointWriter(ctx, tx, surveyID)
+	if err != nil {
 		return err
+	}
+	defer points.close()
+	for _, p := range ps {
+		if err := points.insert(ctx, floorID, p); err != nil {
+			return err
+		}
 	}
 	if _, err := tx.ExecContext(ctx,
 		`UPDATE surveys SET updated_at = ? WHERE id = ?`,
-		s.UpdatedAt.UTC().Format(rfc3339Nano), surveyID); err != nil {
+		at.UTC().Format(rfc3339Nano), surveyID); err != nil {
 		return fmt.Errorf("touch survey: %w", err)
 	}
 	if _, err := tx.ExecContext(ctx,
 		`UPDATE floors SET updated_at = ? WHERE id = ?`,
-		s.UpdatedAt.UTC().Format(rfc3339Nano), floorID); err != nil {
+		at.UTC().Format(rfc3339Nano), floorID); err != nil {
 		return fmt.Errorf("touch floor: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit append: %w", err)
+	}
+	return nil
+}
+
+// persistStatus writes a status change. A transition touches one row, and
+// persistSurvey would rewrite every point the survey holds: closing a
+// 100k-point import that way rewrote all 100k (#683).
+//
+// THE CALLER MUST HOLD m.mu, on the same terms as persistSurvey.
+func (m *Manager) persistStatus(s *Survey) error {
+	if _, err := m.db.ExecContext(context.Background(),
+		`UPDATE surveys SET status = ?, updated_at = ? WHERE id = ?`,
+		string(s.Status), s.UpdatedAt.UTC().Format(rfc3339Nano), s.ID); err != nil {
+		return fmt.Errorf("write survey status: %w", err)
 	}
 	return nil
 }

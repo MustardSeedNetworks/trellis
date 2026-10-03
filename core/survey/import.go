@@ -10,6 +10,7 @@ import (
 	_ "image/jpeg" // register JPEG decoder for DecodeConfig
 	_ "image/png"  // register PNG decoder for DecodeConfig
 	"math"
+	"slices"
 
 	"github.com/google/uuid"
 )
@@ -103,15 +104,14 @@ func (m *Manager) importMeasurements(surveyID string, payload []byte) error {
 	if err := m.StartSurvey(surveyID); err != nil {
 		return fmt.Errorf("open survey for import: %w", err)
 	}
+	samples := make([]*SamplePoint, 0, len(points))
 	for _, p := range points {
 		// A point carries one kind or the other, never both: AirMapper writes
 		// passive observations and the active association as different fields.
 		var sample any
 		switch {
 		case len(p.Networks) > 0:
-			passive := &PassiveSample{Networks: p.Networks}
-			passive.CalculateAggregations()
-			sample = passive
+			sample = &PassiveSample{Networks: p.Networks}
 		case p.Active != nil:
 			sample = p.Active
 		default:
@@ -120,12 +120,32 @@ func (m *Manager) importMeasurements(surveyID string, payload []byte) error {
 			// is information even when the radio returned nothing.
 			sample = &PassiveSample{}
 		}
-		if err := m.AddSample(surveyID, p.X, p.Y, sample); err != nil {
-			return fmt.Errorf("record imported point (%d,%d): %w", p.X, p.Y, err)
-		}
+		samples = append(samples, newSamplePoint(p.X, p.Y, sample))
+	}
+	if err := m.recordImported(surveyID, samples); err != nil {
+		return err
 	}
 	if err := m.CompleteSurvey(surveyID); err != nil {
 		return fmt.Errorf("close imported survey: %w", err)
+	}
+	return nil
+}
+
+// importBatch is how many points one import transaction writes. The write
+// holds m.mu, which every other survey waits on; at the measured store rate a
+// batch this size holds it for well under a second, and the commit it pays is
+// already a negligible share of the batch.
+const importBatch = 1000
+
+// recordImported stores a completed walk's points, a batch per transaction.
+func (m *Manager) recordImported(surveyID string, samples []*SamplePoint) error {
+	for batch := range slices.Chunk(samples, importBatch) {
+		m.mu.Lock()
+		err := m.appendSamples(surveyID, batch)
+		m.mu.Unlock()
+		if err != nil {
+			return fmt.Errorf("record imported points: %w", err)
+		}
 	}
 	return nil
 }

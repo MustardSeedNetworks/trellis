@@ -141,3 +141,42 @@ func abs(v float64) float64 {
 	}
 	return v
 }
+
+// An import writes its points a batch per transaction. Across batch
+// boundaries every point must still land, in walk order, on a survey whose
+// closing status reached the store.
+func TestImportAirMapperSpanningBatchesReloadsEveryPoint(t *testing.T) {
+	const points = 2_500 // three batches, the last one partial
+	dir := t.TempDir()
+	mgr := mustManager(t, dir, nil, nil, nil, nil)
+	svy, err := mgr.ImportAirMapper("batches", benchAMP(t, points))
+	if err != nil {
+		t.Fatalf("ImportAirMapper: %v", err)
+	}
+
+	reopened := mustManager(t, dir, nil, nil, nil, nil)
+	if err := reopened.LoadSurveys(); err != nil {
+		t.Fatalf("LoadSurveys: %v", err)
+	}
+	got, err := reopened.GetSurvey(svy.ID)
+	if err != nil {
+		t.Fatalf("reopened GetSurvey(%s): %v", svy.ID, err)
+	}
+	if got.Status != survey.StatusCompleted {
+		t.Errorf("reopened status = %s, want %s", got.Status, survey.StatusCompleted)
+	}
+	want, gotPoints := svy.GetActiveFloor().Samples, got.GetActiveFloor().Samples
+	if len(gotPoints) != points || len(want) != points {
+		t.Fatalf("points: imported %d, reloaded %d, want %d", len(want), len(gotPoints), points)
+	}
+	for i := range gotPoints {
+		if gotPoints[i].X != want[i].X || gotPoints[i].Y != want[i].Y {
+			t.Fatalf("point %d reloaded at (%d,%d), imported at (%d,%d)",
+				i, gotPoints[i].X, gotPoints[i].Y, want[i].X, want[i].Y)
+		}
+		ps, ok := gotPoints[i].SampleData.(*survey.PassiveSample)
+		if !ok || len(ps.Networks) != benchHeardPerP {
+			t.Fatalf("point %d reloaded with %T, want %d networks", i, gotPoints[i].SampleData, benchHeardPerP)
+		}
+	}
+}
