@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.4.0...v0.4.1) (2026-10-03)
+
+
+### Performance Improvements
+
+* **survey:** batch import writes and prepare point inserts once ([#687](https://github.com/MustardSeedNetworks/trellis/issues/687)) ([e901e62](https://github.com/MustardSeedNetworks/trellis/commit/e901e625916fd650b7da7740b9361423f27deaf1)), closes [#683](https://github.com/MustardSeedNetworks/trellis/issues/683)
+
+
+### Tests
+
+* **perf:** benchmark import, heatmap and coverage against the PRD budgets ([#685](https://github.com/MustardSeedNetworks/trellis/issues/685)) ([67527b3](https://github.com/MustardSeedNetworks/trellis/commit/67527b327f7cafd5ea09089453068fbe220a8696)), closes [#682](https://github.com/MustardSeedNetworks/trellis/issues/682)
+
 ## [0.4.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.3.3...v0.4.0) (2026-10-03)
 
 
