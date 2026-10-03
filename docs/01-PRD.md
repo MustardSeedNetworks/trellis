@@ -65,6 +65,7 @@ Thin, instant, project-free. Runs on the same shared capture core as survey.
     ~5,000 m² floor (GPU).
   - Full-building recompute (all floors/bands/metrics, fast model): **< 3 s**.
   - Survey ingest: sustain **≥ 1,000 measurement points/s** without UI stall.
+  - Current measurements against these budgets: `13-PERFORMANCE.md`.
 - **Scale:** projects with **10+ floors**, **multi-million-cell** grids, **100k+**
   survey points.
 - **Determinism:** identical scene → identical grids (golden-testable).
