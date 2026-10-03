@@ -256,6 +256,8 @@ func (g *ReportGenerator) addFloorSection(floor *Floor) {
 				)
 			}
 		}
+
+		g.addFloorAPTable(measured)
 	} else {
 		g.pdf.Ln(pdfSpacingSmall)
 		g.pdf.SetFont("Arial", "I", pdfFontSizeSmall)
@@ -272,6 +274,73 @@ func (g *ReportGenerator) addFloorSection(floor *Floor) {
 	// no extent to draw and no layer to draw on it (ADR-0009).
 	if g.options.IncludeHeatmaps && len(floor.MeasuredSamples()) > 0 {
 		g.addFloorLayers(floor)
+	}
+}
+
+// addFloorAPTable lists every access point heard on the floor.
+//
+// The statistics above say how good coverage is; this says who provides it,
+// which is the part of a survey a customer acts on: the AP to move, re-power
+// or re-channel is named here by BSSID.
+func (g *ReportGenerator) addFloorAPTable(measured []*SamplePoint) {
+	aps := floorAPInventory(measured)
+	if len(aps) == 0 {
+		return
+	}
+
+	g.pdf.Ln(pdfSpacingSmall)
+	g.pdf.SetFont("Arial", "B", pdfFontSizeNormal)
+	g.pdf.SetTextColor(0, 0, 0)
+	g.pdf.CellFormat(0, pdfSpacingLarge, "Access Points Heard", "", 1, "L", false, 0, "")
+
+	g.pdf.SetFont("Arial", "B", pdfFontSizeTableHeader)
+	g.pdf.SetFillColor(pdfColorGrayTableBg, pdfColorGrayTableBg, pdfColorGrayTableBg)
+	headers := []struct {
+		text  string
+		width float64
+	}{
+		{"BSSID", apColBSSIDWidth},
+		{"SSID", apColSSIDWidth},
+		{"Band", apColBandWidth},
+		{"Channel", apColChannelWidth},
+		{"Width", apColWidthWidth},
+		{"Samples", apColSamplesWidth},
+		{"Best RSSI", apColRSSIWidth},
+		{"Median RSSI", apColRSSIWidth},
+	}
+	for _, h := range headers {
+		g.pdf.CellFormat(h.width, pdfSpacingNormal, h.text, "1", 0, "C", true, 0, "")
+	}
+	g.pdf.Ln(-1)
+
+	g.pdf.SetFont("Arial", "", pdfFontSizeTiny)
+	for _, ap := range aps {
+		ssid := "-"
+		if ap.SSID != "" {
+			ssid = truncateString(ap.SSID, pdfSSIDMaxLength)
+		}
+		width := "-"
+		if ap.Width > 0 {
+			width = strconv.Itoa(ap.Width)
+		}
+		cells := []struct {
+			text  string
+			width float64
+			align string
+		}{
+			{ap.BSSID, apColBSSIDWidth, "L"},
+			{ssid, apColSSIDWidth, "L"},
+			{ap.Band, apColBandWidth, "C"},
+			{strconv.Itoa(ap.Channel), apColChannelWidth, "C"},
+			{width, apColWidthWidth, "C"},
+			{strconv.Itoa(ap.Samples), apColSamplesWidth, "C"},
+			{strconv.Itoa(ap.BestRSSI), apColRSSIWidth, "C"},
+			{strconv.Itoa(ap.MedianRSSI), apColRSSIWidth, "C"},
+		}
+		for _, c := range cells {
+			g.pdf.CellFormat(c.width, pdfSpacingMedium, c.text, "1", 0, c.align, false, 0, "")
+		}
+		g.pdf.Ln(-1)
 	}
 }
 

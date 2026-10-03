@@ -1,7 +1,10 @@
 package survey
 
 import (
+	"math"
 	"sort"
+
+	"github.com/MustardSeedNetworks/trellis/core/wifi"
 )
 
 // SurveyStats holds calculated statistics for a survey.
@@ -169,4 +172,90 @@ const (
 type Recommendation struct {
 	Text     string
 	Priority RecommendationPriority
+}
+
+// apSighting is one access point's record across a floor's walk: what it
+// announced and how it was heard.
+type apSighting struct {
+	BSSID      string
+	SSID       string
+	Band       string
+	Channel    int
+	Width      int // MHz; 0 when the scan did not report it
+	Samples    int // points at which this BSSID was heard
+	BestRSSI   int
+	MedianRSSI int
+}
+
+// floorAPInventory lists every BSSID heard across samples, most-heard first.
+//
+// A BSSID counts once per point, at its strongest reading there, so Samples is
+// "how much of the walk heard it" rather than how many scan entries named it.
+// SSID, band, channel and width come from the strongest reading overall: an AP
+// that moved channel mid-walk is reported where it was loudest.
+func floorAPInventory(samples []*SamplePoint) []apSighting {
+	type tally struct {
+		strongest *wifi.ScannedNetwork
+		readings  []int
+	}
+	byBSSID := make(map[string]*tally)
+
+	for _, sample := range samples {
+		ps := getPassiveSampleFromPoint(sample)
+		if ps == nil {
+			continue
+		}
+		best := make(map[string]*wifi.ScannedNetwork, len(ps.Networks))
+		for _, net := range ps.Networks {
+			if net.BSSID == "" {
+				continue
+			}
+			if cur, ok := best[net.BSSID]; !ok || net.Signal > cur.Signal {
+				best[net.BSSID] = net
+			}
+		}
+		for bssid, net := range best {
+			t, ok := byBSSID[bssid]
+			if !ok {
+				t = &tally{strongest: net}
+				byBSSID[bssid] = t
+			} else if net.Signal > t.strongest.Signal {
+				t.strongest = net
+			}
+			t.readings = append(t.readings, net.Signal)
+		}
+	}
+
+	aps := make([]apSighting, 0, len(byBSSID))
+	for bssid, t := range byBSSID {
+		sort.Ints(t.readings)
+		n := t.strongest
+		aps = append(aps, apSighting{
+			BSSID:      bssid,
+			SSID:       n.SSID,
+			Band:       bandLabel(n.Frequency, n.Channel),
+			Channel:    n.Channel,
+			Width:      n.ChannelWidth,
+			Samples:    len(t.readings),
+			BestRSSI:   n.Signal,
+			MedianRSSI: medianInt(t.readings),
+		})
+	}
+	sort.Slice(aps, func(i, j int) bool {
+		if aps[i].Samples != aps[j].Samples {
+			return aps[i].Samples > aps[j].Samples
+		}
+		return aps[i].BSSID < aps[j].BSSID
+	})
+	return aps
+}
+
+// medianInt is the median of sorted, rounded half away from zero when the
+// count is even.
+func medianInt(sorted []int) int {
+	mid := len(sorted) / 2
+	if len(sorted)%2 == 1 {
+		return sorted[mid]
+	}
+	return int(math.Round(float64(sorted[mid-1]+sorted[mid]) / 2))
 }
