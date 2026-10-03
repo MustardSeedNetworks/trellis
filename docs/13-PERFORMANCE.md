@@ -1,7 +1,8 @@
 # Performance against the PRD budgets
 
-**Measured 2026-10-03.** Plan of record row T-C25, issue #682. Import
-re-measured the same day after its fix (T-C30, #683).
+**Measured 2026-10-03.** Plan of record row T-C25, issue #682. Import and
+the heatmap were re-measured the same day after their fixes (T-C30, #683;
+T-C31, #684).
 
 `docs/01-PRD.md` sets an ingest budget of at least 1,000 measurement points/s
 and a scale target of 100k+ survey points. This page records what the measured
@@ -40,9 +41,9 @@ Machine: dev-srv-ubuntu, 6 vCPU QEMU guest (x86_64), 16 GB RAM, Ubuntu
 | Import (decode → store) | 1,000 | 0.22 s | 4,618 | ≥ 1,000 points/s | Met (#683) |
 | Import (decode → store) | 10,000 | 1.97 s | 5,086 | ≥ 1,000 points/s | Met (#683) |
 | Import (decode → store) | 100,000 | 20.3 s | 4,919 | ≥ 1,000 points/s | Met (#683) |
-| `GetHeatmap` | 1,000 | 1.26 s | — | < 3 s (see below) | Met |
-| `GetHeatmap` | 10,000 | 8.7 s | — | < 3 s (see below) | Miss, #684 |
-| `GetHeatmap` | 100,000 | 80.4 s | — | < 3 s (see below) | Miss, #684 |
+| `GetHeatmap` | 1,000 | 0.31 s | — | < 3 s (see below) | Met |
+| `GetHeatmap` | 10,000 | 0.56–0.63 s | — | < 3 s (see below) | Met (#684) |
+| `GetHeatmap` | 100,000 | 2.6–6.4 s | — | < 3 s (see below) | Miss under load, #691 |
 | `GetCoverage` | 1,000 | 0.07 ms | — | < 3 s (see below) | Met |
 | `GetCoverage` | 10,000 | 0.57 ms | — | < 3 s (see below) | Met |
 | `GetCoverage` | 100,000 | 11.0 ms | — | < 3 s (see below) | Met |
@@ -62,6 +63,14 @@ A 100k-point floor whose map takes more than a minute does not meet the
   once, and a status change writes only the survey row. Executing the
   inserts is now about 80% of the profile. Decoding the archive is under 2%.
 - **Heatmap** time grows linearly with the point count. Each of the
-  plan's 30,000 cells (10 px each) weighs every sample by inverse distance,
-  on one goroutine, and `math.Pow` takes most of that time (#684).
+  plan's 30,000 cells (10 px each) weighs every sample by inverse distance.
+  Until #684 that ran on one goroutine, with a square root and a `math.Pow`
+  per pair: 1.26 s at 1k, 8.7 s at 10k, 80 s at 100k. The weights are now
+  taken from the squared distance (at the default power, 1/d² needs no call)
+  and the rows are shared across the CPUs. The output is unchanged, within
+  1e-9. Interpolation is still about 80% of a 100k request, and that figure
+  moves with whatever else the host is running: 2.6 s on a quiet guest, 6.4 s
+  with another build on it. Meeting the budget there with room to spare means
+  not weighing every sample for every cell. That changes the output, so it is
+  a separate decision (#691).
 - **Coverage** never interpolates. It reaches 100k points in 11 ms.
