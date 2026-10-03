@@ -54,12 +54,12 @@ func (m *Manager) importAirMagnetPoints(surveyID string, points []AirMagnetPoint
 	if err := m.StartSurvey(surveyID); err != nil {
 		return fmt.Errorf("open survey for import: %w", err)
 	}
+	samples := make([]*SamplePoint, 0, len(points))
 	for _, p := range points {
-		sample := &PassiveSample{Networks: p.Networks}
-		sample.CalculateAggregations()
-		if err := m.AddSample(surveyID, p.X, p.Y, sample); err != nil {
-			return fmt.Errorf("record imported point (%d,%d): %w", p.X, p.Y, err)
-		}
+		samples = append(samples, newSamplePoint(p.X, p.Y, &PassiveSample{Networks: p.Networks}))
+	}
+	if err := m.recordImported(surveyID, samples); err != nil {
+		return err
 	}
 	return m.CompleteSurvey(surveyID)
 }

@@ -210,7 +210,7 @@ func (m *Manager) StartSurvey(id string) error {
 	survey.Status = StatusInProgress
 	survey.UpdatedAt = time.Now()
 
-	return m.persistSurvey(survey)
+	return m.persistStatus(survey)
 }
 
 // PauseSurvey pauses a survey.
@@ -233,7 +233,7 @@ func (m *Manager) PauseSurvey(id string) error {
 	survey.Status = StatusPaused
 	survey.UpdatedAt = time.Now()
 
-	return m.persistSurvey(survey)
+	return m.persistStatus(survey)
 }
 
 // CompleteSurvey completes a survey.
@@ -256,7 +256,7 @@ func (m *Manager) CompleteSurvey(id string) error {
 	survey.Status = StatusCompleted
 	survey.UpdatedAt = time.Now()
 
-	return m.persistSurvey(survey)
+	return m.persistStatus(survey)
 }
 
 // ImportedDataUpdate carries the slices a caller wants to replace on a survey.
@@ -296,7 +296,6 @@ func (m *Manager) UpdateImportedData(id string, update ImportedDataUpdate) error
 	return m.persistSurvey(survey)
 }
 
-// AddSample adds a measurement sample to the active floor of a survey.
 // newSamplePoint stamps a measurement and puts its payload into the shape the
 // readers expect. A passive scan arrives in whatever order the radio reported
 // it, so aggregating here is what makes Networks[0] the AP serving this point
@@ -313,31 +312,39 @@ func newSamplePoint(x, y int, sampleData any) *SamplePoint {
 	}
 }
 
+// AddSample adds a measurement sample to the active floor of a survey.
 func (m *Manager) AddSample(id string, x, y int, sampleData any) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	return m.appendSamples(id, []*SamplePoint{newSamplePoint(x, y, sampleData)})
+}
 
+// appendSamples stores points on the active floor of a survey being walked,
+// in one transaction. The in-memory floor gains them only once the write
+// commits, so a failed write leaves memory and the store agreeing.
+//
+// THE CALLER MUST HOLD m.mu, on the same terms as persistSurvey.
+func (m *Manager) appendSamples(id string, samples []*SamplePoint) error {
 	survey, exists := m.surveys[id]
 	if !exists {
 		return fmt.Errorf("%w: %s", ErrSurveyNotFound, id)
 	}
-
 	if survey.Status != StatusInProgress {
 		return fmt.Errorf("%w: %s is %s", ErrNotWalking, id, survey.Status)
 	}
-
 	floor := survey.GetActiveFloor()
 	if floor == nil {
 		return fmt.Errorf("no active floor set for survey: %s", id)
 	}
 
-	sample := newSamplePoint(x, y, sampleData)
-
-	floor.Samples = append(floor.Samples, sample)
-	floor.UpdatedAt = time.Now()
-	survey.UpdatedAt = time.Now()
-
-	return m.appendPoint(survey.ID, floor.ID, survey, sample)
+	now := time.Now()
+	if err := m.appendPoints(survey.ID, floor.ID, now, samples); err != nil {
+		return err
+	}
+	floor.Samples = append(floor.Samples, samples...)
+	floor.UpdatedAt = now
+	survey.UpdatedAt = now
+	return nil
 }
 
 // AddFailedSample records that a measurement was attempted at (x, y) and
@@ -349,29 +356,12 @@ func (m *Manager) AddSample(id string, x, y int, sampleData any) error {
 // is the distinction the map could not otherwise make — a gap because nobody
 // walked there, or a gap because the measurement failed.
 func (m *Manager) AddFailedSample(surveyID string, x, y int, kind, reason string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	survey, exists := m.surveys[surveyID]
-	if !exists {
-		return fmt.Errorf("%w: %s", ErrSurveyNotFound, surveyID)
-	}
-	if survey.Status != StatusInProgress {
-		return fmt.Errorf("%w: %s is %s", ErrNotWalking, surveyID, survey.Status)
-	}
-	floor := survey.GetActiveFloor()
-	if floor == nil {
-		return fmt.Errorf("no active floor set for survey: %s", surveyID)
-	}
-
 	sample := newSamplePoint(x, y, nil)
 	sample.Failed = &Attempt{Kind: kind, Reason: reason}
 
-	floor.Samples = append(floor.Samples, sample)
-	floor.UpdatedAt = time.Now()
-	survey.UpdatedAt = time.Now()
-
-	return m.appendPoint(survey.ID, floor.ID, survey, sample)
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.appendSamples(surveyID, []*SamplePoint{sample})
 }
 
 // AddSampleToFloor adds a measurement sample to a specific floor.
