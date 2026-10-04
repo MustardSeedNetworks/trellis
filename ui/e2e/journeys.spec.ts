@@ -112,6 +112,31 @@ test('generates a PDF report for a walked survey', async ({ page }) => {
   expect(head.length).toBeGreaterThan(1024);
 });
 
+test('judges the report by the metric and threshold chosen on Reports', async ({ page }) => {
+  const name = uniqueName('ReportSNR');
+  await createSurvey(page, name);
+  await walkThreePoints(page);
+  await page.getByTestId('survey-complete').click();
+
+  await page.goto('/reports');
+  await page.locator('#report-survey').selectOption({ label: name });
+  await page.getByTestId('report-metric-snr').click();
+  await expect(page.getByTestId('report-threshold')).toHaveValue('20');
+  await expect(page.getByTestId('report-threshold-unit')).toHaveText('dB');
+  await page.getByTestId('report-threshold').fill('25');
+
+  // Asserted on the wire: the daemon's half (trellis#666) is pinned by its own
+  // test, and what this page owes it is the pair the operator chose.
+  const requestPromise = page.waitForRequest((request) =>
+    request.url().endsWith('/trellis.survey.v1.SurveyService/GenerateReport'),
+  );
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByTestId('generate-report').click();
+  const request = await requestPromise;
+  expect(request.postDataJSON().options).toMatchObject({ metric: 'snr', threshold: 25 });
+  expect((await downloadPromise).suggestedFilename()).toMatch(/\.pdf$/);
+});
+
 test('reads a measured value off the heatmap and zooms it', async ({ page }) => {
   await createSurvey(page, uniqueName('Readout'));
   await walkThreePoints(page);

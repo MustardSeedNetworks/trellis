@@ -8,6 +8,13 @@ import { CoverageFindings } from '@/components/CoverageFindings';
 import { HeatmapLegend } from '@/components/HeatmapLegend';
 import { HeatmapSurface } from '@/components/HeatmapSurface';
 import { surveyClient } from '@/lib/client';
+import {
+  COVERAGE_METRIC_COPY,
+  DEFAULT_THRESHOLDS,
+  isCoverageMetric,
+  parseThreshold,
+  THRESHOLDS,
+} from '@/lib/coverageThreshold';
 import { formatCoverageScore, formatSignal } from '@/lib/format';
 import type { RollupState } from '@/ui/StatusRollup';
 
@@ -26,38 +33,15 @@ import type { RollupState } from '@/ui/StatusRollup';
  * but no RPC reaches them, so offering them here would promise a picture the
  * product cannot draw.
  */
-/* RSSI, SNR, dBm, dB and Mbps are glossary terms the gate requires verbatim in
-   every locale, so they are not translated and that is not an oversight. The
-   throughput layer has no glossary name: "Download" alone read as a file
-   action rather than as the layer being plotted (trellis#476), so it carries
-   ordinary English copy from the catalogue instead. */
+/* Mbps is a glossary term like RSSI and SNR. The throughput layer has no
+   glossary name: "Download" alone read as a file action rather than as the
+   layer being plotted (trellis#476), so it carries ordinary English copy from
+   the catalogue instead. */
 const METRICS = [
-  { id: 'rssi', glossary: 'RSSI', unit: 'dBm' },
-  { id: 'snr', glossary: 'SNR', unit: 'dB' },
+  { id: 'rssi', ...COVERAGE_METRIC_COPY.rssi },
+  { id: 'snr', ...COVERAGE_METRIC_COPY.snr },
   { id: 'download', glossary: undefined, unit: 'Mbps' },
 ] as const;
-
-/**
- * Metrics the dead-zone analysis can speak about. Download throughput is not
- * one of them: `GetCoverage` refuses a metric it has no rule for rather than
- * answering about signal strength under another heading, so offering it here
- * would only produce an error where a finding belongs.
- */
-const COVERAGE_METRICS: readonly Metric[] = ['rssi', 'snr'];
-
-/**
- * Each metric's own dead-zone threshold, in its own unit. There is no shared
- * default and no shared range: -75 dB of signal-to-noise is not a number, and
- * a threshold typed under one layer must not follow the operator to the other.
- * The service applies the same defaults when a request omits one.
- */
-const THRESHOLDS: Record<Metric & ('rssi' | 'snr'), { default: number; min: number; max: number }> =
-  {
-    /* The service reads a threshold it was sent verbatim; these bounds are the
-       range over which each analysis means anything. */
-    rssi: { default: -75, min: -90, max: -40 },
-    snr: { default: 20, min: 5, max: 40 },
-  };
 
 type Metric = (typeof METRICS)[number]['id'];
 
@@ -71,10 +55,7 @@ export function CoveragePage() {
      operator: carrying -75 into a dB box would ask for a margin no radio has,
      and the number an operator settled on for one layer is still the one they
      want when they come back to it. */
-  const [thresholds, setThresholds] = useState<Record<string, number>>({
-    rssi: THRESHOLDS.rssi.default,
-    snr: THRESHOLDS.snr.default,
-  });
+  const [thresholds, setThresholds] = useState(DEFAULT_THRESHOLDS);
 
   const surveysQuery = useQuery({
     queryKey: ['surveys'],
@@ -120,9 +101,12 @@ export function CoveragePage() {
     enabled: surveyId !== undefined,
   });
 
-  const analysable = COVERAGE_METRICS.includes(metric);
-  const bounds = THRESHOLDS[metric as 'rssi' | 'snr'] ?? THRESHOLDS.rssi;
-  const threshold = thresholds[metric] ?? bounds.default;
+  /* Download throughput has no dead-zone rule, so the analysis is not asked
+     about it: offering it would only produce an error where a finding belongs. */
+  const coverageMetric = isCoverageMetric(metric) ? metric : undefined;
+  const analysable = coverageMetric !== undefined;
+  const bounds = THRESHOLDS[coverageMetric ?? 'rssi'];
+  const threshold = thresholds[coverageMetric ?? 'rssi'];
 
   const coverageQuery = useQuery({
     queryKey: ['coverage', surveyId, metric, threshold, floorId],
@@ -244,12 +228,12 @@ export function CoveragePage() {
             speak about a layer the analysis has a rule for; over a throughput
             layer they would answer a question nobody asked, and a control that
             appears to do nothing is worse than one that is not there. */}
-        {analysable ? (
+        {coverageMetric !== undefined ? (
           <label
             className="flex min-w-0 flex-wrap items-center gap-2 text-sm"
             htmlFor="coverage-threshold"
           >
-            <span className="kicker">{t('pages:coverage.deadZoneThreshold')}</span>
+            <span className="kicker">{t('common:labels.deadZoneThreshold')}</span>
             <input
               id="coverage-threshold"
               type="number"
@@ -258,9 +242,9 @@ export function CoveragePage() {
               max={bounds.max}
               step={1}
               onChange={(event) => {
-                const parsed = Number(event.target.value);
-                if (Number.isInteger(parsed) && parsed >= bounds.min && parsed <= bounds.max) {
-                  setThresholds((current) => ({ ...current, [metric]: parsed }));
+                const parsed = parseThreshold(coverageMetric, event.target.value);
+                if (parsed !== undefined) {
+                  setThresholds((current) => ({ ...current, [coverageMetric]: parsed }));
                 }
               }}
               className="figure w-24 rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"

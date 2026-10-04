@@ -23,6 +23,7 @@
   "labels": {
     "companyName": "Nombre de la empresa",
     "coverageScore": "Puntuación de cobertura",
+    "deadZoneThreshold": "Zona muerta por debajo de",
     "deadZones": "Zonas muertas",
     "floor": "Planta",
     "floorPlan": "Plano de planta",
