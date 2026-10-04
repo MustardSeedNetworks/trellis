@@ -34,6 +34,14 @@ const (
 	// A value of 2.0 provides a good balance between local and global influence.
 	defaultIDWPower = 2.0
 
+	// idwNeighbours is how many of the nearest samples weigh into a cell.
+	// Weighing every sample made a heatmap O(cells × samples), 2.6–6.4 s at
+	// 100k points (#691), and at power 2 the far samples' many small weights
+	// pull every cell toward the floor's mean. Twelve is the common default
+	// for local IDW; docs/13-PERFORMANCE.md records the deviation from
+	// weighing them all.
+	idwNeighbours = 12
+
 	// distanceEpsilon is the minimum distance threshold to consider a point as coincident with a sample.
 	// Points closer than this distance return the exact sample value to avoid division issues.
 	distanceEpsilon = 0.0001
@@ -44,103 +52,69 @@ const (
 
 // Interpolator performs spatial interpolation of sample values.
 type Interpolator struct {
-	Samples  []SampleValue
-	Method   InterpolationMethod
-	Power    float64 // Power parameter for IDW (default: 2.0)
-	MaxDist  float64 // Maximum distance to consider (0 = unlimited)
-	MinCount int     // Minimum samples to use (default: 1)
+	Method InterpolationMethod
+	Power  float64 // Power parameter for IDW (default: 2.0)
+
+	index *sampleIndex
 }
 
 // NewInterpolator creates a new interpolator with default settings.
 func NewInterpolator(samples []SampleValue) *Interpolator {
 	return &Interpolator{
-		Samples:  samples,
-		Method:   MethodIDW,
-		Power:    defaultIDWPower,
-		MaxDist:  0,
-		MinCount: 1,
+		Method: MethodIDW,
+		Power:  defaultIDWPower,
+		index:  newSampleIndex(samples),
 	}
 }
 
 // Interpolate calculates the interpolated value at a given point.
 func (i *Interpolator) Interpolate(x, y float64) float64 {
-	if len(i.Samples) == 0 {
+	return i.interpolate(x, y, make([]neighbour, 0, idwNeighbours))
+}
+
+// interpolate takes the caller's candidate buffer, so a grid worker reuses
+// one across all its cells.
+func (i *Interpolator) interpolate(x, y float64, buf []neighbour) float64 {
+	if len(i.index.samples) == 0 {
 		return 0
 	}
 
 	switch i.Method {
 	case MethodNearest:
-		return i.nearestNeighbor(x, y)
+		return i.index.samples[i.index.nearest(x, y, 1, buf)[0].index].Value
 	case MethodIDW:
-		return i.inverseDistanceWeighting(x, y)
+		return i.inverseDistanceWeighting(x, y, buf)
 	default:
-		return i.inverseDistanceWeighting(x, y)
+		return i.inverseDistanceWeighting(x, y, buf)
 	}
 }
 
-// inverseDistanceWeighting implements IDW interpolation.
+// inverseDistanceWeighting implements IDW interpolation over the
+// idwNeighbours nearest samples.
 // IDW formula: z = Σ(wi * zi) / Σ(wi) where wi = 1 / d^p.
 //
-// The loop works in squared distance: a heatmap runs it for every cell over
-// every sample, so a square root and a math.Pow per pair were most of a
-// floor's render time (#684). At the default power the weight is 1/d², which
-// is the squared distance's reciprocal with no call at all.
-func (i *Interpolator) inverseDistanceWeighting(x, y float64) float64 {
+// The weights come from the squared distance: at the default power the weight
+// is 1/d², its reciprocal with no call at all (#684).
+func (i *Interpolator) inverseDistanceWeighting(x, y float64, buf []neighbour) float64 {
+	near := i.index.nearest(x, y, idwNeighbours, buf)
+
+	// If we're exactly on a sample point, return its value
+	if near[0].distSq < distanceEpsilon*distanceEpsilon {
+		return i.index.samples[near[0].index].Value
+	}
+
 	var weightedSum, weightSum float64
-	maxDistSq := i.MaxDist * i.MaxDist
 	halfPower := i.Power / 2
 	square := i.Power == defaultIDWPower
-
-	for _, sample := range i.Samples {
-		dx := x - sample.Point.X
-		dy := y - sample.Point.Y
-		distSq := dx*dx + dy*dy
-
-		// If we're exactly on a sample point, return its value
-		if distSq < distanceEpsilon*distanceEpsilon {
-			return sample.Value
-		}
-
-		// Skip samples beyond max distance (if set)
-		if i.MaxDist > 0 && distSq > maxDistSq {
-			continue
-		}
-
-		weight := 1 / distSq
+	for _, n := range near {
+		weight := 1 / n.distSq
 		if !square {
-			weight = 1 / math.Pow(distSq, halfPower)
+			weight = 1 / math.Pow(n.distSq, halfPower)
 		}
-		weightedSum += weight * sample.Value
+		weightedSum += weight * i.index.samples[n.index].Value
 		weightSum += weight
 	}
-
-	if weightSum == 0 {
-		// No samples within range, use nearest
-		return i.nearestNeighbor(x, y)
-	}
-
 	return weightedSum / weightSum
-}
-
-// nearestNeighbor returns the value of the closest sample.
-func (i *Interpolator) nearestNeighbor(x, y float64) float64 {
-	if len(i.Samples) == 0 {
-		return 0
-	}
-
-	point := Point2D{X: x, Y: y}
-	minDist := math.MaxFloat64
-	var nearestValue float64
-
-	for _, sample := range i.Samples {
-		dist := distance(point, sample.Point)
-		if dist < minDist {
-			minDist = dist
-			nearestValue = sample.Value
-		}
-	}
-
-	return nearestValue
 }
 
 // distance calculates Euclidean distance between two points.
@@ -167,12 +141,13 @@ func (i *Interpolator) InterpolateGrid(width, height, cellSize int) [][]float64 
 	var wg sync.WaitGroup
 	for w := range workers {
 		wg.Go(func() {
+			buf := make([]neighbour, 0, idwNeighbours)
 			for row := w; row < rows; row += workers {
 				// Calculate center of cell
 				y := float64(row*cellSize) + float64(cellSize)/cellCenterDivisor
 				for col := range cols {
 					x := float64(col*cellSize) + float64(cellSize)/cellCenterDivisor
-					grid[row][col] = i.Interpolate(x, y)
+					grid[row][col] = i.interpolate(x, y, buf)
 				}
 			}
 		})
