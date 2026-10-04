@@ -335,4 +335,104 @@ describe('CoveragePage', () => {
       }
     });
   });
+
+  /* T-C24 draws one access point's map when the request names its BSSID;
+     these pin that the page offers the floor's APs and sends the one chosen. */
+  describe('one access point', () => {
+    const accessPoints = [
+      { bssid: '02:00:00:00:00:01', ssid: 'Trellis Lab', channel: 36, samples: 3 },
+      { bssid: '02:00:00:00:00:03', ssid: '', channel: 100, samples: 3 },
+    ];
+
+    beforeEach(() => {
+      getHeatmap.mockResolvedValue({ ...heatmapReply, accessPoints });
+    });
+
+    function lastRequest(mock: typeof getHeatmap) {
+      return mock.mock.calls.at(-1)?.[0];
+    }
+
+    it('lists the heard access points by network name and channel', async () => {
+      renderPage();
+
+      const select = await screen.findByTestId('coverage-access-point');
+      const options = Array.from(select.querySelectorAll('option')).map((o) => o.textContent);
+      expect(options).toEqual([
+        'All access points',
+        'Trellis Lab · channel 36 · 02:00:00:00:00:01',
+        'Hidden network · channel 100 · 02:00:00:00:00:03',
+      ]);
+      expect(screen.getByLabelText('Access point')).toBe(select);
+    });
+
+    it('sends the chosen BSSID to the map and the findings, and none for all', async () => {
+      renderPage();
+
+      const select = await screen.findByTestId('coverage-access-point');
+      expect(lastRequest(getHeatmap)).not.toHaveProperty('bssid');
+
+      fireEvent.change(select, { target: { value: '02:00:00:00:00:01' } });
+      await waitFor(() =>
+        expect(lastRequest(getHeatmap)).toEqual({
+          surveyId: 'svy-1',
+          metric: 'rssi',
+          floorId: '',
+          bssid: '02:00:00:00:00:01',
+        }),
+      );
+      await waitFor(() =>
+        expect(lastRequest(getCoverage)).toEqual({
+          surveyId: 'svy-1',
+          metric: 'rssi',
+          threshold: -75,
+          floorId: '',
+          bssid: '02:00:00:00:00:01',
+        }),
+      );
+
+      // Back to the whole floor: both requests drop the field, not send ''.
+      getHeatmap.mockClear();
+      getCoverage.mockClear();
+      fireEvent.change(select, { target: { value: '' } });
+      fireEvent.click(screen.getByRole('button', { name: 'SNR' }));
+      await waitFor(() => expect(lastRequest(getHeatmap)).toMatchObject({ metric: 'snr' }));
+      expect(lastRequest(getHeatmap)).not.toHaveProperty('bssid');
+      await waitFor(() => expect(lastRequest(getCoverage)).toMatchObject({ metric: 'snr' }));
+      expect(lastRequest(getCoverage)).not.toHaveProperty('bssid');
+    });
+
+    it('keeps the way back when the chosen AP has no reading for the layer', async () => {
+      getHeatmap.mockImplementation((req: { metric: string; bssid?: string }) =>
+        req.bssid === undefined
+          ? Promise.resolve({ ...heatmapReply, metric: req.metric, accessPoints })
+          : Promise.reject(new ConnectError('no SNR measured', Code.FailedPrecondition)),
+      );
+      renderPage();
+
+      fireEvent.click(await screen.findByRole('button', { name: 'SNR' }));
+      fireEvent.change(await screen.findByTestId('coverage-access-point'), {
+        target: { value: '02:00:00:00:00:03' },
+      });
+
+      await waitFor(() =>
+        expect(screen.getByTestId('surface-message')).toHaveTextContent('No SNR measured'),
+      );
+      const select = screen.getByTestId('coverage-access-point');
+      expect(select).toHaveValue('02:00:00:00:00:03');
+      fireEvent.change(select, { target: { value: '' } });
+      expect(await screen.findByTestId('heatmap-image')).toBeInTheDocument();
+    });
+
+    it('offers no AP choice on the throughput layer, which has no per-AP reading', async () => {
+      renderPage();
+
+      const select = await screen.findByTestId('coverage-access-point');
+      fireEvent.change(select, { target: { value: '02:00:00:00:00:01' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Download speed' }));
+
+      await waitFor(() => expect(lastRequest(getHeatmap)).toMatchObject({ metric: 'download' }));
+      expect(lastRequest(getHeatmap)).not.toHaveProperty('bssid');
+      expect(screen.queryByTestId('coverage-access-point')).not.toBeInTheDocument();
+    });
+  });
 });

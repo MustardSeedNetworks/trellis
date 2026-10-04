@@ -172,6 +172,11 @@ test('a floor can be walked at phone width', async ({ page }) => {
   // draws: the empty-route assertions above never load an image.
   await page.getByTestId('plot-coverage').click();
   await expect(page.getByTestId('heatmap-image')).toBeVisible();
+  // The access-point list arrives with the map, and its option labels are the
+  // longest text in the toolbar.
+  await expect(page.getByTestId('coverage-access-point')).toBeVisible();
+  const widest = await widestControlEdge(page);
+  expect(widest.right, `${widest.label} runs past the right edge`).toBeLessThanOrEqual(PHONE.width);
   expect(await overflowingElements(page)).toEqual([]);
 });
 

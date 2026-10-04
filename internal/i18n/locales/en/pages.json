@@ -4,6 +4,8 @@
     "stillUsable": "Surveys still open, import, analyse and report here — only a new walk needs a radio."
   },
   "coverage": {
+    "accessPointOption": "{{ssid}} · channel {{channel}} · {{bssid}}",
+    "allAccessPoints": "All access points",
     "analysing": "Analysing coverage",
     "deadZoneBodyRssi": "Each is a measured region where signal fell under the threshold.",
     "deadZoneBodySnr": "Each is a measured region where the margin above the noise floor fell under the threshold. A thin margin next to a strong signal is interference, not a coverage gap.",
@@ -85,7 +87,6 @@
     "healthyUnmeasured": "Connected to {{ssid}} at {{signal}} dBm",
     "healthyUnmeasuredBody_one": "This adapter reports no noise floor, so the margin is not known. {{count}} BSS observed in this sweep.",
     "healthyUnmeasuredBody_other": "This adapter reports no noise floor, so the margin is not known. {{count}} BSSs observed in this sweep.",
-    "hiddenNetwork": "Hidden network",
     "neighbours_one": "{{count}} BSS heard",
     "neighbours_other": "{{count}} BSSs heard",
     "notAssociated": "Not joined to a network",

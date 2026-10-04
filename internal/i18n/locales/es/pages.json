@@ -4,6 +4,8 @@
     "stillUsable": "Los estudios se abren, importan, analizan y se informan igual: solo un recorrido nuevo necesita una radio."
   },
   "coverage": {
+    "accessPointOption": "{{ssid}} · canal {{channel}} · {{bssid}}",
+    "allAccessPoints": "Todos los puntos de acceso",
     "analysing": "Analizando la cobertura",
     "deadZoneBodyRssi": "Cada una es una región medida donde la señal quedó por debajo del umbral.",
     "deadZoneBodySnr": "Cada una es una región medida donde el margen sobre el ruido de fondo quedó por debajo del umbral. Un margen escaso junto a una señal fuerte es interferencia, no una falta de cobertura.",
@@ -85,7 +87,6 @@
     "healthyUnmeasured": "Conectado a {{ssid}} con {{signal}} dBm",
     "healthyUnmeasuredBody_one": "Este adaptador no informa del ruido de fondo, así que el margen no se conoce. {{count}} BSS observado en este barrido.",
     "healthyUnmeasuredBody_other": "Este adaptador no informa del ruido de fondo, así que el margen no se conoce. {{count}} BSS observados en este barrido.",
-    "hiddenNetwork": "Red oculta",
     "neighbours_one": "{{count}} BSS detectado",
     "neighbours_other": "{{count}} BSS detectados",
     "notAssociated": "Sin conexión a ninguna red",
