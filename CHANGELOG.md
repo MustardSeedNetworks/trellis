@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.2](https://github.com/MustardSeedNetworks/trellis/compare/v0.4.1...v0.4.2) (2026-10-04)
+
+
+### Performance Improvements
+
+* **survey:** weigh heatmap samples by squared distance across all CPUs ([#692](https://github.com/MustardSeedNetworks/trellis/issues/692)) ([bf6169a](https://github.com/MustardSeedNetworks/trellis/commit/bf6169a06df21066bf187d007de118d52ba1e8cf)), closes [#684](https://github.com/MustardSeedNetworks/trellis/issues/684)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#689](https://github.com/MustardSeedNetworks/trellis/issues/689)) ([c88f6b5](https://github.com/MustardSeedNetworks/trellis/commit/c88f6b5cc754d7634e8932223c4f9cab912a9151))
+* **deps:** lock file maintenance ([#693](https://github.com/MustardSeedNetworks/trellis/issues/693)) ([5fa3088](https://github.com/MustardSeedNetworks/trellis/commit/5fa3088f4cbb07f05d85322046aa688e82ef6e66))
+
 ## [0.4.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.4.0...v0.4.1) (2026-10-03)
 
 
