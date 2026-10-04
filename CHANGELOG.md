@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.3](https://github.com/MustardSeedNetworks/trellis/compare/v0.4.2...v0.4.3) (2026-10-04)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/mustardseednetworks/foundation to v0.7.0 ([#696](https://github.com/MustardSeedNetworks/trellis/issues/696)) ([c685ccc](https://github.com/MustardSeedNetworks/trellis/commit/c685ccc26fa85c86e6f0764cde4a078ba3e1ebe5))
+
+
+### Documentation
+
+* **roadmap:** bring the status table up to date ([#695](https://github.com/MustardSeedNetworks/trellis/issues/695)) ([0aec1a0](https://github.com/MustardSeedNetworks/trellis/commit/0aec1a030af59639315c0d7c90e3cd2db5c92d6c)), closes [#694](https://github.com/MustardSeedNetworks/trellis/issues/694)
+
 ## [0.4.2](https://github.com/MustardSeedNetworks/trellis/compare/v0.4.1...v0.4.2) (2026-10-04)
 
 
