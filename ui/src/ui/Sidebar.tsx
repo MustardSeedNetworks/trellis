@@ -15,7 +15,7 @@
  * shared while each product's own contents are not.
  */
 import { ChevronsLeft, ChevronsRight, LogOut, Moon, Sun } from 'lucide-react';
-import { type FC, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
 import { useAuth } from '@/ui/AuthGate';
@@ -32,7 +32,7 @@ interface SidebarProps {
   version?: string;
 }
 
-export const Sidebar: FC<SidebarProps> = ({ version }) => {
+export function Sidebar({ version }: SidebarProps) {
   const { t } = useTranslation('common');
   const navGroups = useNavGroups();
   const narrow = useNarrowViewport();
@@ -173,7 +173,7 @@ export const Sidebar: FC<SidebarProps> = ({ version }) => {
       </div>
     </aside>
   );
-};
+}
 
 /**
  * Light / dark switch.

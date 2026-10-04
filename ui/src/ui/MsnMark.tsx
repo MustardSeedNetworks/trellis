@@ -15,7 +15,6 @@
  * invite someone to tokenise those colours, at which point the seed stops being
  * mustard.
  */
-import type { FC } from 'react';
 import msnLogo from '../assets/msn-logo.svg';
 
 interface MsnMarkProps {
@@ -24,17 +23,19 @@ interface MsnMarkProps {
   className?: string;
 }
 
-export const MsnMark: FC<MsnMarkProps> = ({ collapsed = false, className = '' }) => (
-  <div
-    className={`flex items-center gap-2 ${collapsed ? 'justify-center' : ''} ${className}`}
-    data-testid="msn-mark"
-  >
-    <img src={msnLogo} alt="" aria-hidden="true" className="h-4 w-4 shrink-0" />
-    {/* allow-hardcoded: proper noun, kept verbatim in every locale by the glossary. */}
-    {!collapsed ? (
-      <span className="text-[10px] font-semibold tracking-wide text-text-muted">
-        Mustard Seed Networks
-      </span>
-    ) : null}
-  </div>
-);
+export function MsnMark({ collapsed = false, className = '' }: MsnMarkProps) {
+  return (
+    <div
+      className={`flex items-center gap-2 ${collapsed ? 'justify-center' : ''} ${className}`}
+      data-testid="msn-mark"
+    >
+      <img src={msnLogo} alt="" aria-hidden="true" className="h-4 w-4 shrink-0" />
+      {/* allow-hardcoded: proper noun, kept verbatim in every locale by the glossary. */}
+      {!collapsed ? (
+        <span className="text-[10px] font-semibold tracking-wide text-text-muted">
+          Mustard Seed Networks
+        </span>
+      ) : null}
+    </div>
+  );
+}
