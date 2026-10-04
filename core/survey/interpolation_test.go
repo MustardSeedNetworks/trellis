@@ -1,7 +1,9 @@
 package survey_test
 
 import (
+	"cmp"
 	"math"
+	"slices"
 	"testing"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
@@ -16,20 +18,11 @@ func TestNewInterpolator(t *testing.T) {
 
 	interp := survey.NewInterpolator(samples)
 
-	if len(interp.Samples) != 2 {
-		t.Errorf("Expected 2 samples, got %d", len(interp.Samples))
-	}
 	if interp.Method != survey.MethodIDW {
 		t.Errorf("Expected method IDW, got %s", interp.Method)
 	}
 	if interp.Power != 2.0 {
 		t.Errorf("Expected power 2.0, got %f", interp.Power)
-	}
-	if interp.MaxDist != 0 {
-		t.Errorf("Expected maxDist 0, got %f", interp.MaxDist)
-	}
-	if interp.MinCount != 1 {
-		t.Errorf("Expected minCount 1, got %d", interp.MinCount)
 	}
 }
 
@@ -103,29 +96,6 @@ func TestInterpolator_Interpolate_Nearest(t *testing.T) {
 	}
 }
 
-func TestInterpolator_Interpolate_MaxDist(t *testing.T) {
-	samples := []survey.SampleValue{
-		{Point: survey.Point2D{X: 0, Y: 0}, Value: -70},
-		{Point: survey.Point2D{X: 1000, Y: 1000}, Value: -40},
-	}
-
-	interp := survey.NewInterpolator(samples)
-	interp.Method = survey.MethodIDW
-	interp.MaxDist = 50 // Only consider samples within 50 units.
-
-	// At origin, should use first sample.
-	result := interp.Interpolate(0, 0)
-	if result != -70 {
-		t.Errorf("Expected -70, got %f", result)
-	}
-
-	// At (100, 100), first sample is out of range, should fall back to nearest.
-	result = interp.Interpolate(100, 100)
-	if result != -70 {
-		t.Errorf("Expected -70 (nearest fallback), got %f", result)
-	}
-}
-
 func TestInterpolator_InterpolateGrid(t *testing.T) {
 	samples := []survey.SampleValue{
 		{Point: survey.Point2D{X: 0, Y: 0}, Value: -70},
@@ -157,59 +127,72 @@ func TestInterpolator_InterpolateGrid(t *testing.T) {
 	}
 }
 
-// The grid is computed in squared distance and across goroutines (#684). Both
-// are speed-ups only: every cell must still be the textbook IDW value, at the
-// default power and off it, with and without a distance cutoff.
-func TestInterpolateGrid_MatchesTextbookIDW(t *testing.T) {
-	// An R2 low-discrepancy sequence scatters the samples irregularly over the
-	// floor, deterministically.
+// The grid is computed in squared distance, across goroutines (#684) and from
+// a bucket index (#691). The first two are speed-ups only and the index only
+// finds the neighbours: every cell must still be the textbook IDW of its 12
+// nearest samples, at the default power and off it, for walks that cover the
+// floor, sit in one corner of it, run along one corridor line or stand still.
+func TestInterpolateGrid_MatchesTextbookNearestIDW(t *testing.T) {
+	// An R2 low-discrepancy sequence scatters the samples irregularly,
+	// deterministically.
 	frac := func(v float64) float64 { return v - math.Floor(v) }
-	samples := make([]survey.SampleValue, 200)
-	for k := range samples {
-		n := float64(k + 1)
-		samples[k] = survey.SampleValue{
-			Point: survey.Point2D{X: frac(n*0.7548776662466927) * 400, Y: frac(n*0.5698402909980532) * 310},
-			Value: -90 + frac(n*0.6180339887498949)*60,
+	scatter := func(n int, place func(u, v float64) survey.Point2D) []survey.SampleValue {
+		samples := make([]survey.SampleValue, n)
+		for k := range samples {
+			m := float64(k + 1)
+			samples[k] = survey.SampleValue{
+				Point: place(frac(m*0.7548776662466927), frac(m*0.5698402909980532)),
+				Value: -90 + frac(m*0.6180339887498949)*60,
+			}
 		}
+		return samples
 	}
+
+	floor := scatter(200, func(u, v float64) survey.Point2D { return survey.Point2D{X: u * 400, Y: v * 310} })
 	// 0.005 from cell [0][0]'s centre: close, but not the coincident sample
 	// whose value a cell takes outright.
-	samples = append(samples, survey.SampleValue{Point: survey.Point2D{X: 5.003, Y: 5.004}, Value: -30})
+	floor = append(floor, survey.SampleValue{Point: survey.Point2D{X: 5.003, Y: 5.004}, Value: -30})
+	corner := scatter(150, func(u, v float64) survey.Point2D { return survey.Point2D{X: 300 + u*80, Y: 240 + v*60} })
+	corridor := scatter(90, func(u, _ float64) survey.Point2D { return survey.Point2D{X: 20 + u*360, Y: 155} })
+	still := scatter(20, func(_, _ float64) survey.Point2D { return survey.Point2D{X: 133, Y: 77} })
 
-	textbook := func(power, maxDist, x, y float64) float64 {
-		var weighted, weights float64
-		nearest, nearestDist := 0.0, math.MaxFloat64
-		for _, s := range samples {
-			d := math.Hypot(x-s.Point.X, y-s.Point.Y)
-			if d < nearestDist {
-				nearest, nearestDist = s.Value, d
-			}
-			if maxDist > 0 && d > maxDist {
-				continue
-			}
-			w := 1 / math.Pow(d, power)
-			weighted += w * s.Value
-			weights += w
+	// textbook sorts every sample by distance, ties by position, and weighs
+	// the first 12.
+	textbook := func(samples []survey.SampleValue, power, x, y float64) float64 {
+		order := make([]int, len(samples))
+		for k := range order {
+			order[k] = k
 		}
-		if weights == 0 {
-			return nearest
+		dist := func(k int) float64 { return math.Hypot(x-samples[k].Point.X, y-samples[k].Point.Y) }
+		slices.SortStableFunc(order, func(a, b int) int { return cmp.Compare(dist(a), dist(b)) })
+		if dist(order[0]) < 0.0001 {
+			return samples[order[0]].Value
+		}
+		var weighted, weights float64
+		for _, k := range order[:min(12, len(order))] {
+			w := 1 / math.Pow(dist(k), power)
+			weighted += w * samples[k].Value
+			weights += w
 		}
 		return weighted / weights
 	}
 
 	for _, tc := range []struct {
-		name           string
-		power, maxDist float64
+		name    string
+		samples []survey.SampleValue
+		power   float64
 	}{
-		{"default power", 2, 0},
-		{"power 3", 3, 0},
-		{"default power with cutoff", 2, 40},
-		{"power 1.5 with cutoff", 1.5, 40},
+		{"whole floor, default power", floor, 2},
+		{"whole floor, power 3", floor, 3},
+		{"whole floor, power 1.5", floor, 1.5},
+		{"one corner", corner, 2},
+		{"one corridor line", corridor, 2},
+		{"standing still", still, 2},
+		{"fewer samples than neighbours", floor[:5], 2},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			interp := survey.NewInterpolator(samples)
+			interp := survey.NewInterpolator(tc.samples)
 			interp.Power = tc.power
-			interp.MaxDist = tc.maxDist
 
 			const cell = 10
 			grid := interp.InterpolateGrid(400, 310, cell)
@@ -218,7 +201,7 @@ func TestInterpolateGrid_MatchesTextbookIDW(t *testing.T) {
 			}
 			for row, cells := range grid {
 				for col, got := range cells {
-					want := textbook(tc.power, tc.maxDist, float64(col*cell+cell/2), float64(row*cell+cell/2))
+					want := textbook(tc.samples, tc.power, float64(col*cell+cell/2), float64(row*cell+cell/2))
 					if math.Abs(got-want) > 1e-9 {
 						t.Fatalf("cell [%d][%d] = %.12f, want %.12f", row, col, got, want)
 					}
@@ -719,5 +702,67 @@ func TestExtractValueStillAnswersTheMetricsASampleHas(t *testing.T) {
 		if got := survey.ExportExtractValue(tc.sample, tc.metric); got != tc.want {
 			t.Errorf("%s = %v, want %v", tc.metric, got, tc.want)
 		}
+	}
+}
+
+// Weighing only the 12 nearest samples changes the map (#691). This bounds the
+// change against weighing every sample, on a floor whose true field is known:
+// six APs, log-distance path loss, 1,000 points scattered over a 2000×1500 px
+// plan at 0.05 m/px. Full IDW at power 2 drags every cell toward the floor's
+// mean, flattening the peak under each AP, so the cutoff is the closer of the
+// two to the truth; the deviation bounds are the measured figures recorded in
+// docs/13-PERFORMANCE.md, with a little room.
+func TestInterpolateGrid_NearestCutoffDeviation(t *testing.T) {
+	aps := []survey.Point2D{{X: 300, Y: 300}, {X: 1000, Y: 250}, {X: 1700, Y: 400}, {X: 400, Y: 1200}, {X: 1100, Y: 1100}, {X: 1750, Y: 1250}}
+	truth := func(x, y float64) float64 {
+		best := math.Inf(-1)
+		for _, ap := range aps {
+			metres := max(math.Hypot(x-ap.X, y-ap.Y)*0.05, 1)
+			best = max(best, -40-30*math.Log10(metres))
+		}
+		return best
+	}
+	frac := func(v float64) float64 { return v - math.Floor(v) }
+	samples := make([]survey.SampleValue, 1000)
+	for k := range samples {
+		m := float64(k + 1)
+		x, y := frac(m*0.7548776662466927)*2000, frac(m*0.5698402909980532)*1500
+		samples[k] = survey.SampleValue{Point: survey.Point2D{X: x, Y: y}, Value: truth(x, y)}
+	}
+	full := func(x, y float64) float64 {
+		var weighted, weights float64
+		for _, s := range samples {
+			d2 := (x-s.Point.X)*(x-s.Point.X) + (y-s.Point.Y)*(y-s.Point.Y)
+			weighted += s.Value / d2
+			weights += 1 / d2
+		}
+		return weighted / weights
+	}
+
+	const cell = 10
+	grid := survey.NewInterpolator(samples).InterpolateGrid(2000, 1500, cell)
+	var maxDev, sumDev, sumErrNearest, sumErrFull float64
+	var cells int
+	for row, values := range grid {
+		for col, got := range values {
+			x, y := float64(col*cell+cell/2), float64(row*cell+cell/2)
+			all := full(x, y)
+			maxDev = max(maxDev, math.Abs(got-all))
+			sumDev += math.Abs(got - all)
+			sumErrNearest += math.Abs(got - truth(x, y))
+			sumErrFull += math.Abs(all - truth(x, y))
+			cells++
+		}
+	}
+	meanDev := sumDev / float64(cells)
+	errNearest, errFull := sumErrNearest/float64(cells), sumErrFull/float64(cells)
+	t.Logf("vs full IDW: max %.2f dB, mean %.3f dB; mean error vs truth: nearest 12 %.3f dB, full %.3f dB",
+		maxDev, meanDev, errNearest, errFull)
+
+	if maxDev > 12.5 || meanDev > 1.75 {
+		t.Errorf("deviation from full IDW max %.2f dB, mean %.3f dB; want at most 12.5 and 1.75", maxDev, meanDev)
+	}
+	if errNearest > 0.5 || errNearest >= errFull {
+		t.Errorf("mean error vs truth %.3f dB (full IDW %.3f dB); want at most 0.5 and below full IDW's", errNearest, errFull)
 	}
 }
