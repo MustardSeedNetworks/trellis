@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.4.3...v0.5.0) (2026-10-04)
+
+
+### Features
+
+* **ui:** judge the PDF report by the operator's metric and threshold ([#701](https://github.com/MustardSeedNetworks/trellis/issues/701)) ([9e44bd8](https://github.com/MustardSeedNetworks/trellis/commit/9e44bd818e665e5418af622f5265851cf8cb0ef7)), closes [#509](https://github.com/MustardSeedNetworks/trellis/issues/509)
+
+
+### Bug Fixes
+
+* **trellisd:** answer --version and --help instead of starting a daemon ([#699](https://github.com/MustardSeedNetworks/trellis/issues/699)) ([94ee197](https://github.com/MustardSeedNetworks/trellis/commit/94ee1973ca9674d3ccd160343718e5c0f5dc30bb)), closes [#698](https://github.com/MustardSeedNetworks/trellis/issues/698)
+
 ## [0.4.3](https://github.com/MustardSeedNetworks/trellis/compare/v0.4.2...v0.4.3) (2026-10-04)
 
 
