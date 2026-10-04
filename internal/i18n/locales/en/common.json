@@ -23,6 +23,7 @@
   "labels": {
     "companyName": "Company name",
     "coverageScore": "Coverage score",
+    "deadZoneThreshold": "Dead zone below",
     "deadZones": "Dead zones",
     "floor": "Floor",
     "floorPlan": "Floor plan",

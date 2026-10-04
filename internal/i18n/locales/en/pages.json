@@ -7,7 +7,6 @@
     "analysing": "Analysing coverage",
     "deadZoneBodyRssi": "Each is a measured region where signal fell under the threshold.",
     "deadZoneBodySnr": "Each is a measured region where the margin above the noise floor fell under the threshold. A thin margin next to a strong signal is interference, not a coverage gap.",
-    "deadZoneThreshold": "Dead zone below",
     "deadZones_one": "{{count}} dead zone below {{threshold}} {{unit}}",
     "deadZones_other": "{{count}} dead zones below {{threshold}} {{unit}}",
     "description": "Measured signal across the surveyed floor, and where it falls short.",
@@ -123,6 +122,8 @@
     }
   },
   "reports": {
+    "analysis": "Findings",
+    "analysisHint": "Dead zones in the PDF are judged by this layer and threshold, as on the Coverage page.",
     "companyPlaceholder": "Printed on the cover page",
     "description": "Generate a PDF for a survey, choosing what it contains.",
     "generate": "Generate PDF",

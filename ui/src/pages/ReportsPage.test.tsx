@@ -70,8 +70,59 @@ describe('ReportsPage', () => {
         includeRecommendations: true,
         includeHeatmaps: true,
         includeRawData: false,
+        /* The Coverage page's defaults, sent explicitly: a report judged at a
+           threshold the operator never saw is the defect this control fixes. */
+        metric: 'rssi',
+        threshold: -75,
       },
     });
+  });
+
+  it('sends the metric and threshold the operator chose', async () => {
+    renderPage();
+    const button = await readyButton();
+
+    fireEvent.click(screen.getByTestId('report-metric-snr'));
+    /* SNR reads its own default, not the dBm one carried across. */
+    expect(screen.getByTestId('report-threshold')).toHaveValue(20);
+    expect(screen.getByTestId('report-threshold-unit')).toHaveTextContent('dB');
+    fireEvent.change(screen.getByTestId('report-threshold'), { target: { value: '25' } });
+    fireEvent.click(button);
+
+    await waitFor(() => expect(generateReport).toHaveBeenCalled());
+    expect(generateReport.mock.calls[0]?.[0].options).toMatchObject({
+      metric: 'snr',
+      threshold: 25,
+    });
+  });
+
+  it('keeps each metric on its own threshold', async () => {
+    renderPage();
+    const button = await readyButton();
+
+    fireEvent.change(screen.getByTestId('report-threshold'), { target: { value: '-60' } });
+    fireEvent.click(screen.getByTestId('report-metric-snr'));
+    fireEvent.click(screen.getByTestId('report-metric-rssi'));
+    expect(screen.getByTestId('report-threshold')).toHaveValue(-60);
+    expect(screen.getByTestId('report-metric-rssi')).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(button);
+
+    await waitFor(() => expect(generateReport).toHaveBeenCalled());
+    expect(generateReport.mock.calls[0]?.[0].options).toMatchObject({
+      metric: 'rssi',
+      threshold: -60,
+    });
+  });
+
+  it('ignores a threshold outside the range the analysis means anything over', async () => {
+    renderPage();
+    const button = await readyButton();
+
+    fireEvent.change(screen.getByTestId('report-threshold'), { target: { value: '-20' } });
+    fireEvent.click(button);
+
+    await waitFor(() => expect(generateReport).toHaveBeenCalled());
+    expect(generateReport.mock.calls[0]?.[0].options.threshold).toBe(-75);
   });
 
   it('sends a section the operator turned off as off', async () => {

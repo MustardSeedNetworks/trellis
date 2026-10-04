@@ -7,7 +7,6 @@
     "analysing": "Analizando la cobertura",
     "deadZoneBodyRssi": "Cada una es una región medida donde la señal quedó por debajo del umbral.",
     "deadZoneBodySnr": "Cada una es una región medida donde el margen sobre el ruido de fondo quedó por debajo del umbral. Un margen escaso junto a una señal fuerte es interferencia, no una falta de cobertura.",
-    "deadZoneThreshold": "Zona muerta por debajo de",
     "deadZones_one": "{{count}} zona muerta por debajo de {{threshold}} {{unit}}",
     "deadZones_other": "{{count}} zonas muertas por debajo de {{threshold}} {{unit}}",
     "description": "Señal medida en la planta estudiada, y dónde resulta insuficiente.",
@@ -123,6 +122,8 @@
     }
   },
   "reports": {
+    "analysis": "Hallazgos",
+    "analysisHint": "Las zonas muertas del PDF se evalúan con esta capa y este umbral, como en la página Cobertura.",
     "companyPlaceholder": "Se imprime en la portada",
     "description": "Genere un PDF de un estudio, eligiendo qué contiene.",
     "generate": "Generar PDF",

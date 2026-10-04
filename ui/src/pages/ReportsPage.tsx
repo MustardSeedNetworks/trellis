@@ -3,6 +3,14 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import { surveyClient } from '@/lib/client';
+import {
+  COVERAGE_METRIC_COPY,
+  COVERAGE_METRICS,
+  type CoverageMetric,
+  DEFAULT_THRESHOLDS,
+  parseThreshold,
+  THRESHOLDS,
+} from '@/lib/coverageThreshold';
 import { bytesToDataUrl, reportFilename } from '@/lib/format';
 
 /**
@@ -20,7 +28,9 @@ import { bytesToDataUrl, reportFilename } from '@/lib/format';
  *
  * The report is still *about* one survey, so the survey is chosen here the
  * same way Coverage chooses one, and for the same reason — a link that names
- * the survey opens the report for it.
+ * the survey opens the report for it. Its findings are judged by the same
+ * metric and threshold control too, or the PDF would disagree with the dead
+ * zones the operator just analysed (trellis#509).
  */
 const SECTION_KEYS = [
   'includeExecutiveSummary',
@@ -68,6 +78,9 @@ export function ReportsPage() {
   };
   const [sections, setSections] = useState<Record<SectionKey, boolean>>(DEFAULT_SECTIONS);
   const [companyName, setCompanyName] = useState('');
+  const [metric, setMetric] = useState<CoverageMetric>('rssi');
+  const [thresholds, setThresholds] = useState(DEFAULT_THRESHOLDS);
+  const bounds = THRESHOLDS[metric];
 
   const surveysQuery = useQuery({
     queryKey: ['surveys'],
@@ -86,7 +99,12 @@ export function ReportsPage() {
       }
       const reply = await surveyClient.generateReport({
         surveyId,
-        options: { ...sections, companyName: companyName.trim() },
+        options: {
+          ...sections,
+          companyName: companyName.trim(),
+          metric,
+          threshold: thresholds[metric],
+        },
       });
       // Reuse the tested bytes→data-URL path and trigger a browser download
       // via a transient anchor; no library needed for a one-shot PDF save.
@@ -135,6 +153,59 @@ export function ReportsPage() {
               </span>
             </label>
           ))}
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-3 border-t border-hairline pt-6">
+          <legend className="kicker">{t('pages:reports.analysis')}</legend>
+          <p className="text-xs text-text-muted">{t('pages:reports.analysisHint')}</p>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm">
+              <span className="text-text-secondary">{t('common:labels.metric')}</span>
+              <div className="flex flex-wrap gap-1">
+                {COVERAGE_METRICS.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setMetric(option)}
+                    aria-pressed={metric === option}
+                    className={`rounded-[9px] px-3 py-2 text-sm font-bold ${
+                      metric === option
+                        ? 'bg-brand-primary text-on-brand'
+                        : 'text-text-secondary hover:bg-surface-hover'
+                    }`}
+                    data-testid={`report-metric-${option}`}
+                  >
+                    {COVERAGE_METRIC_COPY[option].glossary}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <label
+              className="flex min-w-0 flex-wrap items-center gap-2 text-sm"
+              htmlFor="report-threshold"
+            >
+              <span className="text-text-secondary">{t('common:labels.deadZoneThreshold')}</span>
+              <input
+                id="report-threshold"
+                type="number"
+                value={thresholds[metric]}
+                min={bounds.min}
+                max={bounds.max}
+                step={1}
+                onChange={(event) => {
+                  const parsed = parseThreshold(metric, event.target.value);
+                  if (parsed !== undefined) {
+                    setThresholds((current) => ({ ...current, [metric]: parsed }));
+                  }
+                }}
+                className="figure w-24 rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
+                data-testid="report-threshold"
+              />
+              <span className="text-text-secondary" data-testid="report-threshold-unit">
+                {COVERAGE_METRIC_COPY[metric].unit}
+              </span>
+            </label>
+          </div>
         </fieldset>
 
         <label className="flex flex-col gap-2 text-sm" htmlFor="report-company">
