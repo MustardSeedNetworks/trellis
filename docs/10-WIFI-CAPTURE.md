@@ -95,15 +95,22 @@ So the bundled daemon keeps its survey store at
 capture-readiness line at startup is where an operator sees whether this launch
 can read network names.
 
-The same log is the only place a bundle announces its address. `trellisd` binds
+A bundle launch opens the operator's default browser once, at the address the
+daemon actually bound, after the listener is up. `trellisd` binds
 `127.0.0.1:8446`, and walks `8447..8455` when something already holds the port —
-the fleet convention, and the difference here between an app that moved and an
-app that appears not to start at all. The `trellisd listening` line names the
-address to open; a `TRELLIS_ADDR` given by an operator is taken literally and
-fails rather than moving. It must also be a loopback address: the daemon has no
-authentication or TLS, so a routable address is refused at startup with a
-message pointing at #160, where serving another device is tracked as a feature
-gated on both.
+the fleet convention — so with 8446 held the browser opens at 8447 rather than at
+whatever holds the habitual address (#157). The `trellisd listening` line in the
+log, and the port in the instance lock, name the same address. Only a binary
+running from inside an `.app` bundle does this; a CLI or systemd start never
+opens a browser. A second double-click of an app that is already running opens
+nothing: LaunchServices does not start the binary again, so reopen the address
+from the log.
+
+A `TRELLIS_ADDR` given by an operator is taken literally and fails rather than
+moving. It must be a loopback address unless an operator credential is
+configured (`TRELLIS_AUTH_USERNAME` and `TRELLIS_AUTH_PASSWORD`), which puts
+authentication, CSRF and TLS in front of the API (#160); a credentialed bundle
+opens its `https` address.
 
 Environment variables _do_ reach the app when it is launched with `open` from a
 shell (`TRELLIS_ADDR=… open -a Trellis.app` works), but not when it is started

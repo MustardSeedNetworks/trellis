@@ -215,6 +215,15 @@ func run() error {
 		serveErr <- nil
 	}()
 
+	// After Serve has the listener, so the page the browser asks for is served.
+	if exe, err := os.Executable(); err == nil {
+		if target, ok := bundleLaunchURL(exe, scheme, ln.Addr()); ok {
+			if err := openBrowser(ctx, target); err != nil {
+				slog.Warn("could not open the browser; open the address by hand", "url", target, "error", err)
+			}
+		}
+	}
+
 	select {
 	case <-ctx.Done():
 		slog.Info("shutting down trellisd")
