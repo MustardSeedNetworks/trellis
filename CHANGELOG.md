@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.5.0...v0.6.0) (2026-10-04)
+
+
+### Features
+
+* **trellisd:** open the browser at the bound address on a bundle launch ([#704](https://github.com/MustardSeedNetworks/trellis/issues/704)) ([085d7df](https://github.com/MustardSeedNetworks/trellis/commit/085d7df449c20614b97710fce6f959eafd673e35)), closes [#157](https://github.com/MustardSeedNetworks/trellis/issues/157)
+
+
+### Continuous Integration
+
+* **release:** declare the artifacts each release publishes ([#707](https://github.com/MustardSeedNetworks/trellis/issues/707)) ([77d0af9](https://github.com/MustardSeedNetworks/trellis/commit/77d0af9626d0b7bc807664d6a2d9629a0cffa32c)), closes [#706](https://github.com/MustardSeedNetworks/trellis/issues/706)
+
 ## [0.5.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.4.3...v0.5.0) (2026-10-04)
 
 
