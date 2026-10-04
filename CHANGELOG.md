@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.6.0...v0.7.0) (2026-10-04)
+
+
+### Features
+
+* **ui:** choose one access point on the Coverage map ([#703](https://github.com/MustardSeedNetworks/trellis/issues/703)) ([5e2d94c](https://github.com/MustardSeedNetworks/trellis/commit/5e2d94c36bf9eb4d4484f9c5bd8b4c8799cc8512)), closes [#702](https://github.com/MustardSeedNetworks/trellis/issues/702)
+
+
+### Documentation
+
+* **adr:** link the fleet API styles decision from the ADR index ([#709](https://github.com/MustardSeedNetworks/trellis/issues/709)) ([a1abf62](https://github.com/MustardSeedNetworks/trellis/commit/a1abf62af2ef65208f531adca70410154c9a0c53))
+
 ## [0.6.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.5.0...v0.6.0) (2026-10-04)
 
 
