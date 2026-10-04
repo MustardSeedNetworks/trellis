@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.0...v0.7.1) (2026-10-04)
+
+
+### Performance Improvements
+
+* **survey:** weigh each heatmap cell's 12 nearest samples ([#714](https://github.com/MustardSeedNetworks/trellis/issues/714)) ([d5fc76e](https://github.com/MustardSeedNetworks/trellis/commit/d5fc76e9b6a244daf1d11ed6a30f9127be406079)), closes [#691](https://github.com/MustardSeedNetworks/trellis/issues/691)
+
+
+### Continuous Integration
+
+* **i18n:** move the shared copy gate to the tightened pin ([#712](https://github.com/MustardSeedNetworks/trellis/issues/712)) ([97efb78](https://github.com/MustardSeedNetworks/trellis/commit/97efb786fdda6a5584069ba7b8f6f8e20f3d1ce6))
+
 ## [0.7.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.6.0...v0.7.0) (2026-10-04)
 
 
