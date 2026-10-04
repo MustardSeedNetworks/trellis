@@ -15,3 +15,9 @@ ADR that references the old one — don't edit history.
 | [0008](ADR-0008-sample-markers-scale-with-density.md) | Sample markers are sized by how close the readings lie | Accepted |
 | [0009](ADR-0009-a-failed-measurement-is-a-point.md) | A failed measurement is stored as an attempted point that no layer draws | Accepted |
 | [0010](ADR-0010-auth-gated-routable-bind-keeps-0007.md) | Auth, TLS and CSRF gate a routable bind; ADR-0007's packaging shape stands (amends 0007) | Accepted |
+
+Fleet decisions recorded outside this repository: the API style. Trellis stays
+Connect-RPC over its proto contract, and seed, stem and niac stay REST/JSON
+over foundation's shared route registrar
+(`msn-docs-internal/05-Engineering/API_STYLES.md`, owner decision 10,
+2026-09-17; revisit at trellis v1).
