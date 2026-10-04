@@ -4,18 +4,18 @@ Each phase ends in something **demoable** and has explicit exit criteria. No pha
 starts before the prior phase's contract is frozen. Order is dependency-driven, not
 feature-driven.
 
-## Status (2026-09-03)
+## Status (2026-10-04)
 
 | Phase | Status | Evidence |
 | --- | --- | --- |
-| Phase 0 — Plan freeze | Done | `docs/` reviewed; contracts drafted (`proto/trellis/survey/v1` implemented; `docs/contracts/api.proto` and `engine.proto` still draft/unimplemented). |
-| Phase 1 — Migrate measured-survey | Done | `core/survey` in tree, ~92% covered, corpus tests assert values; survey API real; UI wired to the live measured-survey workflow (#268). |
-| Phase 2 — Predictive engine MVP | Not started | Zero lines of C++/Rust/GPU code in the tree; no `/engine`. |
+| Phase 0 — Plan freeze | Done | `docs/` reviewed; contracts drafted. Only `proto/trellis/survey/v1/survey.proto` is implemented; `docs/contracts/api.proto`, `capture.proto` and `engine.proto` are still marked DRAFT and unimplemented. |
+| Phase 1 — Migrate measured-survey | Done | `core/survey` in tree, corpus tests assert values; survey API real; UI wired to the live measured-survey workflow (#268); per-AP heatmap (#679) and per-floor AP table in the PDF (#677). |
+| Phase 2 — Predictive engine MVP | Not started | Zero lines of C++/Rust/GPU code in the tree; no `/engine`. The closed-form CPU path-loss model Gate G1 measures lives in `core/rf` (Go) and is not wired into the product. |
 | Gate G1 — Engine credibility | Run 2026-09-07 — **failed**; **re-scoped 2026-09-08, re-run pending** | CPU log-distance model measured against surveyor-placed APs: 10.42 dB mean error uncalibrated, 4.34 dB calibrated, against the original thresholds of 6 and 3–4 dB. Re-scoped by the owner to **10 dB mean error against the Link-Live oracle**, four weeks from the first run (box closes 2026-10-05); fail stops the planner for good. `docs/11-GATE-G1-RESULT.md`, `docs/12-CROSS-PRODUCT-ORACLE.md`, `core/rf`. |
-| Phase 3 — Planning UX + Wails | Not started | No Wails; UI is a browser page served over loopback HTTP. |
+| Phase 3 — Planning UX + Wails | Not started | No Wails; the UI is a browser page served by `trellisd`, loopback HTTP by default (ADR-0010). No planning UX. |
 | Phase 4 — GPU + full predictive layers | Not started | Depends on Phase 2. |
-| Phase 5 — Capture + survey loop | Partially done | Host-NIC capture backends real on macOS (CoreWLAN), Linux (nl80211), Windows (Native WiFi), linked into `trellisd` (ADR-0006). External HW, calibration not started. |
-| Phase 6 — Reporting, licensing, polish | Partially done | Pure-Go PDF reporter real (`core/survey/report.go`, fpdf); no Ed25519 licensing, no installers/signing. |
+| Phase 5 — Capture + survey loop | Partially done | Tier 1 host-NIC scan backends real on macOS (CoreWLAN), Linux (nl80211), Windows (Native WiFi), linked into `trellisd` (ADR-0006). Tier 2 monitor-mode acquisition landed on Linux, 2.4 GHz only, opt-in (#419, `docs/10-WIFI-CAPTURE.md`). External hardware and model calibration in the survey loop not started; `core/rf` calibration exists only as the Gate G1 measurement. |
+| Phase 6 — Reporting, licensing, polish | Partially done | Pure-Go PDF reporter real (`core/survey/report.go`, fpdf). Releases ship deb and rpm installing a user-session daemon (ADR-0007, #318), plus Linux/macOS tarballs and a Windows zip, each with a Syft SBOM and cosign keyless signature (`.goreleaser.yml`). The macOS `.app` is code-signed by `deploy/macos/build-app.sh` but not notarized; no Windows installer; no Ed25519 licensing. |
 | Phase 7 — Cloud/team | Not started | — |
 
 ## The bet (read before anything)
