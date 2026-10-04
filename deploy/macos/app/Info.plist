@@ -26,9 +26,10 @@
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
 
-    <!-- trellisd has no windows of its own: the surveyor works in a browser
-         against 127.0.0.1:8446. Without this it would sit in the Dock as an
-         app that never opens anything. Quit it with `pkill trellisd`. -->
+    <!-- trellisd has no windows of its own: the surveyor works in a browser,
+         which a bundle launch opens at the address it bound. Without this it
+         would sit in the Dock as an app with no window. Quit it with
+         `pkill trellisd`. -->
     <key>LSUIElement</key>
     <true/>
 
