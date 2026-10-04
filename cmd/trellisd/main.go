@@ -55,6 +55,10 @@ const (
 )
 
 func main() {
+	if code, done := handleArgs(os.Args[1:], os.Stdout, os.Stderr); done {
+		os.Exit(code)
+	}
+
 	closeLog, err := installLogger()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
