@@ -186,7 +186,7 @@ function describeAirspace(
           : `${connected.channelUtilizationPercent}%`,
     },
   ];
-  const ssid = connected.ssid || t('pages:live.hiddenNetwork');
+  const ssid = connected.ssid || t('common:labels.hiddenNetwork');
 
   // SNR is what decides this, not signal: a strong signal on a noisy channel
   // performs worse than a weaker one in quiet air, and the derived margin is

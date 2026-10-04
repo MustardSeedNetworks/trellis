@@ -21,6 +21,7 @@
     "notFoundTitle": "Página no encontrada"
   },
   "labels": {
+    "accessPoint": "Punto de acceso",
     "companyName": "Nombre de la empresa",
     "coverageScore": "Puntuación de cobertura",
     "deadZoneThreshold": "Zona muerta por debajo de",
@@ -28,6 +29,7 @@
     "floor": "Planta",
     "floorPlan": "Plano de planta",
     "floors": "Plantas",
+    "hiddenNetwork": "Red oculta",
     "metric": "Métrica",
     "recommendations": "Recomendaciones",
     "samples": "Muestras",

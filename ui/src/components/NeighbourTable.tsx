@@ -86,7 +86,7 @@ function NeighbourRow({
       className="border-hairline border-t"
     >
       <td className="py-2 pr-4 text-text-primary">
-        {network.ssid || t('pages:live.hiddenNetwork')}
+        {network.ssid || t('common:labels.hiddenNetwork')}
         {network.associated ? (
           <span className="ml-2 rounded bg-surface-raised px-2 py-0.5 text-text-secondary text-xs">
             {t('pages:live.connectedBadge')}

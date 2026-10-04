@@ -148,14 +148,17 @@ test('reads a measured value off the heatmap and zooms it', async ({ page }) => 
   const readout = page.getByTestId('heatmap-readout');
   await expect(readout).toContainText('Point at the surface');
 
-  // Hover the middle of the surface. The value comes from the grid the daemon
-  // painted with, so this asserts a real dBm reading rather than that a
-  // tooltip appeared: the scripted radio's APs run -48 to -66 dBm.
+  // Hover the surface. The value comes from the grid the daemon painted with,
+  // so this asserts a real dBm reading rather than that a tooltip appeared:
+  // the scripted radio's APs run -48 to -66 dBm. A quarter of the way down,
+  // through the locator: at 1280x720 the map's lower half sits under the
+  // pinned legend, and hover() refuses a point something else covers where a
+  // raw mouse move would silently land on the legend.
   const box = await image.boundingBox();
   if (!box) {
     throw new Error('heatmap image has no layout box');
   }
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await image.hover({ position: { x: box.width / 2, y: box.height / 4 } });
   await expect(readout).toHaveText(/-\d+\.\d dBm at \d+, \d+/);
 
   const viewport = page.getByTestId('heatmap-viewport');

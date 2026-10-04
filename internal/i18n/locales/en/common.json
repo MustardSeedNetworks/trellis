@@ -21,6 +21,7 @@
     "notFoundTitle": "Page not found"
   },
   "labels": {
+    "accessPoint": "Access point",
     "companyName": "Company name",
     "coverageScore": "Coverage score",
     "deadZoneThreshold": "Dead zone below",
@@ -28,6 +29,7 @@
     "floor": "Floor",
     "floorPlan": "Floor plan",
     "floors": "Floors",
+    "hiddenNetwork": "Hidden network",
     "metric": "Metric",
     "recommendations": "Recommendations",
     "samples": "Samples",

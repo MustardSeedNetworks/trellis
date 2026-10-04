@@ -4,6 +4,7 @@ import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
+import { AccessPointSelect } from '@/components/AccessPointSelect';
 import { CoverageFindings } from '@/components/CoverageFindings';
 import { HeatmapLegend } from '@/components/HeatmapLegend';
 import { HeatmapSurface } from '@/components/HeatmapSurface';
@@ -95,12 +96,6 @@ export function CoveragePage() {
       ? requestedFloorId
       : '';
 
-  const heatmapQuery = useQuery({
-    queryKey: ['heatmap', surveyId, metric, floorId],
-    queryFn: () => surveyClient.getHeatmap({ surveyId: surveyId ?? '', metric, floorId }),
-    enabled: surveyId !== undefined,
-  });
-
   /* Download throughput has no dead-zone rule, so the analysis is not asked
      about it: offering it would only produce an error where a finding belongs. */
   const coverageMetric = isCoverageMetric(metric) ? metric : undefined;
@@ -108,13 +103,33 @@ export function CoveragePage() {
   const bounds = THRESHOLDS[coverageMetric ?? 'rssi'];
   const threshold = thresholds[coverageMetric ?? 'rssi'];
 
+  /* A BSSID belongs to the floor that heard it, so the choice is kept with
+     its floor: elsewhere it would be refused as not heard. Only rssi and snr
+     have a per-AP reading, so the throughput layer is always the whole floor. */
+  const floorKey = `${surveyId}/${floorId}`;
+  const [apChoice, setApChoice] = useState({ floorKey: '', bssid: '' });
+  const bssid = analysable && apChoice.floorKey === floorKey ? apChoice.bssid : '';
+
+  const heatmapQuery = useQuery(heatmapOptions(surveyId, metric, floorId, bssid));
+  /* Every reply lists the floor's heard APs. They are read from the
+     whole-floor RSSI map the page opens on, not the map on screen: an AP with
+     no SNR reading fails to draw, and the way back must not go with it. */
+  const heardQuery = useQuery(heatmapOptions(surveyId, 'rssi', floorId, ''));
+
   const coverageQuery = useQuery({
-    queryKey: ['coverage', surveyId, metric, threshold, floorId],
+    queryKey: ['coverage', surveyId, metric, threshold, floorId, bssid],
     queryFn: () =>
-      surveyClient.getCoverage({ surveyId: surveyId ?? '', metric, threshold, floorId }),
+      surveyClient.getCoverage({
+        surveyId: surveyId ?? '',
+        metric,
+        threshold,
+        floorId,
+        ...apField(bssid),
+      }),
     enabled: surveyId !== undefined && analysable,
   });
 
+  const accessPoints = heardQuery.data?.accessPoints ?? [];
   const heatmap = heatmapQuery.data;
   const metricOption = METRICS.find((m) => m.id === metric);
   const unit = metricOption?.unit ?? '';
@@ -224,6 +239,14 @@ export function CoveragePage() {
           </div>
         </div>
 
+        {analysable && accessPoints.length > 0 ? (
+          <AccessPointSelect
+            accessPoints={accessPoints}
+            value={bssid}
+            onChange={(chosen) => setApChoice({ floorKey, bssid: chosen })}
+          />
+        ) : null}
+
         {/* Only where it means something. The threshold and the findings below
             speak about a layer the analysis has a rule for; over a throughput
             layer they would answer a question nobody asked, and a control that
@@ -315,6 +338,26 @@ export function CoveragePage() {
       </div>
     </div>
   );
+}
+
+/** The request field for one AP; absent, not empty, means every AP. */
+function apField(bssid: string) {
+  return bssid === '' ? {} : { bssid };
+}
+
+/** One heatmap request, shared by the map on screen and the heard-AP list. */
+function heatmapOptions(
+  surveyId: string | undefined,
+  metric: Metric,
+  floorId: string,
+  bssid: string,
+) {
+  return {
+    queryKey: ['heatmap', surveyId, metric, floorId, bssid],
+    queryFn: () =>
+      surveyClient.getHeatmap({ surveyId: surveyId ?? '', metric, floorId, ...apField(bssid) }),
+    enabled: surveyId !== undefined,
+  };
 }
 
 interface SurfaceState {
