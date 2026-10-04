@@ -157,6 +157,77 @@ func TestInterpolator_InterpolateGrid(t *testing.T) {
 	}
 }
 
+// The grid is computed in squared distance and across goroutines (#684). Both
+// are speed-ups only: every cell must still be the textbook IDW value, at the
+// default power and off it, with and without a distance cutoff.
+func TestInterpolateGrid_MatchesTextbookIDW(t *testing.T) {
+	// An R2 low-discrepancy sequence scatters the samples irregularly over the
+	// floor, deterministically.
+	frac := func(v float64) float64 { return v - math.Floor(v) }
+	samples := make([]survey.SampleValue, 200)
+	for k := range samples {
+		n := float64(k + 1)
+		samples[k] = survey.SampleValue{
+			Point: survey.Point2D{X: frac(n*0.7548776662466927) * 400, Y: frac(n*0.5698402909980532) * 310},
+			Value: -90 + frac(n*0.6180339887498949)*60,
+		}
+	}
+	// 0.005 from cell [0][0]'s centre: close, but not the coincident sample
+	// whose value a cell takes outright.
+	samples = append(samples, survey.SampleValue{Point: survey.Point2D{X: 5.003, Y: 5.004}, Value: -30})
+
+	textbook := func(power, maxDist, x, y float64) float64 {
+		var weighted, weights float64
+		nearest, nearestDist := 0.0, math.MaxFloat64
+		for _, s := range samples {
+			d := math.Hypot(x-s.Point.X, y-s.Point.Y)
+			if d < nearestDist {
+				nearest, nearestDist = s.Value, d
+			}
+			if maxDist > 0 && d > maxDist {
+				continue
+			}
+			w := 1 / math.Pow(d, power)
+			weighted += w * s.Value
+			weights += w
+		}
+		if weights == 0 {
+			return nearest
+		}
+		return weighted / weights
+	}
+
+	for _, tc := range []struct {
+		name           string
+		power, maxDist float64
+	}{
+		{"default power", 2, 0},
+		{"power 3", 3, 0},
+		{"default power with cutoff", 2, 40},
+		{"power 1.5 with cutoff", 1.5, 40},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			interp := survey.NewInterpolator(samples)
+			interp.Power = tc.power
+			interp.MaxDist = tc.maxDist
+
+			const cell = 10
+			grid := interp.InterpolateGrid(400, 310, cell)
+			if len(grid) != 31 || len(grid[0]) != 40 {
+				t.Fatalf("grid is %dx%d, want 31x40", len(grid), len(grid[0]))
+			}
+			for row, cells := range grid {
+				for col, got := range cells {
+					want := textbook(tc.power, tc.maxDist, float64(col*cell+cell/2), float64(row*cell+cell/2))
+					if math.Abs(got-want) > 1e-9 {
+						t.Fatalf("cell [%d][%d] = %.12f, want %.12f", row, col, got, want)
+					}
+				}
+			}
+		})
+	}
+}
+
 func TestDistance(t *testing.T) {
 	tests := []struct {
 		name     string

@@ -2,6 +2,8 @@ package survey
 
 import (
 	"math"
+	"runtime"
+	"sync"
 )
 
 // Point2D represents a 2D coordinate.
@@ -78,25 +80,36 @@ func (i *Interpolator) Interpolate(x, y float64) float64 {
 
 // inverseDistanceWeighting implements IDW interpolation.
 // IDW formula: z = Σ(wi * zi) / Σ(wi) where wi = 1 / d^p.
+//
+// The loop works in squared distance: a heatmap runs it for every cell over
+// every sample, so a square root and a math.Pow per pair were most of a
+// floor's render time (#684). At the default power the weight is 1/d², which
+// is the squared distance's reciprocal with no call at all.
 func (i *Interpolator) inverseDistanceWeighting(x, y float64) float64 {
 	var weightedSum, weightSum float64
-	point := Point2D{X: x, Y: y}
+	maxDistSq := i.MaxDist * i.MaxDist
+	halfPower := i.Power / 2
+	square := i.Power == defaultIDWPower
 
 	for _, sample := range i.Samples {
-		dist := distance(point, sample.Point)
+		dx := x - sample.Point.X
+		dy := y - sample.Point.Y
+		distSq := dx*dx + dy*dy
 
 		// If we're exactly on a sample point, return its value
-		if dist < distanceEpsilon {
+		if distSq < distanceEpsilon*distanceEpsilon {
 			return sample.Value
 		}
 
 		// Skip samples beyond max distance (if set)
-		if i.MaxDist > 0 && dist > i.MaxDist {
+		if i.MaxDist > 0 && distSq > maxDistSq {
 			continue
 		}
 
-		// Calculate weight: 1 / distance^power
-		weight := 1.0 / math.Pow(dist, i.Power)
+		weight := 1 / distSq
+		if !square {
+			weight = 1 / math.Pow(distSq, halfPower)
+		}
 		weightedSum += weight * sample.Value
 		weightSum += weight
 	}
@@ -138,20 +151,33 @@ func distance(p1, p2 Point2D) float64 {
 }
 
 // InterpolateGrid generates a 2D grid of interpolated values.
+//
+// Cells are independent, so rows are shared out across the CPUs; each worker
+// writes only its own rows and the result does not depend on the split.
 func (i *Interpolator) InterpolateGrid(width, height, cellSize int) [][]float64 {
 	cols := (width + cellSize - 1) / cellSize
 	rows := (height + cellSize - 1) / cellSize
 
 	grid := make([][]float64, rows)
-	for row := range rows {
+	for row := range grid {
 		grid[row] = make([]float64, cols)
-		for col := range cols {
-			// Calculate center of cell
-			x := float64(col*cellSize) + float64(cellSize)/cellCenterDivisor
-			y := float64(row*cellSize) + float64(cellSize)/cellCenterDivisor
-			grid[row][col] = i.Interpolate(x, y)
-		}
 	}
+
+	workers := min(runtime.GOMAXPROCS(0), rows)
+	var wg sync.WaitGroup
+	for w := range workers {
+		wg.Go(func() {
+			for row := w; row < rows; row += workers {
+				// Calculate center of cell
+				y := float64(row*cellSize) + float64(cellSize)/cellCenterDivisor
+				for col := range cols {
+					x := float64(col*cellSize) + float64(cellSize)/cellCenterDivisor
+					grid[row][col] = i.Interpolate(x, y)
+				}
+			}
+		})
+	}
+	wg.Wait()
 
 	return grid
 }
