@@ -821,7 +821,7 @@ jobs:
           persist-credentials: false
 
       - name: Validate i18n (parity, glossary, banned vocab, etc.)
-        uses: MustardSeedNetworks/.github/.github/actions/i18n-validate@19e61bef9a6c9d3c15fc47c2bf144a62065617cc # .github#97, untagged
+        uses: MustardSeedNetworks/.github/.github/actions/i18n-validate@d2aa4161d10bf8cb5a9ffb0e0985224df0faa617 # .github#105 + #106, untagged
 
   # actionlint + zizmor over .github/workflows. Ported from seed, which has had
   # this since the fleet CI pass; trellis was the one repo where a workflow
