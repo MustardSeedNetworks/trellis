@@ -50,6 +50,17 @@
     "rules": {
       "preset": "recommended",
       "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "react": {
+                "importNames": ["FC", "FunctionComponent"],
+                "message": "Type the props parameter directly: function Name({ a }: NameProps)."
+              }
+            }
+          }
+        },
         "noDefaultExport": "off",
         "useFilenamingConvention": "off"
       },
