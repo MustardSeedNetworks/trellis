@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.2](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.1...v0.7.2) (2026-10-05)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @tanstack/react-query to v5.104.0 ([#670](https://github.com/MustardSeedNetworks/trellis/issues/670)) ([dbd8d57](https://github.com/MustardSeedNetworks/trellis/commit/dbd8d57ca46a75ed04bccc7c55b24139d9758135))
+
+
+### Code Refactoring
+
+* **ui:** type component props directly instead of FC&lt;&gt; ([#718](https://github.com/MustardSeedNetworks/trellis/issues/718)) ([3669119](https://github.com/MustardSeedNetworks/trellis/commit/36691197a3bf345abf01ce1b6e1ac5072b10cafb)), closes [#717](https://github.com/MustardSeedNetworks/trellis/issues/717)
+
 ## [0.7.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.0...v0.7.1) (2026-10-04)
 
 
