@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.3](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.2...v0.7.3) (2026-10-05)
+
+
+### Continuous Integration
+
+* **release:** skip release-please while the release PR is queued ([#720](https://github.com/MustardSeedNetworks/trellis/issues/720)) ([b8acc41](https://github.com/MustardSeedNetworks/trellis/commit/b8acc4134d66df0aaf156ffdc4fe34cb0ef2e1c5))
+
 ## [0.7.2](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.1...v0.7.2) (2026-10-05)
 
 
