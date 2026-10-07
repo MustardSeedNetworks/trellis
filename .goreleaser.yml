@@ -232,7 +232,12 @@ release:
   # defeats the signatures and provenance produced two steps later. A corrected
   # release gets a new patch tag instead.
   replace_existing_artifacts: false
-  draft: false
+  # Releases are immutable once published, so nothing can be uploaded to one
+  # afterwards (v0.7.3 to v0.7.7 shipped with no assets that way, #748).
+  # release-please creates the release as a draft, goreleaser fills that draft,
+  # and the provenance job publishes it only after the attestation is attached.
+  use_existing_draft: true
+  draft: true
   prerelease: auto
   mode: keep-existing
   header: |
