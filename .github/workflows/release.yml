@@ -365,3 +365,16 @@ jobs:
              trellis-slsa-provenance.intoto.jsonl
           gh release upload "$TARGET_TAG" \
              trellis-slsa-provenance.intoto.jsonl --clobber --repo "${GITHUB_REPOSITORY}"
+
+      # Last step on purpose: publishing makes the release immutable, so every
+      # asset, the attestation included, must already be on the draft. A
+      # provenance-only backfill targets a release that is already published.
+      - name: Publish the completed release
+        if: ${{ !inputs.provenance_only }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release edit "$TARGET_TAG" --draft=false --repo "${GITHUB_REPOSITORY}"
