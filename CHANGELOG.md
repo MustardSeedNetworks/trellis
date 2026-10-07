@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.7.6](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.5...v0.7.6) (2026-10-07)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.49.0 ([#734](https://github.com/MustardSeedNetworks/trellis/issues/734)) ([3a1e9a6](https://github.com/MustardSeedNetworks/trellis/commit/3a1e9a6c2a6b748722fedc028e65a8a11c68a1ce))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#729](https://github.com/MustardSeedNetworks/trellis/issues/729)) ([b7c2db6](https://github.com/MustardSeedNetworks/trellis/commit/b7c2db6f9ec8485e47cbbe4dd903829f40521209))
+* **deps:** update storybook monorepo to v10.6.1 ([#733](https://github.com/MustardSeedNetworks/trellis/issues/733)) ([7e75488](https://github.com/MustardSeedNetworks/trellis/commit/7e75488a1cab096a1a79b3ac5b646038700c199f))
+
 ## [0.7.5](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.4...v0.7.5) (2026-10-07)
 
 
