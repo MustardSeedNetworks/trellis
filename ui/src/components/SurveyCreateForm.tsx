@@ -25,6 +25,10 @@ export function SurveyCreateForm({ onCreated }: SurveyCreateFormProps) {
   const createMutation = useMutation({
     mutationFn: (input: { name: string; interface: string }) => surveyClient.createSurvey(input),
     onSuccess: async (reply) => {
+      // A list still loading was requested before this survey existed, and
+      // invalidate alone would join it rather than refetch while the query has
+      // no data yet (trellis#739). Cancel it so the refetch sees the survey.
+      await queryClient.cancelQueries({ queryKey: ['surveys'] });
       await queryClient.invalidateQueries({ queryKey: ['surveys'] });
       setName('');
       setIface('');
