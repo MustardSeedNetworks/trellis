@@ -277,6 +277,29 @@ describe('SurveysPage walk', () => {
     expect(screen.getByText('Created')).toBeInTheDocument();
   });
 
+  // trellis#739: a create that lands while the first list is still in flight.
+  // That list predates the survey, so the page has to ask again rather than
+  // settle for it.
+  it('selects a survey created before the first list arrives', async () => {
+    let releaseFirstList: (reply: { surveys: (typeof everett)[] }) => void = () => {};
+    listSurveys.mockReturnValueOnce(
+      new Promise((resolve) => {
+        releaseFirstList = resolve;
+      }),
+    );
+    listSurveys.mockResolvedValue({ surveys: [everett, fresh] });
+    createSurvey.mockResolvedValue({ survey: fresh });
+    renderPage();
+
+    fireEvent.change(screen.getByTestId('new-survey-name'), { target: { value: 'Lab walk' } });
+    fireEvent.click(screen.getByTestId('create-survey'));
+    await waitFor(() => expect(createSurvey).toHaveBeenCalled());
+    releaseFirstList({ surveys: [everett] });
+
+    expect(await screen.findByTestId('survey-start')).toBeInTheDocument();
+    expect(listSurveys).toHaveBeenCalledTimes(2);
+  });
+
   it('accepts points only while the survey is walking', async () => {
     listSurveys.mockResolvedValue({ surveys: [everett, { ...fresh, status: 'in_progress' }] });
     renderPage();
