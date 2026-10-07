@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.5](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.4...v0.7.5) (2026-10-07)
+
+
+### Bug Fixes
+
+* **deps:** bump source-map-js to 1.2.2 for GHSA-68fv-2mgg-jv7q ([#738](https://github.com/MustardSeedNetworks/trellis/issues/738)) ([d838968](https://github.com/MustardSeedNetworks/trellis/commit/d83896897cf44f1fbfc100af58f306920bf7892c)), closes [#737](https://github.com/MustardSeedNetworks/trellis/issues/737)
+* **deps:** update module modernc.org/sqlite to v1.60.0 ([#727](https://github.com/MustardSeedNetworks/trellis/issues/727)) ([79a6c66](https://github.com/MustardSeedNetworks/trellis/commit/79a6c66e5f4666608dfb37f555709f1873643fe8))
+
 ## [0.7.4](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.3...v0.7.4) (2026-10-05)
 
 
