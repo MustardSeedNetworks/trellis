@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.7.6](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.5...v0.7.6) (2026-10-07)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.49.0 ([#734](https://github.com/MustardSeedNetworks/trellis/issues/734)) ([3a1e9a6](https://github.com/MustardSeedNetworks/trellis/commit/3a1e9a6c2a6b748722fedc028e65a8a11c68a1ce))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#729](https://github.com/MustardSeedNetworks/trellis/issues/729)) ([b7c2db6](https://github.com/MustardSeedNetworks/trellis/commit/b7c2db6f9ec8485e47cbbe4dd903829f40521209))
+* **deps:** update storybook monorepo to v10.6.1 ([#733](https://github.com/MustardSeedNetworks/trellis/issues/733)) ([7e75488](https://github.com/MustardSeedNetworks/trellis/commit/7e75488a1cab096a1a79b3ac5b646038700c199f))
+
+## [0.7.5](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.4...v0.7.5) (2026-10-07)
+
+
+### Bug Fixes
+
+* **deps:** bump source-map-js to 1.2.2 for GHSA-68fv-2mgg-jv7q ([#738](https://github.com/MustardSeedNetworks/trellis/issues/738)) ([d838968](https://github.com/MustardSeedNetworks/trellis/commit/d83896897cf44f1fbfc100af58f306920bf7892c)), closes [#737](https://github.com/MustardSeedNetworks/trellis/issues/737)
+* **deps:** update module modernc.org/sqlite to v1.60.0 ([#727](https://github.com/MustardSeedNetworks/trellis/issues/727)) ([79a6c66](https://github.com/MustardSeedNetworks/trellis/commit/79a6c66e5f4666608dfb37f555709f1873643fe8))
+
 ## [0.7.4](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.3...v0.7.4) (2026-10-05)
 
 
