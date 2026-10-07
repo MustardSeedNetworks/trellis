@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.7.7](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.6...v0.7.7) (2026-10-07)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/mustardseednetworks/foundation to v0.7.1 ([#745](https://github.com/MustardSeedNetworks/trellis/issues/745)) ([2113fb0](https://github.com/MustardSeedNetworks/trellis/commit/2113fb01874e39b4c0212e8ec0191d76fe49ebce))
+* **ui:** select a survey created while the first list is loading ([#742](https://github.com/MustardSeedNetworks/trellis/issues/742)) ([1d63531](https://github.com/MustardSeedNetworks/trellis/commit/1d63531d4a8a7a38ca871c516c1c5c2ab102957c)), closes [#739](https://github.com/MustardSeedNetworks/trellis/issues/739)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#741](https://github.com/MustardSeedNetworks/trellis/issues/741)) ([113ac86](https://github.com/MustardSeedNetworks/trellis/commit/113ac860db6eaec0afeaf76d4a3a1adfb81c6fab))
+* **deps:** lock file maintenance ([#747](https://github.com/MustardSeedNetworks/trellis/issues/747)) ([ebdf9a2](https://github.com/MustardSeedNetworks/trellis/commit/ebdf9a2d3ea78c6823aa45b2004b8bd8f6c2f1c9))
+* **deps:** migrate the UI test stack to vitest 5 ([#736](https://github.com/MustardSeedNetworks/trellis/issues/736)) ([979961f](https://github.com/MustardSeedNetworks/trellis/commit/979961fe8cb9e0f5f071e26108e07e8e04f801aa)), closes [#735](https://github.com/MustardSeedNetworks/trellis/issues/735)
+* **deps:** update dependency @biomejs/biome to v2.5.15 ([#744](https://github.com/MustardSeedNetworks/trellis/issues/744)) ([44c3c54](https://github.com/MustardSeedNetworks/trellis/commit/44c3c5475493270464613d9916c24b001901de6f))
+* **deps:** update npm to v12.2.0 ([#746](https://github.com/MustardSeedNetworks/trellis/issues/746)) ([83dfce7](https://github.com/MustardSeedNetworks/trellis/commit/83dfce720eb952e2dca18d58de3b06b6d129af74))
+
 ## [0.7.6](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.5...v0.7.6) (2026-10-07)
 
 
