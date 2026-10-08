@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.9](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.8...v0.7.9) (2026-10-08)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#755](https://github.com/MustardSeedNetworks/trellis/issues/755)) ([6311be6](https://github.com/MustardSeedNetworks/trellis/commit/6311be6dfbf522ec62b24350997d91c8249f6b06))
+* **deps:** update dependency vite to v8.3.2 ([#753](https://github.com/MustardSeedNetworks/trellis/issues/753)) ([082c9bc](https://github.com/MustardSeedNetworks/trellis/commit/082c9bcbad6316a621c32787234144cd5414a7b9))
+
 ## [0.7.8](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.7...v0.7.8) (2026-10-08)
 
 
