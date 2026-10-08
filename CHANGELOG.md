@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.8](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.7...v0.7.8) (2026-10-08)
+
+
+### Bug Fixes
+
+* **release:** publish releases as drafts until every asset is attached ([#749](https://github.com/MustardSeedNetworks/trellis/issues/749)) ([e43e4e5](https://github.com/MustardSeedNetworks/trellis/commit/e43e4e5d7303e908e7611c80259b22d72322d2b1)), closes [#748](https://github.com/MustardSeedNetworks/trellis/issues/748)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#752](https://github.com/MustardSeedNetworks/trellis/issues/752)) ([bc68c9c](https://github.com/MustardSeedNetworks/trellis/commit/bc68c9cc1b98c457df9081a023c7d47ae7abc482))
+
 ## [0.7.7](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.6...v0.7.7) (2026-10-07)
 
 
