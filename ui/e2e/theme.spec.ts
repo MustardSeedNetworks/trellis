@@ -23,6 +23,14 @@ async function surfaceColour(page: Page): Promise<string> {
   );
 }
 
+/**
+ * The scheme the browser paints native controls in. Without it Linux Chromium
+ * drew the dark theme's `<select>` with a light face (UI-FLEET-9, #761).
+ */
+async function rootColorScheme(page: Page): Promise<string> {
+  return page.evaluate(() => getComputedStyle(document.documentElement).colorScheme);
+}
+
 async function rootIsDark(page: Page): Promise<boolean> {
   return page.evaluate(() => document.documentElement.classList.contains('dark'));
 }
@@ -52,6 +60,7 @@ test.describe('with a dark desktop', () => {
 
     expect(await rootIsDark(page)).toBe(true);
     expect(await paintedSurface(page)).toBe(DARK_SURFACE);
+    expect(await rootColorScheme(page)).toBe('dark');
   });
 });
 
@@ -63,6 +72,7 @@ test.describe('with a light desktop', () => {
 
     expect(await rootIsDark(page)).toBe(false);
     expect(await paintedSurface(page)).toBe(LIGHT_SURFACE);
+    expect(await rootColorScheme(page)).toBe('light');
   });
 
   test('the toggle overrides the OS and survives a reload', async ({ page }) => {
@@ -72,6 +82,7 @@ test.describe('with a light desktop', () => {
     await page.getByTestId('theme-toggle').click();
     expect(await rootIsDark(page)).toBe(true);
     expect(await surfaceColour(page)).toBe('#181611');
+    expect(await rootColorScheme(page)).toBe('dark');
 
     // The reload is the assertion: an in-memory toggle passes every line above.
     await page.reload();
