@@ -1,6 +1,6 @@
 module github.com/MustardSeedNetworks/trellis
 
-go 1.27.1
+go 1.27.2
 
 require (
 	connectrpc.com/connect v1.21.0
@@ -30,7 +30,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20260908205506-85c1c2202aba // indirect
 	golang.org/x/mod v0.41.0 // indirect
-	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/tools v0.50.0 // indirect
 	honnef.co/go/tools v0.8.1 // indirect
