@@ -4,7 +4,7 @@ go 1.27.2
 
 require (
 	connectrpc.com/connect v1.21.0
-	github.com/MustardSeedNetworks/foundation v0.7.1
+	github.com/MustardSeedNetworks/foundation v0.7.2
 	github.com/go-pdf/fpdf v0.9.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
