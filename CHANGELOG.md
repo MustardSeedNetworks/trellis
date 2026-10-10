@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.10](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.9...v0.7.10) (2026-10-10)
+
+
+### Bug Fixes
+
+* **deps:** move to Go 1.27.2 for the net/http HTTP/2 CVEs (GO-2026-6617) ([#764](https://github.com/MustardSeedNetworks/trellis/issues/764)) ([f4c87cf](https://github.com/MustardSeedNetworks/trellis/commit/f4c87cf58879604048cb629b4a5269b9363cb048))
+
 ## [0.7.9](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.8...v0.7.9) (2026-10-08)
 
 
