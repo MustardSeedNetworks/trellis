@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.12](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.11...v0.7.12) (2026-10-11)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.52.0 ([#773](https://github.com/MustardSeedNetworks/trellis/issues/773)) ([11d4e8b](https://github.com/MustardSeedNetworks/trellis/commit/11d4e8bfb47ad762f27bbee40e6ec79a656789ea))
+* **deps:** update module github.com/mustardseednetworks/foundation to v0.7.3 ([#770](https://github.com/MustardSeedNetworks/trellis/issues/770)) ([ce643e0](https://github.com/MustardSeedNetworks/trellis/commit/ce643e0f790b3ab857b4ed0be8f995ecd47a22d7))
+* **deps:** update module github.com/mustardseednetworks/foundation to v0.7.4 ([#772](https://github.com/MustardSeedNetworks/trellis/issues/772)) ([d3204c5](https://github.com/MustardSeedNetworks/trellis/commit/d3204c5952351807f8712ff208bb5496d3100851))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#774](https://github.com/MustardSeedNetworks/trellis/issues/774)) ([ebfe068](https://github.com/MustardSeedNetworks/trellis/commit/ebfe0684877f9a298d337d46c061b9e4d1eb0129))
+
 ## [0.7.11](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.10...v0.7.11) (2026-10-10)
 
 
