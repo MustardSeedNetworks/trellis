@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.13](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.12...v0.7.13) (2026-10-12)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#776](https://github.com/MustardSeedNetworks/trellis/issues/776)) ([be510de](https://github.com/MustardSeedNetworks/trellis/commit/be510de77a34811560f522668ea6df8281094286))
+* **deps:** update dependency @vitejs/plugin-react to v6.1.2 ([#778](https://github.com/MustardSeedNetworks/trellis/issues/778)) ([ccfe979](https://github.com/MustardSeedNetworks/trellis/commit/ccfe9799280ed89a93119ba7b0e65811f9606fa3))
+* **deps:** update dependency postcss to v8.5.29 ([#779](https://github.com/MustardSeedNetworks/trellis/issues/779)) ([b37eaae](https://github.com/MustardSeedNetworks/trellis/commit/b37eaae9fdbd26657e4b7ea58deebf21015e7292))
+
 ## [0.7.12](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.11...v0.7.12) (2026-10-11)
 
 
