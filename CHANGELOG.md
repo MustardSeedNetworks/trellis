@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.15](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.14...v0.7.15) (2026-10-13)
+
+
+### Miscellaneous
+
+* **deps:** update dependency vite to v8.3.3 ([#785](https://github.com/MustardSeedNetworks/trellis/issues/785)) ([af72782](https://github.com/MustardSeedNetworks/trellis/commit/af7278267d7d588e6e71de6c6ca865c1c3529d6b))
+* **deps:** update frontend toolchain ([#767](https://github.com/MustardSeedNetworks/trellis/issues/767)) ([aa4a915](https://github.com/MustardSeedNetworks/trellis/commit/aa4a9151744edc779fb51d34552a72fd7d6705bb))
+
 ## [0.7.14](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.13...v0.7.14) (2026-10-13)
 
 
