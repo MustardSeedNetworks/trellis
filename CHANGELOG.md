@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.14](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.13...v0.7.14) (2026-10-13)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#782](https://github.com/MustardSeedNetworks/trellis/issues/782)) ([aefe711](https://github.com/MustardSeedNetworks/trellis/commit/aefe711f8913eb41b6fab3b307e671c9f5f4b846))
+* **deps:** update dependency axe-core to v4.14.0 ([#781](https://github.com/MustardSeedNetworks/trellis/issues/781)) ([31fe25d](https://github.com/MustardSeedNetworks/trellis/commit/31fe25de27b46af163acd731283e686c5a850d21))
+
 ## [0.7.13](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.12...v0.7.13) (2026-10-12)
 
 
