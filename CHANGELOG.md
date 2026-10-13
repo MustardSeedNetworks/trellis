@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.7.16](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.15...v0.7.16) (2026-10-13)
+
+
+### Bug Fixes
+
+* **deps:** update dependency react-i18next to v17.0.16 ([#787](https://github.com/MustardSeedNetworks/trellis/issues/787)) ([6c65a0e](https://github.com/MustardSeedNetworks/trellis/commit/6c65a0e2141c511b1d8ce1b89b38998941696c6b))
+* **deps:** update module golang.org/x/sys to v0.49.0 ([#788](https://github.com/MustardSeedNetworks/trellis/issues/788)) ([31d9f40](https://github.com/MustardSeedNetworks/trellis/commit/31d9f4053bc947747307158458ed143eb7db1cf5))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#789](https://github.com/MustardSeedNetworks/trellis/issues/789)) ([0421ed2](https://github.com/MustardSeedNetworks/trellis/commit/0421ed2ed18d1413b5721a6c0470ac5766c6d0f6))
+
 ## [0.7.15](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.14...v0.7.15) (2026-10-13)
 
 
