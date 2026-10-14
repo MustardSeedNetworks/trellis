@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.21](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.20...v0.7.21) (2026-10-14)
+
+
+### Bug Fixes
+
+* **build:** pin @babel/core 7 so the react compiler covers defaulted props ([#751](https://github.com/MustardSeedNetworks/trellis/issues/751)) ([7da055b](https://github.com/MustardSeedNetworks/trellis/commit/7da055bb780e559ce64373af517022bc064db70e)), closes [#721](https://github.com/MustardSeedNetworks/trellis/issues/721)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#805](https://github.com/MustardSeedNetworks/trellis/issues/805)) ([d3fb4aa](https://github.com/MustardSeedNetworks/trellis/commit/d3fb4aa3eb7523e878c3ffe3fe63902954087bae))
+* **deps:** lock file maintenance ([#808](https://github.com/MustardSeedNetworks/trellis/issues/808)) ([b7d3920](https://github.com/MustardSeedNetworks/trellis/commit/b7d39209aab8f7e5710088a6395a39388d8e467e))
+* **deps:** update frontend toolchain to v1.64.0 ([#807](https://github.com/MustardSeedNetworks/trellis/issues/807)) ([ee29d4b](https://github.com/MustardSeedNetworks/trellis/commit/ee29d4bdaea9c43abb39c6d19799d47cbff26619))
+
 ## [0.7.20](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.19...v0.7.20) (2026-10-14)
 
 
