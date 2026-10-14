@@ -63,10 +63,29 @@ type llPoint struct {
 
 // llAP is one BSS observed from a walk position.
 type llAP struct {
-	BSSID          string `json:"bssid"`
-	Signal         int    `json:"signal"`
-	Noise          int    `json:"noise"`
-	ChannelPrimary int    `json:"channelPrimary"`
+	BSSID          string  `json:"bssid"`
+	Signal         int     `json:"signal"`
+	Noise          int     `json:"noise"`
+	ChannelPrimary channel `json:"channelPrimary"`
+}
+
+// channel is Link-Live's primary channel. It is a number for 2.4 and 5 GHz and
+// a string with an "E" suffix for 6 GHz ("97E"), and null where the record
+// holds no reading.
+type channel int
+
+func (c *channel) UnmarshalJSON(b []byte) error {
+	text := strings.TrimSuffix(strings.Trim(string(b), `"`), "E")
+	if text == "null" {
+		*c = 0
+		return nil
+	}
+	n, err := strconv.Atoi(text)
+	if err != nil {
+		return fmt.Errorf("channelPrimary %s: %w", b, err)
+	}
+	*c = channel(n)
+	return nil
 }
 
 // comparison is one survey's result, in the order the report prints it.
@@ -285,7 +304,7 @@ func diff(into *comparison, ll *processed, points []survey.SurveyPointRecord, im
 				continue
 			}
 			llBSSIDs[b] = true
-			truth[[2]string{strconv.Itoa(i), b}] = reading{ap.Signal, ap.Noise, ap.ChannelPrimary}
+			truth[[2]string{strconv.Itoa(i), b}] = reading{ap.Signal, ap.Noise, int(ap.ChannelPrimary)}
 		}
 	}
 

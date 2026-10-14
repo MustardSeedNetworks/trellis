@@ -2,7 +2,9 @@
 
 **First run:** 2026-09-07 on AirMagnet demo projects · **re-measured the same
 day** on the AirMapper walks that carry AP placements (#362) · **re-scoped
-2026-09-08 by the owner** — see [The owner's decision](#the-owners-decision-2026-09-08).
+2026-09-08 by the owner** — see [The owner's decision](#the-owners-decision-2026-09-08)
+· **re-scoped run 2026-10-14: FAIL** — see
+[The re-scoped run](#the-re-scoped-run-2026-10-14).
 
 **Verdict against the thresholds this gate was originally specified with: FAIL,
 confirmed on both datasets. The predictive engine is not built.** The gate has
@@ -271,7 +273,96 @@ ourselves — `T-KILL` in the plan of record. The owner chose the oracle route
 instead, and the re-scoped run is the one that decides. `T-KILL` remains worth
 having as the alpha's kill criterion; it is no longer what G1 waits on.
 
-**The re-scoped run has not been made.** It needs Link-Live reachable. No code
-in this repo changes as a result of this decision: the harness it would use is
-`scripts/linklive-fetch-oracle.sh` and `tools/linklive-oracle`, both in tree
-since #363.
+The re-scoped run was made on 2026-10-14 and is recorded next.
+
+## The re-scoped run, 2026-10-14
+
+**Verdict: FAIL.** Mean error against the Link-Live oracle's AP placements is
+**20.24 dB uncalibrated** at the 20 dBm transmit power every earlier run
+assumed, and **12.61 dB** at the most favourable power tried. No assumption
+reaches 10 dB. Per the 2026-09-08 decision, a fail stops the planner for good.
+
+### What was measured
+
+Everything is Link-Live's: the AP placements, the walk positions and readings
+in the same floor-plan pixel space, and the scale (`floorPlanScalePpf` in its
+`heatmap.json`). The gate no longer depends on this repo's reader of an
+AirMapper archive, which is what the re-scope asked for. The owner fetched the
+oracle with `scripts/linklive-fetch-oracle.sh` on 2026-10-14: 17 surveys from
+the Gotlabs org. The data is the vendor's and is not committed.
+
+```bash
+TRELLIS_LL_ORACLE=~/data/linklive-oracle go test ./core/rf/ -run G1LinkLive -v
+```
+
+The model, the 30-pair floor, the calibration bounds and the uncalibrated
+defaults (free-space loss at the measured carrier, n = 3.0) are unchanged from
+the earlier runs. A Link-Live placement records no transmit power, so the
+uncalibrated number is reported across 10–23 dBm. A placement labelled with an
+AP name rather than an address is not joined, as before.
+
+Ten of the 17 surveys score. The four active walks carry no placements. Survey
+3 of the large retailer carries none either. The DIA Main Hall walk and the
+second Resorts World tent are too short for any AP to reach 30 pairs.
+
+### Result
+
+| Survey | Placed APs scored | Pre-cal MAE (20 dBm) | Calibrated MAE |
+| --- | --- | --- | --- |
+| Time Square, 9th floor (`65c694f8`) | 276 | 23.61 | 3.96 |
+| Time Square, 10th floor (`65c69564`) | 124 | 22.78 | 3.66 |
+| Large retailer, survey 2 (`60957f54`) | 44 | 7.82 | 2.63 |
+| Resorts World tent, survey 3 (`628da344`) | 27 | 7.04 | 3.37 |
+| Utopia floor 2 (`628da44e`) | 25 | 19.00 | 4.05 |
+| Utopia floor 1 (`628da423`) | 20 | 13.95 | 3.98 |
+| Everett office, 2022 (`628da3f3`) | 18 | 14.37 | 3.18 |
+| Everett office, 2021 (`60957e0f`) | 16 | 17.20 | 3.18 |
+| Home, floor 2 (`60957de1`) | 6 | 13.65 | 3.26 |
+| MGM corporate (`62869b48`) | 1 | 28.79 | 3.17 |
+| **All, per placed AP** | **557** | **20.24** | **3.71** |
+
+| Assumed transmit power | 10 dBm | 15 dBm | 20 dBm | 23 dBm |
+| --- | --- | --- | --- | --- |
+| Pre-cal mean MAE, all 557 APs | 12.61 | 16.04 | 20.24 | 22.98 |
+| Pre-cal mean MAE, the two COS surveys (50 APs) | 6.43 | 5.94 | 8.52 | 11.08 |
+
+- **The harness reproduces the earlier run.** The two Utopia floors are the
+  archives the 2026-09-07 re-measurement scored from this repo's own reader.
+  Scored from Link-Live's placements, their 45 APs average 16.76 dB against
+  16.75 dB then.
+- **The Time Square floors carry 400 of the 557 APs.** Weighting each survey
+  equally instead gives 16.72 dB, which also fails.
+- **The calibrated mean, 3.71 dB, is inside the 3–4 dB band, but it is not a
+  propagation model.** 480 of the 557 fits (86%) fell below the physical
+  exponent bound and were pulled back to 1.5. Over these walks, distance from
+  the placed AP barely predicts what the tester heard, so the fit is a constant
+  offset. That is the September finding, on twelve times the APs.
+
+### The COS surveys
+
+The owner named the two Colorado Springs surveys as the good ones when the
+data was delivered: the home floor and the large retailer's survey 2. Survey 3
+of the retailer has no placements. On those two, the uncalibrated mean is 5.9
+to 11.1 dB across the power range, and 8.52 dB at 20 dBm, which is under the
+bar.
+
+This record does not take that as the verdict. Fifty APs on two floors, 44 of
+them in one walk, is the narrowest base of any run. The selection was named
+before this run, but the gate as decided reads "against the Link-Live oracle",
+not a subset of it. If the owner meant the COS surveys to be the gate, the
+verdict line above is the one place to change.
+
+### What else the run found
+
+`go run ./tools/linklive-oracle` against the delivered corpus now pairs 12
+surveys and agrees on every position, signal and noise reading. It disagrees
+on 400 of 113,263 channels, and those 400 are exactly the 6 GHz readings: the
+archive reader returns a 6 GHz channel offset by 190, with no frequency.
+That is filed as #812. It does not touch the gate number, because the harness
+takes the carrier from Link-Live. Before this run, the tool stopped at the
+first 6 GHz record, because Link-Live writes those channels as `"97E"`.
+
+The delivered archives are a different export from the September corpus and
+carry no placements in `.serial`. So `TestG1AirMapperCorpusCarriesAPPlacements`
+fails on them by design: there is nothing for the importer to read, and the
+importer has not regressed.

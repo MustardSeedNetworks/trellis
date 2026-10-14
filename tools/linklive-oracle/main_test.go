@@ -6,6 +6,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"image"
 	"image/png"
@@ -150,6 +151,34 @@ func TestReadProcessedAcceptsBothShapes(t *testing.T) {
 			}
 			if len(got.APLocations) != tc.placements {
 				t.Errorf("placements = %d, want %d", len(got.APLocations), tc.placements)
+			}
+		})
+	}
+}
+
+// TestChannelAcceptsEveryShape: newer Link-Live records write a 6 GHz channel
+// as a string and a position with no reading as null. Either one used to fail
+// the whole survey's decode.
+func TestChannelAcceptsEveryShape(t *testing.T) {
+	for _, tc := range []struct {
+		in      string
+		want    channel
+		wantErr bool
+	}{
+		{`36`, 36, false},
+		{`"97E"`, 97, false},
+		{`"6"`, 6, false},
+		{`null`, 0, false},
+		{`"auto"`, 0, true},
+	} {
+		t.Run(tc.in, func(t *testing.T) {
+			var got channel
+			err := json.Unmarshal([]byte(tc.in), &got)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("err = %v, wantErr %v", err, tc.wantErr)
+			}
+			if got != tc.want {
+				t.Errorf("channel = %d, want %d", got, tc.want)
 			}
 		})
 	}
