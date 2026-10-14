@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Trellis Wi-Fi survey UI - Mustard Seed Networks",
   "engines": {
-    "node": "26.10.0",
+    "node": "26.11.1",
     "npm": "12.2.0"
   },
   "packageManager": "npm@12.2.0",
