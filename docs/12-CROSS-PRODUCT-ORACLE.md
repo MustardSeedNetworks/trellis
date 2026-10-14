@@ -197,3 +197,13 @@ Windows backends. The first needs the MT7925U named in `T-HW`.
 - **Six Link-Live records** have no counterpart in the corpus: two Everett
   walks and the four Time Square walks. They are listed by the tool rather than
   quietly skipped.
+
+## Re-run on the owner's corpus, 2026-10-14
+
+The Gate G1 run (`docs/11-GATE-G1-RESULT.md`) re-ran this comparison on a
+different export of the archives. It paired 12 surveys, including two Time
+Square walks, and agreed on every position, signal and noise reading. It
+disagreed on 400 of 113,263 channels, and those are exactly the 6 GHz readings.
+The archive reader returns a 6 GHz channel offset by 190 (`"97E"` in Link-Live
+reads as 287) with no frequency: #812. Before this run, the tool stopped at the
+first 6 GHz record, because Link-Live writes those channels as strings.
