@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.19](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.18...v0.7.19) (2026-10-14)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#798](https://github.com/MustardSeedNetworks/trellis/issues/798)) ([5e50c1e](https://github.com/MustardSeedNetworks/trellis/commit/5e50c1ed9126fe2fbef4fac09abd54c33832bdc9))
+* **deps:** update dependency @babel/core to v8.0.7 ([#796](https://github.com/MustardSeedNetworks/trellis/issues/796)) ([f3af4d5](https://github.com/MustardSeedNetworks/trellis/commit/f3af4d590af53feb14589a74e04fede06f7c2d64))
+* **deps:** update github actions ([#797](https://github.com/MustardSeedNetworks/trellis/issues/797)) ([9b40323](https://github.com/MustardSeedNetworks/trellis/commit/9b40323b39ec48c3379b1d4caa1c41cf181645d0))
+
 ## [0.7.18](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.17...v0.7.18) (2026-10-14)
 
 
