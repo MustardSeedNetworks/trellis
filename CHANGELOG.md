@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.26](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.25...v0.7.26) (2026-10-15)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#827](https://github.com/MustardSeedNetworks/trellis/issues/827)) ([7a9896b](https://github.com/MustardSeedNetworks/trellis/commit/7a9896bbc9be8127297c2cd50fed018cf79df17f))
+* **deps:** lock file maintenance ([#829](https://github.com/MustardSeedNetworks/trellis/issues/829)) ([47afa63](https://github.com/MustardSeedNetworks/trellis/commit/47afa631ee725abf70c47d592d3b66368e69498a))
+
 ## [0.7.25](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.24...v0.7.25) (2026-10-15)
 
 
