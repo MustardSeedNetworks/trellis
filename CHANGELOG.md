@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.9.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.9.0...v0.9.1) (2026-10-15)
+
+
+### Continuous Integration
+
+* **conformance:** pin ci-conformance to .github v1.14.0 ([#840](https://github.com/MustardSeedNetworks/trellis/issues/840)) ([8f423c9](https://github.com/MustardSeedNetworks/trellis/commit/8f423c900c48b1cd0676c9ce74728c5222bcc0b2)), closes [#839](https://github.com/MustardSeedNetworks/trellis/issues/839)
+
+
+### Miscellaneous
+
+* **deps:** update dependency @bufbuild/protoc-gen-es to v2.16.0 ([#731](https://github.com/MustardSeedNetworks/trellis/issues/731)) ([9f0ad4e](https://github.com/MustardSeedNetworks/trellis/commit/9f0ad4e4f73f206d27536fc95ef86c7bfa4e1118))
+
 ## [0.9.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.8.0...v0.9.0) (2026-10-15)
 
 
