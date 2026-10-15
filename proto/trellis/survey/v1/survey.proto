@@ -395,6 +395,33 @@ message GetHeatmapResponse {
   // Every access point heard on the floor, most-heard first, whether or not
   // the request named one: what a caller offers as the choices for `bssid`.
   repeated HeardAccessPoint access_points = 13;
+  // For "predicted_rssi", one entry per placed AP drawn: whether its model was
+  // fitted to the floor's own walk, and if not, why. Empty for measured maps.
+  repeated APCalibration calibrations = 14;
+}
+
+// APCalibration is how one placed AP's prediction was fitted to the readings
+// of its BSSID on the floor's walk. An AP is drawn calibrated only when the
+// fit can be trusted; otherwise it is drawn with the uncalibrated defaults and
+// `fallback` says why: no BSSID, fewer readings than a fit needs, readings at
+// one distance, or a fitted exponent outside the physical bounds (`clamped`).
+message APCalibration {
+  string placement_id = 1;
+  string label = 2;
+  string bssid = 3;
+  // Walked points that heard the BSSID on the requested band.
+  int32 pairs = 4;
+  // The path-loss exponent the AP was drawn with.
+  double exponent = 5;
+  // The least-squares exponent before the bounds, set whenever a fit ran.
+  optional double fitted_exponent = 6;
+  bool clamped = 7;
+  // Mean absolute error, in dB, of the drawn model against the joined
+  // readings; absent when there were none.
+  optional double mean_abs_error_db = 8;
+  bool calibrated = 9;
+  // Why the defaults were drawn; empty when calibrated.
+  string fallback = 10;
 }
 
 // HeardAccessPoint is one BSSID heard on a floor, labelled as a surveyor tells

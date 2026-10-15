@@ -156,9 +156,9 @@ type floorResult struct {
 	medianDist float64
 }
 
-// minPairs is the smallest number of (position, AP) pairs that says anything
-// about a floor. Below it the fit is describing noise.
-const minPairs = 30
+// minPairs is the product's own floor, so the gate scores what the product
+// would calibrate.
+const minPairs = rf.MinFitPairs
 
 // scorePlacedAPs runs the gate's measurement: the uncalibrated model as a
 // planner would start from it, then the fit, on every AP with enough pairs.
