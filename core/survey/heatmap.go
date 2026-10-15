@@ -27,6 +27,10 @@ const (
 	HeatmapInterference HeatmapType = "interference" // Co-channel interference.
 	HeatmapDownload     HeatmapType = "download"     // Download speed.
 	HeatmapUpload       HeatmapType = "upload"       // Upload speed.
+
+	// HeatmapPredictedRSSI is signal predicted from the floor's placed APs
+	// rather than interpolated from a walk (ADR-0011).
+	HeatmapPredictedRSSI HeatmapType = "predicted_rssi"
 )
 
 // Heatmap type alias constants for user-friendly names.
@@ -96,6 +100,9 @@ type HeatmapConfig struct {
 	// uses — so the map and the findings below it fail the same cells.
 	// Ignored by the metrics that have no floor.
 	Threshold float64
+	// Band is the band a prediction is for, spelled as a placement states it
+	// ("2.4 GHz", "5 GHz", "6 GHz"). Read by HeatmapPredictedRSSI only.
+	Band string
 }
 
 // HeatmapResult contains the generated heatmap.
@@ -142,6 +149,9 @@ func GenerateHeatmap(survey *Survey, config HeatmapConfig) (*HeatmapResult, erro
 	if survey == nil {
 		return nil, errors.New("survey is nil")
 	}
+	if config.Type == HeatmapPredictedRSSI {
+		return nil, errors.New("a prediction is drawn per floor: use GenerateFloorHeatmap")
+	}
 
 	// Determine dimensions
 	width, height := getHeatmapDimensions(survey)
@@ -164,6 +174,9 @@ func GenerateFloorHeatmap(floor *Floor, config HeatmapConfig) (*HeatmapResult, e
 	if floor == nil {
 		return nil, errors.New("floor is nil")
 	}
+	if config.Type == HeatmapPredictedRSSI {
+		return generatePredictedHeatmap(floor, config)
+	}
 	width, height := floorDimensions(floor)
 	if width == 0 || height == 0 {
 		return nil, errors.New("invalid dimensions: floor plan or samples required")
@@ -184,17 +197,7 @@ func renderHeatmap(
 	width, height int,
 	config HeatmapConfig,
 ) (*HeatmapResult, error) {
-	// Apply defaults
-	if config.CellSize <= 0 {
-		config.CellSize = defaultHeatmapCellSize
-	}
-	if config.Opacity == 0 {
-		config.Opacity = defaultHeatmapOpacity
-	}
-	if config.Power <= 0 {
-		config.Power = defaultIDWPowerHeatmap
-	}
-
+	config = withHeatmapDefaults(config)
 	if len(samples) == 0 {
 		return nil, fmt.Errorf("no samples found for heatmap type: %s", config.Type)
 	}
@@ -204,8 +207,34 @@ func renderHeatmap(
 	interpolator.Method = config.Method
 	interpolator.Power = config.Power
 
-	// Generate interpolated grid
 	grid := interpolator.InterpolateGrid(width, height, config.CellSize)
+	return paintHeatmap(grid, samples, plan, width, height, config)
+}
+
+// withHeatmapDefaults fills the zero fields of a config with the defaults.
+func withHeatmapDefaults(config HeatmapConfig) HeatmapConfig {
+	if config.CellSize <= 0 {
+		config.CellSize = defaultHeatmapCellSize
+	}
+	if config.Opacity == 0 {
+		config.Opacity = defaultHeatmapOpacity
+	}
+	if config.Power <= 0 {
+		config.Power = defaultIDWPowerHeatmap
+	}
+	return config
+}
+
+// paintHeatmap draws a computed grid over the plan and packages the result.
+// Measured and predicted maps both end here, so a legend, the cursor read-out
+// and the report treat them alike.
+func paintHeatmap(
+	grid [][]float64,
+	samples []SampleValue,
+	plan *FloorPlan,
+	width, height int,
+	config HeatmapConfig,
+) (*HeatmapResult, error) {
 	stats := CalculateGridStats(grid)
 
 	// Get color scale
@@ -336,7 +365,7 @@ func mapHeatmapTypeToValueType(ht HeatmapType) string {
 // diverge around and keep their own sequential scales.
 func getColorScaleForType(ht HeatmapType, threshold float64) ColorScale {
 	switch ht {
-	case HeatmapRSSI, HeatmapSNR:
+	case HeatmapRSSI, HeatmapSNR, HeatmapPredictedRSSI:
 		return CoverageScale(ht, coverageThreshold(ht, threshold))
 	case HeatmapDensity:
 		return GetAPDensityColorScale()
@@ -687,6 +716,8 @@ func ParseHeatmapType(s string) HeatmapType {
 		return HeatmapDownload
 	case string(HeatmapUpload):
 		return HeatmapUpload
+	case string(HeatmapPredictedRSSI):
+		return HeatmapPredictedRSSI
 	default:
 		return HeatmapRSSI
 	}
