@@ -18,6 +18,8 @@ const listSurveys = vi.fn();
 const listFloors = vi.fn();
 const getHeatmap = vi.fn();
 const getCoverage = vi.fn();
+const getFloorPlanImage = vi.fn();
+const listAPPlacements = vi.fn();
 
 vi.mock('@/lib/client', () => ({
   surveyClient: {
@@ -25,6 +27,8 @@ vi.mock('@/lib/client', () => ({
     listFloors: (req: unknown) => listFloors(req),
     getHeatmap: (req: unknown) => getHeatmap(req),
     getCoverage: (req: unknown) => getCoverage(req),
+    getFloorPlanImage: (req: unknown) => getFloorPlanImage(req),
+    listAPPlacements: (req: unknown) => listAPPlacements(req),
   },
 }));
 
@@ -80,6 +84,8 @@ beforeEach(() => {
   listFloors.mockResolvedValue({ floors: [] });
   getHeatmap.mockResolvedValue(heatmapReply);
   getCoverage.mockResolvedValue({ coverageScore: 82.4, deadZoneCount: 2, recommendations: [] });
+  getFloorPlanImage.mockResolvedValue({ image: heatmapReply.png, width: 400, height: 300 });
+  listAPPlacements.mockResolvedValue({ placements: [] });
 });
 
 describe('CoveragePage', () => {
@@ -433,6 +439,43 @@ describe('CoveragePage', () => {
       await waitFor(() => expect(lastRequest(getHeatmap)).toMatchObject({ metric: 'download' }));
       expect(lastRequest(getHeatmap)).not.toHaveProperty('bssid');
       expect(screen.queryByTestId('coverage-access-point')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('the predicted layer', () => {
+    it('asks for the chosen band, and only the predicted layer carries one', async () => {
+      renderPage();
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Predicted signal' }));
+      await waitFor(() =>
+        expect(getHeatmap).toHaveBeenCalledWith(
+          expect.objectContaining({ metric: 'predicted_rssi', band: '5 GHz' }),
+        ),
+      );
+      fireEvent.change(screen.getByTestId('coverage-band'), { target: { value: '6 GHz' } });
+      await waitFor(() =>
+        expect(getHeatmap).toHaveBeenCalledWith(
+          expect.objectContaining({ metric: 'predicted_rssi', band: '6 GHz' }),
+        ),
+      );
+      for (const [request] of getHeatmap.mock.calls) {
+        expect(request.band === undefined).toBe(request.metric !== 'predicted_rssi');
+      }
+
+      fireEvent.click(screen.getByRole('button', { name: 'RSSI' }));
+      expect(screen.queryByTestId('coverage-band')).not.toBeInTheDocument();
+    });
+
+    it('swaps the findings for the planned APs, with no dead-zone analysis', async () => {
+      renderPage();
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Predicted signal' }));
+      expect(await screen.findByTestId('placement-panel')).toBeInTheDocument();
+      expect(screen.queryByTestId('coverage-findings')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('coverage-threshold')).not.toBeInTheDocument();
+      expect(getCoverage).not.toHaveBeenCalledWith(
+        expect.objectContaining({ metric: 'predicted_rssi' }),
+      );
     });
   });
 });

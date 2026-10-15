@@ -47,3 +47,24 @@ export async function walkThreePoints(page: Page) {
     await expect(page.getByTestId('capture-pin')).toHaveCount(index + 1);
   }
 }
+
+/**
+ * Uploads the 800x600 fixture plan onto the selected survey's floor and scales
+ * it: two marks 400 px apart called 10 metres, 0.025 m per pixel.
+ */
+export async function uploadScaledPlan(page: Page) {
+  await page.getByTestId('floor-plan-input').setInputFiles('e2e/fixtures/ninth-floor.png');
+  await expect(page.getByTestId('floor-plan-status')).toContainText('no scale yet');
+
+  const calibration = page.getByTestId('calibration-surface');
+  await expect(calibration).toBeVisible();
+  const box = await calibration.boundingBox();
+  if (box === null) {
+    throw new Error('the calibration surface is not laid out');
+  }
+  await calibration.click({ position: { x: box.width * 0.25, y: box.height / 2 } });
+  await calibration.click({ position: { x: box.width * 0.75, y: box.height / 2 } });
+  await page.getByTestId('calibration-metres').fill('10');
+  await page.getByTestId('calibrate-floor-plan').click();
+  await expect(page.getByTestId('floor-plan-status')).toContainText('0.025 m per pixel');
+}

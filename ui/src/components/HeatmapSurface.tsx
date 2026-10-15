@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { bytesToDataUrl, formatSignal } from '@/lib/format';
 
@@ -26,6 +26,8 @@ export interface HeatmapSurfaceProps {
   /** "dBm" for rssi, "dB" for snr. */
   unit: string;
   metric: string;
+  /** Drawn over the image in its own pixels, so it follows the zoom. */
+  overlay?: ReactNode;
 }
 
 /**
@@ -47,10 +49,12 @@ export function HeatmapSurface({
   cellSize,
   unit,
   metric,
+  overlay,
 }: HeatmapSurfaceProps) {
   const { t } = useTranslation(['common', 'pages']);
   const imageRef = useRef<HTMLImageElement>(null);
   const viewportRef = useRef<HTMLElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(MIN_ZOOM);
   const [reading, setReading] = useState<{ value: number; x: number; y: number } | null>(null);
 
@@ -121,6 +125,25 @@ export function HeatmapSurface({
     return () => viewport.removeEventListener('wheel', zoomOnPinch);
   }, []);
 
+  /* The reading follows the pointer over the frame rather than the image, so
+     it still works under an overlay, which covers the image it is drawn on. A
+     native listener for the same reason as the wheel: the frame is not a
+     control, and the read-out is announced for those not using a pointer. */
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) {
+      return;
+    }
+    const read = (event: MouseEvent) => readAt(event.clientX, event.clientY);
+    const clear = () => setReading(null);
+    frame.addEventListener('mousemove', read);
+    frame.addEventListener('mouseleave', clear);
+    return () => {
+      frame.removeEventListener('mousemove', read);
+      frame.removeEventListener('mouseleave', clear);
+    };
+  }, [readAt]);
+
   return (
     /* The controls sit inside the scrolling region rather than above it. A
        region that scrolls must be reachable from a keyboard, and the honest
@@ -190,18 +213,23 @@ export function HeatmapSurface({
         </output>
       </div>
 
-      <img
-        ref={imageRef}
-        src={bytesToDataUrl(png, 'image/png')}
-        alt={t('pages:coverage.heatmapAlt', { metric: metric.toUpperCase() })}
-        width={width}
-        height={height}
-        onMouseMove={(event) => readAt(event.clientX, event.clientY)}
-        onMouseLeave={() => setReading(null)}
+      <div
+        className="relative max-w-none"
         style={{ width: `${zoom * 100}%` }}
-        className="max-w-none"
-        data-testid="heatmap-image"
-      />
+        ref={frameRef}
+        data-testid="heatmap-frame"
+      >
+        <img
+          ref={imageRef}
+          src={bytesToDataUrl(png, 'image/png')}
+          alt={t('pages:coverage.heatmapAlt', { metric: metric.toUpperCase() })}
+          width={width}
+          height={height}
+          className="block w-full"
+          data-testid="heatmap-image"
+        />
+        {overlay}
+      </div>
     </section>
   );
 }

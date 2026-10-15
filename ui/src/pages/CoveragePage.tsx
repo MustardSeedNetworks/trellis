@@ -8,15 +8,17 @@ import { AccessPointSelect } from '@/components/AccessPointSelect';
 import { CoverageFindings } from '@/components/CoverageFindings';
 import { HeatmapLegend } from '@/components/HeatmapLegend';
 import { HeatmapSurface } from '@/components/HeatmapSurface';
+import { PredictionView } from '@/components/PredictionView';
 import { surveyClient } from '@/lib/client';
+import { apField, heatmapOptions, METRICS, type Metric, metricName } from '@/lib/coverageLayers';
 import {
-  COVERAGE_METRIC_COPY,
   DEFAULT_THRESHOLDS,
   isCoverageMetric,
   parseThreshold,
   THRESHOLDS,
 } from '@/lib/coverageThreshold';
 import { formatCoverageScore, formatSignal } from '@/lib/format';
+import { BANDS, type Band, isBand } from '@/lib/placement';
 import type { RollupState } from '@/ui/StatusRollup';
 
 /**
@@ -29,29 +31,22 @@ import type { RollupState } from '@/ui/StatusRollup';
  * page moves both here rather than copying them: the same reading in two
  * places is the drift the family rules exist to prevent.
  *
- * Only rssi and snr appear as metrics because those are the only two the
- * service renders. `core/survey` also defines density and interference scales,
- * but no RPC reaches them, so offering them here would promise a picture the
- * product cannot draw.
+ * The measured layers are the ones the service renders from a walk: rssi, snr
+ * and download throughput. `core/survey` also defines density and
+ * interference scales, but no RPC reaches them, so offering them here would
+ * promise a picture the product cannot draw. The predicted layer is not
+ * measured at all: it is drawn from the APs placed on the floor, which is why
+ * it brings its own surface and side panel (PredictionView).
  */
-/* Mbps is a glossary term like RSSI and SNR. The throughput layer has no
-   glossary name: "Download" alone read as a file action rather than as the
-   layer being plotted (trellis#476), so it carries ordinary English copy from
-   the catalogue instead. */
-const METRICS = [
-  { id: 'rssi', ...COVERAGE_METRIC_COPY.rssi },
-  { id: 'snr', ...COVERAGE_METRIC_COPY.snr },
-  { id: 'download', glossary: undefined, unit: 'Mbps' },
-] as const;
-
-type Metric = (typeof METRICS)[number]['id'];
-
 export function CoveragePage() {
   const { t } = useTranslation(['common', 'pages']);
   /* The survey lives in the URL so "Plot coverage" on a survey opens that
      survey's coverage, and so a floor worth showing someone is a link. */
   const [searchParams, setSearchParams] = useSearchParams();
   const [metric, setMetric] = useState<Metric>('rssi');
+  /* A prediction is for one band; 5 GHz is where most clients are served. */
+  const [band, setBand] = useState<Band>('5 GHz');
+  const predicted = metric === 'predicted_rssi';
   /* One threshold per metric, not one control that changes unit under the
      operator: carrying -75 into a dB box would ask for a margin no radio has,
      and the number an operator settled on for one layer is still the one they
@@ -110,11 +105,11 @@ export function CoveragePage() {
   const [apChoice, setApChoice] = useState({ floorKey: '', bssid: '' });
   const bssid = analysable && apChoice.floorKey === floorKey ? apChoice.bssid : '';
 
-  const heatmapQuery = useQuery(heatmapOptions(surveyId, metric, floorId, bssid));
+  const heatmapQuery = useQuery(heatmapOptions(surveyId, metric, floorId, bssid, band));
   /* Every reply lists the floor's heard APs. They are read from the
      whole-floor RSSI map the page opens on, not the map on screen: an AP with
      no SNR reading fails to draw, and the way back must not go with it. */
-  const heardQuery = useQuery(heatmapOptions(surveyId, 'rssi', floorId, ''));
+  const heardQuery = useQuery(heatmapOptions(surveyId, 'rssi', floorId, '', band));
 
   const coverageQuery = useQuery({
     queryKey: ['coverage', surveyId, metric, threshold, floorId, bssid],
@@ -130,10 +125,11 @@ export function CoveragePage() {
   });
 
   const accessPoints = heardQuery.data?.accessPoints ?? [];
-  const heatmap = heatmapQuery.data;
-  const metricOption = METRICS.find((m) => m.id === metric);
-  const unit = metricOption?.unit ?? '';
-  const metricLabel = metricOption?.glossary ?? t('pages:coverage.metricDownload');
+  /* A refetch that fails keeps the last good reply as data; the error is what
+     is true now. Deleting the last placed AP is exactly that refetch. */
+  const heatmap = heatmapQuery.error ? undefined : heatmapQuery.data;
+  const unit = METRICS.find((m) => m.id === metric)?.unit ?? '';
+  const metricLabel = metricName(metric, t);
   const findings = describeCoverage(
     {
       metric,
@@ -227,17 +223,44 @@ export function CoveragePage() {
                 type="button"
                 onClick={() => setMetric(option.id)}
                 aria-pressed={metric === option.id}
+                data-testid={`coverage-metric-${option.id}`}
                 className={`rounded-[9px] px-3 py-2 text-sm font-bold ${
                   metric === option.id
                     ? 'bg-brand-primary text-on-brand'
                     : 'text-text-secondary hover:bg-surface-hover'
                 }`}
               >
-                {option.glossary ?? t('pages:coverage.metricDownload')}
+                {metricName(option.id, t)}
               </button>
             ))}
           </div>
         </div>
+
+        {predicted ? (
+          <label
+            className="flex min-w-0 flex-wrap items-center gap-2 text-sm"
+            htmlFor="coverage-band"
+          >
+            <span className="kicker">{t('pages:coverage.band')}</span>
+            <select
+              id="coverage-band"
+              value={band}
+              onChange={(event) => {
+                if (isBand(event.target.value)) {
+                  setBand(event.target.value);
+                }
+              }}
+              className="w-full min-w-0 rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary md:w-auto"
+              data-testid="coverage-band"
+            >
+              {BANDS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
 
         {analysable && accessPoints.length > 0 ? (
           <AccessPointSelect
@@ -279,7 +302,7 @@ export function CoveragePage() {
           </label>
         ) : null}
 
-        {heatmap ? (
+        {heatmap && !predicted ? (
           <span className="figure ml-auto text-xs text-text-muted" data-testid="surface-meta">
             {t('pages:coverage.surfaceMeta', {
               metric: heatmap.metric,
@@ -292,72 +315,65 @@ export function CoveragePage() {
       </div>
 
       <div className="grid flex-1 grid-cols-1 items-start gap-6 xl:min-h-0 xl:grid-cols-[1fr_320px]">
-        <section className="panel flex flex-col gap-4 p-5 xl:min-h-0 xl:self-stretch">
-          {renderSurface(
-            {
-              hasSurveys: surveys.length > 0,
-              surveysLoading: surveysQuery.isLoading,
-              surveysError: surveysQuery.error,
-              heatmapLoading: heatmapQuery.isLoading,
-              heatmapError: heatmapQuery.error,
-              heatmap,
-              metric,
-              metricLabel,
-              unit,
-            },
-            t,
-          )}
-          {/* Pinned to the foot of the surface panel. Bounding the layout keeps
+        {predicted && surveyId !== undefined ? (
+          <PredictionView
+            surveyId={surveyId}
+            floorId={floorId}
+            band={band}
+            heatmap={heatmap}
+            heatmapError={heatmapQuery.error}
+            heatmapLoading={heatmapQuery.isLoading}
+          />
+        ) : (
+          <>
+            <section className="panel flex flex-col gap-4 p-5 xl:min-h-0 xl:self-stretch">
+              {renderSurface(
+                {
+                  hasSurveys: surveys.length > 0,
+                  surveysLoading: surveysQuery.isLoading,
+                  surveysError: surveysQuery.error,
+                  heatmapLoading: heatmapQuery.isLoading,
+                  heatmapError: heatmapQuery.error,
+                  heatmap,
+                  metric,
+                  metricLabel,
+                  unit,
+                },
+                t,
+              )}
+              {/* Pinned to the foot of the surface panel. Bounding the layout keeps
               the key beside the map at xl (trellis#476); below that breakpoint
               the page scrolls and a tall floor plan still carried the key past
               the fold, so the one thing that says what the colours mean was
               off screen exactly while an operator was reading them (#484).
               Sticky rather than fixed: it belongs to this panel, and on a short
               plan it simply sits where it always did. */}
-          {heatmap ? (
-            <div className="sticky bottom-0 -mx-5 -mb-5 mt-auto bg-surface-raised px-5 pb-5 pt-3">
-              <HeatmapLegend stops={heatmap.legend} unit={unit} />
-            </div>
-          ) : null}
-        </section>
+              {heatmap ? (
+                <div className="sticky bottom-0 -mx-5 -mb-5 mt-auto bg-surface-raised px-5 pb-5 pt-3">
+                  <HeatmapLegend stops={heatmap.legend} unit={unit} />
+                </div>
+              ) : null}
+            </section>
 
-        {analysable ? (
-          <CoverageFindings
-            title={
-              metric === 'snr'
-                ? t('pages:coverage.findingsTitleSnr')
-                : t('pages:coverage.findingsTitleRssi')
-            }
-            state={findings.state}
-            headline={findings.headline}
-            body={findings.body}
-            figures={findings.figures}
-            recommendations={findings.recommendations}
-          />
-        ) : null}
+            {analysable ? (
+              <CoverageFindings
+                title={
+                  metric === 'snr'
+                    ? t('pages:coverage.findingsTitleSnr')
+                    : t('pages:coverage.findingsTitleRssi')
+                }
+                state={findings.state}
+                headline={findings.headline}
+                body={findings.body}
+                figures={findings.figures}
+                recommendations={findings.recommendations}
+              />
+            ) : null}
+          </>
+        )}
       </div>
     </div>
   );
-}
-
-/** The request field for one AP; absent, not empty, means every AP. */
-function apField(bssid: string) {
-  return bssid === '' ? {} : { bssid };
-}
-
-/** One heatmap request, shared by the map on screen and the heard-AP list. */
-function heatmapOptions(
-  surveyId: string | undefined,
-  metric: Metric,
-  floorId: string,
-  bssid: string,
-) {
-  return {
-    queryKey: ['heatmap', surveyId, metric, floorId, bssid],
-    queryFn: () =>
-      surveyClient.getHeatmap({ surveyId: surveyId ?? '', metric, floorId, ...apField(bssid) }),
-    enabled: surveyId !== undefined,
-  };
 }
 
 interface SurfaceState {

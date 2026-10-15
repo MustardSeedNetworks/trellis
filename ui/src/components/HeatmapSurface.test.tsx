@@ -104,7 +104,7 @@ describe('HeatmapSurface', () => {
     fireEvent.mouseMove(image, { clientX: 250, clientY: 150 });
     expect(screen.getByTestId('heatmap-readout')).toHaveTextContent('-65.0 dBm');
 
-    fireEvent.mouseLeave(image);
+    fireEvent.mouseLeave(screen.getByTestId('heatmap-frame'));
     expect(screen.getByTestId('heatmap-readout')).toHaveTextContent('Point at the surface');
   });
 
@@ -120,7 +120,7 @@ describe('HeatmapSurface', () => {
     fireEvent.click(screen.getByTestId('zoom-in'));
     expect(viewport).toHaveAttribute('data-zoom', '1.5');
     expect(screen.getByTestId('zoom-level')).toHaveTextContent('150%');
-    expect(screen.getByTestId('heatmap-image')).toHaveStyle({ width: '150%' });
+    expect(screen.getByTestId('heatmap-frame')).toHaveStyle({ width: '150%' });
 
     fireEvent.click(screen.getByTestId('zoom-reset'));
     expect(viewport).toHaveAttribute('data-zoom', '1');
@@ -191,5 +191,13 @@ describe('HeatmapSurface', () => {
     fireEvent.mouseMove(image, { clientX: 250, clientY: 150 });
 
     expect(screen.getByTestId('heatmap-readout')).toHaveTextContent('Point at the surface');
+  });
+
+  it('draws an overlay inside the zoomed frame, so it scales with the image', () => {
+    renderSurface({ overlay: <svg data-testid="overlay" /> });
+    fireEvent.click(screen.getByTestId('zoom-in'));
+    const frame = screen.getByTestId('heatmap-frame');
+    expect(frame).toContainElement(screen.getByTestId('overlay'));
+    expect(frame).toHaveStyle({ width: '125%' });
   });
 });
