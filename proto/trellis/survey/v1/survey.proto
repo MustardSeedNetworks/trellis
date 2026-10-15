@@ -157,6 +157,22 @@ service SurveyService {
   // ListFloors is polled while a survey is walked. A client fetches the image
   // once and the list stays light.
   rpc GetFloorPlanImage(GetFloorPlanImageRequest) returns (GetFloorPlanImageResponse);
+
+  // The APs placed on a floor's plan, imported or placed by hand. They are what
+  // the predicted map is drawn from.
+  rpc ListAPPlacements(ListAPPlacementsRequest) returns (ListAPPlacementsResponse);
+
+  // CreateAPPlacement places an AP on a floor by hand. Planning a floor nobody
+  // has walked starts here: until now a placement existed only if an importer
+  // wrote it.
+  rpc CreateAPPlacement(CreateAPPlacementRequest) returns (CreateAPPlacementResponse);
+
+  // UpdateAPPlacement moves a placed AP or changes its label, power or band.
+  // The BSSID an importer recorded is kept.
+  rpc UpdateAPPlacement(UpdateAPPlacementRequest) returns (UpdateAPPlacementResponse);
+
+  // DeleteAPPlacement removes a placed AP from its floor.
+  rpc DeleteAPPlacement(DeleteAPPlacementRequest) returns (DeleteAPPlacementResponse);
 }
 
 
@@ -572,6 +588,81 @@ message GetFloorPlanImageResponse {
   bytes image = 1;
   int32 width = 2;
   int32 height = 3;
+}
+
+// APPlacement is an access point placed on a floor's plan.
+message APPlacement {
+  string id = 1;
+  // A pixel of the floor's plan.
+  int32 x = 2;
+  int32 y = 3;
+  string label = 4;
+  // Recorded by an importer; empty on an AP placed by hand.
+  string bssid = 5;
+  // Absent when not stated, which the prediction reads as the 10 dBm default.
+  // Distinct from 0 dBm.
+  optional double tx_power_dbm = 6;
+  // "2.4 GHz", "5 GHz" or "6 GHz"; empty when not stated, which the
+  // prediction draws on every band.
+  string band = 7;
+  bool imported = 8;
+}
+
+// What an operator sets on a placed AP. The position must be a pixel of the
+// floor's plan, so a floor with no plan is refused with FAILED_PRECONDITION; a
+// position off the plan, an unknown band or a power outside -10..36 dBm is
+// INVALID_ARGUMENT.
+message APPlacementEdit {
+  int32 x = 1;
+  int32 y = 2;
+  string label = 3;
+  optional double tx_power_dbm = 4;
+  string band = 5;
+}
+
+message ListAPPlacementsRequest {
+  string survey_id = 1;
+  // Empty means the survey's active floor.
+  string floor_id = 2;
+}
+
+message ListAPPlacementsResponse {
+  repeated APPlacement placements = 1;
+}
+
+message CreateAPPlacementRequest {
+  string survey_id = 1;
+  // Empty means the survey's active floor.
+  string floor_id = 2;
+  APPlacementEdit placement = 3;
+}
+
+message CreateAPPlacementResponse {
+  APPlacement placement = 1;
+}
+
+message UpdateAPPlacementRequest {
+  string survey_id = 1;
+  // Empty means the survey's active floor.
+  string floor_id = 2;
+  string placement_id = 3;
+  APPlacementEdit placement = 4;
+}
+
+message UpdateAPPlacementResponse {
+  APPlacement placement = 1;
+}
+
+message DeleteAPPlacementRequest {
+  string survey_id = 1;
+  // Empty means the survey's active floor.
+  string floor_id = 2;
+  string placement_id = 3;
+}
+
+// The placements that remain, so a caller redraws from the reply.
+message DeleteAPPlacementResponse {
+  repeated APPlacement placements = 1;
 }
 
 message SetFloorPlanRequest {

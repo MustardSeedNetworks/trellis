@@ -125,6 +125,18 @@ const (
 	// SurveyServiceGetFloorPlanImageProcedure is the fully-qualified name of the SurveyService's
 	// GetFloorPlanImage RPC.
 	SurveyServiceGetFloorPlanImageProcedure = "/trellis.survey.v1.SurveyService/GetFloorPlanImage"
+	// SurveyServiceListAPPlacementsProcedure is the fully-qualified name of the SurveyService's
+	// ListAPPlacements RPC.
+	SurveyServiceListAPPlacementsProcedure = "/trellis.survey.v1.SurveyService/ListAPPlacements"
+	// SurveyServiceCreateAPPlacementProcedure is the fully-qualified name of the SurveyService's
+	// CreateAPPlacement RPC.
+	SurveyServiceCreateAPPlacementProcedure = "/trellis.survey.v1.SurveyService/CreateAPPlacement"
+	// SurveyServiceUpdateAPPlacementProcedure is the fully-qualified name of the SurveyService's
+	// UpdateAPPlacement RPC.
+	SurveyServiceUpdateAPPlacementProcedure = "/trellis.survey.v1.SurveyService/UpdateAPPlacement"
+	// SurveyServiceDeleteAPPlacementProcedure is the fully-qualified name of the SurveyService's
+	// DeleteAPPlacement RPC.
+	SurveyServiceDeleteAPPlacementProcedure = "/trellis.survey.v1.SurveyService/DeleteAPPlacement"
 )
 
 // SurveyServiceClient is a client for the trellis.survey.v1.SurveyService service.
@@ -241,6 +253,18 @@ type SurveyServiceClient interface {
 	// ListFloors is polled while a survey is walked. A client fetches the image
 	// once and the list stays light.
 	GetFloorPlanImage(context.Context, *connect.Request[v1.GetFloorPlanImageRequest]) (*connect.Response[v1.GetFloorPlanImageResponse], error)
+	// The APs placed on a floor's plan, imported or placed by hand. They are what
+	// the predicted map is drawn from.
+	ListAPPlacements(context.Context, *connect.Request[v1.ListAPPlacementsRequest]) (*connect.Response[v1.ListAPPlacementsResponse], error)
+	// CreateAPPlacement places an AP on a floor by hand. Planning a floor nobody
+	// has walked starts here: until now a placement existed only if an importer
+	// wrote it.
+	CreateAPPlacement(context.Context, *connect.Request[v1.CreateAPPlacementRequest]) (*connect.Response[v1.CreateAPPlacementResponse], error)
+	// UpdateAPPlacement moves a placed AP or changes its label, power or band.
+	// The BSSID an importer recorded is kept.
+	UpdateAPPlacement(context.Context, *connect.Request[v1.UpdateAPPlacementRequest]) (*connect.Response[v1.UpdateAPPlacementResponse], error)
+	// DeleteAPPlacement removes a placed AP from its floor.
+	DeleteAPPlacement(context.Context, *connect.Request[v1.DeleteAPPlacementRequest]) (*connect.Response[v1.DeleteAPPlacementResponse], error)
 }
 
 // NewSurveyServiceClient constructs a client for the trellis.survey.v1.SurveyService service. By
@@ -428,6 +452,30 @@ func NewSurveyServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(surveyServiceMethods.ByName("GetFloorPlanImage")),
 			connect.WithClientOptions(opts...),
 		),
+		listAPPlacements: connect.NewClient[v1.ListAPPlacementsRequest, v1.ListAPPlacementsResponse](
+			httpClient,
+			baseURL+SurveyServiceListAPPlacementsProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("ListAPPlacements")),
+			connect.WithClientOptions(opts...),
+		),
+		createAPPlacement: connect.NewClient[v1.CreateAPPlacementRequest, v1.CreateAPPlacementResponse](
+			httpClient,
+			baseURL+SurveyServiceCreateAPPlacementProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("CreateAPPlacement")),
+			connect.WithClientOptions(opts...),
+		),
+		updateAPPlacement: connect.NewClient[v1.UpdateAPPlacementRequest, v1.UpdateAPPlacementResponse](
+			httpClient,
+			baseURL+SurveyServiceUpdateAPPlacementProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("UpdateAPPlacement")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteAPPlacement: connect.NewClient[v1.DeleteAPPlacementRequest, v1.DeleteAPPlacementResponse](
+			httpClient,
+			baseURL+SurveyServiceDeleteAPPlacementProcedure,
+			connect.WithSchema(surveyServiceMethods.ByName("DeleteAPPlacement")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -462,6 +510,10 @@ type surveyServiceClient struct {
 	setFloorPlan           *connect.Client[v1.SetFloorPlanRequest, v1.SetFloorPlanResponse]
 	calibrateFloorPlan     *connect.Client[v1.CalibrateFloorPlanRequest, v1.CalibrateFloorPlanResponse]
 	getFloorPlanImage      *connect.Client[v1.GetFloorPlanImageRequest, v1.GetFloorPlanImageResponse]
+	listAPPlacements       *connect.Client[v1.ListAPPlacementsRequest, v1.ListAPPlacementsResponse]
+	createAPPlacement      *connect.Client[v1.CreateAPPlacementRequest, v1.CreateAPPlacementResponse]
+	updateAPPlacement      *connect.Client[v1.UpdateAPPlacementRequest, v1.UpdateAPPlacementResponse]
+	deleteAPPlacement      *connect.Client[v1.DeleteAPPlacementRequest, v1.DeleteAPPlacementResponse]
 }
 
 // ImportAirMapper calls trellis.survey.v1.SurveyService.ImportAirMapper.
@@ -609,6 +661,26 @@ func (c *surveyServiceClient) GetFloorPlanImage(ctx context.Context, req *connec
 	return c.getFloorPlanImage.CallUnary(ctx, req)
 }
 
+// ListAPPlacements calls trellis.survey.v1.SurveyService.ListAPPlacements.
+func (c *surveyServiceClient) ListAPPlacements(ctx context.Context, req *connect.Request[v1.ListAPPlacementsRequest]) (*connect.Response[v1.ListAPPlacementsResponse], error) {
+	return c.listAPPlacements.CallUnary(ctx, req)
+}
+
+// CreateAPPlacement calls trellis.survey.v1.SurveyService.CreateAPPlacement.
+func (c *surveyServiceClient) CreateAPPlacement(ctx context.Context, req *connect.Request[v1.CreateAPPlacementRequest]) (*connect.Response[v1.CreateAPPlacementResponse], error) {
+	return c.createAPPlacement.CallUnary(ctx, req)
+}
+
+// UpdateAPPlacement calls trellis.survey.v1.SurveyService.UpdateAPPlacement.
+func (c *surveyServiceClient) UpdateAPPlacement(ctx context.Context, req *connect.Request[v1.UpdateAPPlacementRequest]) (*connect.Response[v1.UpdateAPPlacementResponse], error) {
+	return c.updateAPPlacement.CallUnary(ctx, req)
+}
+
+// DeleteAPPlacement calls trellis.survey.v1.SurveyService.DeleteAPPlacement.
+func (c *surveyServiceClient) DeleteAPPlacement(ctx context.Context, req *connect.Request[v1.DeleteAPPlacementRequest]) (*connect.Response[v1.DeleteAPPlacementResponse], error) {
+	return c.deleteAPPlacement.CallUnary(ctx, req)
+}
+
 // SurveyServiceHandler is an implementation of the trellis.survey.v1.SurveyService service.
 type SurveyServiceHandler interface {
 	// ImportAirMapper imports an AirMapper (.amp) archive into a new stored
@@ -723,6 +795,18 @@ type SurveyServiceHandler interface {
 	// ListFloors is polled while a survey is walked. A client fetches the image
 	// once and the list stays light.
 	GetFloorPlanImage(context.Context, *connect.Request[v1.GetFloorPlanImageRequest]) (*connect.Response[v1.GetFloorPlanImageResponse], error)
+	// The APs placed on a floor's plan, imported or placed by hand. They are what
+	// the predicted map is drawn from.
+	ListAPPlacements(context.Context, *connect.Request[v1.ListAPPlacementsRequest]) (*connect.Response[v1.ListAPPlacementsResponse], error)
+	// CreateAPPlacement places an AP on a floor by hand. Planning a floor nobody
+	// has walked starts here: until now a placement existed only if an importer
+	// wrote it.
+	CreateAPPlacement(context.Context, *connect.Request[v1.CreateAPPlacementRequest]) (*connect.Response[v1.CreateAPPlacementResponse], error)
+	// UpdateAPPlacement moves a placed AP or changes its label, power or band.
+	// The BSSID an importer recorded is kept.
+	UpdateAPPlacement(context.Context, *connect.Request[v1.UpdateAPPlacementRequest]) (*connect.Response[v1.UpdateAPPlacementResponse], error)
+	// DeleteAPPlacement removes a placed AP from its floor.
+	DeleteAPPlacement(context.Context, *connect.Request[v1.DeleteAPPlacementRequest]) (*connect.Response[v1.DeleteAPPlacementResponse], error)
 }
 
 // NewSurveyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -906,6 +990,30 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(surveyServiceMethods.ByName("GetFloorPlanImage")),
 		connect.WithHandlerOptions(opts...),
 	)
+	surveyServiceListAPPlacementsHandler := connect.NewUnaryHandler(
+		SurveyServiceListAPPlacementsProcedure,
+		svc.ListAPPlacements,
+		connect.WithSchema(surveyServiceMethods.ByName("ListAPPlacements")),
+		connect.WithHandlerOptions(opts...),
+	)
+	surveyServiceCreateAPPlacementHandler := connect.NewUnaryHandler(
+		SurveyServiceCreateAPPlacementProcedure,
+		svc.CreateAPPlacement,
+		connect.WithSchema(surveyServiceMethods.ByName("CreateAPPlacement")),
+		connect.WithHandlerOptions(opts...),
+	)
+	surveyServiceUpdateAPPlacementHandler := connect.NewUnaryHandler(
+		SurveyServiceUpdateAPPlacementProcedure,
+		svc.UpdateAPPlacement,
+		connect.WithSchema(surveyServiceMethods.ByName("UpdateAPPlacement")),
+		connect.WithHandlerOptions(opts...),
+	)
+	surveyServiceDeleteAPPlacementHandler := connect.NewUnaryHandler(
+		SurveyServiceDeleteAPPlacementProcedure,
+		svc.DeleteAPPlacement,
+		connect.WithSchema(surveyServiceMethods.ByName("DeleteAPPlacement")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/trellis.survey.v1.SurveyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case SurveyServiceImportAirMapperProcedure:
@@ -966,6 +1074,14 @@ func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOp
 			surveyServiceCalibrateFloorPlanHandler.ServeHTTP(w, r)
 		case SurveyServiceGetFloorPlanImageProcedure:
 			surveyServiceGetFloorPlanImageHandler.ServeHTTP(w, r)
+		case SurveyServiceListAPPlacementsProcedure:
+			surveyServiceListAPPlacementsHandler.ServeHTTP(w, r)
+		case SurveyServiceCreateAPPlacementProcedure:
+			surveyServiceCreateAPPlacementHandler.ServeHTTP(w, r)
+		case SurveyServiceUpdateAPPlacementProcedure:
+			surveyServiceUpdateAPPlacementHandler.ServeHTTP(w, r)
+		case SurveyServiceDeleteAPPlacementProcedure:
+			surveyServiceDeleteAPPlacementHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -1089,4 +1205,20 @@ func (UnimplementedSurveyServiceHandler) CalibrateFloorPlan(context.Context, *co
 
 func (UnimplementedSurveyServiceHandler) GetFloorPlanImage(context.Context, *connect.Request[v1.GetFloorPlanImageRequest]) (*connect.Response[v1.GetFloorPlanImageResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.GetFloorPlanImage is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) ListAPPlacements(context.Context, *connect.Request[v1.ListAPPlacementsRequest]) (*connect.Response[v1.ListAPPlacementsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.ListAPPlacements is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) CreateAPPlacement(context.Context, *connect.Request[v1.CreateAPPlacementRequest]) (*connect.Response[v1.CreateAPPlacementResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.CreateAPPlacement is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) UpdateAPPlacement(context.Context, *connect.Request[v1.UpdateAPPlacementRequest]) (*connect.Response[v1.UpdateAPPlacementResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.UpdateAPPlacement is not implemented"))
+}
+
+func (UnimplementedSurveyServiceHandler) DeleteAPPlacement(context.Context, *connect.Request[v1.DeleteAPPlacementRequest]) (*connect.Response[v1.DeleteAPPlacementResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.DeleteAPPlacement is not implemented"))
 }

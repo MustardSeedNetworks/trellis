@@ -2877,6 +2877,614 @@ func (x *GetFloorPlanImageResponse) GetHeight() int32 {
 	return 0
 }
 
+// APPlacement is an access point placed on a floor's plan.
+type APPlacement struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// A pixel of the floor's plan.
+	X     int32  `protobuf:"varint,2,opt,name=x,proto3" json:"x,omitempty"`
+	Y     int32  `protobuf:"varint,3,opt,name=y,proto3" json:"y,omitempty"`
+	Label string `protobuf:"bytes,4,opt,name=label,proto3" json:"label,omitempty"`
+	// Recorded by an importer; empty on an AP placed by hand.
+	Bssid string `protobuf:"bytes,5,opt,name=bssid,proto3" json:"bssid,omitempty"`
+	// Absent when not stated, which the prediction reads as the 10 dBm default.
+	// Distinct from 0 dBm.
+	TxPowerDbm *float64 `protobuf:"fixed64,6,opt,name=tx_power_dbm,json=txPowerDbm,proto3,oneof" json:"tx_power_dbm,omitempty"`
+	// "2.4 GHz", "5 GHz" or "6 GHz"; empty when not stated, which the
+	// prediction draws on every band.
+	Band          string `protobuf:"bytes,7,opt,name=band,proto3" json:"band,omitempty"`
+	Imported      bool   `protobuf:"varint,8,opt,name=imported,proto3" json:"imported,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *APPlacement) Reset() {
+	*x = APPlacement{}
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[46]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *APPlacement) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*APPlacement) ProtoMessage() {}
+
+func (x *APPlacement) ProtoReflect() protoreflect.Message {
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[46]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use APPlacement.ProtoReflect.Descriptor instead.
+func (*APPlacement) Descriptor() ([]byte, []int) {
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{46}
+}
+
+func (x *APPlacement) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *APPlacement) GetX() int32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *APPlacement) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *APPlacement) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *APPlacement) GetBssid() string {
+	if x != nil {
+		return x.Bssid
+	}
+	return ""
+}
+
+func (x *APPlacement) GetTxPowerDbm() float64 {
+	if x != nil && x.TxPowerDbm != nil {
+		return *x.TxPowerDbm
+	}
+	return 0
+}
+
+func (x *APPlacement) GetBand() string {
+	if x != nil {
+		return x.Band
+	}
+	return ""
+}
+
+func (x *APPlacement) GetImported() bool {
+	if x != nil {
+		return x.Imported
+	}
+	return false
+}
+
+// What an operator sets on a placed AP. The position must be a pixel of the
+// floor's plan, so a floor with no plan is refused with FAILED_PRECONDITION; a
+// position off the plan, an unknown band or a power outside -10..36 dBm is
+// INVALID_ARGUMENT.
+type APPlacementEdit struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	X             int32                  `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
+	Y             int32                  `protobuf:"varint,2,opt,name=y,proto3" json:"y,omitempty"`
+	Label         string                 `protobuf:"bytes,3,opt,name=label,proto3" json:"label,omitempty"`
+	TxPowerDbm    *float64               `protobuf:"fixed64,4,opt,name=tx_power_dbm,json=txPowerDbm,proto3,oneof" json:"tx_power_dbm,omitempty"`
+	Band          string                 `protobuf:"bytes,5,opt,name=band,proto3" json:"band,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *APPlacementEdit) Reset() {
+	*x = APPlacementEdit{}
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[47]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *APPlacementEdit) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*APPlacementEdit) ProtoMessage() {}
+
+func (x *APPlacementEdit) ProtoReflect() protoreflect.Message {
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[47]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use APPlacementEdit.ProtoReflect.Descriptor instead.
+func (*APPlacementEdit) Descriptor() ([]byte, []int) {
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{47}
+}
+
+func (x *APPlacementEdit) GetX() int32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *APPlacementEdit) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *APPlacementEdit) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *APPlacementEdit) GetTxPowerDbm() float64 {
+	if x != nil && x.TxPowerDbm != nil {
+		return *x.TxPowerDbm
+	}
+	return 0
+}
+
+func (x *APPlacementEdit) GetBand() string {
+	if x != nil {
+		return x.Band
+	}
+	return ""
+}
+
+type ListAPPlacementsRequest struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	SurveyId string                 `protobuf:"bytes,1,opt,name=survey_id,json=surveyId,proto3" json:"survey_id,omitempty"`
+	// Empty means the survey's active floor.
+	FloorId       string `protobuf:"bytes,2,opt,name=floor_id,json=floorId,proto3" json:"floor_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAPPlacementsRequest) Reset() {
+	*x = ListAPPlacementsRequest{}
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[48]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAPPlacementsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAPPlacementsRequest) ProtoMessage() {}
+
+func (x *ListAPPlacementsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[48]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAPPlacementsRequest.ProtoReflect.Descriptor instead.
+func (*ListAPPlacementsRequest) Descriptor() ([]byte, []int) {
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{48}
+}
+
+func (x *ListAPPlacementsRequest) GetSurveyId() string {
+	if x != nil {
+		return x.SurveyId
+	}
+	return ""
+}
+
+func (x *ListAPPlacementsRequest) GetFloorId() string {
+	if x != nil {
+		return x.FloorId
+	}
+	return ""
+}
+
+type ListAPPlacementsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Placements    []*APPlacement         `protobuf:"bytes,1,rep,name=placements,proto3" json:"placements,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAPPlacementsResponse) Reset() {
+	*x = ListAPPlacementsResponse{}
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[49]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAPPlacementsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAPPlacementsResponse) ProtoMessage() {}
+
+func (x *ListAPPlacementsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[49]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAPPlacementsResponse.ProtoReflect.Descriptor instead.
+func (*ListAPPlacementsResponse) Descriptor() ([]byte, []int) {
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{49}
+}
+
+func (x *ListAPPlacementsResponse) GetPlacements() []*APPlacement {
+	if x != nil {
+		return x.Placements
+	}
+	return nil
+}
+
+type CreateAPPlacementRequest struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	SurveyId string                 `protobuf:"bytes,1,opt,name=survey_id,json=surveyId,proto3" json:"survey_id,omitempty"`
+	// Empty means the survey's active floor.
+	FloorId       string           `protobuf:"bytes,2,opt,name=floor_id,json=floorId,proto3" json:"floor_id,omitempty"`
+	Placement     *APPlacementEdit `protobuf:"bytes,3,opt,name=placement,proto3" json:"placement,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateAPPlacementRequest) Reset() {
+	*x = CreateAPPlacementRequest{}
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[50]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateAPPlacementRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateAPPlacementRequest) ProtoMessage() {}
+
+func (x *CreateAPPlacementRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[50]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateAPPlacementRequest.ProtoReflect.Descriptor instead.
+func (*CreateAPPlacementRequest) Descriptor() ([]byte, []int) {
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{50}
+}
+
+func (x *CreateAPPlacementRequest) GetSurveyId() string {
+	if x != nil {
+		return x.SurveyId
+	}
+	return ""
+}
+
+func (x *CreateAPPlacementRequest) GetFloorId() string {
+	if x != nil {
+		return x.FloorId
+	}
+	return ""
+}
+
+func (x *CreateAPPlacementRequest) GetPlacement() *APPlacementEdit {
+	if x != nil {
+		return x.Placement
+	}
+	return nil
+}
+
+type CreateAPPlacementResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Placement     *APPlacement           `protobuf:"bytes,1,opt,name=placement,proto3" json:"placement,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateAPPlacementResponse) Reset() {
+	*x = CreateAPPlacementResponse{}
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[51]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateAPPlacementResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateAPPlacementResponse) ProtoMessage() {}
+
+func (x *CreateAPPlacementResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[51]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateAPPlacementResponse.ProtoReflect.Descriptor instead.
+func (*CreateAPPlacementResponse) Descriptor() ([]byte, []int) {
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{51}
+}
+
+func (x *CreateAPPlacementResponse) GetPlacement() *APPlacement {
+	if x != nil {
+		return x.Placement
+	}
+	return nil
+}
+
+type UpdateAPPlacementRequest struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	SurveyId string                 `protobuf:"bytes,1,opt,name=survey_id,json=surveyId,proto3" json:"survey_id,omitempty"`
+	// Empty means the survey's active floor.
+	FloorId       string           `protobuf:"bytes,2,opt,name=floor_id,json=floorId,proto3" json:"floor_id,omitempty"`
+	PlacementId   string           `protobuf:"bytes,3,opt,name=placement_id,json=placementId,proto3" json:"placement_id,omitempty"`
+	Placement     *APPlacementEdit `protobuf:"bytes,4,opt,name=placement,proto3" json:"placement,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateAPPlacementRequest) Reset() {
+	*x = UpdateAPPlacementRequest{}
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[52]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateAPPlacementRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateAPPlacementRequest) ProtoMessage() {}
+
+func (x *UpdateAPPlacementRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[52]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateAPPlacementRequest.ProtoReflect.Descriptor instead.
+func (*UpdateAPPlacementRequest) Descriptor() ([]byte, []int) {
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{52}
+}
+
+func (x *UpdateAPPlacementRequest) GetSurveyId() string {
+	if x != nil {
+		return x.SurveyId
+	}
+	return ""
+}
+
+func (x *UpdateAPPlacementRequest) GetFloorId() string {
+	if x != nil {
+		return x.FloorId
+	}
+	return ""
+}
+
+func (x *UpdateAPPlacementRequest) GetPlacementId() string {
+	if x != nil {
+		return x.PlacementId
+	}
+	return ""
+}
+
+func (x *UpdateAPPlacementRequest) GetPlacement() *APPlacementEdit {
+	if x != nil {
+		return x.Placement
+	}
+	return nil
+}
+
+type UpdateAPPlacementResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Placement     *APPlacement           `protobuf:"bytes,1,opt,name=placement,proto3" json:"placement,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateAPPlacementResponse) Reset() {
+	*x = UpdateAPPlacementResponse{}
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateAPPlacementResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateAPPlacementResponse) ProtoMessage() {}
+
+func (x *UpdateAPPlacementResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateAPPlacementResponse.ProtoReflect.Descriptor instead.
+func (*UpdateAPPlacementResponse) Descriptor() ([]byte, []int) {
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *UpdateAPPlacementResponse) GetPlacement() *APPlacement {
+	if x != nil {
+		return x.Placement
+	}
+	return nil
+}
+
+type DeleteAPPlacementRequest struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	SurveyId string                 `protobuf:"bytes,1,opt,name=survey_id,json=surveyId,proto3" json:"survey_id,omitempty"`
+	// Empty means the survey's active floor.
+	FloorId       string `protobuf:"bytes,2,opt,name=floor_id,json=floorId,proto3" json:"floor_id,omitempty"`
+	PlacementId   string `protobuf:"bytes,3,opt,name=placement_id,json=placementId,proto3" json:"placement_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteAPPlacementRequest) Reset() {
+	*x = DeleteAPPlacementRequest{}
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[54]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteAPPlacementRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteAPPlacementRequest) ProtoMessage() {}
+
+func (x *DeleteAPPlacementRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[54]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteAPPlacementRequest.ProtoReflect.Descriptor instead.
+func (*DeleteAPPlacementRequest) Descriptor() ([]byte, []int) {
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{54}
+}
+
+func (x *DeleteAPPlacementRequest) GetSurveyId() string {
+	if x != nil {
+		return x.SurveyId
+	}
+	return ""
+}
+
+func (x *DeleteAPPlacementRequest) GetFloorId() string {
+	if x != nil {
+		return x.FloorId
+	}
+	return ""
+}
+
+func (x *DeleteAPPlacementRequest) GetPlacementId() string {
+	if x != nil {
+		return x.PlacementId
+	}
+	return ""
+}
+
+// The placements that remain, so a caller redraws from the reply.
+type DeleteAPPlacementResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Placements    []*APPlacement         `protobuf:"bytes,1,rep,name=placements,proto3" json:"placements,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteAPPlacementResponse) Reset() {
+	*x = DeleteAPPlacementResponse{}
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[55]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteAPPlacementResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteAPPlacementResponse) ProtoMessage() {}
+
+func (x *DeleteAPPlacementResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[55]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteAPPlacementResponse.ProtoReflect.Descriptor instead.
+func (*DeleteAPPlacementResponse) Descriptor() ([]byte, []int) {
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{55}
+}
+
+func (x *DeleteAPPlacementResponse) GetPlacements() []*APPlacement {
+	if x != nil {
+		return x.Placements
+	}
+	return nil
+}
+
 type SetFloorPlanRequest struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	SurveyId string                 `protobuf:"bytes,1,opt,name=survey_id,json=surveyId,proto3" json:"survey_id,omitempty"`
@@ -2892,7 +3500,7 @@ type SetFloorPlanRequest struct {
 
 func (x *SetFloorPlanRequest) Reset() {
 	*x = SetFloorPlanRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[46]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2904,7 +3512,7 @@ func (x *SetFloorPlanRequest) String() string {
 func (*SetFloorPlanRequest) ProtoMessage() {}
 
 func (x *SetFloorPlanRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[46]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2917,7 +3525,7 @@ func (x *SetFloorPlanRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetFloorPlanRequest.ProtoReflect.Descriptor instead.
 func (*SetFloorPlanRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{46}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *SetFloorPlanRequest) GetSurveyId() string {
@@ -2950,7 +3558,7 @@ type SetFloorPlanResponse struct {
 
 func (x *SetFloorPlanResponse) Reset() {
 	*x = SetFloorPlanResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[47]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2962,7 +3570,7 @@ func (x *SetFloorPlanResponse) String() string {
 func (*SetFloorPlanResponse) ProtoMessage() {}
 
 func (x *SetFloorPlanResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[47]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2975,7 +3583,7 @@ func (x *SetFloorPlanResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetFloorPlanResponse.ProtoReflect.Descriptor instead.
 func (*SetFloorPlanResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{47}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *SetFloorPlanResponse) GetFloor() *Floor {
@@ -3002,7 +3610,7 @@ type CalibrateFloorPlanRequest struct {
 
 func (x *CalibrateFloorPlanRequest) Reset() {
 	*x = CalibrateFloorPlanRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[48]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3014,7 +3622,7 @@ func (x *CalibrateFloorPlanRequest) String() string {
 func (*CalibrateFloorPlanRequest) ProtoMessage() {}
 
 func (x *CalibrateFloorPlanRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[48]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3027,7 +3635,7 @@ func (x *CalibrateFloorPlanRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CalibrateFloorPlanRequest.ProtoReflect.Descriptor instead.
 func (*CalibrateFloorPlanRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{48}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *CalibrateFloorPlanRequest) GetSurveyId() string {
@@ -3088,7 +3696,7 @@ type CalibrateFloorPlanResponse struct {
 
 func (x *CalibrateFloorPlanResponse) Reset() {
 	*x = CalibrateFloorPlanResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[49]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3100,7 +3708,7 @@ func (x *CalibrateFloorPlanResponse) String() string {
 func (*CalibrateFloorPlanResponse) ProtoMessage() {}
 
 func (x *CalibrateFloorPlanResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[49]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3113,7 +3721,7 @@ func (x *CalibrateFloorPlanResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CalibrateFloorPlanResponse.ProtoReflect.Descriptor instead.
 func (*CalibrateFloorPlanResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{49}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *CalibrateFloorPlanResponse) GetFloor() *Floor {
@@ -3135,7 +3743,7 @@ type MeasureThroughputRequest struct {
 
 func (x *MeasureThroughputRequest) Reset() {
 	*x = MeasureThroughputRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[50]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3147,7 +3755,7 @@ func (x *MeasureThroughputRequest) String() string {
 func (*MeasureThroughputRequest) ProtoMessage() {}
 
 func (x *MeasureThroughputRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[50]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3160,7 +3768,7 @@ func (x *MeasureThroughputRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MeasureThroughputRequest.ProtoReflect.Descriptor instead.
 func (*MeasureThroughputRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{50}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *MeasureThroughputRequest) GetSurveyId() string {
@@ -3193,7 +3801,7 @@ type MeasureThroughputResponse struct {
 
 func (x *MeasureThroughputResponse) Reset() {
 	*x = MeasureThroughputResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[51]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3205,7 +3813,7 @@ func (x *MeasureThroughputResponse) String() string {
 func (*MeasureThroughputResponse) ProtoMessage() {}
 
 func (x *MeasureThroughputResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[51]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3218,7 +3826,7 @@ func (x *MeasureThroughputResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MeasureThroughputResponse.ProtoReflect.Descriptor instead.
 func (*MeasureThroughputResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{51}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *MeasureThroughputResponse) GetReading() *ThroughputReading {
@@ -3245,7 +3853,7 @@ type ThroughputReading struct {
 
 func (x *ThroughputReading) Reset() {
 	*x = ThroughputReading{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[52]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3257,7 +3865,7 @@ func (x *ThroughputReading) String() string {
 func (*ThroughputReading) ProtoMessage() {}
 
 func (x *ThroughputReading) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[52]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3270,7 +3878,7 @@ func (x *ThroughputReading) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ThroughputReading.ProtoReflect.Descriptor instead.
 func (*ThroughputReading) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{52}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *ThroughputReading) GetDownloadMbps() float64 {
@@ -3321,7 +3929,7 @@ type SetThroughputTargetRequest struct {
 
 func (x *SetThroughputTargetRequest) Reset() {
 	*x = SetThroughputTargetRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[53]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3333,7 +3941,7 @@ func (x *SetThroughputTargetRequest) String() string {
 func (*SetThroughputTargetRequest) ProtoMessage() {}
 
 func (x *SetThroughputTargetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[53]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3346,7 +3954,7 @@ func (x *SetThroughputTargetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetThroughputTargetRequest.ProtoReflect.Descriptor instead.
 func (*SetThroughputTargetRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{53}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *SetThroughputTargetRequest) GetSurveyId() string {
@@ -3379,7 +3987,7 @@ type SetThroughputTargetResponse struct {
 
 func (x *SetThroughputTargetResponse) Reset() {
 	*x = SetThroughputTargetResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[54]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3391,7 +3999,7 @@ func (x *SetThroughputTargetResponse) String() string {
 func (*SetThroughputTargetResponse) ProtoMessage() {}
 
 func (x *SetThroughputTargetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[54]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3404,7 +4012,7 @@ func (x *SetThroughputTargetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetThroughputTargetResponse.ProtoReflect.Descriptor instead.
 func (*SetThroughputTargetResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{54}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *SetThroughputTargetResponse) GetSurvey() *SurveySummary {
@@ -3427,7 +4035,7 @@ type StartContinuousCaptureRequest struct {
 
 func (x *StartContinuousCaptureRequest) Reset() {
 	*x = StartContinuousCaptureRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[55]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3439,7 +4047,7 @@ func (x *StartContinuousCaptureRequest) String() string {
 func (*StartContinuousCaptureRequest) ProtoMessage() {}
 
 func (x *StartContinuousCaptureRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[55]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3452,7 +4060,7 @@ func (x *StartContinuousCaptureRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartContinuousCaptureRequest.ProtoReflect.Descriptor instead.
 func (*StartContinuousCaptureRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{55}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *StartContinuousCaptureRequest) GetSurveyId() string {
@@ -3485,7 +4093,7 @@ type StartContinuousCaptureResponse struct {
 
 func (x *StartContinuousCaptureResponse) Reset() {
 	*x = StartContinuousCaptureResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[56]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3497,7 +4105,7 @@ func (x *StartContinuousCaptureResponse) String() string {
 func (*StartContinuousCaptureResponse) ProtoMessage() {}
 
 func (x *StartContinuousCaptureResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[56]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3510,7 +4118,7 @@ func (x *StartContinuousCaptureResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartContinuousCaptureResponse.ProtoReflect.Descriptor instead.
 func (*StartContinuousCaptureResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{56}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *StartContinuousCaptureResponse) GetCapture() *CaptureStatus {
@@ -3529,7 +4137,7 @@ type StopContinuousCaptureRequest struct {
 
 func (x *StopContinuousCaptureRequest) Reset() {
 	*x = StopContinuousCaptureRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[57]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3541,7 +4149,7 @@ func (x *StopContinuousCaptureRequest) String() string {
 func (*StopContinuousCaptureRequest) ProtoMessage() {}
 
 func (x *StopContinuousCaptureRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[57]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3554,7 +4162,7 @@ func (x *StopContinuousCaptureRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StopContinuousCaptureRequest.ProtoReflect.Descriptor instead.
 func (*StopContinuousCaptureRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{57}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{67}
 }
 
 func (x *StopContinuousCaptureRequest) GetSurveyId() string {
@@ -3572,7 +4180,7 @@ type StopContinuousCaptureResponse struct {
 
 func (x *StopContinuousCaptureResponse) Reset() {
 	*x = StopContinuousCaptureResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[58]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3584,7 +4192,7 @@ func (x *StopContinuousCaptureResponse) String() string {
 func (*StopContinuousCaptureResponse) ProtoMessage() {}
 
 func (x *StopContinuousCaptureResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[58]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3597,7 +4205,7 @@ func (x *StopContinuousCaptureResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StopContinuousCaptureResponse.ProtoReflect.Descriptor instead.
 func (*StopContinuousCaptureResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{58}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{68}
 }
 
 // CaptureStatus is a survey's continuous capture as it stands, so a client that
@@ -3617,7 +4225,7 @@ type CaptureStatus struct {
 
 func (x *CaptureStatus) Reset() {
 	*x = CaptureStatus{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[59]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3629,7 +4237,7 @@ func (x *CaptureStatus) String() string {
 func (*CaptureStatus) ProtoMessage() {}
 
 func (x *CaptureStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[59]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3642,7 +4250,7 @@ func (x *CaptureStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CaptureStatus.ProtoReflect.Descriptor instead.
 func (*CaptureStatus) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{59}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *CaptureStatus) GetRunning() bool {
@@ -3681,7 +4289,7 @@ type GetCaptureCapabilityRequest struct {
 
 func (x *GetCaptureCapabilityRequest) Reset() {
 	*x = GetCaptureCapabilityRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[60]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3693,7 +4301,7 @@ func (x *GetCaptureCapabilityRequest) String() string {
 func (*GetCaptureCapabilityRequest) ProtoMessage() {}
 
 func (x *GetCaptureCapabilityRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[60]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3706,7 +4314,7 @@ func (x *GetCaptureCapabilityRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCaptureCapabilityRequest.ProtoReflect.Descriptor instead.
 func (*GetCaptureCapabilityRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{60}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{70}
 }
 
 type GetCaptureCapabilityResponse struct {
@@ -3727,7 +4335,7 @@ type GetCaptureCapabilityResponse struct {
 
 func (x *GetCaptureCapabilityResponse) Reset() {
 	*x = GetCaptureCapabilityResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[61]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3739,7 +4347,7 @@ func (x *GetCaptureCapabilityResponse) String() string {
 func (*GetCaptureCapabilityResponse) ProtoMessage() {}
 
 func (x *GetCaptureCapabilityResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[61]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3752,7 +4360,7 @@ func (x *GetCaptureCapabilityResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCaptureCapabilityResponse.ProtoReflect.Descriptor instead.
 func (*GetCaptureCapabilityResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{61}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{71}
 }
 
 func (x *GetCaptureCapabilityResponse) GetAvailable() bool {
@@ -3784,7 +4392,7 @@ type ScanRequest struct {
 
 func (x *ScanRequest) Reset() {
 	*x = ScanRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[62]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[72]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3796,7 +4404,7 @@ func (x *ScanRequest) String() string {
 func (*ScanRequest) ProtoMessage() {}
 
 func (x *ScanRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[62]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[72]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3809,7 +4417,7 @@ func (x *ScanRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScanRequest.ProtoReflect.Descriptor instead.
 func (*ScanRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{62}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{72}
 }
 
 type ScanResponse struct {
@@ -3825,7 +4433,7 @@ type ScanResponse struct {
 
 func (x *ScanResponse) Reset() {
 	*x = ScanResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[63]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[73]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3837,7 +4445,7 @@ func (x *ScanResponse) String() string {
 func (*ScanResponse) ProtoMessage() {}
 
 func (x *ScanResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[63]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[73]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3850,7 +4458,7 @@ func (x *ScanResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScanResponse.ProtoReflect.Descriptor instead.
 func (*ScanResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{63}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{73}
 }
 
 func (x *ScanResponse) GetNetworks() []*ScannedNetwork {
@@ -3876,7 +4484,7 @@ type ListSamplesRequest struct {
 
 func (x *ListSamplesRequest) Reset() {
 	*x = ListSamplesRequest{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[64]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[74]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3888,7 +4496,7 @@ func (x *ListSamplesRequest) String() string {
 func (*ListSamplesRequest) ProtoMessage() {}
 
 func (x *ListSamplesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[64]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[74]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3901,7 +4509,7 @@ func (x *ListSamplesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSamplesRequest.ProtoReflect.Descriptor instead.
 func (*ListSamplesRequest) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{64}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{74}
 }
 
 func (x *ListSamplesRequest) GetSurveyId() string {
@@ -3920,7 +4528,7 @@ type ListSamplesResponse struct {
 
 func (x *ListSamplesResponse) Reset() {
 	*x = ListSamplesResponse{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[65]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[75]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3932,7 +4540,7 @@ func (x *ListSamplesResponse) String() string {
 func (*ListSamplesResponse) ProtoMessage() {}
 
 func (x *ListSamplesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[65]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[75]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3945,7 +4553,7 @@ func (x *ListSamplesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSamplesResponse.ProtoReflect.Descriptor instead.
 func (*ListSamplesResponse) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{65}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{75}
 }
 
 func (x *ListSamplesResponse) GetSamples() []*SurveySample {
@@ -3991,7 +4599,7 @@ type SurveySample struct {
 
 func (x *SurveySample) Reset() {
 	*x = SurveySample{}
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[66]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[76]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4003,7 +4611,7 @@ func (x *SurveySample) String() string {
 func (*SurveySample) ProtoMessage() {}
 
 func (x *SurveySample) ProtoReflect() protoreflect.Message {
-	mi := &file_trellis_survey_v1_survey_proto_msgTypes[66]
+	mi := &file_trellis_survey_v1_survey_proto_msgTypes[76]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4016,7 +4624,7 @@ func (x *SurveySample) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SurveySample.ProtoReflect.Descriptor instead.
 func (*SurveySample) Descriptor() ([]byte, []int) {
-	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{66}
+	return file_trellis_survey_v1_survey_proto_rawDescGZIP(), []int{76}
 }
 
 func (x *SurveySample) GetX() int32 {
@@ -4275,7 +4883,54 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\x19GetFloorPlanImageResponse\x12\x14\n" +
 	"\x05image\x18\x01 \x01(\fR\x05image\x12\x14\n" +
 	"\x05width\x18\x02 \x01(\x05R\x05width\x12\x16\n" +
-	"\x06height\x18\x03 \x01(\x05R\x06height\"c\n" +
+	"\x06height\x18\x03 \x01(\x05R\x06height\"\xcd\x01\n" +
+	"\vAPPlacement\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\f\n" +
+	"\x01x\x18\x02 \x01(\x05R\x01x\x12\f\n" +
+	"\x01y\x18\x03 \x01(\x05R\x01y\x12\x14\n" +
+	"\x05label\x18\x04 \x01(\tR\x05label\x12\x14\n" +
+	"\x05bssid\x18\x05 \x01(\tR\x05bssid\x12%\n" +
+	"\ftx_power_dbm\x18\x06 \x01(\x01H\x00R\n" +
+	"txPowerDbm\x88\x01\x01\x12\x12\n" +
+	"\x04band\x18\a \x01(\tR\x04band\x12\x1a\n" +
+	"\bimported\x18\b \x01(\bR\bimportedB\x0f\n" +
+	"\r_tx_power_dbm\"\x8f\x01\n" +
+	"\x0fAPPlacementEdit\x12\f\n" +
+	"\x01x\x18\x01 \x01(\x05R\x01x\x12\f\n" +
+	"\x01y\x18\x02 \x01(\x05R\x01y\x12\x14\n" +
+	"\x05label\x18\x03 \x01(\tR\x05label\x12%\n" +
+	"\ftx_power_dbm\x18\x04 \x01(\x01H\x00R\n" +
+	"txPowerDbm\x88\x01\x01\x12\x12\n" +
+	"\x04band\x18\x05 \x01(\tR\x04bandB\x0f\n" +
+	"\r_tx_power_dbm\"Q\n" +
+	"\x17ListAPPlacementsRequest\x12\x1b\n" +
+	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\x12\x19\n" +
+	"\bfloor_id\x18\x02 \x01(\tR\afloorId\"Z\n" +
+	"\x18ListAPPlacementsResponse\x12>\n" +
+	"\n" +
+	"placements\x18\x01 \x03(\v2\x1e.trellis.survey.v1.APPlacementR\n" +
+	"placements\"\x94\x01\n" +
+	"\x18CreateAPPlacementRequest\x12\x1b\n" +
+	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\x12\x19\n" +
+	"\bfloor_id\x18\x02 \x01(\tR\afloorId\x12@\n" +
+	"\tplacement\x18\x03 \x01(\v2\".trellis.survey.v1.APPlacementEditR\tplacement\"Y\n" +
+	"\x19CreateAPPlacementResponse\x12<\n" +
+	"\tplacement\x18\x01 \x01(\v2\x1e.trellis.survey.v1.APPlacementR\tplacement\"\xb7\x01\n" +
+	"\x18UpdateAPPlacementRequest\x12\x1b\n" +
+	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\x12\x19\n" +
+	"\bfloor_id\x18\x02 \x01(\tR\afloorId\x12!\n" +
+	"\fplacement_id\x18\x03 \x01(\tR\vplacementId\x12@\n" +
+	"\tplacement\x18\x04 \x01(\v2\".trellis.survey.v1.APPlacementEditR\tplacement\"Y\n" +
+	"\x19UpdateAPPlacementResponse\x12<\n" +
+	"\tplacement\x18\x01 \x01(\v2\x1e.trellis.survey.v1.APPlacementR\tplacement\"u\n" +
+	"\x18DeleteAPPlacementRequest\x12\x1b\n" +
+	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\x12\x19\n" +
+	"\bfloor_id\x18\x02 \x01(\tR\afloorId\x12!\n" +
+	"\fplacement_id\x18\x03 \x01(\tR\vplacementId\"[\n" +
+	"\x19DeleteAPPlacementResponse\x12>\n" +
+	"\n" +
+	"placements\x18\x01 \x03(\v2\x1e.trellis.survey.v1.APPlacementR\n" +
+	"placements\"c\n" +
 	"\x13SetFloorPlanRequest\x12\x1b\n" +
 	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\x12\x19\n" +
 	"\bfloor_id\x18\x02 \x01(\tR\afloorId\x12\x14\n" +
@@ -4352,7 +5007,7 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\finterpolated\x18\x06 \x01(\bR\finterpolated\x12\x18\n" +
 	"\afailure\x18\b \x01(\tR\afailureB\x10\n" +
 	"\x0e_strongest_dbmB\x10\n" +
-	"\x0e_download_mbps2\xf5\x16\n" +
+	"\x0e_download_mbps2\xb2\x1a\n" +
 	"\rSurveyService\x12h\n" +
 	"\x0fImportAirMapper\x12).trellis.survey.v1.ImportAirMapperRequest\x1a*.trellis.survey.v1.ImportAirMapperResponse\x12h\n" +
 	"\x0fImportAirMagnet\x12).trellis.survey.v1.ImportAirMagnetRequest\x1a*.trellis.survey.v1.ImportAirMagnetResponse\x12\\\n" +
@@ -4384,7 +5039,11 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\x13SetThroughputTarget\x12-.trellis.survey.v1.SetThroughputTargetRequest\x1a..trellis.survey.v1.SetThroughputTargetResponse\x12_\n" +
 	"\fSetFloorPlan\x12&.trellis.survey.v1.SetFloorPlanRequest\x1a'.trellis.survey.v1.SetFloorPlanResponse\x12q\n" +
 	"\x12CalibrateFloorPlan\x12,.trellis.survey.v1.CalibrateFloorPlanRequest\x1a-.trellis.survey.v1.CalibrateFloorPlanResponse\x12n\n" +
-	"\x11GetFloorPlanImage\x12+.trellis.survey.v1.GetFloorPlanImageRequest\x1a,.trellis.survey.v1.GetFloorPlanImageResponseBGZEgithub.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1;surveyv1b\x06proto3"
+	"\x11GetFloorPlanImage\x12+.trellis.survey.v1.GetFloorPlanImageRequest\x1a,.trellis.survey.v1.GetFloorPlanImageResponse\x12k\n" +
+	"\x10ListAPPlacements\x12*.trellis.survey.v1.ListAPPlacementsRequest\x1a+.trellis.survey.v1.ListAPPlacementsResponse\x12n\n" +
+	"\x11CreateAPPlacement\x12+.trellis.survey.v1.CreateAPPlacementRequest\x1a,.trellis.survey.v1.CreateAPPlacementResponse\x12n\n" +
+	"\x11UpdateAPPlacement\x12+.trellis.survey.v1.UpdateAPPlacementRequest\x1a,.trellis.survey.v1.UpdateAPPlacementResponse\x12n\n" +
+	"\x11DeleteAPPlacement\x12+.trellis.survey.v1.DeleteAPPlacementRequest\x1a,.trellis.survey.v1.DeleteAPPlacementResponseBGZEgithub.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1;surveyv1b\x06proto3"
 
 var (
 	file_trellis_survey_v1_survey_proto_rawDescOnce sync.Once
@@ -4398,7 +5057,7 @@ func file_trellis_survey_v1_survey_proto_rawDescGZIP() []byte {
 	return file_trellis_survey_v1_survey_proto_rawDescData
 }
 
-var file_trellis_survey_v1_survey_proto_msgTypes = make([]protoimpl.MessageInfo, 67)
+var file_trellis_survey_v1_survey_proto_msgTypes = make([]protoimpl.MessageInfo, 77)
 var file_trellis_survey_v1_survey_proto_goTypes = []any{
 	(*SurveySummary)(nil),                  // 0: trellis.survey.v1.SurveySummary
 	(*ImportAirMapperRequest)(nil),         // 1: trellis.survey.v1.ImportAirMapperRequest
@@ -4446,31 +5105,41 @@ var file_trellis_survey_v1_survey_proto_goTypes = []any{
 	(*ScannedNetwork)(nil),                 // 43: trellis.survey.v1.ScannedNetwork
 	(*GetFloorPlanImageRequest)(nil),       // 44: trellis.survey.v1.GetFloorPlanImageRequest
 	(*GetFloorPlanImageResponse)(nil),      // 45: trellis.survey.v1.GetFloorPlanImageResponse
-	(*SetFloorPlanRequest)(nil),            // 46: trellis.survey.v1.SetFloorPlanRequest
-	(*SetFloorPlanResponse)(nil),           // 47: trellis.survey.v1.SetFloorPlanResponse
-	(*CalibrateFloorPlanRequest)(nil),      // 48: trellis.survey.v1.CalibrateFloorPlanRequest
-	(*CalibrateFloorPlanResponse)(nil),     // 49: trellis.survey.v1.CalibrateFloorPlanResponse
-	(*MeasureThroughputRequest)(nil),       // 50: trellis.survey.v1.MeasureThroughputRequest
-	(*MeasureThroughputResponse)(nil),      // 51: trellis.survey.v1.MeasureThroughputResponse
-	(*ThroughputReading)(nil),              // 52: trellis.survey.v1.ThroughputReading
-	(*SetThroughputTargetRequest)(nil),     // 53: trellis.survey.v1.SetThroughputTargetRequest
-	(*SetThroughputTargetResponse)(nil),    // 54: trellis.survey.v1.SetThroughputTargetResponse
-	(*StartContinuousCaptureRequest)(nil),  // 55: trellis.survey.v1.StartContinuousCaptureRequest
-	(*StartContinuousCaptureResponse)(nil), // 56: trellis.survey.v1.StartContinuousCaptureResponse
-	(*StopContinuousCaptureRequest)(nil),   // 57: trellis.survey.v1.StopContinuousCaptureRequest
-	(*StopContinuousCaptureResponse)(nil),  // 58: trellis.survey.v1.StopContinuousCaptureResponse
-	(*CaptureStatus)(nil),                  // 59: trellis.survey.v1.CaptureStatus
-	(*GetCaptureCapabilityRequest)(nil),    // 60: trellis.survey.v1.GetCaptureCapabilityRequest
-	(*GetCaptureCapabilityResponse)(nil),   // 61: trellis.survey.v1.GetCaptureCapabilityResponse
-	(*ScanRequest)(nil),                    // 62: trellis.survey.v1.ScanRequest
-	(*ScanResponse)(nil),                   // 63: trellis.survey.v1.ScanResponse
-	(*ListSamplesRequest)(nil),             // 64: trellis.survey.v1.ListSamplesRequest
-	(*ListSamplesResponse)(nil),            // 65: trellis.survey.v1.ListSamplesResponse
-	(*SurveySample)(nil),                   // 66: trellis.survey.v1.SurveySample
-	(*timestamppb.Timestamp)(nil),          // 67: google.protobuf.Timestamp
+	(*APPlacement)(nil),                    // 46: trellis.survey.v1.APPlacement
+	(*APPlacementEdit)(nil),                // 47: trellis.survey.v1.APPlacementEdit
+	(*ListAPPlacementsRequest)(nil),        // 48: trellis.survey.v1.ListAPPlacementsRequest
+	(*ListAPPlacementsResponse)(nil),       // 49: trellis.survey.v1.ListAPPlacementsResponse
+	(*CreateAPPlacementRequest)(nil),       // 50: trellis.survey.v1.CreateAPPlacementRequest
+	(*CreateAPPlacementResponse)(nil),      // 51: trellis.survey.v1.CreateAPPlacementResponse
+	(*UpdateAPPlacementRequest)(nil),       // 52: trellis.survey.v1.UpdateAPPlacementRequest
+	(*UpdateAPPlacementResponse)(nil),      // 53: trellis.survey.v1.UpdateAPPlacementResponse
+	(*DeleteAPPlacementRequest)(nil),       // 54: trellis.survey.v1.DeleteAPPlacementRequest
+	(*DeleteAPPlacementResponse)(nil),      // 55: trellis.survey.v1.DeleteAPPlacementResponse
+	(*SetFloorPlanRequest)(nil),            // 56: trellis.survey.v1.SetFloorPlanRequest
+	(*SetFloorPlanResponse)(nil),           // 57: trellis.survey.v1.SetFloorPlanResponse
+	(*CalibrateFloorPlanRequest)(nil),      // 58: trellis.survey.v1.CalibrateFloorPlanRequest
+	(*CalibrateFloorPlanResponse)(nil),     // 59: trellis.survey.v1.CalibrateFloorPlanResponse
+	(*MeasureThroughputRequest)(nil),       // 60: trellis.survey.v1.MeasureThroughputRequest
+	(*MeasureThroughputResponse)(nil),      // 61: trellis.survey.v1.MeasureThroughputResponse
+	(*ThroughputReading)(nil),              // 62: trellis.survey.v1.ThroughputReading
+	(*SetThroughputTargetRequest)(nil),     // 63: trellis.survey.v1.SetThroughputTargetRequest
+	(*SetThroughputTargetResponse)(nil),    // 64: trellis.survey.v1.SetThroughputTargetResponse
+	(*StartContinuousCaptureRequest)(nil),  // 65: trellis.survey.v1.StartContinuousCaptureRequest
+	(*StartContinuousCaptureResponse)(nil), // 66: trellis.survey.v1.StartContinuousCaptureResponse
+	(*StopContinuousCaptureRequest)(nil),   // 67: trellis.survey.v1.StopContinuousCaptureRequest
+	(*StopContinuousCaptureResponse)(nil),  // 68: trellis.survey.v1.StopContinuousCaptureResponse
+	(*CaptureStatus)(nil),                  // 69: trellis.survey.v1.CaptureStatus
+	(*GetCaptureCapabilityRequest)(nil),    // 70: trellis.survey.v1.GetCaptureCapabilityRequest
+	(*GetCaptureCapabilityResponse)(nil),   // 71: trellis.survey.v1.GetCaptureCapabilityResponse
+	(*ScanRequest)(nil),                    // 72: trellis.survey.v1.ScanRequest
+	(*ScanResponse)(nil),                   // 73: trellis.survey.v1.ScanResponse
+	(*ListSamplesRequest)(nil),             // 74: trellis.survey.v1.ListSamplesRequest
+	(*ListSamplesResponse)(nil),            // 75: trellis.survey.v1.ListSamplesResponse
+	(*SurveySample)(nil),                   // 76: trellis.survey.v1.SurveySample
+	(*timestamppb.Timestamp)(nil),          // 77: google.protobuf.Timestamp
 }
 var file_trellis_survey_v1_survey_proto_depIdxs = []int32{
-	59, // 0: trellis.survey.v1.SurveySummary.capture:type_name -> trellis.survey.v1.CaptureStatus
+	69, // 0: trellis.survey.v1.SurveySummary.capture:type_name -> trellis.survey.v1.CaptureStatus
 	0,  // 1: trellis.survey.v1.ImportAirMapperResponse.survey:type_name -> trellis.survey.v1.SurveySummary
 	0,  // 2: trellis.survey.v1.ImportAirMagnetResponse.survey:type_name -> trellis.survey.v1.SurveySummary
 	0,  // 3: trellis.survey.v1.ListSurveysResponse.surveys:type_name -> trellis.survey.v1.SurveySummary
@@ -4489,78 +5158,92 @@ var file_trellis_survey_v1_survey_proto_depIdxs = []int32{
 	0,  // 16: trellis.survey.v1.PauseSurveyResponse.survey:type_name -> trellis.survey.v1.SurveySummary
 	0,  // 17: trellis.survey.v1.CompleteSurveyResponse.survey:type_name -> trellis.survey.v1.SurveySummary
 	43, // 18: trellis.survey.v1.CapturePointResponse.networks:type_name -> trellis.survey.v1.ScannedNetwork
-	11, // 19: trellis.survey.v1.SetFloorPlanResponse.floor:type_name -> trellis.survey.v1.Floor
-	11, // 20: trellis.survey.v1.CalibrateFloorPlanResponse.floor:type_name -> trellis.survey.v1.Floor
-	52, // 21: trellis.survey.v1.MeasureThroughputResponse.reading:type_name -> trellis.survey.v1.ThroughputReading
-	0,  // 22: trellis.survey.v1.SetThroughputTargetResponse.survey:type_name -> trellis.survey.v1.SurveySummary
-	59, // 23: trellis.survey.v1.StartContinuousCaptureResponse.capture:type_name -> trellis.survey.v1.CaptureStatus
-	43, // 24: trellis.survey.v1.ScanResponse.networks:type_name -> trellis.survey.v1.ScannedNetwork
-	67, // 25: trellis.survey.v1.ScanResponse.scanned_at:type_name -> google.protobuf.Timestamp
-	66, // 26: trellis.survey.v1.ListSamplesResponse.samples:type_name -> trellis.survey.v1.SurveySample
-	67, // 27: trellis.survey.v1.SurveySample.captured_at:type_name -> google.protobuf.Timestamp
-	1,  // 28: trellis.survey.v1.SurveyService.ImportAirMapper:input_type -> trellis.survey.v1.ImportAirMapperRequest
-	3,  // 29: trellis.survey.v1.SurveyService.ImportAirMagnet:input_type -> trellis.survey.v1.ImportAirMagnetRequest
-	5,  // 30: trellis.survey.v1.SurveyService.ListSurveys:input_type -> trellis.survey.v1.ListSurveysRequest
-	7,  // 31: trellis.survey.v1.SurveyService.GetSurvey:input_type -> trellis.survey.v1.GetSurveyRequest
-	9,  // 32: trellis.survey.v1.SurveyService.DeleteSurvey:input_type -> trellis.survey.v1.DeleteSurveyRequest
-	24, // 33: trellis.survey.v1.SurveyService.GetHeatmap:input_type -> trellis.survey.v1.GetHeatmapRequest
-	28, // 34: trellis.survey.v1.SurveyService.GetCoverage:input_type -> trellis.survey.v1.GetCoverageRequest
-	12, // 35: trellis.survey.v1.SurveyService.ListFloors:input_type -> trellis.survey.v1.ListFloorsRequest
-	14, // 36: trellis.survey.v1.SurveyService.GetFloor:input_type -> trellis.survey.v1.GetFloorRequest
-	16, // 37: trellis.survey.v1.SurveyService.CreateFloor:input_type -> trellis.survey.v1.CreateFloorRequest
-	18, // 38: trellis.survey.v1.SurveyService.SetActiveFloor:input_type -> trellis.survey.v1.SetActiveFloorRequest
-	20, // 39: trellis.survey.v1.SurveyService.UpdateFloor:input_type -> trellis.survey.v1.UpdateFloorRequest
-	22, // 40: trellis.survey.v1.SurveyService.DeleteFloor:input_type -> trellis.survey.v1.DeleteFloorRequest
-	30, // 41: trellis.survey.v1.SurveyService.GenerateReport:input_type -> trellis.survey.v1.GenerateReportRequest
-	33, // 42: trellis.survey.v1.SurveyService.CreateSurvey:input_type -> trellis.survey.v1.CreateSurveyRequest
-	35, // 43: trellis.survey.v1.SurveyService.StartSurvey:input_type -> trellis.survey.v1.StartSurveyRequest
-	37, // 44: trellis.survey.v1.SurveyService.PauseSurvey:input_type -> trellis.survey.v1.PauseSurveyRequest
-	39, // 45: trellis.survey.v1.SurveyService.CompleteSurvey:input_type -> trellis.survey.v1.CompleteSurveyRequest
-	41, // 46: trellis.survey.v1.SurveyService.CapturePoint:input_type -> trellis.survey.v1.CapturePointRequest
-	64, // 47: trellis.survey.v1.SurveyService.ListSamples:input_type -> trellis.survey.v1.ListSamplesRequest
-	62, // 48: trellis.survey.v1.SurveyService.Scan:input_type -> trellis.survey.v1.ScanRequest
-	60, // 49: trellis.survey.v1.SurveyService.GetCaptureCapability:input_type -> trellis.survey.v1.GetCaptureCapabilityRequest
-	55, // 50: trellis.survey.v1.SurveyService.StartContinuousCapture:input_type -> trellis.survey.v1.StartContinuousCaptureRequest
-	57, // 51: trellis.survey.v1.SurveyService.StopContinuousCapture:input_type -> trellis.survey.v1.StopContinuousCaptureRequest
-	50, // 52: trellis.survey.v1.SurveyService.MeasureThroughput:input_type -> trellis.survey.v1.MeasureThroughputRequest
-	53, // 53: trellis.survey.v1.SurveyService.SetThroughputTarget:input_type -> trellis.survey.v1.SetThroughputTargetRequest
-	46, // 54: trellis.survey.v1.SurveyService.SetFloorPlan:input_type -> trellis.survey.v1.SetFloorPlanRequest
-	48, // 55: trellis.survey.v1.SurveyService.CalibrateFloorPlan:input_type -> trellis.survey.v1.CalibrateFloorPlanRequest
-	44, // 56: trellis.survey.v1.SurveyService.GetFloorPlanImage:input_type -> trellis.survey.v1.GetFloorPlanImageRequest
-	2,  // 57: trellis.survey.v1.SurveyService.ImportAirMapper:output_type -> trellis.survey.v1.ImportAirMapperResponse
-	4,  // 58: trellis.survey.v1.SurveyService.ImportAirMagnet:output_type -> trellis.survey.v1.ImportAirMagnetResponse
-	6,  // 59: trellis.survey.v1.SurveyService.ListSurveys:output_type -> trellis.survey.v1.ListSurveysResponse
-	8,  // 60: trellis.survey.v1.SurveyService.GetSurvey:output_type -> trellis.survey.v1.GetSurveyResponse
-	10, // 61: trellis.survey.v1.SurveyService.DeleteSurvey:output_type -> trellis.survey.v1.DeleteSurveyResponse
-	25, // 62: trellis.survey.v1.SurveyService.GetHeatmap:output_type -> trellis.survey.v1.GetHeatmapResponse
-	29, // 63: trellis.survey.v1.SurveyService.GetCoverage:output_type -> trellis.survey.v1.GetCoverageResponse
-	13, // 64: trellis.survey.v1.SurveyService.ListFloors:output_type -> trellis.survey.v1.ListFloorsResponse
-	15, // 65: trellis.survey.v1.SurveyService.GetFloor:output_type -> trellis.survey.v1.GetFloorResponse
-	17, // 66: trellis.survey.v1.SurveyService.CreateFloor:output_type -> trellis.survey.v1.CreateFloorResponse
-	19, // 67: trellis.survey.v1.SurveyService.SetActiveFloor:output_type -> trellis.survey.v1.SetActiveFloorResponse
-	21, // 68: trellis.survey.v1.SurveyService.UpdateFloor:output_type -> trellis.survey.v1.UpdateFloorResponse
-	23, // 69: trellis.survey.v1.SurveyService.DeleteFloor:output_type -> trellis.survey.v1.DeleteFloorResponse
-	32, // 70: trellis.survey.v1.SurveyService.GenerateReport:output_type -> trellis.survey.v1.GenerateReportResponse
-	34, // 71: trellis.survey.v1.SurveyService.CreateSurvey:output_type -> trellis.survey.v1.CreateSurveyResponse
-	36, // 72: trellis.survey.v1.SurveyService.StartSurvey:output_type -> trellis.survey.v1.StartSurveyResponse
-	38, // 73: trellis.survey.v1.SurveyService.PauseSurvey:output_type -> trellis.survey.v1.PauseSurveyResponse
-	40, // 74: trellis.survey.v1.SurveyService.CompleteSurvey:output_type -> trellis.survey.v1.CompleteSurveyResponse
-	42, // 75: trellis.survey.v1.SurveyService.CapturePoint:output_type -> trellis.survey.v1.CapturePointResponse
-	65, // 76: trellis.survey.v1.SurveyService.ListSamples:output_type -> trellis.survey.v1.ListSamplesResponse
-	63, // 77: trellis.survey.v1.SurveyService.Scan:output_type -> trellis.survey.v1.ScanResponse
-	61, // 78: trellis.survey.v1.SurveyService.GetCaptureCapability:output_type -> trellis.survey.v1.GetCaptureCapabilityResponse
-	56, // 79: trellis.survey.v1.SurveyService.StartContinuousCapture:output_type -> trellis.survey.v1.StartContinuousCaptureResponse
-	58, // 80: trellis.survey.v1.SurveyService.StopContinuousCapture:output_type -> trellis.survey.v1.StopContinuousCaptureResponse
-	51, // 81: trellis.survey.v1.SurveyService.MeasureThroughput:output_type -> trellis.survey.v1.MeasureThroughputResponse
-	54, // 82: trellis.survey.v1.SurveyService.SetThroughputTarget:output_type -> trellis.survey.v1.SetThroughputTargetResponse
-	47, // 83: trellis.survey.v1.SurveyService.SetFloorPlan:output_type -> trellis.survey.v1.SetFloorPlanResponse
-	49, // 84: trellis.survey.v1.SurveyService.CalibrateFloorPlan:output_type -> trellis.survey.v1.CalibrateFloorPlanResponse
-	45, // 85: trellis.survey.v1.SurveyService.GetFloorPlanImage:output_type -> trellis.survey.v1.GetFloorPlanImageResponse
-	57, // [57:86] is the sub-list for method output_type
-	28, // [28:57] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	46, // 19: trellis.survey.v1.ListAPPlacementsResponse.placements:type_name -> trellis.survey.v1.APPlacement
+	47, // 20: trellis.survey.v1.CreateAPPlacementRequest.placement:type_name -> trellis.survey.v1.APPlacementEdit
+	46, // 21: trellis.survey.v1.CreateAPPlacementResponse.placement:type_name -> trellis.survey.v1.APPlacement
+	47, // 22: trellis.survey.v1.UpdateAPPlacementRequest.placement:type_name -> trellis.survey.v1.APPlacementEdit
+	46, // 23: trellis.survey.v1.UpdateAPPlacementResponse.placement:type_name -> trellis.survey.v1.APPlacement
+	46, // 24: trellis.survey.v1.DeleteAPPlacementResponse.placements:type_name -> trellis.survey.v1.APPlacement
+	11, // 25: trellis.survey.v1.SetFloorPlanResponse.floor:type_name -> trellis.survey.v1.Floor
+	11, // 26: trellis.survey.v1.CalibrateFloorPlanResponse.floor:type_name -> trellis.survey.v1.Floor
+	62, // 27: trellis.survey.v1.MeasureThroughputResponse.reading:type_name -> trellis.survey.v1.ThroughputReading
+	0,  // 28: trellis.survey.v1.SetThroughputTargetResponse.survey:type_name -> trellis.survey.v1.SurveySummary
+	69, // 29: trellis.survey.v1.StartContinuousCaptureResponse.capture:type_name -> trellis.survey.v1.CaptureStatus
+	43, // 30: trellis.survey.v1.ScanResponse.networks:type_name -> trellis.survey.v1.ScannedNetwork
+	77, // 31: trellis.survey.v1.ScanResponse.scanned_at:type_name -> google.protobuf.Timestamp
+	76, // 32: trellis.survey.v1.ListSamplesResponse.samples:type_name -> trellis.survey.v1.SurveySample
+	77, // 33: trellis.survey.v1.SurveySample.captured_at:type_name -> google.protobuf.Timestamp
+	1,  // 34: trellis.survey.v1.SurveyService.ImportAirMapper:input_type -> trellis.survey.v1.ImportAirMapperRequest
+	3,  // 35: trellis.survey.v1.SurveyService.ImportAirMagnet:input_type -> trellis.survey.v1.ImportAirMagnetRequest
+	5,  // 36: trellis.survey.v1.SurveyService.ListSurveys:input_type -> trellis.survey.v1.ListSurveysRequest
+	7,  // 37: trellis.survey.v1.SurveyService.GetSurvey:input_type -> trellis.survey.v1.GetSurveyRequest
+	9,  // 38: trellis.survey.v1.SurveyService.DeleteSurvey:input_type -> trellis.survey.v1.DeleteSurveyRequest
+	24, // 39: trellis.survey.v1.SurveyService.GetHeatmap:input_type -> trellis.survey.v1.GetHeatmapRequest
+	28, // 40: trellis.survey.v1.SurveyService.GetCoverage:input_type -> trellis.survey.v1.GetCoverageRequest
+	12, // 41: trellis.survey.v1.SurveyService.ListFloors:input_type -> trellis.survey.v1.ListFloorsRequest
+	14, // 42: trellis.survey.v1.SurveyService.GetFloor:input_type -> trellis.survey.v1.GetFloorRequest
+	16, // 43: trellis.survey.v1.SurveyService.CreateFloor:input_type -> trellis.survey.v1.CreateFloorRequest
+	18, // 44: trellis.survey.v1.SurveyService.SetActiveFloor:input_type -> trellis.survey.v1.SetActiveFloorRequest
+	20, // 45: trellis.survey.v1.SurveyService.UpdateFloor:input_type -> trellis.survey.v1.UpdateFloorRequest
+	22, // 46: trellis.survey.v1.SurveyService.DeleteFloor:input_type -> trellis.survey.v1.DeleteFloorRequest
+	30, // 47: trellis.survey.v1.SurveyService.GenerateReport:input_type -> trellis.survey.v1.GenerateReportRequest
+	33, // 48: trellis.survey.v1.SurveyService.CreateSurvey:input_type -> trellis.survey.v1.CreateSurveyRequest
+	35, // 49: trellis.survey.v1.SurveyService.StartSurvey:input_type -> trellis.survey.v1.StartSurveyRequest
+	37, // 50: trellis.survey.v1.SurveyService.PauseSurvey:input_type -> trellis.survey.v1.PauseSurveyRequest
+	39, // 51: trellis.survey.v1.SurveyService.CompleteSurvey:input_type -> trellis.survey.v1.CompleteSurveyRequest
+	41, // 52: trellis.survey.v1.SurveyService.CapturePoint:input_type -> trellis.survey.v1.CapturePointRequest
+	74, // 53: trellis.survey.v1.SurveyService.ListSamples:input_type -> trellis.survey.v1.ListSamplesRequest
+	72, // 54: trellis.survey.v1.SurveyService.Scan:input_type -> trellis.survey.v1.ScanRequest
+	70, // 55: trellis.survey.v1.SurveyService.GetCaptureCapability:input_type -> trellis.survey.v1.GetCaptureCapabilityRequest
+	65, // 56: trellis.survey.v1.SurveyService.StartContinuousCapture:input_type -> trellis.survey.v1.StartContinuousCaptureRequest
+	67, // 57: trellis.survey.v1.SurveyService.StopContinuousCapture:input_type -> trellis.survey.v1.StopContinuousCaptureRequest
+	60, // 58: trellis.survey.v1.SurveyService.MeasureThroughput:input_type -> trellis.survey.v1.MeasureThroughputRequest
+	63, // 59: trellis.survey.v1.SurveyService.SetThroughputTarget:input_type -> trellis.survey.v1.SetThroughputTargetRequest
+	56, // 60: trellis.survey.v1.SurveyService.SetFloorPlan:input_type -> trellis.survey.v1.SetFloorPlanRequest
+	58, // 61: trellis.survey.v1.SurveyService.CalibrateFloorPlan:input_type -> trellis.survey.v1.CalibrateFloorPlanRequest
+	44, // 62: trellis.survey.v1.SurveyService.GetFloorPlanImage:input_type -> trellis.survey.v1.GetFloorPlanImageRequest
+	48, // 63: trellis.survey.v1.SurveyService.ListAPPlacements:input_type -> trellis.survey.v1.ListAPPlacementsRequest
+	50, // 64: trellis.survey.v1.SurveyService.CreateAPPlacement:input_type -> trellis.survey.v1.CreateAPPlacementRequest
+	52, // 65: trellis.survey.v1.SurveyService.UpdateAPPlacement:input_type -> trellis.survey.v1.UpdateAPPlacementRequest
+	54, // 66: trellis.survey.v1.SurveyService.DeleteAPPlacement:input_type -> trellis.survey.v1.DeleteAPPlacementRequest
+	2,  // 67: trellis.survey.v1.SurveyService.ImportAirMapper:output_type -> trellis.survey.v1.ImportAirMapperResponse
+	4,  // 68: trellis.survey.v1.SurveyService.ImportAirMagnet:output_type -> trellis.survey.v1.ImportAirMagnetResponse
+	6,  // 69: trellis.survey.v1.SurveyService.ListSurveys:output_type -> trellis.survey.v1.ListSurveysResponse
+	8,  // 70: trellis.survey.v1.SurveyService.GetSurvey:output_type -> trellis.survey.v1.GetSurveyResponse
+	10, // 71: trellis.survey.v1.SurveyService.DeleteSurvey:output_type -> trellis.survey.v1.DeleteSurveyResponse
+	25, // 72: trellis.survey.v1.SurveyService.GetHeatmap:output_type -> trellis.survey.v1.GetHeatmapResponse
+	29, // 73: trellis.survey.v1.SurveyService.GetCoverage:output_type -> trellis.survey.v1.GetCoverageResponse
+	13, // 74: trellis.survey.v1.SurveyService.ListFloors:output_type -> trellis.survey.v1.ListFloorsResponse
+	15, // 75: trellis.survey.v1.SurveyService.GetFloor:output_type -> trellis.survey.v1.GetFloorResponse
+	17, // 76: trellis.survey.v1.SurveyService.CreateFloor:output_type -> trellis.survey.v1.CreateFloorResponse
+	19, // 77: trellis.survey.v1.SurveyService.SetActiveFloor:output_type -> trellis.survey.v1.SetActiveFloorResponse
+	21, // 78: trellis.survey.v1.SurveyService.UpdateFloor:output_type -> trellis.survey.v1.UpdateFloorResponse
+	23, // 79: trellis.survey.v1.SurveyService.DeleteFloor:output_type -> trellis.survey.v1.DeleteFloorResponse
+	32, // 80: trellis.survey.v1.SurveyService.GenerateReport:output_type -> trellis.survey.v1.GenerateReportResponse
+	34, // 81: trellis.survey.v1.SurveyService.CreateSurvey:output_type -> trellis.survey.v1.CreateSurveyResponse
+	36, // 82: trellis.survey.v1.SurveyService.StartSurvey:output_type -> trellis.survey.v1.StartSurveyResponse
+	38, // 83: trellis.survey.v1.SurveyService.PauseSurvey:output_type -> trellis.survey.v1.PauseSurveyResponse
+	40, // 84: trellis.survey.v1.SurveyService.CompleteSurvey:output_type -> trellis.survey.v1.CompleteSurveyResponse
+	42, // 85: trellis.survey.v1.SurveyService.CapturePoint:output_type -> trellis.survey.v1.CapturePointResponse
+	75, // 86: trellis.survey.v1.SurveyService.ListSamples:output_type -> trellis.survey.v1.ListSamplesResponse
+	73, // 87: trellis.survey.v1.SurveyService.Scan:output_type -> trellis.survey.v1.ScanResponse
+	71, // 88: trellis.survey.v1.SurveyService.GetCaptureCapability:output_type -> trellis.survey.v1.GetCaptureCapabilityResponse
+	66, // 89: trellis.survey.v1.SurveyService.StartContinuousCapture:output_type -> trellis.survey.v1.StartContinuousCaptureResponse
+	68, // 90: trellis.survey.v1.SurveyService.StopContinuousCapture:output_type -> trellis.survey.v1.StopContinuousCaptureResponse
+	61, // 91: trellis.survey.v1.SurveyService.MeasureThroughput:output_type -> trellis.survey.v1.MeasureThroughputResponse
+	64, // 92: trellis.survey.v1.SurveyService.SetThroughputTarget:output_type -> trellis.survey.v1.SetThroughputTargetResponse
+	57, // 93: trellis.survey.v1.SurveyService.SetFloorPlan:output_type -> trellis.survey.v1.SetFloorPlanResponse
+	59, // 94: trellis.survey.v1.SurveyService.CalibrateFloorPlan:output_type -> trellis.survey.v1.CalibrateFloorPlanResponse
+	45, // 95: trellis.survey.v1.SurveyService.GetFloorPlanImage:output_type -> trellis.survey.v1.GetFloorPlanImageResponse
+	49, // 96: trellis.survey.v1.SurveyService.ListAPPlacements:output_type -> trellis.survey.v1.ListAPPlacementsResponse
+	51, // 97: trellis.survey.v1.SurveyService.CreateAPPlacement:output_type -> trellis.survey.v1.CreateAPPlacementResponse
+	53, // 98: trellis.survey.v1.SurveyService.UpdateAPPlacement:output_type -> trellis.survey.v1.UpdateAPPlacementResponse
+	55, // 99: trellis.survey.v1.SurveyService.DeleteAPPlacement:output_type -> trellis.survey.v1.DeleteAPPlacementResponse
+	67, // [67:100] is the sub-list for method output_type
+	34, // [34:67] is the sub-list for method input_type
+	34, // [34:34] is the sub-list for extension type_name
+	34, // [34:34] is the sub-list for extension extendee
+	0,  // [0:34] is the sub-list for field type_name
 }
 
 func init() { file_trellis_survey_v1_survey_proto_init() }
@@ -4572,14 +5255,16 @@ func file_trellis_survey_v1_survey_proto_init() {
 	file_trellis_survey_v1_survey_proto_msgTypes[24].OneofWrappers = []any{}
 	file_trellis_survey_v1_survey_proto_msgTypes[28].OneofWrappers = []any{}
 	file_trellis_survey_v1_survey_proto_msgTypes[43].OneofWrappers = []any{}
-	file_trellis_survey_v1_survey_proto_msgTypes[66].OneofWrappers = []any{}
+	file_trellis_survey_v1_survey_proto_msgTypes[46].OneofWrappers = []any{}
+	file_trellis_survey_v1_survey_proto_msgTypes[47].OneofWrappers = []any{}
+	file_trellis_survey_v1_survey_proto_msgTypes[76].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_trellis_survey_v1_survey_proto_rawDesc), len(file_trellis_survey_v1_survey_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   67,
+			NumMessages:   77,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

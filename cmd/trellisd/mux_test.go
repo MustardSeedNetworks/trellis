@@ -133,6 +133,67 @@ func TestUngatedMuxServesEveryRPCAnonymously(t *testing.T) {
 	}
 }
 
+// loginThroughMux signs in the way the UI does and returns the session cookies
+// and the CSRF token the login handed back.
+func loginThroughMux(t *testing.T, mux *http.ServeMux) ([]*http.Cookie, string) {
+	t.Helper()
+
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/auth/login",
+		strings.NewReader(`{"username":"surveyor","password":"correct-horse-battery-staple"}`)))
+	var body struct {
+		CSRFToken string `json:"csrfToken"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil || rec.Code != http.StatusOK || body.CSRFToken == "" {
+		t.Fatalf("login = %d %q, want 200 with a CSRF token", rec.Code, rec.Body.String())
+	}
+	return rec.Result().Cookies(), body.CSRFToken
+}
+
+// callWithSession makes a Connect call carrying a live session, with csrf in
+// the header when it is not empty.
+func callWithSession(t *testing.T, mux *http.ServeMux, procedure string, cookies []*http.Cookie, csrf string) string {
+	t.Helper()
+
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, procedure, strings.NewReader("{}"))
+	req.Header.Set("Content-Type", "application/json")
+	for _, c := range cookies {
+		req.AddCookie(c)
+	}
+	if csrf != "" {
+		req.Header.Set(auth.HeaderCSRFToken, csrf)
+	}
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	var body struct {
+		Code string `json:"code"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("%s: response %d is not Connect JSON: %v (%q)", procedure, rec.Code, err, rec.Body.String())
+	}
+	return body.Code
+}
+
+// TestGatedMuxRefusesEveryRPCWithoutTheCSRFToken covers the other half of the
+// gate: a browser holding a live session is exactly what a cross-site request
+// rides on, so every RPC — every survey write among them, the AP placements
+// included — needs the token as well as the cookie. The control call with the
+// token reaches the handler, so the refusal is the CSRF check and nothing else.
+func TestGatedMuxRefusesEveryRPCWithoutTheCSRFToken(t *testing.T) {
+	mux := gatedMux(t)
+	cookies, csrf := loginThroughMux(t, mux)
+
+	for _, procedure := range surveyProcedures(t) {
+		if code := callWithSession(t, mux, procedure, cookies, ""); code != "permission_denied" {
+			t.Errorf("%s with a session and no CSRF token = %q, want \"permission_denied\"", procedure, code)
+		}
+		if code := callWithSession(t, mux, procedure, cookies, csrf); code != "unimplemented" {
+			t.Errorf("%s with a session and its CSRF token = %q, want \"unimplemented\"", procedure, code)
+		}
+	}
+}
+
 // The version endpoint is outside the gate by build-contract rule 4: a
 // deployment check reads it with no credentials. /healthz is there for the same
 // reason, and the login routes have to be reachable or nobody can log in.
