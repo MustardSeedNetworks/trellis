@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.25](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.24...v0.7.25) (2026-10-15)
+
+
+### Bug Fixes
+
+* **survey:** persist AP and client placements on their floor ([#822](https://github.com/MustardSeedNetworks/trellis/issues/822)) ([1093ff7](https://github.com/MustardSeedNetworks/trellis/commit/1093ff7baf0796365a6fadcd90f3a2358171cfeb)), closes [#821](https://github.com/MustardSeedNetworks/trellis/issues/821)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#819](https://github.com/MustardSeedNetworks/trellis/issues/819)) ([81edc99](https://github.com/MustardSeedNetworks/trellis/commit/81edc99ef5ee56d93965eda9cff05a08e88da4cf))
+
 ## [0.7.24](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.23...v0.7.24) (2026-10-15)
 
 
