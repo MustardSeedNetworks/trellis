@@ -1,6 +1,6 @@
 # ADR-0004 — Portable GPU via wgpu-native/Dawn + CPU fallback
 
-Status: Accepted · Date: 2026-06-20
+Status: Superseded by [ADR-0011](ADR-0011-predictive-model-is-core-rf-on-cpu.md) · Date: 2026-06-20
 
 ## Context
 
