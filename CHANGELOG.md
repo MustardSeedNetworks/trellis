@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.9.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.8.0...v0.9.0) (2026-10-15)
+
+
+### Features
+
+* **rf:** calibrate the prediction from the floor's own walk ([#836](https://github.com/MustardSeedNetworks/trellis/issues/836)) ([311d278](https://github.com/MustardSeedNetworks/trellis/commit/311d278c8ac8d609cad5a3c9d63e7d4223d1ca3f))
+
+
+### Documentation
+
+* **adr:** record the predictive model as core/rf on the CPU (ADR-0011) ([#824](https://github.com/MustardSeedNetworks/trellis/issues/824)) ([748dabb](https://github.com/MustardSeedNetworks/trellis/commit/748dabb10a710bdb33176460fd888bb8661ac9da)), closes [#823](https://github.com/MustardSeedNetworks/trellis/issues/823)
+
 ## [0.8.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.26...v0.8.0) (2026-10-15)
 
 
