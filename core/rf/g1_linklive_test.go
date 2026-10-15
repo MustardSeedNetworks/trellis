@@ -22,8 +22,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/MustardSeedNetworks/trellis/core/internal/linkliveoracle"
 	"github.com/MustardSeedNetworks/trellis/core/rf"
-	"github.com/MustardSeedNetworks/trellis/internal/linkliveoracle"
 )
 
 // assumedTxPowersDBm brackets what an AP plausibly transmits. A Link-Live

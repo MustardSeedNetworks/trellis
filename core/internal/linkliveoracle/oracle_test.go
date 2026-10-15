@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/MustardSeedNetworks/trellis/internal/linkliveoracle"
+	"github.com/MustardSeedNetworks/trellis/core/internal/linkliveoracle"
 )
 
 func TestSurveyorNamed(t *testing.T) {

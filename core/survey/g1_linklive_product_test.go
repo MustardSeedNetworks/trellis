@@ -16,10 +16,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/MustardSeedNetworks/trellis/core/internal/linkliveoracle"
 	"github.com/MustardSeedNetworks/trellis/core/rf"
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
-	"github.com/MustardSeedNetworks/trellis/internal/linkliveoracle"
 )
 
 // killCriterionDB is the predictive phase's stop line: a calibrated mean
