@@ -8,13 +8,14 @@ ADR that references the old one — don't edit history.
 | [0001](ADR-0001-process-isolated-architecture.md) | Process-isolated, local-first, transport-agnostic core | Accepted |
 | [0002](ADR-0002-language-per-component.md) | Go core · C++/GPU engine · TS/React UI (not all-Rust) | Accepted |
 | [0003](ADR-0003-protobuf-seams-shared-memory.md) | Schema-first protobuf seams; shared-memory for grids | Accepted |
-| [0004](ADR-0004-gpu-via-wgpu-dawn.md) | Portable GPU via wgpu-native/Dawn + CPU fallback | Accepted |
+| [0004](ADR-0004-gpu-via-wgpu-dawn.md) | Portable GPU via wgpu-native/Dawn + CPU fallback | Superseded by 0011 |
 | [0005](ADR-0005-ed25519-offline-licensing.md) | Ed25519 offline-verifiable licensing | Accepted |
 | [0006](ADR-0006-capture-linked-into-core.md) | Wi-Fi capture linked into trellisd, not a separate daemon (amends 0001, 0002) | Accepted |
 | [0007](ADR-0007-linux-packaging-and-service-contract.md) | Linux packages install a user-session daemon, not a system service | Accepted |
 | [0008](ADR-0008-sample-markers-scale-with-density.md) | Sample markers are sized by how close the readings lie | Accepted |
 | [0009](ADR-0009-a-failed-measurement-is-a-point.md) | A failed measurement is stored as an attempted point that no layer draws | Accepted |
 | [0010](ADR-0010-auth-gated-routable-bind-keeps-0007.md) | Auth, TLS and CSRF gate a routable bind; ADR-0007's packaging shape stands (amends 0007) | Accepted |
+| [0011](ADR-0011-predictive-model-is-core-rf-on-cpu.md) | The predictive model is `core/rf`'s log-distance model, in Go, on the CPU (supersedes 0004, amends 0002) | Accepted |
 
 Fleet decisions recorded outside this repository: the API style. Trellis stays
 Connect-RPC over its proto contract, and seed, stem and niac stay REST/JSON

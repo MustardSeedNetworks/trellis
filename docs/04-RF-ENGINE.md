@@ -1,8 +1,27 @@
 # Trellis — RF Engine Internals
 
 The engine is a **pure function**: `(scene, params) → grids`. Deterministic, no I/O,
-golden-testable. C++20 + GPU compute, with a CPU/SIMD fallback. This doc is the math
-spec; the wire shape is `contracts/engine.proto`.
+golden-testable.
+
+**What ships ([ADR-0011](adr/ADR-0011-predictive-model-is-core-rf-on-cpu.md)):** the
+log-distance model in `core/rf`, in Go on the CPU, calibrated per AP from the floor's
+own walk. The rest of this doc — walls, the GPU, ray tracing, the derived layers — is
+the long-range specification. ADR-0011 keeps it closed until a measured result shows
+the closed form missing a bar.
+
+## What Gate G1 measured, and its two limits
+
+G1 (`11-GATE-G1-RESULT.md`) scored the `core/rf` model against 510 radios on
+surveyor-placed APs: 8.30 dB mean error uncalibrated at 10 dBm, 3.55 dB calibrated.
+Two limits come with that number:
+
+- **No wall term.** Floor plans are raster images with no wall geometry, so the
+  model has no `Σ wall_atten`, no AP height and no antenna pattern. The calibrated
+  exponent absorbs the floor's average obstruction; a single wall between an AP
+  and a cell is not modelled.
+- **Transmit power is the largest error term.** The same radios score 8.30 dB at an
+  assumed 10 dBm and 11.15 dB at 20 dBm. Each placement carries its configured
+  power; the default is 10 dBm, the power G1 scored at.
 
 ## Propagation models (tiered by speed/accuracy)
 
@@ -38,6 +57,8 @@ PL = PL0 + 10·n·log10(d/d0) + Σ wall_atten + Σ floor_atten
 
 ## Multi-floor
 
+_Long-range; not in ADR-0011's model._
+
 Floors are stacked planes with `interfloor_atten_db`. An AP on floor _k_ contributes to
 floor _k±m_ with `m` slab crossings added to PL. 3D voxel mode (Later) for true leakage.
 
@@ -55,6 +76,8 @@ within physical bounds. Output: adjusted params + a residual/error map. This is 
 makes predictions credible and is a key differentiator vs. naive predictive tools.
 
 ## GPU & fallback
+
+_Superseded by ADR-0011: the model runs in Go on the CPU._
 
 - Kernels in **WGSL/SPIR-V** via wgpu-native/Dawn. The MWF model maps to one
   compute dispatch per (floor, band, AP-batch); reduction passes derive best-server/
