@@ -67,6 +67,7 @@ type llPoint struct {
 // position Link-Live holds no reading for, and is not a measurement.
 type llObserved struct {
 	BSSID   string          `json:"bssid"`
+	APName  string          `json:"apName"`
 	Signal  *int            `json:"signal"`
 	Band    string          `json:"band"`
 	Channel json.RawMessage `json:"channelPrimary"`
@@ -110,13 +111,17 @@ func TestG1LinkLivePathLoss(t *testing.T) {
 		}
 		metresPerPixel := feetToMetres / e.ScalePpf
 
-		// A label folds the address in ("RuckusWi:58b633-c652d9"). One that
-		// names an AP instead groups its radios, and joining it to one of them
-		// would score the wrong radio.
-		locations := map[string]llPlacement{}
+		// Score only the APs the surveyor placed. Link-Live labels a placement it
+		// estimated with the BSS address ("RuckusWi:58b633-c652d9") and does so
+		// for every BSS it heard, neighbours' routers included, so an address
+		// label is not ground truth. A placement the surveyor made carries the
+		// AP's name ("WA-EVERETT-AP7_", or the address the AP reports as its
+		// name, "10.24.23.87"), and every radio of that AP reports the same
+		// value as apName. Each radio is scored on its own.
+		placements := map[string]llPlacement{}
 		for _, p := range s.APLocations {
-			if key, ok := placementAddress(p.Label); ok {
-				locations[key] = p
+			if _, isAddress := placementAddress(p.Label); !isAddress && p.Label != "" {
+				placements[p.Label] = p
 			}
 		}
 
@@ -124,11 +129,11 @@ func TestG1LinkLivePathLoss(t *testing.T) {
 		carrier := map[string]float64{}
 		for _, pt := range s.Points {
 			for _, o := range pt.APs {
-				key := normalizeLLBSSID(o.BSSID)
-				ap, ok := locations[key]
+				ap, ok := placements[o.APName]
 				if !ok || o.Signal == nil {
 					continue
 				}
+				key := o.APName + " " + normalizeLLBSSID(o.BSSID)
 				samples[key] = append(samples[key], rf.Sample{
 					DistanceM: math.Hypot(pt.X-ap.X, pt.Y-ap.Y) * metresPerPixel,
 					RSSIDBm:   float64(*o.Signal),
@@ -145,8 +150,8 @@ func TestG1LinkLivePathLoss(t *testing.T) {
 				scored++
 			}
 		}
-		t.Logf("%s %s (%s): %d points, %d placements, %d addressed, %d joined, %d with >=%d pairs",
-			e.ID, e.FileName, e.Mode, len(s.Points), len(s.APLocations), len(locations),
+		t.Logf("%s %s (%s): %d points, %d placements, %d surveyor-named, %d radios joined, %d with >=%d pairs",
+			e.ID, e.FileName, e.Mode, len(s.Points), len(s.APLocations), len(placements),
 			len(samples), scored, minPairs)
 
 		for key, v := range samples {

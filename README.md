@@ -16,7 +16,7 @@ Wi-Fi analysis; Trellis owns survey/planning** (decided 2026-09-03, superseding 
 > monitor-mode acquisition on Linux 2.4 GHz only; see `docs/10-WIFI-CAPTURE.md`).
 > **Does not exist:** the predictive C++/GPU RF engine — Gate G1 ran 2026-09-07 and
 > failed its original thresholds, and the owner re-scoped it on 2026-09-08 to 10 dB mean
-> error against the Link-Live oracle; the re-scoped run on 2026-10-14 failed that too
+> error against the Link-Live oracle, which the corrected run of 2026-10-15 passes
 > (`docs/11-GATE-G1-RESULT.md`) — licensing, and the desktop shell (the
 > macOS build is a hand-rolled bundle serving loopback HTTP, not Wails). The product/
 > architecture plan lives in `docs/`; see `docs/06-ROADMAP.md` for a phase-by-phase
