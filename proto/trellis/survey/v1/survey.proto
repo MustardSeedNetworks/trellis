@@ -309,9 +309,15 @@ message DeleteFloorResponse {
 
 message GetHeatmapRequest {
   string survey_id = 1;
-  // Heatmap metric: "rssi", "snr", "density", "interference", "download" or
-  // "upload", with "signal" and "cochannel" accepted as aliases for the first
-  // and fourth. Unrecognised values fall back to "rssi", as does the default.
+  // Heatmap metric: "rssi", "snr", "density", "interference", "download",
+  // "upload" or "predicted_rssi", with "signal" and "cochannel" accepted as
+  // aliases for the first and fourth. Unrecognised values fall back to
+  // "rssi", as does the default.
+  //
+  // "predicted_rssi" is not measured: it is the best-server signal predicted
+  // from the floor's placed APs on `band`, over the same grid as the measured
+  // map. A floor with no scale or no AP placed on the band is refused with
+  // FAILED_PRECONDITION rather than drawn empty.
   string metric = 2;
   // Floor to render. Empty means the survey's active floor.
   //
@@ -335,6 +341,10 @@ message GetHeatmapRequest {
   // have a per-AP reading; any other metric with a BSSID is refused, as is a
   // BSSID no point on the floor heard.
   optional string bssid = 5;
+  // Band a "predicted_rssi" map is for: "2.4 GHz", "5 GHz" or "6 GHz", as a
+  // placement states its band. Required for that metric, ignored by the
+  // others. A placement that states no band is drawn on every band.
+  string band = 6;
 }
 
 message GetHeatmapResponse {

@@ -101,3 +101,29 @@ full IDW's mean error stays at 1.4–2.6 dB from 100 to 10,000 points. The
 12-nearest error falls from 2.0 dB to 0.09 dB. The test fails if the mean
 deviation exceeds 1.75 dB or the maximum exceeds 12.5 dB. It also fails if
 the cutoff stops beating full IDW against the truth.
+
+## Predicted heatmap (T-P3)
+
+**Measured 2026-10-15.** The `predicted_rssi` map (ADR-0011) has the PRD's
+tightest budget: an incremental recompute on AP move in under 100 ms at a
+0.25 m grid on a ~5,000 m² floor. The PRD wrote that budget for a GPU; the
+model runs in Go on the CPU.
+
+```bash
+go test -run x -bench PredictGrid -count 3 ./core/rf/
+go test -run x -bench GetHeatmapPredicted -benchtime 5x -count 3 ./internal/api/
+```
+
+Both use a 100 m × 50 m floor with 20 APs on 5 GHz. The model runs on a
+400×200 grid of 0.25 m cells, 80,000 cells in all. The handler path draws a
+4000×2000 px plan at 0.025 m/px, so its 10 px cells are the same 0.25 m.
+
+| Path | Time per op | PRD budget | Verdict |
+| --- | --- | --- | --- |
+| `rf.PredictGrid` (the model) | 33 ms quiet; 65–73 ms at load 7–8 | < 100 ms on AP move | Met |
+| `GetHeatmap` `predicted_rssi` (model, paint, PNG) | 1.09–1.40 s at load 7–8 | < 3 s full recompute | Met |
+
+The model is the only part that changes when an AP moves, and it is what the
+100 ms budget measures. The rest of the handler's time is painting and
+PNG-encoding an 8-megapixel image. A measured map of the same plan pays that
+cost too, so it is not part of the prediction.

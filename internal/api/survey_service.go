@@ -216,6 +216,7 @@ func (h *SurveyServiceHandler) GetHeatmap(
 	// Zero is "the metric's default", resolved in the domain rather than here
 	// so the heatmap and the dead-zone analysis cannot disagree about it.
 	config.Threshold = req.Msg.GetThreshold()
+	config.Band = req.Msg.GetBand()
 
 	floor, err := floorOf(svy, req.Msg.GetFloorId())
 	if err != nil {
@@ -343,9 +344,12 @@ func coverageMetric(name string) (survey.HeatmapType, error) {
 // layerError maps a failure to draw or analyse one layer of a floor. A metric
 // the walk never measured — SNR from a radio that reports no noise figure — is
 // a true statement about the survey, which is what FailedPrecondition is for,
-// and lets a client say so without reading the message (#607).
+// and lets a client say so without reading the message (#607). A prediction on
+// a floor with no scale or no placement is the same kind of statement.
 func layerError(err error) error {
-	if errors.Is(err, survey.ErrMetricUnmeasured) {
+	if errors.Is(err, survey.ErrMetricUnmeasured) ||
+		errors.Is(err, survey.ErrFloorUnscaled) ||
+		errors.Is(err, survey.ErrNoPlacements) {
 		return connect.NewError(connect.CodeFailedPrecondition, err)
 	}
 	return connect.NewError(connect.CodeInvalidArgument, err)

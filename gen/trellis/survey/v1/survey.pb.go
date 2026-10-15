@@ -1307,9 +1307,15 @@ func (x *DeleteFloorResponse) GetFloors() []*Floor {
 type GetHeatmapRequest struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	SurveyId string                 `protobuf:"bytes,1,opt,name=survey_id,json=surveyId,proto3" json:"survey_id,omitempty"`
-	// Heatmap metric: "rssi", "snr", "density", "interference", "download" or
-	// "upload", with "signal" and "cochannel" accepted as aliases for the first
-	// and fourth. Unrecognised values fall back to "rssi", as does the default.
+	// Heatmap metric: "rssi", "snr", "density", "interference", "download",
+	// "upload" or "predicted_rssi", with "signal" and "cochannel" accepted as
+	// aliases for the first and fourth. Unrecognised values fall back to
+	// "rssi", as does the default.
+	//
+	// "predicted_rssi" is not measured: it is the best-server signal predicted
+	// from the floor's placed APs on `band`, over the same grid as the measured
+	// map. A floor with no scale or no AP placed on the band is refused with
+	// FAILED_PRECONDITION rather than drawn empty.
 	Metric string `protobuf:"bytes,2,opt,name=metric,proto3" json:"metric,omitempty"`
 	// Floor to render. Empty means the survey's active floor.
 	//
@@ -1332,7 +1338,11 @@ type GetHeatmapRequest struct {
 	// did not hear it carry no reading and are left out. Only "rssi" and "snr"
 	// have a per-AP reading; any other metric with a BSSID is refused, as is a
 	// BSSID no point on the floor heard.
-	Bssid         *string `protobuf:"bytes,5,opt,name=bssid,proto3,oneof" json:"bssid,omitempty"`
+	Bssid *string `protobuf:"bytes,5,opt,name=bssid,proto3,oneof" json:"bssid,omitempty"`
+	// Band a "predicted_rssi" map is for: "2.4 GHz", "5 GHz" or "6 GHz", as a
+	// placement states its band. Required for that metric, ignored by the
+	// others. A placement that states no band is drawn on every band.
+	Band          string `protobuf:"bytes,6,opt,name=band,proto3" json:"band,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1398,6 +1408,13 @@ func (x *GetHeatmapRequest) GetThreshold() float64 {
 func (x *GetHeatmapRequest) GetBssid() string {
 	if x != nil && x.Bssid != nil {
 		return *x.Bssid
+	}
+	return ""
+}
+
+func (x *GetHeatmapRequest) GetBand() string {
+	if x != nil {
+		return x.Band
 	}
 	return ""
 }
@@ -4139,13 +4156,14 @@ const file_trellis_survey_v1_survey_proto_rawDesc = "" +
 	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\x12\x19\n" +
 	"\bfloor_id\x18\x02 \x01(\tR\afloorId\"G\n" +
 	"\x13DeleteFloorResponse\x120\n" +
-	"\x06floors\x18\x01 \x03(\v2\x18.trellis.survey.v1.FloorR\x06floors\"\xa6\x01\n" +
+	"\x06floors\x18\x01 \x03(\v2\x18.trellis.survey.v1.FloorR\x06floors\"\xba\x01\n" +
 	"\x11GetHeatmapRequest\x12\x1b\n" +
 	"\tsurvey_id\x18\x01 \x01(\tR\bsurveyId\x12\x16\n" +
 	"\x06metric\x18\x02 \x01(\tR\x06metric\x12\x19\n" +
 	"\bfloor_id\x18\x03 \x01(\tR\afloorId\x12\x1c\n" +
 	"\tthreshold\x18\x04 \x01(\x01R\tthreshold\x12\x19\n" +
-	"\x05bssid\x18\x05 \x01(\tH\x00R\x05bssid\x88\x01\x01B\b\n" +
+	"\x05bssid\x18\x05 \x01(\tH\x00R\x05bssid\x88\x01\x01\x12\x12\n" +
+	"\x04band\x18\x06 \x01(\tR\x04bandB\b\n" +
 	"\x06_bssid\"\x9f\x03\n" +
 	"\x12GetHeatmapResponse\x12\x10\n" +
 	"\x03png\x18\x01 \x01(\fR\x03png\x12\x14\n" +
