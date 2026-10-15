@@ -3,8 +3,8 @@
 **First run:** 2026-09-07 on AirMagnet demo projects · **re-measured the same
 day** on the AirMapper walks that carry AP placements (#362) · **re-scoped
 2026-09-08 by the owner** — see [The owner's decision](#the-owners-decision-2026-09-08)
-· **re-scoped run 2026-10-14: FAIL** — see
-[The re-scoped run](#the-re-scoped-run-2026-10-14).
+· **re-scoped run 2026-10-14: PASS** after the harness correction of
+2026-10-15 — see [The corrected run](#the-corrected-run-2026-10-15).
 
 **Verdict against the thresholds this gate was originally specified with: FAIL,
 confirmed on both datasets. The predictive engine is not built.** The gate has
@@ -273,11 +273,70 @@ ourselves — `T-KILL` in the plan of record. The owner chose the oracle route
 instead, and the re-scoped run is the one that decides. `T-KILL` remains worth
 having as the alpha's kill criterion; it is no longer what G1 waits on.
 
-The re-scoped run was made on 2026-10-14 and is recorded next.
+The re-scoped run was made on 2026-10-14 and corrected on 2026-10-15; both are recorded next, the correction first.
 
-## The re-scoped run, 2026-10-14
+## The corrected run, 2026-10-15
 
-**Verdict: FAIL.** Mean error against the Link-Live oracle's AP placements is
+**Verdict: PASS.** Scored against the APs the surveyor placed, mean error is
+**8.30 dB** uncalibrated at the most favourable power tried (10 dBm) and
+**8.74 dB** at 15 dBm, under the 10 dB bar. At 20 dBm it is 11.15 dB. The
+calibrated mean is 3.55 dB. This is the same decision rule the 2026-10-14 run
+applied (the most favourable power across 10–23 dBm), now on the right APs.
+
+### What was wrong with the 2026-10-14 run
+
+It scored the wrong APs. Link-Live puts a placement on the floor plan for every
+BSS it hears, neighbours' routers included, and labels each estimate with the
+BSS address ("RuckusWi:58b633-c652d9"). The harness joined only those
+address-labelled estimates and skipped every placement labelled with a name,
+which is how the surveyor placed the site's own APs. At the Everett office the
+four SonicWall APs (SSIDs `LRC`/`LRG`) are placed as `10.24.23.87`–`.90`, and
+every radio of those APs reports that value as `apName`. At Time Square 9 the
+site's 42 APs (SSIDs `FP Internal`/`FP Guest`) are placed by name, while 70 of
+the 1,141 address estimates sit on one pixel. So the run measured distance to
+neighbours' routers and to Link-Live's guesses. That is why 86% of its fits
+pinned at the exponent floor: distance from a guessed position did not predict
+what the tester heard.
+
+The harness now joins a surveyor-named placement to every radio whose `apName`
+equals the label, scores each radio separately, and ignores address-labelled
+placements as estimates. Nothing else changed: the model, the 30-pair floor, the
+calibration bounds and the uncalibrated defaults are those of the earlier runs.
+Owner-confirmed site APs: Everett = SonicWall `LRC`/`LRG`; Time Square = the
+dense, multi-tenant `FP` deployment.
+
+```bash
+TRELLIS_LL_ORACLE=~/data/linklive-oracle go test ./core/rf/ -run G1LinkLive -v
+```
+
+### Result
+
+| Survey | Radios scored | Pre-cal MAE (20 dBm) | Calibrated MAE |
+| --- | --- | --- | --- |
+| Large retailer, survey 2 (`60957f54`) | 125 | 6.49 | 2.70 |
+| MGM corporate (`62869b48`) | 77 | 15.56 | 3.11 |
+| Everett office, AirCheck G2 (`60957e34`) | 70 | 12.18 | 2.80 |
+| Utopia floor 2 (`628da44e`) | 60 | 9.55 | 6.40 |
+| Utopia floor 1 (`628da423`) | 57 | 17.95 | 3.47 |
+| Time Square, 9th floor (`65c694f8`) | 48 | 13.71 | 3.36 |
+| Time Square, 10th floor (`65c69564`) | 32 | 10.44 | 4.11 |
+| Everett office, 2021 (`60957e0f`) | 20 | 5.53 | 3.77 |
+| Everett office, 2022 (`628da3f3`) | 12 | 4.62 | 3.50 |
+| Home, floor 2 (`60957de1`) | 9 | 8.01 | 4.95 |
+| **All, per radio** | **510** | **11.15** | **3.55** |
+
+| Assumed transmit power | 10 dBm | 15 dBm | 20 dBm | 23 dBm |
+| --- | --- | --- | --- | --- |
+| Pre-cal mean MAE, all 510 radios | **8.30** | **8.74** | 11.15 | 13.38 |
+
+201 of the 510 fits (39%, against 86% before) fell outside the physical
+exponent bounds. The sites that miss most at 20 dBm are dense deployments whose
+controllers run the radios low, which is what the power sweep shows. A planner
+should take each AP's configured power rather than a flat 20 dBm.
+
+## The re-scoped run, 2026-10-14 (superseded by the correction above)
+
+**Recorded verdict, since corrected: FAIL.** Mean error against the Link-Live oracle's AP placements is
 **20.24 dB uncalibrated** at the 20 dBm transmit power every earlier run
 assumed, and **12.61 dB** at the most favourable power tried. No assumption
 reaches 10 dB. Per the 2026-09-08 decision, a fail stops the planner for good.
