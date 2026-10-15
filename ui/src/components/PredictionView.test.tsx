@@ -72,6 +72,7 @@ beforeEach(() => {
   listAPPlacements.mockResolvedValue({ placements: [] });
   createAPPlacement.mockResolvedValue({ placement: { ...placed } });
   updateAPPlacement.mockResolvedValue({ placement: { ...placed } });
+  deleteAPPlacement.mockResolvedValue({});
 });
 
 describe('PredictionView', () => {
@@ -180,5 +181,41 @@ describe('PredictionView', () => {
       placementId: 'p-1',
       placement: { x: 100, y: 80, band: '5 GHz', txPowerDbm: undefined },
     });
+  });
+
+  it('moves an AP from the keyboard with every other setting kept', async () => {
+    listAPPlacements.mockResolvedValue({ placements: [{ ...placed, txPowerDbm: 17 }] });
+    renderView({ heatmapError: noPlacements });
+
+    fireEvent.keyDown(await screen.findByTestId('ap-marker'), { key: 'ArrowLeft' });
+    await waitFor(() => expect(updateAPPlacement).toHaveBeenCalled());
+    expect(updateAPPlacement.mock.calls[0]?.[0]).toMatchObject({
+      placementId: 'p-1',
+      placement: { x: 95, y: 80, band: '5 GHz', txPowerDbm: 17 },
+    });
+  });
+
+  it('moves an AP to another band, and deletes it', async () => {
+    listAPPlacements.mockResolvedValue({ placements: [placed] });
+    renderView({ heatmapError: noPlacements });
+
+    fireEvent.click(within(await screen.findByTestId('placement-list')).getByRole('button'));
+    fireEvent.change(screen.getByTestId('placement-band'), { target: { value: '2.4 GHz' } });
+    fireEvent.click(screen.getByTestId('placement-apply'));
+    await waitFor(() => expect(updateAPPlacement).toHaveBeenCalled());
+    expect(updateAPPlacement.mock.calls[0]?.[0]).toMatchObject({
+      placement: { band: '2.4 GHz' },
+    });
+
+    await waitFor(() => expect(screen.getByTestId('placement-delete')).toBeEnabled());
+    fireEvent.click(screen.getByTestId('placement-delete'));
+    await waitFor(() =>
+      expect(deleteAPPlacement).toHaveBeenCalledWith({
+        surveyId: 'svy-1',
+        floorId: '',
+        placementId: 'p-1',
+      }),
+    );
+    await waitFor(() => expect(screen.queryByTestId('placement-editor')).not.toBeInTheDocument());
   });
 });

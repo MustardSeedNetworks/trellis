@@ -88,6 +88,22 @@ describe('PlacementLayer', () => {
     expect(onSelect).toHaveBeenCalledWith('ap-2');
   });
 
+  it('drops a cancelled drag rather than moving the AP', () => {
+    const { onMove } = renderLayer();
+    const marker = screen.getAllByTestId('ap-marker')[0] as HTMLElement;
+    fireEvent.pointerDown(marker, { pointerId: 1, clientX: 110, clientY: 85 });
+    fireEvent.pointerMove(marker, { pointerId: 1, clientX: 300, clientY: 200 });
+    fireEvent.pointerCancel(marker, { pointerId: 1 });
+    expect(onMove).not.toHaveBeenCalled();
+    expect(marker).toHaveStyle({ left: '25%', top: '25%' });
+  });
+
+  it('selects a marker reached with Tab', () => {
+    const { onSelect } = renderLayer();
+    fireEvent.focus(screen.getAllByTestId('ap-marker')[1] as HTMLElement);
+    expect(onSelect).toHaveBeenCalledWith('ap-2');
+  });
+
   it('nudges a marker with the arrow keys, further with Shift', () => {
     const { onMove } = renderLayer();
     const [first, second] = screen.getAllByTestId('ap-marker') as HTMLElement[];
