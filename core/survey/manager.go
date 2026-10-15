@@ -261,18 +261,20 @@ func (m *Manager) CompleteSurvey(id string) error {
 
 // ImportedDataUpdate carries the slices a caller wants to replace on a survey.
 // Each field is optional; nil means "leave as-is". An empty (non-nil) slice
-// clears the corresponding survey field, which is the right behaviour when an
+// clears the corresponding field, which is the right behaviour when an
 // importer wants to fully replace the existing list.
+//
+// FloorID names the floor the placements sit on. It is required whenever a
+// placement slice is set: a placement is a pixel on one floor's plan.
 type ImportedDataUpdate struct {
+	FloorID          string
 	APLocations      []APLocation
 	ClientLocations  []ClientLocation
 	PassFailCriteria []PassFailCriterion
 }
 
-// UpdateImportedData replaces the survey's imported-data fields (#727).
-// Callers (most notably the AirMapper import flow) use this to persist the
-// AP/client placements and pass-fail criteria that come back from the parser
-// so the data survives a page reload.
+// UpdateImportedData replaces a survey's imported data (#727): the placements
+// on one floor and the survey's pass/fail criteria.
 func (m *Manager) UpdateImportedData(id string, update ImportedDataUpdate) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -282,16 +284,24 @@ func (m *Manager) UpdateImportedData(id string, update ImportedDataUpdate) error
 		return fmt.Errorf("%w: %s", ErrSurveyNotFound, id)
 	}
 
-	if update.APLocations != nil {
-		survey.APLocations = update.APLocations
-	}
-	if update.ClientLocations != nil {
-		survey.ClientLocations = update.ClientLocations
+	now := time.Now()
+	if update.APLocations != nil || update.ClientLocations != nil {
+		floor := survey.GetFloorByID(update.FloorID)
+		if floor == nil {
+			return fmt.Errorf("%w: %q", ErrFloorNotFound, update.FloorID)
+		}
+		if update.APLocations != nil {
+			floor.APLocations = update.APLocations
+		}
+		if update.ClientLocations != nil {
+			floor.ClientLocations = update.ClientLocations
+		}
+		floor.UpdatedAt = now
 	}
 	if update.PassFailCriteria != nil {
 		survey.PassFailCriteria = update.PassFailCriteria
 	}
-	survey.UpdatedAt = time.Now()
+	survey.UpdatedAt = now
 
 	return m.persistSurvey(survey)
 }

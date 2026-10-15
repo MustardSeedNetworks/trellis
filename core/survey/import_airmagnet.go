@@ -4,6 +4,7 @@ package survey
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/google/uuid"
 )
@@ -30,7 +31,10 @@ func (m *Manager) ImportAirMagnet(name string, data []byte) (*Survey, error) {
 	}
 
 	if aps := airMagnetAPLocations(file.APs); len(aps) > 0 {
-		if err := m.UpdateImportedData(svy.ID, ImportedDataUpdate{APLocations: aps}); err != nil {
+		if err := m.UpdateImportedData(svy.ID, ImportedDataUpdate{
+			FloorID:     svy.ActiveFloorID,
+			APLocations: aps,
+		}); err != nil {
 			return nil, err
 		}
 	}
@@ -77,7 +81,8 @@ func airMagnetDescription(f *AirMagnetFile) string {
 }
 
 // airMagnetAPLocations maps the file's AP configuration section onto the
-// domain type, the same shape the AirMapper importer produces.
+// domain type, the same shape the AirMapper importer produces. AirMagnet also
+// records each radio's channel and power, which an AirMapper archive does not.
 func airMagnetAPLocations(in []AirMagnetAP) []APLocation {
 	if len(in) == 0 {
 		return nil
@@ -88,14 +93,22 @@ func airMagnetAPLocations(in []AirMagnetAP) []APLocation {
 		if label == "" {
 			label = ap.SSID
 		}
-		out = append(out, APLocation{
+		loc := APLocation{
 			ID:       uuid.New().String(),
 			X:        ap.X,
 			Y:        ap.Y,
 			Label:    label,
 			BSSID:    ap.BSSID,
 			Imported: true,
-		})
+		}
+		if ap.PowerMW > 0 {
+			dBm := 10 * math.Log10(float64(ap.PowerMW))
+			loc.TxPowerDBm = &dBm
+		}
+		if ap.Channel > 0 {
+			loc.Band = bandLabel(frequencyForChannel(ap.Channel), ap.Channel)
+		}
+		out = append(out, loc)
 	}
 	return out
 }

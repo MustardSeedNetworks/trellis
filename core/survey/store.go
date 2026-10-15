@@ -51,7 +51,8 @@ func (m *Manager) persistSurvey(survey *Survey) error {
 	if err := upsertSurvey(ctx, tx, survey); err != nil {
 		return err
 	}
-	// ON DELETE CASCADE clears floors, points, samples and criteria.
+	// ON DELETE CASCADE clears floors with their points, samples and
+	// placements.
 	if _, err := tx.ExecContext(ctx, `DELETE FROM floors WHERE survey_id = ?`, survey.ID); err != nil {
 		return fmt.Errorf("clear floors: %w", err)
 	}
@@ -126,6 +127,32 @@ func insertFloor(ctx context.Context, tx *sql.Tx, points *pointWriter, f *Floor)
 	for _, p := range f.Samples {
 		if err := points.insert(ctx, f.ID, p); err != nil {
 			return err
+		}
+	}
+	return insertPlacements(ctx, tx, f)
+}
+
+// insertPlacements writes a floor's AP and client placements. The floor row was
+// just reinserted, so its old placements went with the cascade.
+func insertPlacements(ctx context.Context, tx *sql.Tx, f *Floor) error {
+	for _, ap := range f.APLocations {
+		if _, err := tx.ExecContext(ctx, `
+			INSERT INTO ap_placements (floor_id, placement_id, x, y, label, bssid, vendor,
+				notes, imported, tx_power_dbm, band)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			f.ID, ap.ID, ap.X, ap.Y, ap.Label, ap.BSSID, ap.Vendor, ap.Notes,
+			boolToInt(ap.Imported), ap.TxPowerDBm, ap.Band,
+		); err != nil {
+			return fmt.Errorf("insert AP placement: %w", err)
+		}
+	}
+	for _, c := range f.ClientLocations {
+		if _, err := tx.ExecContext(ctx, `
+			INSERT INTO client_placements (floor_id, placement_id, x, y, label, mac, imported)
+			VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			f.ID, c.ID, c.X, c.Y, c.Label, c.MAC, boolToInt(c.Imported),
+		); err != nil {
+			return fmt.Errorf("insert client placement: %w", err)
 		}
 	}
 	return nil
@@ -370,6 +397,57 @@ func (m *Manager) loadFloors(ctx context.Context, s *Survey) error {
 		if err := m.loadPoints(ctx, f); err != nil {
 			return err
 		}
+		if err := m.loadPlacements(ctx, f); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m *Manager) loadPlacements(ctx context.Context, f *Floor) error {
+	aps, err := m.db.QueryContext(ctx, `
+		SELECT placement_id, x, y, label, bssid, vendor, notes, imported, tx_power_dbm, band
+		FROM ap_placements WHERE floor_id = ? ORDER BY id`, f.ID)
+	if err != nil {
+		return fmt.Errorf("list AP placements: %w", err)
+	}
+	defer func() { _ = aps.Close() }()
+	for aps.Next() {
+		var ap APLocation
+		var imported int
+		var power sql.NullFloat64
+		if err := aps.Scan(&ap.ID, &ap.X, &ap.Y, &ap.Label, &ap.BSSID, &ap.Vendor, &ap.Notes,
+			&imported, &power, &ap.Band); err != nil {
+			return fmt.Errorf("scan AP placement: %w", err)
+		}
+		ap.Imported = imported == 1
+		if power.Valid {
+			ap.TxPowerDBm = &power.Float64
+		}
+		f.APLocations = append(f.APLocations, ap)
+	}
+	if err := aps.Err(); err != nil {
+		return fmt.Errorf("iterate AP placements: %w", err)
+	}
+
+	clients, err := m.db.QueryContext(ctx, `
+		SELECT placement_id, x, y, label, mac, imported
+		FROM client_placements WHERE floor_id = ? ORDER BY id`, f.ID)
+	if err != nil {
+		return fmt.Errorf("list client placements: %w", err)
+	}
+	defer func() { _ = clients.Close() }()
+	for clients.Next() {
+		var c ClientLocation
+		var imported int
+		if err := clients.Scan(&c.ID, &c.X, &c.Y, &c.Label, &c.MAC, &imported); err != nil {
+			return fmt.Errorf("scan client placement: %w", err)
+		}
+		c.Imported = imported == 1
+		f.ClientLocations = append(f.ClientLocations, c)
+	}
+	if err := clients.Err(); err != nil {
+		return fmt.Errorf("iterate client placements: %w", err)
 	}
 	return nil
 }
