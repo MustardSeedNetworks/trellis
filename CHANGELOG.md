@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.24](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.23...v0.7.24) (2026-10-15)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.53.0 ([#817](https://github.com/MustardSeedNetworks/trellis/issues/817)) ([22cc36f](https://github.com/MustardSeedNetworks/trellis/commit/22cc36f46c188ece2abbf15426be8f6302086052))
+
+
+### Documentation
+
+* **rf:** record Gate G1 against the Link-Live oracle — pass on surveyor-placed APs ([#813](https://github.com/MustardSeedNetworks/trellis/issues/813)) ([87b2326](https://github.com/MustardSeedNetworks/trellis/commit/87b2326ee85408cc5a5871daa9d56ecf454804ca))
+
 ## [0.7.23](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.22...v0.7.23) (2026-10-15)
 
 
