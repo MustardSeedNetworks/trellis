@@ -69,7 +69,7 @@ func TestImportAirMapperWithoutSerialMetadata(t *testing.T) {
 	if floor.FloorPlan.ScaleM != 0 {
 		t.Errorf("scale = %v m/px from an archive that carries no calibration", floor.FloorPlan.ScaleM)
 	}
-	if len(svy.APLocations) != 0 {
-		t.Errorf("AP locations = %d from an archive with no placements", len(svy.APLocations))
+	if len(floor.APLocations) != 0 {
+		t.Errorf("AP locations = %d from an archive with no placements", len(floor.APLocations))
 	}
 }

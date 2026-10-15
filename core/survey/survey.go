@@ -64,6 +64,12 @@ type Floor struct {
 	Samples   []*SamplePoint `json:"samples"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
+
+	// Placements are pixels on this floor's plan, so they live with it rather
+	// than with the survey: a survey with several floors has to say which plan
+	// each AP sits on (#821).
+	APLocations     []APLocation     `json:"apLocations,omitempty"`
+	ClientLocations []ClientLocation `json:"clientLocations,omitempty"`
 }
 
 // PassiveSample contains data from a passive Wi-Fi scan.
@@ -252,11 +258,8 @@ type Survey struct {
 	IperfServer  string `json:"iperfServer,omitempty"`  // For throughput surveys
 	TestDuration int    `json:"testDuration,omitempty"` // seconds, for throughput tests
 
-	// Imported / placed data (#727). These are sourced from AirMapper imports
-	// or user placement in the planner and are persisted with the survey so
-	// they survive reload.
-	APLocations      []APLocation        `json:"apLocations,omitempty"`
-	ClientLocations  []ClientLocation    `json:"clientLocations,omitempty"`
+	// Imported pass/fail thresholds (#727). Placements are per floor; see
+	// Floor.APLocations.
 	PassFailCriteria []PassFailCriterion `json:"passFailCriteria,omitempty"`
 }
 
@@ -271,6 +274,10 @@ type APLocation struct {
 	Vendor   string `json:"vendor,omitempty"`
 	Notes    string `json:"notes,omitempty"`
 	Imported bool   `json:"imported,omitempty"` // True when added by an importer
+	// TxPowerDBm is the radio's stated transmit power. Nil when the source
+	// does not state one, which is distinct from 0 dBm.
+	TxPowerDBm *float64 `json:"txPowerDbm,omitempty"`
+	Band       string   `json:"band,omitempty"` // "2.4 GHz" / "5 GHz" / "6 GHz"; empty when unstated
 }
 
 // ClientLocation marks the floorplan-relative position of a client/station.
@@ -381,11 +388,11 @@ func (s *Survey) snapshot() *Survey {
 		}
 		f := *floor
 		f.Samples = slices.Clone(floor.Samples)
+		f.APLocations = slices.Clone(floor.APLocations)
+		f.ClientLocations = slices.Clone(floor.ClientLocations)
 		copied.Floors[i] = &f
 	}
 	copied.Samples = slices.Clone(s.Samples)
-	copied.APLocations = slices.Clone(s.APLocations)
-	copied.ClientLocations = slices.Clone(s.ClientLocations)
 	copied.PassFailCriteria = slices.Clone(s.PassFailCriteria)
 	return &copied
 }

@@ -107,7 +107,7 @@ func TestParseAirMapperReadsTopLevelAPPlacements(t *testing.T) {
 	}
 }
 
-func TestImportAirMapperLandsPlacementsOnTheSurvey(t *testing.T) {
+func TestImportAirMapperLandsPlacementsOnTheFloor(t *testing.T) {
 	mgr := mustManager(t, t.TempDir(), nil, nil, nil, nil)
 
 	amp := buildPlacementAMP(t, map[string]any{
@@ -123,13 +123,14 @@ func TestImportAirMapperLandsPlacementsOnTheSurvey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("import: %v", err)
 	}
-	if len(svy.APLocations) != 1 {
-		t.Fatalf("stored AP placements = %d, want 1", len(svy.APLocations))
+	aps := svy.Floors[0].APLocations
+	if len(aps) != 1 {
+		t.Fatalf("stored AP placements = %d, want 1", len(aps))
 	}
-	if got := svy.APLocations[0].BSSID; got != "58:b6:33:c6:52:d9" {
+	if got := aps[0].BSSID; got != "58:b6:33:c6:52:d9" {
 		t.Errorf("stored BSSID = %q, want 58:b6:33:c6:52:d9", got)
 	}
-	if !svy.APLocations[0].Imported {
+	if !aps[0].Imported {
 		t.Error("placement is not marked imported")
 	}
 }

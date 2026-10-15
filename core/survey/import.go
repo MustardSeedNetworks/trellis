@@ -62,7 +62,9 @@ func (m *Manager) ImportAirMapper(name string, data []byte) (*Survey, error) {
 		return nil, err
 	}
 
+	// An archive holds one plan, and the new survey's one floor carries it.
 	if err := m.UpdateImportedData(svy.ID, ImportedDataUpdate{
+		FloorID:          svy.ActiveFloorID,
 		APLocations:      importedAPLocations(result.APLocations),
 		PassFailCriteria: importedPassFailCriteria(result.PassFailCriteria),
 	}); err != nil {
