@@ -777,10 +777,11 @@ export const GetHeatmapResponseSchema: GenMessage<GetHeatmapResponse> = /*@__PUR
 
 /**
  * APCalibration is how one placed AP's prediction was fitted to the readings
- * of its BSSID on the floor's walk. An AP is drawn calibrated only when the
- * fit can be trusted; otherwise it is drawn with the uncalibrated defaults and
- * `fallback` says why: no BSSID, fewer readings than a fit needs, readings at
- * one distance, or a fitted exponent outside the physical bounds (`clamped`).
+ * of its BSSID on the floor's walk. An AP is drawn calibrated whenever a fit
+ * can be made; a fitted exponent outside the physical bounds is drawn at the
+ * nearest bound with its own reference loss and `clamped` set. Otherwise it is
+ * drawn with the uncalibrated defaults and `fallback` says why: no BSSID,
+ * fewer readings than a fit needs, or readings at one distance.
  *
  * @generated from message trellis.survey.v1.APCalibration
  */

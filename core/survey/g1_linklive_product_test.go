@@ -94,18 +94,16 @@ func TestG1LinkLiveProductPath(t *testing.T) {
 	sort.Slice(surveys, func(i, j int) bool { return surveys[i].ID < surveys[j].ID })
 
 	// drawn is every radio with enough readings to fit, the set Gate G1
-	// scored, at the error of the model the map was actually drawn with:
-	// calibrated where the fit is trusted, the defaults where it fell back.
-	// calibrated is the subset whose fit was trusted.
-	var drawn, calibrated []float64
+	// scored, at the error of the model the map was actually drawn with.
+	// unclamped is the subset whose fitted exponent was physical.
+	var drawn, unclamped []float64
 	for _, s := range surveys {
 		if s.MetresPerPixel() == 0 || s.WidthPx <= 0 || s.HeightPx <= 0 {
 			t.Logf("%s %s: no scale or plan size stated; not scored", s.ID[:8], s.FileName)
 			continue
 		}
 		floor := oracleFloor(s)
-		var sDrawn, sCal []float64
-		clamped := 0
+		var sDrawn, sUnclamped []float64
 		for _, band := range predictionBands {
 			result, err := survey.GenerateFloorHeatmap(floor, predictedConfig(band))
 			if err != nil {
@@ -116,28 +114,25 @@ func TestG1LinkLiveProductPath(t *testing.T) {
 					continue
 				}
 				sDrawn = append(sDrawn, *c.MeanAbsErrorDB)
-				if c.Calibrated {
-					sCal = append(sCal, *c.MeanAbsErrorDB)
-				}
-				if c.Clamped {
-					clamped++
+				if !c.Clamped {
+					sUnclamped = append(sUnclamped, *c.MeanAbsErrorDB)
 				}
 			}
 		}
 		if len(sDrawn) == 0 {
 			continue
 		}
-		t.Logf("survey %s: %3d radios, %3d calibrated, %3d clamped to the defaults: drawn-map MAE=%5.2f dB, calibrated MAE=%5.2f dB",
-			s.ID[:8], len(sDrawn), len(sCal), clamped, mean(sDrawn), mean(sCal))
+		t.Logf("survey %s: %3d radios, %3d clamped: drawn-map MAE=%5.2f dB, unclamped MAE=%5.2f dB",
+			s.ID[:8], len(sDrawn), len(sDrawn)-len(sUnclamped), mean(sDrawn), mean(sUnclamped))
 		drawn = append(drawn, sDrawn...)
-		calibrated = append(calibrated, sCal...)
+		unclamped = append(unclamped, sUnclamped...)
 	}
 	if len(drawn) == 0 {
 		t.Fatal("no radio on any survey had enough readings to score")
 	}
-	t.Logf("all: %d radios, %d calibrated (%d fell back): drawn-map MAE=%.2f dB, calibrated MAE=%.2f dB; kill criterion %.0f dB",
-		len(drawn), len(calibrated), len(drawn)-len(calibrated), mean(drawn), mean(calibrated), killCriterionDB)
-	if m := mean(calibrated); m > killCriterionDB {
+	t.Logf("all: %d radios, %d clamped: drawn-map MAE=%.2f dB, unclamped MAE=%.2f dB; kill criterion %.0f dB",
+		len(drawn), len(drawn)-len(unclamped), mean(drawn), mean(unclamped), killCriterionDB)
+	if m := mean(drawn); m > killCriterionDB {
 		t.Errorf("calibrated MAE %.2f dB is above the %.0f dB kill criterion: stop the predictive phase after T-P5", m, killCriterionDB)
 	}
 }

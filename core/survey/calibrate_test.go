@@ -107,12 +107,6 @@ func TestPredictionFallsBackWhenTheFitCannotBeTrusted(t *testing.T) {
 			}
 			return f
 		}, 15 * 20, "same distance"},
-		{"signal rising with distance", func() *survey.Floor {
-			return calibratedFloor(func(x, y int, _ int) []*wifi.ScannedNetwork {
-				d := math.Hypot(float64(x-205), float64(y-155)) * 0.1
-				return []*wifi.ScannedNetwork{{BSSID: calBSSID, Signal: int(-80 + d), Channel: 36, Frequency: 5180}}
-			})
-		}, 15 * 20, "outside the physical"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			floor := tc.floor()
@@ -135,9 +129,12 @@ func TestPredictionFallsBackWhenTheFitCannotBeTrusted(t *testing.T) {
 	}
 }
 
-func TestClampedFitReportsWhatItFound(t *testing.T) {
+func TestClampedFitIsDrawnAtTheBound(t *testing.T) {
+	// The signal rises with distance: no physical exponent explains it.
+	var pairs []rf.Sample
 	floor := calibratedFloor(func(x, y int, _ int) []*wifi.ScannedNetwork {
 		d := math.Hypot(float64(x-205), float64(y-155)) * 0.1
+		pairs = append(pairs, rf.Sample{DistanceM: d, RSSIDBm: float64(int(-80 + d))})
 		return []*wifi.ScannedNetwork{{BSSID: calBSSID, Signal: int(-80 + d), Channel: 36, Frequency: 5180}}
 	})
 	result, err := survey.GenerateFloorHeatmap(floor, predictedConfig("5 GHz"))
@@ -147,6 +144,18 @@ func TestClampedFitReportsWhatItFound(t *testing.T) {
 	c := result.Calibrations[0]
 	if !c.Clamped || c.FittedExponent == nil || *c.FittedExponent >= 0 {
 		t.Errorf("calibration = %+v, want clamped with the negative exponent the walk fits", c)
+	}
+	if !c.Calibrated || c.Fallback != "" || c.Exponent != rf.MinExponent {
+		t.Errorf("calibration = %+v, want drawn calibrated at the bound exponent %v", c, rf.MinExponent)
+	}
+
+	// Drawn with the fit's own reference loss at the bound, not the defaults.
+	fit, err := rf.Fit(known.TxPowerDBm, pairs)
+	if err != nil {
+		t.Fatalf("Fit: %v", err)
+	}
+	if got, want := result.Grid[15][30], fit.Model.PredictRSSI(10); math.Abs(got-want) > 0.3 {
+		t.Errorf("cell 10 m east = %.2f dBm, want %.2f from the clamped fit", got, want)
 	}
 }
 

@@ -340,42 +340,40 @@ The predicted map now calibrates each placed radio from the floor's own walk
 (ADR-0011). The same ten surveys were run through it: each became a floor
 holding the walk and one placement per radio of every surveyor-named AP, and
 `GenerateFloorHeatmap` drew the predicted map per band, as `GetHeatmap` does.
-The product scores the same 510 radios as the run above. A radio is drawn
-calibrated only when its fit is trusted; a clamped fit, or fewer than 30
-readings, falls back to the uncalibrated defaults (10 dBm, exponent 3) and the
-response says why.
+The product scores the same 510 radios as the run above. A radio with at least
+30 readings is drawn calibrated. A fit whose exponent falls outside the
+physical bounds is drawn at the nearest bound with its own reference loss
+(owner decision 2026-10-15) and the response marks it clamped; fewer readings
+fall back to the uncalibrated defaults (10 dBm, exponent 3) and the response
+says why.
 
 ```bash
 TRELLIS_LL_ORACLE=~/data/linklive-oracle go test ./core/survey/ -run G1LinkLiveProduct -v
 ```
 
-| Survey | Radios | Calibrated | Calibrated MAE | Drawn-map MAE |
+| Survey | Radios | Clamped | Unclamped MAE | Drawn-map MAE |
 | --- | --- | --- | --- | --- |
-| Large retailer, survey 2 (`60957f54`) | 125 | 80 | 2.77 | 3.93 |
-| MGM corporate (`62869b48`) | 77 | 35 | 3.23 | 6.32 |
-| Everett office, AirCheck G2 (`60957e34`) | 70 | 46 | 3.09 | 6.49 |
-| Utopia floor 2 (`628da44e`) | 60 | 46 | 6.65 | 6.68 |
-| Utopia floor 1 (`628da423`) | 57 | 12 | 4.59 | 10.16 |
-| Time Square, 9th floor (`65c694f8`) | 48 | 30 | 3.83 | 7.38 |
-| Time Square, 10th floor (`65c69564`) | 32 | 27 | 4.02 | 5.73 |
-| Everett office, 2021 (`60957e0f`) | 20 | 20 | 3.78 | 3.78 |
-| Everett office, 2022 (`628da3f3`) | 12 | 12 | 3.50 | 3.50 |
-| Home, floor 2 (`60957de1`) | 9 | 1 | 3.38 | 14.93 |
-| **All, per radio** | **510** | **309** | **3.83** | **6.28** |
+| Large retailer, survey 2 (`60957f54`) | 125 | 45 | 2.77 | 2.70 |
+| MGM corporate (`62869b48`) | 77 | 42 | 3.23 | 3.11 |
+| Everett office, AirCheck G2 (`60957e34`) | 70 | 24 | 3.09 | 2.80 |
+| Utopia floor 2 (`628da44e`) | 60 | 14 | 6.65 | 6.40 |
+| Utopia floor 1 (`628da423`) | 57 | 45 | 4.59 | 3.47 |
+| Time Square, 9th floor (`65c694f8`) | 48 | 18 | 3.83 | 3.36 |
+| Time Square, 10th floor (`65c69564`) | 32 | 5 | 4.02 | 4.11 |
+| Everett office, 2021 (`60957e0f`) | 20 | 0 | 3.78 | 3.78 |
+| Everett office, 2022 (`628da3f3`) | 12 | 0 | 3.50 | 3.50 |
+| Home, floor 2 (`60957de1`) | 9 | 8 | 3.38 | 4.95 |
+| **All, per radio** | **510** | **201** | **3.83** | **3.55** |
 
-**Kill criterion: not tripped.** The calibrated mean error through the product
-is **3.83 dB**, under the phase's 6 dB line; it is above the 3.55 dB of the
-run above because that mean also counts the 201 clamped fits at their bound,
-which the product does not draw.
+**Kill criterion: not tripped.** The map the product draws is **3.55 dB** from
+the walk, under the phase's 6 dB line, and equal to the run above, which
+scored the same clamped fits at their bound. The 309 radios whose exponent was
+physical score 3.83 dB on their own.
 
-**The drawn map is 6.28 dB.** The 201 radios whose fit clamped are drawn on
-the defaults, where they average about 10.0 dB; at their clamped fit they
-average about 3.1 dB (from the two means above).
-Falling back is what T-P5 specifies, because a clamped exponent is not a
-propagation model. Whether the map should instead draw a clamped fit's
-reference loss, which tracks the walk's level at the cost of a meaningless
-slope, is an owner decision recorded on the T-P5 row; nothing in this run
-changes the gate verdict.
+The first cut of T-P5 drew a clamped fit on the defaults, which put the drawn
+map at 6.28 dB: those 201 radios averaged about 10.0 dB there. A clamped
+exponent is not a propagation model, but its reference loss tracks the walk's
+level, and that is most of the error.
 
 ## The re-scoped run, 2026-10-14 (superseded by the correction above)
 
