@@ -6,6 +6,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"image"
 	"image/png"
@@ -71,6 +72,7 @@ func TestDiffCountsEveryDisagreement(t *testing.T) {
 		{"signal", func(p []survey.SurveyPointRecord) { p[0].Networks[0].Signal = -75 }, false},
 		{"noise", func(p []survey.SurveyPointRecord) { p[0].Networks[0].NoiseFloor = -89 }, false},
 		{"channel", func(p []survey.SurveyPointRecord) { p[0].Networks[0].Channel = 28 }, false},
+		{"band", func(p []survey.SurveyPointRecord) { p[0].Networks[0].Frequency = 5990 }, false},
 		{"a BSSID only one side saw", func(p []survey.SurveyPointRecord) {
 			p[0].Networks[0].BSSID = "00:00:5e:00:53:01"
 		}, false},
@@ -84,6 +86,34 @@ func TestDiffCountsEveryDisagreement(t *testing.T) {
 				t.Fatalf("agrees() = %v, want %v (%+v)", got.agrees(), tc.agrees, got)
 			}
 		})
+	}
+}
+
+// TestLLChannelDecodesEveryForm: a single 6 GHz reading in Link-Live's string
+// form used to fail the whole survey's decode (trellis#812).
+func TestLLChannelDecodesEveryForm(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		json string
+		want llChannel
+	}{
+		{"number", `149`, 149},
+		{"6 GHz string", `"97E"`, 97},
+		{"null", `null`, 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var ap llAP
+			if err := json.Unmarshal([]byte(`{"channelPrimary":`+tc.json+`}`), &ap); err != nil {
+				t.Fatalf("Unmarshal: %v", err)
+			}
+			if ap.ChannelPrimary != tc.want {
+				t.Errorf("channelPrimary %s = %d, want %d", tc.json, ap.ChannelPrimary, tc.want)
+			}
+		})
+	}
+	var ap llAP
+	if err := json.Unmarshal([]byte(`{"channelPrimary":"97X"}`), &ap); err == nil {
+		t.Errorf("channelPrimary \"97X\" decoded as %d, want an error", ap.ChannelPrimary)
 	}
 }
 
