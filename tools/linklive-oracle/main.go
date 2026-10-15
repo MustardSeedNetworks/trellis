@@ -63,11 +63,39 @@ type llPoint struct {
 
 // llAP is one BSS observed from a walk position.
 type llAP struct {
-	BSSID          string `json:"bssid"`
-	Signal         int    `json:"signal"`
-	Noise          int    `json:"noise"`
-	ChannelPrimary int    `json:"channelPrimary"`
+	BSSID          string    `json:"bssid"`
+	Signal         int       `json:"signal"`
+	Noise          int       `json:"noise"`
+	Band           string    `json:"band"`
+	ChannelPrimary llChannel `json:"channelPrimary"`
 }
+
+// llChannel is Link-Live's channelPrimary: a number on 2.4 and 5 GHz, and a
+// string with an "E" suffix on 6 GHz ("97E"). Band says which.
+type llChannel int
+
+func (c *llChannel) UnmarshalJSON(b []byte) error {
+	var n int
+	if err := json.Unmarshal(b, &n); err == nil {
+		*c = llChannel(n)
+		return nil
+	}
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return fmt.Errorf("channelPrimary %s: %w", b, err)
+	}
+	n, err := strconv.Atoi(strings.TrimSuffix(s, "E"))
+	if err != nil {
+		return fmt.Errorf("channelPrimary %q: %w", s, err)
+	}
+	*c = llChannel(n)
+	return nil
+}
+
+// sixGHzMinMHz is the bottom edge of the 6 GHz band. Channel numbers repeat
+// across bands, so a channel only agrees when both sides also put it in the
+// same band.
+const sixGHzMinMHz = 5925
 
 // comparison is one survey's result, in the order the report prints it.
 type comparison struct {
@@ -275,7 +303,10 @@ func diff(into *comparison, ll *processed, points []survey.SurveyPointRecord, im
 	into.points = [2]int{len(ll.Points), len(points)}
 	into.placements = [2]int{len(ll.APLocations), len(imported.APLocations)}
 
-	type reading struct{ signal, noise, channel int }
+	type reading struct {
+		signal, noise, channel int
+		sixGHz                 bool
+	}
 	truth := map[[2]string]reading{}
 	llBSSIDs := map[string]bool{}
 	for i, p := range ll.Points {
@@ -285,7 +316,7 @@ func diff(into *comparison, ll *processed, points []survey.SurveyPointRecord, im
 				continue
 			}
 			llBSSIDs[b] = true
-			truth[[2]string{strconv.Itoa(i), b}] = reading{ap.Signal, ap.Noise, ap.ChannelPrimary}
+			truth[[2]string{strconv.Itoa(i), b}] = reading{ap.Signal, ap.Noise, int(ap.ChannelPrimary), ap.Band == "6 GHz"}
 		}
 	}
 
@@ -313,7 +344,7 @@ func diff(into *comparison, ll *processed, points []survey.SurveyPointRecord, im
 			if want.noise == n.NoiseFloor {
 				into.noise[0]++
 			}
-			if want.channel == n.Channel {
+			if want.channel == n.Channel && want.sixGHz == (n.Frequency >= sixGHzMinMHz) {
 				into.channel[0]++
 			}
 		}

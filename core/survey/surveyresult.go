@@ -282,7 +282,7 @@ func parseObservation(data []byte) (*wifi.ScannedNetwork, error) {
 		case frObsSSID:
 			n.SSID = string(payload)
 		case frObsChannel:
-			n.Channel = smallNonNegative(val)
+			n.Channel, n.Frequency = decodeChannel(smallNonNegative(val))
 		case frObsRSSI:
 			n.Signal = signedDBm(val)
 		case frObsNoise:
@@ -305,7 +305,6 @@ func parseObservation(data []byte) (*wifi.ScannedNetwork, error) {
 	if n.NoiseFloor < 0 && n.Signal >= n.NoiseFloor {
 		n.SNR = n.Signal - n.NoiseFloor
 	}
-	n.Frequency = channelToFrequency(n.Channel)
 	return n, nil
 }
 
@@ -364,20 +363,38 @@ func msToTime(ms uint64) time.Time {
 	return time.UnixMilli(int64(ms)).UTC()
 }
 
-// channelToFrequency maps an 802.11 channel to its centre frequency in MHz.
-// AirMapper records the channel; the rest of Trellis reasons in frequency, and
-// deriving it here keeps that conversion in one place.
-func channelToFrequency(ch int) int {
+// airMapper6GHzOffset is what AirMapper adds to a 6 GHz channel number before
+// writing it to field 6. 6 GHz channels 1-233 reuse the numbers 2.4 and 5 GHz
+// already use, so the offset is what keeps the band recoverable: Link-Live
+// reads 97E where the archive holds 287, and every one of the 400 6 GHz
+// readings in the reference corpus is off by exactly 190 (trellis#812).
+const (
+	airMapper6GHzOffset = 190
+	max6GHzChannel      = 233
+)
+
+// decodeChannel turns field 6 into the 802.11 channel and its centre frequency
+// in MHz. AirMapper records the channel; the rest of Trellis reasons in
+// frequency, and deriving it here keeps that conversion in one place. The
+// frequency comes from the band the raw value encodes, not from the channel,
+// because the channel alone cannot tell 6 GHz channel 1 from 2.4 GHz channel 1.
+func decodeChannel(raw int) (channel, frequencyMHz int) {
 	switch {
-	case ch <= 0:
-		return 0
-	case ch == 14:
-		return 2484
-	case ch < 14:
-		return 2407 + ch*5
-	case ch >= 32 && ch <= 177:
-		return 5000 + ch*5
+	case raw <= 0:
+		return raw, 0
+	case raw == 14:
+		return raw, 2484
+	case raw < 14:
+		return raw, 2407 + raw*5
+	case raw >= 32 && raw <= 177:
+		return raw, 5000 + raw*5
+	case raw > airMapper6GHzOffset && raw <= airMapper6GHzOffset+max6GHzChannel:
+		ch := raw - airMapper6GHzOffset
+		if ch == 2 {
+			return ch, 5935
+		}
+		return ch, 5950 + ch*5
 	default:
-		return 0
+		return raw, 0
 	}
 }
