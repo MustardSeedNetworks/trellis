@@ -256,7 +256,27 @@ func (h *SurveyServiceHandler) GetHeatmap(
 		GridRows:     int32Of(len(result.Grid)),
 		CellSize:     int32Of(result.CellSize),
 		AccessPoints: heardAccessPoints(heard),
+		Calibrations: apCalibrations(result.Calibrations),
 	}), nil
+}
+
+func apCalibrations(in []survey.APCalibration) []*surveyv1.APCalibration {
+	out := make([]*surveyv1.APCalibration, 0, len(in))
+	for _, c := range in {
+		out = append(out, &surveyv1.APCalibration{
+			PlacementId:    c.PlacementID,
+			Label:          c.Label,
+			Bssid:          c.BSSID,
+			Pairs:          int32Of(c.Pairs),
+			Exponent:       c.Exponent,
+			FittedExponent: c.FittedExponent,
+			Clamped:        c.Clamped,
+			MeanAbsErrorDb: c.MeanAbsErrorDB,
+			Calibrated:     c.Calibrated,
+			Fallback:       c.Fallback,
+		})
+	}
+	return out
 }
 
 // apView narrows a floor to one access point's readings. A BSSID nobody heard

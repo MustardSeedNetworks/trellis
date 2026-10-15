@@ -128,6 +128,9 @@ type HeatmapResult struct {
 	// CellSize is the block size in image pixels, which is what maps a
 	// position on the image onto a cell of Grid.
 	CellSize int `json:"cell_size"`
+	// Calibrations is, for a predicted map, how each placed AP drawn was
+	// fitted to the floor's walk. Empty for a measured map.
+	Calibrations []APCalibration `json:"calibrations,omitempty"`
 }
 
 // DefaultHeatmapConfig returns default configuration.

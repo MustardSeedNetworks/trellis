@@ -69,6 +69,11 @@ const (
 	MaxExponent = 6.0
 )
 
+// MinFitPairs is the fewest (position, reading) pairs a fit is trusted on, the
+// floor Gate G1 scored with. Below it one stray reading moves the exponent and
+// the fit describes noise.
+const MinFitPairs = 30
+
 // Calibration is a fitted model and whether the fit had to be pulled back to
 // a physical exponent.
 type Calibration struct {
@@ -95,10 +100,18 @@ func Fit(txPowerDBm float64, samples []Sample) (Calibration, error) {
 	}
 	var sumX, sumY float64
 	xs := make([]float64, len(samples))
+	spread := false
 	for i, s := range samples {
 		xs[i] = math.Log10(math.Max(s.DistanceM, MinDistanceM))
 		sumX += xs[i]
 		sumY += s.RSSIDBm
+		spread = spread || xs[i] != xs[0]
+	}
+	// Tested on the distances themselves: their mean, summed in floating
+	// point, can sit an ulp off a value every sample shares, and the slope
+	// through that rounding is noise rather than zero.
+	if !spread {
+		return Calibration{}, ErrNotEnoughSpread
 	}
 	meanX, meanY := sumX/float64(len(samples)), sumY/float64(len(samples))
 	var num, den float64
@@ -106,9 +119,6 @@ func Fit(txPowerDBm float64, samples []Sample) (Calibration, error) {
 		dx := xs[i] - meanX
 		num += dx * (s.RSSIDBm - meanY)
 		den += dx * dx
-	}
-	if den == 0 {
-		return Calibration{}, ErrNotEnoughSpread
 	}
 	raw := -(num / den) / 10
 	exponent := raw

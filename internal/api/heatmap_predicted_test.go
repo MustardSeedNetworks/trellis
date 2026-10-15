@@ -44,7 +44,7 @@ func TestGetHeatmapServesAPrediction(t *testing.T) {
 	t.Parallel()
 
 	handler, id := plannedSurvey(t, 400, 300, 0.05, []survey.APLocation{
-		{ID: "ap1", X: 105, Y: 105, Band: "5 GHz"},
+		{ID: "ap1", X: 105, Y: 105, Band: "5 GHz", BSSID: "aa:bb:cc:00:00:01"},
 	})
 	got, err := handler.GetHeatmap(context.Background(), connect.NewRequest(&surveyv1.GetHeatmapRequest{
 		SurveyId: id, Metric: "predicted_rssi", Band: "5 GHz",
@@ -65,6 +65,12 @@ func TestGetHeatmapServesAPrediction(t *testing.T) {
 	}
 	if len(msg.GetPng()) == 0 || len(msg.GetLegend()) == 0 {
 		t.Error("a prediction came back without an image or a legend")
+	}
+	// Nobody walked the floor, so the AP is drawn uncalibrated and says why.
+	cals := msg.GetCalibrations()
+	if len(cals) != 1 || cals[0].GetPlacementId() != "ap1" || cals[0].GetCalibrated() ||
+		cals[0].GetFallback() == "" || cals[0].GetExponent() != 3 || cals[0].MeanAbsErrorDb != nil {
+		t.Errorf("calibrations = %v, want ap1 drawn on the defaults with the reason", cals)
 	}
 }
 

@@ -16,62 +16,15 @@ package rf_test
 //	TRELLIS_LL_ORACLE=~/data/linklive-oracle go test ./core/rf/ -run G1LinkLive -v
 
 import (
-	"bytes"
-	"compress/gzip"
-	"encoding/json"
 	"fmt"
-	"io"
-	"io/fs"
 	"math"
-	"os"
-	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/MustardSeedNetworks/trellis/core/internal/linkliveoracle"
 	"github.com/MustardSeedNetworks/trellis/core/rf"
 )
-
-const llOracleEnv = "TRELLIS_LL_ORACLE"
-
-// feetToMetres converts the pixels-per-foot scale Link-Live states.
-const feetToMetres = 0.3048
-
-// llHeatmapEntry is Link-Live's metadata for one survey.
-type llHeatmapEntry struct {
-	ID       string  `json:"_id"`
-	FileName string  `json:"fileName"`
-	ScalePpf float64 `json:"floorPlanScalePpf"`
-	Mode     string  `json:"surveyMode"`
-}
-
-type llSurvey struct {
-	Points      []llPoint     `json:"points"`
-	APLocations []llPlacement `json:"apLocations"`
-}
-
-type llPlacement struct {
-	X     float64 `json:"x"`
-	Y     float64 `json:"y"`
-	Label string  `json:"label"`
-}
-
-type llPoint struct {
-	X   float64      `json:"x"`
-	Y   float64      `json:"y"`
-	APs []llObserved `json:"aps"`
-}
-
-// llObserved is one BSS heard at a position. A record with no signal is a
-// position Link-Live holds no reading for, and is not a measurement.
-type llObserved struct {
-	BSSID   string          `json:"bssid"`
-	APName  string          `json:"apName"`
-	Signal  *int            `json:"signal"`
-	Band    string          `json:"band"`
-	Channel json.RawMessage `json:"channelPrimary"`
-}
 
 // assumedTxPowersDBm brackets what an AP plausibly transmits. A Link-Live
 // placement records no power, so the uncalibrated number is reported across
@@ -79,48 +32,28 @@ type llObserved struct {
 var assumedTxPowersDBm = []float64{10, 15, 20, 23}
 
 func TestG1LinkLivePathLoss(t *testing.T) {
-	dir := os.Getenv(llOracleEnv)
-	if dir == "" {
-		t.Skipf("set %s to the directory scripts/linklive-fetch-oracle.sh wrote", llOracleEnv)
+	dir, ok := linkliveoracle.Dir()
+	if !ok {
+		t.Skipf("set %s to the directory scripts/linklive-fetch-oracle.sh wrote", linkliveoracle.Env)
 	}
-	if strings.HasPrefix(dir, "~/") {
-		if home, err := os.UserHomeDir(); err == nil {
-			dir = filepath.Join(home, dir[2:])
-		}
+	surveys, err := linkliveoracle.Load(dir)
+	if err != nil {
+		t.Fatal(err)
 	}
-
-	// Rooted at the directory the operator named, so a survey id read from
-	// heatmap.json cannot reach outside it.
-	root := os.DirFS(dir)
-	var entries []llHeatmapEntry
-	readJSON(t, root, "heatmap.json", &entries)
 
 	var placed []placedAP
-	surveys := 0
-	for _, e := range entries {
-		name := e.ID + ".json.gz"
-		if _, err := fs.Stat(root, name); err != nil {
-			continue // heatmap.json lists every survey in the org; only fetched ones are scored
-		}
-		surveys++
-		var s llSurvey
-		readJSON(t, root, name, &s)
-		if e.ScalePpf <= 0 {
-			t.Logf("%s %s: no scale stated; not scored", e.ID, e.FileName)
+	for _, s := range surveys {
+		metresPerPixel := s.MetresPerPixel()
+		if metresPerPixel == 0 {
+			t.Logf("%s %s: no scale stated; not scored", s.ID, s.FileName)
 			continue
 		}
-		metresPerPixel := feetToMetres / e.ScalePpf
 
-		// Score only the APs the surveyor placed. Link-Live labels a placement it
-		// estimated with the BSS address ("RuckusWi:58b633-c652d9") and does so
-		// for every BSS it heard, neighbours' routers included, so an address
-		// label is not ground truth. A placement the surveyor made carries the
-		// AP's name ("WA-EVERETT-AP7_", or the address the AP reports as its
-		// name, "10.24.23.87"), and every radio of that AP reports the same
-		// value as apName. Each radio is scored on its own.
-		placements := map[string]llPlacement{}
+		// Score only the APs the surveyor placed; each radio is scored on its
+		// own.
+		placements := map[string]linkliveoracle.Placement{}
 		for _, p := range s.APLocations {
-			if _, isAddress := placementAddress(p.Label); !isAddress && p.Label != "" {
+			if p.SurveyorNamed() {
 				placements[p.Label] = p
 			}
 		}
@@ -133,13 +66,13 @@ func TestG1LinkLivePathLoss(t *testing.T) {
 				if !ok || o.Signal == nil {
 					continue
 				}
-				key := o.APName + " " + normalizeLLBSSID(o.BSSID)
+				key := o.APName + " " + linkliveoracle.NormalizeBSSID(o.BSSID)
 				samples[key] = append(samples[key], rf.Sample{
 					DistanceM: math.Hypot(pt.X-ap.X, pt.Y-ap.Y) * metresPerPixel,
 					RSSIDBm:   float64(*o.Signal),
 				})
-				if mhz := carrierMHz(o.Band, o.Channel); mhz > 0 {
-					carrier[key] = mhz
+				if mhz := o.CarrierMHz(); mhz > 0 {
+					carrier[key] = float64(mhz)
 				}
 			}
 		}
@@ -151,20 +84,17 @@ func TestG1LinkLivePathLoss(t *testing.T) {
 			}
 		}
 		t.Logf("%s %s (%s): %d points, %d placements, %d surveyor-named, %d radios joined, %d with >=%d pairs",
-			e.ID, e.FileName, e.Mode, len(s.Points), len(s.APLocations), len(placements),
+			s.ID, s.FileName, s.Mode, len(s.Points), len(s.APLocations), len(placements),
 			len(samples), scored, minPairs)
 
 		for key, v := range samples {
 			placed = append(placed, placedAP{
-				name:       fmt.Sprintf("%s %s", e.ID[:8], key),
+				name:       fmt.Sprintf("%s %s", s.ID[:8], key),
 				samples:    v,
 				txPowerDBm: defaultTxPowerDBm,
 				carrierMHz: carrier[key],
 			})
 		}
-	}
-	if surveys == 0 {
-		t.Fatalf("no processed survey under %s matches heatmap.json", dir)
 	}
 
 	results := scorePlacedAPs(t, placed)
@@ -226,69 +156,5 @@ func uncalibrated(txPowerDBm, carrier float64) rf.Model {
 		TxPowerDBm: txPowerDBm,
 		RefLossDB:  rf.FreeSpaceLossDB(carrier),
 		Exponent:   defaultExponent,
-	}
-}
-
-// placementAddress returns the BSS address a placement label carries, if any.
-func placementAddress(label string) (string, bool) {
-	_, address, found := strings.Cut(label, ":")
-	if !found || !strings.Contains(address, "-") {
-		return "", false
-	}
-	return normalizeLLBSSID(label), true
-}
-
-// normalizeLLBSSID reduces Link-Live's "Vendor:aabbcc-ddeeff" to bare hex.
-func normalizeLLBSSID(s string) string {
-	if _, address, found := strings.Cut(s, ":"); found && strings.Contains(address, "-") {
-		s = address
-	}
-	return strings.ToLower(strings.NewReplacer(":", "", "-", "").Replace(s))
-}
-
-// carrierMHz turns Link-Live's band label and primary channel into a carrier.
-// The channel is a number, or a string such as "97E" for a 6 GHz channel.
-func carrierMHz(band string, raw json.RawMessage) float64 {
-	text := strings.TrimSuffix(strings.Trim(string(raw), `"`), "E")
-	ch, err := strconv.Atoi(text)
-	if err != nil || ch <= 0 {
-		return 0
-	}
-	switch {
-	case strings.HasPrefix(band, "2.4"):
-		if ch == 14 {
-			return 2484
-		}
-		return float64(2407 + 5*ch)
-	case strings.HasPrefix(band, "5"):
-		return float64(5000 + 5*ch)
-	case strings.HasPrefix(band, "6"):
-		return float64(5950 + 5*ch)
-	}
-	return 0
-}
-
-// readJSON decodes a file the fetch script wrote, gzipped or not. Older
-// records are a bare array of points rather than an object.
-func readJSON(t *testing.T, root fs.FS, path string, into any) {
-	t.Helper()
-	body, err := fs.ReadFile(root, path)
-	if err != nil {
-		t.Fatalf("read %s: %v", path, err)
-	}
-	if bytes.HasPrefix(body, []byte{0x1f, 0x8b}) {
-		gz, err := gzip.NewReader(bytes.NewReader(body))
-		if err != nil {
-			t.Fatalf("%s: %v", path, err)
-		}
-		if body, err = io.ReadAll(gz); err != nil {
-			t.Fatalf("%s: %v", path, err)
-		}
-	}
-	if s, ok := into.(*llSurvey); ok && bytes.HasPrefix(bytes.TrimSpace(body), []byte("[")) {
-		into = &s.Points
-	}
-	if err := json.Unmarshal(body, into); err != nil {
-		t.Fatalf("%s: %v", path, err)
 	}
 }

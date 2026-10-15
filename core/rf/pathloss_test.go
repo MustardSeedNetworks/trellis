@@ -129,6 +129,15 @@ func TestFitRefusesSamplesWithNoSpread(t *testing.T) {
 	if _, err := rf.Fit(20, samples); !errors.Is(err, rf.ErrNotEnoughSpread) {
 		t.Fatalf("err = %v, want ErrNotEnoughSpread", err)
 	}
+	// 300 copies of 5.1 m: summed in floating point their mean is not exactly
+	// log10(5.1), and a check on the variance would fit a slope to that.
+	many := make([]rf.Sample, 300)
+	for i := range many {
+		many[i] = rf.Sample{DistanceM: 5.1, RSSIDBm: float64(-50 - i%7)}
+	}
+	if _, err := rf.Fit(20, many); !errors.Is(err, rf.ErrNotEnoughSpread) {
+		t.Fatalf("300 samples at one distance: err = %v, want ErrNotEnoughSpread", err)
+	}
 }
 
 func TestEvaluateReportsAbsoluteErrorAndBiasSeparately(t *testing.T) {

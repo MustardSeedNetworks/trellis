@@ -47,6 +47,13 @@ func solidPlanDataURI(t *testing.T, c color.NRGBA, w, h int) string {
 // returns the decoded heatmap, so only the plan varies between cases.
 func renderWithPlan(t *testing.T, planData string, w, h int) image.Image {
 	t.Helper()
+	return surveyOverPlan(t, planData, w, h)()
+}
+
+// surveyOverPlan stores the survey renderWithPlan draws and returns the step
+// that draws it, so a caller can measure the drawing apart from the store.
+func surveyOverPlan(t *testing.T, planData string, w, h int) func() image.Image {
+	t.Helper()
 	mgr := mustManager(t, t.TempDir(), nil, nil, nil, nil)
 	svy, err := mgr.CreateSurvey("Plan", "floor plan base layer", "wlan0", survey.TypePassive)
 	if err != nil {
@@ -72,18 +79,21 @@ func renderWithPlan(t *testing.T, planData string, w, h int) image.Image {
 		}
 	}
 
-	res, err := mgr.GenerateHeatmap(svy.ID, survey.DefaultHeatmapConfig())
-	if err != nil {
-		t.Fatalf("GenerateHeatmap: %v", err)
+	return func() image.Image {
+		t.Helper()
+		res, err := mgr.GenerateHeatmap(svy.ID, survey.DefaultHeatmapConfig())
+		if err != nil {
+			t.Fatalf("GenerateHeatmap: %v", err)
+		}
+		img, err := png.Decode(bytes.NewReader(res.Image))
+		if err != nil {
+			t.Fatalf("decode heatmap: %v", err)
+		}
+		if got := img.Bounds().Dx(); got != w {
+			t.Fatalf("heatmap width = %d, want the plan's %d", got, w)
+		}
+		return img
 	}
-	img, err := png.Decode(bytes.NewReader(res.Image))
-	if err != nil {
-		t.Fatalf("decode heatmap: %v", err)
-	}
-	if got := img.Bounds().Dx(); got != w {
-		t.Fatalf("heatmap width = %d, want the plan's %d", got, w)
-	}
-	return img
 }
 
 // planWhite is the stand-in plan colour shared with the report tests.
@@ -139,10 +149,14 @@ func TestHeatmapRefusesToDecodeAnOversizedStoredPlan(t *testing.T) {
 	bomb := pngDeclaring(t, 20000, 20000)
 	uri := "data:image/png;base64," + base64.StdEncoding.EncodeToString(bomb)
 
+	// Only the drawing is measured. Opening the store runs the migrations,
+	// whose parser churns pooled buffers that the race detector's sync.Pool
+	// drops, and that alone came within a few MiB of the ceiling.
+	render := surveyOverPlan(t, uri, w, h)
 	var before, after runtime.MemStats
 	runtime.GC()
 	runtime.ReadMemStats(&before)
-	img := renderWithPlan(t, uri, w, h)
+	img := render()
 	runtime.ReadMemStats(&after)
 
 	if img.Bounds().Dy() != h {

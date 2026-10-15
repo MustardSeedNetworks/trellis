@@ -334,6 +334,47 @@ exponent bounds. The sites that miss most at 20 dBm are dense deployments whose
 controllers run the radios low, which is what the power sweep shows. A planner
 should take each AP's configured power rather than a flat 20 dBm.
 
+## Through the product, 2026-10-15 (T-P5)
+
+The predicted map now calibrates each placed radio from the floor's own walk
+(ADR-0011). The same ten surveys were run through it: each became a floor
+holding the walk and one placement per radio of every surveyor-named AP, and
+`GenerateFloorHeatmap` drew the predicted map per band, as `GetHeatmap` does.
+The product scores the same 510 radios as the run above. A radio with at least
+30 readings is drawn calibrated. A fit whose exponent falls outside the
+physical bounds is drawn at the nearest bound with its own reference loss
+(owner decision 2026-10-15) and the response marks it clamped; fewer readings
+fall back to the uncalibrated defaults (10 dBm, exponent 3) and the response
+says why.
+
+```bash
+TRELLIS_LL_ORACLE=~/data/linklive-oracle go test ./core/survey/ -run G1LinkLiveProduct -v
+```
+
+| Survey | Radios | Clamped | Unclamped MAE | Drawn-map MAE |
+| --- | --- | --- | --- | --- |
+| Large retailer, survey 2 (`60957f54`) | 125 | 45 | 2.77 | 2.70 |
+| MGM corporate (`62869b48`) | 77 | 42 | 3.23 | 3.11 |
+| Everett office, AirCheck G2 (`60957e34`) | 70 | 24 | 3.09 | 2.80 |
+| Utopia floor 2 (`628da44e`) | 60 | 14 | 6.65 | 6.40 |
+| Utopia floor 1 (`628da423`) | 57 | 45 | 4.59 | 3.47 |
+| Time Square, 9th floor (`65c694f8`) | 48 | 18 | 3.83 | 3.36 |
+| Time Square, 10th floor (`65c69564`) | 32 | 5 | 4.02 | 4.11 |
+| Everett office, 2021 (`60957e0f`) | 20 | 0 | 3.78 | 3.78 |
+| Everett office, 2022 (`628da3f3`) | 12 | 0 | 3.50 | 3.50 |
+| Home, floor 2 (`60957de1`) | 9 | 8 | 3.38 | 4.95 |
+| **All, per radio** | **510** | **201** | **3.83** | **3.55** |
+
+**Kill criterion: not tripped.** The map the product draws is **3.55 dB** from
+the walk, under the phase's 6 dB line, and equal to the run above, which
+scored the same clamped fits at their bound. The 309 radios whose exponent was
+physical score 3.83 dB on their own.
+
+The first cut of T-P5 drew a clamped fit on the defaults, which put the drawn
+map at 6.28 dB: those 201 radios averaged about 10.0 dB there. A clamped
+exponent is not a propagation model, but its reference loss tracks the walk's
+level, and that is most of the error.
+
 ## The re-scoped run, 2026-10-14 (superseded by the correction above)
 
 **Recorded verdict, since corrected: FAIL.** Mean error against the Link-Live oracle's AP placements is

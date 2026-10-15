@@ -27,7 +27,8 @@ var bandCentreMHz = map[string]float64{
 
 // generatePredictedHeatmap draws the best-server signal predicted from the
 // floor's placed APs on config.Band, over the same grid the measured map of
-// this floor uses.
+// this floor uses. Each AP is calibrated to the floor's own walk where the
+// walk heard it enough to fit; the result says, per AP, which happened.
 func generatePredictedHeatmap(floor *Floor, config HeatmapConfig) (*HeatmapResult, error) {
 	carrier, ok := bandCentreMHz[config.Band]
 	if !ok {
@@ -40,6 +41,7 @@ func generatePredictedHeatmap(floor *Floor, config HeatmapConfig) (*HeatmapResul
 
 	refLoss := rf.FreeSpaceLossDB(carrier)
 	var txs []rf.Transmitter
+	var calibrations []APCalibration
 	for _, ap := range floor.APLocations {
 		// An AP whose band was not stated is taken to radiate on every band:
 		// dropping it would draw its coverage as a hole.
@@ -50,14 +52,16 @@ func generatePredictedHeatmap(floor *Floor, config HeatmapConfig) (*HeatmapResul
 		if ap.TxPowerDBm != nil {
 			power = *ap.TxPowerDBm
 		}
+		model, calibration := calibrate(ap, floor.Samples, plan.ScaleM, config.Band, rf.Model{
+			TxPowerDBm: power,
+			RefLossDB:  refLoss,
+			Exponent:   rf.DefaultExponent,
+		})
+		calibrations = append(calibrations, calibration)
 		txs = append(txs, rf.Transmitter{
-			XM: float64(ap.X) * plan.ScaleM,
-			YM: float64(ap.Y) * plan.ScaleM,
-			Model: rf.Model{
-				TxPowerDBm: power,
-				RefLossDB:  refLoss,
-				Exponent:   rf.DefaultExponent,
-			},
+			XM:    float64(ap.X) * plan.ScaleM,
+			YM:    float64(ap.Y) * plan.ScaleM,
+			Model: model,
 		})
 	}
 	if len(txs) == 0 {
@@ -68,5 +72,10 @@ func generatePredictedHeatmap(floor *Floor, config HeatmapConfig) (*HeatmapResul
 	cols := (plan.Width + config.CellSize - 1) / config.CellSize
 	rows := (plan.Height + config.CellSize - 1) / config.CellSize
 	grid := rf.PredictGrid(txs, cols, rows, float64(config.CellSize)*plan.ScaleM)
-	return paintHeatmap(grid, nil, plan, plan.Width, plan.Height, config)
+	result, err := paintHeatmap(grid, nil, plan, plan.Width, plan.Height, config)
+	if err != nil {
+		return nil, err
+	}
+	result.Calibrations = calibrations
+	return result, nil
 }
