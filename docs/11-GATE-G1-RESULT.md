@@ -417,7 +417,7 @@ verdict line above is the one place to change.
 surveys and agrees on every position, signal and noise reading. It disagrees
 on 400 of 113,263 channels, and those 400 are exactly the 6 GHz readings: the
 archive reader returns a 6 GHz channel offset by 190, with no frequency.
-That is filed as #812. It does not touch the gate number, because the harness
+That was filed as #812 and is fixed by #814. It does not touch the gate number, because the harness
 takes the carrier from Link-Live. Before this run, the tool stopped at the
 first 6 GHz record, because Link-Live writes those channels as `"97E"`.
 
