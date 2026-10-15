@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.26...v0.8.0) (2026-10-15)
+
+
+### Features
+
+* **rf:** predict a floor's signal from its placed APs ([#831](https://github.com/MustardSeedNetworks/trellis/issues/831)) ([952f53c](https://github.com/MustardSeedNetworks/trellis/commit/952f53c0a0a6951b0e806a57dfe0bee1d7b9ac4c)), closes [#830](https://github.com/MustardSeedNetworks/trellis/issues/830)
+* **survey:** place, move and delete an AP through the API ([#834](https://github.com/MustardSeedNetworks/trellis/issues/834)) ([6b40cb9](https://github.com/MustardSeedNetworks/trellis/commit/6b40cb9191c44d2ab6a9274646091cce80f581ff)), closes [#833](https://github.com/MustardSeedNetworks/trellis/issues/833)
+
 ## [0.7.26](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.25...v0.7.26) (2026-10-15)
 
 
