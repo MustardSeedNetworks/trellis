@@ -82,6 +82,12 @@ jobs:
               # job and skip the drift gate, which runs here.
               - 'ui/src/gen/**'
               - 'buf*.yaml'
+              # protoc-gen-es is a UI devDependency and stamps its version
+              # into every generated file, so a generator bump changes only
+              # these two. Without them the drift gate skipped on the PR and
+              # first ran in the merge queue (trellis#731, ejected 294 times).
+              - 'ui/package.json'
+              - 'ui/package-lock.json'
             frontend:
               - 'ui/**'
               - 'gen/**'
