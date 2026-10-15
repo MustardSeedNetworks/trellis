@@ -72,6 +72,7 @@ func TestDiffCountsEveryDisagreement(t *testing.T) {
 		{"signal", func(p []survey.SurveyPointRecord) { p[0].Networks[0].Signal = -75 }, false},
 		{"noise", func(p []survey.SurveyPointRecord) { p[0].Networks[0].NoiseFloor = -89 }, false},
 		{"channel", func(p []survey.SurveyPointRecord) { p[0].Networks[0].Channel = 28 }, false},
+		{"band", func(p []survey.SurveyPointRecord) { p[0].Networks[0].Frequency = 5990 }, false},
 		{"a BSSID only one side saw", func(p []survey.SurveyPointRecord) {
 			p[0].Networks[0].BSSID = "00:00:5e:00:53:01"
 		}, false},
@@ -85,6 +86,34 @@ func TestDiffCountsEveryDisagreement(t *testing.T) {
 				t.Fatalf("agrees() = %v, want %v (%+v)", got.agrees(), tc.agrees, got)
 			}
 		})
+	}
+}
+
+// TestLLChannelDecodesEveryForm: a single 6 GHz reading in Link-Live's string
+// form used to fail the whole survey's decode (trellis#812).
+func TestLLChannelDecodesEveryForm(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		json string
+		want llChannel
+	}{
+		{"number", `149`, 149},
+		{"6 GHz string", `"97E"`, 97},
+		{"null", `null`, 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var ap llAP
+			if err := json.Unmarshal([]byte(`{"channelPrimary":`+tc.json+`}`), &ap); err != nil {
+				t.Fatalf("Unmarshal: %v", err)
+			}
+			if ap.ChannelPrimary != tc.want {
+				t.Errorf("channelPrimary %s = %d, want %d", tc.json, ap.ChannelPrimary, tc.want)
+			}
+		})
+	}
+	var ap llAP
+	if err := json.Unmarshal([]byte(`{"channelPrimary":"97X"}`), &ap); err == nil {
+		t.Errorf("channelPrimary \"97X\" decoded as %d, want an error", ap.ChannelPrimary)
 	}
 }
 
@@ -151,34 +180,6 @@ func TestReadProcessedAcceptsBothShapes(t *testing.T) {
 			}
 			if len(got.APLocations) != tc.placements {
 				t.Errorf("placements = %d, want %d", len(got.APLocations), tc.placements)
-			}
-		})
-	}
-}
-
-// TestChannelAcceptsEveryShape: newer Link-Live records write a 6 GHz channel
-// as a string and a position with no reading as null. Either one used to fail
-// the whole survey's decode.
-func TestChannelAcceptsEveryShape(t *testing.T) {
-	for _, tc := range []struct {
-		in      string
-		want    channel
-		wantErr bool
-	}{
-		{`36`, 36, false},
-		{`"97E"`, 97, false},
-		{`"6"`, 6, false},
-		{`null`, 0, false},
-		{`"auto"`, 0, true},
-	} {
-		t.Run(tc.in, func(t *testing.T) {
-			var got channel
-			err := json.Unmarshal([]byte(tc.in), &got)
-			if (err != nil) != tc.wantErr {
-				t.Fatalf("err = %v, wantErr %v", err, tc.wantErr)
-			}
-			if got != tc.want {
-				t.Errorf("channel = %d, want %d", got, tc.want)
 			}
 		})
 	}

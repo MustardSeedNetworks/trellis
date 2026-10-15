@@ -205,5 +205,5 @@ different export of the archives. It paired 12 surveys, including two Time
 Square walks, and agreed on every position, signal and noise reading. It
 disagreed on 400 of 113,263 channels, and those are exactly the 6 GHz readings.
 The archive reader returns a 6 GHz channel offset by 190 (`"97E"` in Link-Live
-reads as 287) with no frequency: #812. Before this run, the tool stopped at the
+reads as 287) with no frequency: #812, fixed by #814. Before this run, the tool stopped at the
 first 6 GHz record, because Link-Live writes those channels as strings.

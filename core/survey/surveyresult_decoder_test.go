@@ -194,6 +194,48 @@ func TestParseSurveyResultDecodesAPassiveWalk(t *testing.T) {
 	}
 }
 
+// AirMapper writes a 6 GHz channel as the channel plus 190, so 6 GHz 97 is
+// stored as 287. Read as it stands, that is a channel no band has and no
+// frequency (trellis#812); the raw values here are the ones the Time Square
+// 10th-floor walk carries, checked against Link-Live's 37E, 97E and 213E.
+func TestParseSurveyResultDecodesChannelPerBand(t *testing.T) {
+	tests := []struct {
+		name          string
+		raw           uint64
+		wantChannel   int
+		wantFrequency int
+	}{
+		{"2.4 GHz", 6, 6, 2437},
+		{"2.4 GHz channel 14", 14, 14, 2484},
+		{"5 GHz", 149, 149, 5745},
+		{"6 GHz channel 1", 191, 1, 5955},
+		{"6 GHz channel 2", 192, 2, 5935},
+		{"6 GHz 37E", 227, 37, 6135},
+		{"6 GHz 97E", 287, 97, 6435},
+		{"6 GHz 213E", 403, 213, 7015},
+		{"6 GHz channel 233", 423, 233, 7115},
+		{"between 5 and 6 GHz", 180, 180, 0},
+		{"past 6 GHz", 424, 424, 0},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := point(observation("00:11:22:33:44:55", "corp-wifi", tc.raw, negDBm(57), negDBm(95), refMillis))
+			points, err := survey.ParseSurveyResult(msg)
+			if err != nil {
+				t.Fatalf("ParseSurveyResult: %v", err)
+			}
+			if len(points) != 1 || len(points[0].Networks) != 1 {
+				t.Fatalf("got %+v, want one point with one network", points)
+			}
+			n := points[0].Networks[0]
+			if n.Channel != tc.wantChannel || n.Frequency != tc.wantFrequency {
+				t.Errorf("raw %d: channel %d freq %d, want %d / %d",
+					tc.raw, n.Channel, n.Frequency, tc.wantChannel, tc.wantFrequency)
+			}
+		})
+	}
+}
+
 func TestParseSurveyResultDecodesAnActiveWalk(t *testing.T) {
 	msg := concat(
 		point(

@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.23](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.22...v0.7.23) (2026-10-15)
+
+
+### Bug Fixes
+
+* **survey:** decode AirMapper 6 GHz channels per band ([#814](https://github.com/MustardSeedNetworks/trellis/issues/814)) ([e1ee42d](https://github.com/MustardSeedNetworks/trellis/commit/e1ee42d3b33bf641e311abe3afcc24cecb9bc304)), closes [#812](https://github.com/MustardSeedNetworks/trellis/issues/812)
+
+
+### Miscellaneous
+
+* **deps:** update actions/setup-node action to v7.1.0 ([#816](https://github.com/MustardSeedNetworks/trellis/issues/816)) ([044fc8c](https://github.com/MustardSeedNetworks/trellis/commit/044fc8c92e9192582e42230828970bdc888f7660))
+
 ## [0.7.22](https://github.com/MustardSeedNetworks/trellis/compare/v0.7.21...v0.7.22) (2026-10-14)
 
 
