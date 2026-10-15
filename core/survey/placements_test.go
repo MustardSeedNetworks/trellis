@@ -192,3 +192,44 @@ func placementRows(t *testing.T, dir string) int {
 	}
 	return n
 }
+
+// Dragging an imported AP to where it really hangs moves it; it is still the
+// AP the importer recorded, and the BSSID is what calibration joins on.
+func TestUpdateAPPlacementKeepsWhatTheImporterRecorded(t *testing.T) {
+	mgr := mustManager(t, t.TempDir(), nil, nil, nil, nil)
+	s, err := mgr.CreateSurvey("Imported", "", "en0", survey.TypePassive)
+	if err != nil {
+		t.Fatalf("CreateSurvey: %v", err)
+	}
+	floorID := s.Floors[0].ID
+	if err := mgr.SetFloorPlan(s.ID, floorID, planPNG(t, 200, 100)); err != nil {
+		t.Fatalf("SetFloorPlan: %v", err)
+	}
+	imported := survey.APLocation{
+		ID: "ap-1", X: 5, Y: 5, Label: "AP-1", BSSID: "aa:bb:cc:00:00:01",
+		Vendor: "Ruckus", Notes: "ceiling", Imported: true,
+	}
+	if err := mgr.UpdateImportedData(s.ID, survey.ImportedDataUpdate{
+		FloorID: floorID, APLocations: []survey.APLocation{imported},
+	}); err != nil {
+		t.Fatalf("UpdateImportedData: %v", err)
+	}
+
+	power := 12.0
+	got, err := mgr.UpdateAPPlacement(s.ID, floorID, "ap-1", survey.APPlacementEdit{
+		X: 150, Y: 80, Label: "AP-1 lobby", TxPowerDBm: &power, Band: "5 GHz",
+	})
+	if err != nil {
+		t.Fatalf("UpdateAPPlacement: %v", err)
+	}
+	if got.X != 150 || got.Y != 80 || got.Label != "AP-1 lobby" || *got.TxPowerDBm != 12 || got.Band != "5 GHz" {
+		t.Errorf("edited fields = %+v, want the edit applied", got)
+	}
+	if got.BSSID != imported.BSSID || got.Vendor != imported.Vendor ||
+		got.Notes != imported.Notes || !got.Imported {
+		t.Errorf("importer fields = %+v, want BSSID, vendor, notes and imported kept", got)
+	}
+	if _, err := mgr.UpdateAPPlacement(s.ID, floorID, "ap-2", survey.APPlacementEdit{}); !errors.Is(err, survey.ErrPlacementNotFound) {
+		t.Errorf("updating an unknown placement = %v, want ErrPlacementNotFound", err)
+	}
+}
