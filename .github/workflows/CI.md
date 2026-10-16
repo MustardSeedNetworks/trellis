@@ -52,15 +52,13 @@ untouched file.
 | `dead-code.yml` | Weekly dead code detection |
 | `docs-link-check.yml` | Weekly external link check |
 | `label-sync.yml` | Sync label definitions |
-| `labeler.yml` | Auto-label PRs and issues |
 | `license-check.yml` | Verify dependency licenses |
 | `main-retry.yml` | Retry a failed main run once (see the file header) |
 | `merge-queue-ejection.yml` | Stop a PR the merge queue keeps ejecting |
-| `pr-body-lint.yml` | Enforce the PR body template |
+| `pr-hygiene.yml` | PR and issue title lint, the PR body template, auto-labels (one job per rule) |
 | `release-please.yml` | Automated version management and release PRs |
 | `release.yml` | goreleaser release builds, signing, provenance |
 | `scorecard.yml` | OpenSSF Scorecard |
-| `title-lint.yml` | Lint PR and issue titles |
 | `todo-tracker.yml` | Weekly TODO tracking |
 
 ## Workflow security
