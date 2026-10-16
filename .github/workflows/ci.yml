@@ -1,3 +1,9 @@
+# Shared callers (changes, backend, race, frontend, storybook, e2e) pin
+# MustardSeedNetworks/.github at e092081a97245d29978e229be7425179cc1dcde1.
+# That commit pins apt-install and flake-budget inside the called workflows,
+# so this repo does not vendor them. CI Complete stays a job in this file:
+# the shared aggregator would publish `ci-complete / CI Complete`, and branch
+# protection plus release.yml require the bare name.
 name: CI
 
 on:
@@ -31,359 +37,301 @@ jobs:
   # ===========================================================================
   # Changed paths — the filter every expensive job keys off
   # ===========================================================================
-  # Fleet parity with seed's ci.yml. Before this job every one of the fifteen
-  # jobs below ran on every PR, so a one-line docs edit paid for three Go
-  # backends, Playwright and Storybook. The org is on the GitHub Free plan
-  # (20 concurrent hosted jobs), which is the concrete cost.
+  # Fleet parity with seed's ci.yml. Before this job every one of the jobs
+  # below ran on every PR, so a one-line docs edit paid for the Go backends,
+  # Playwright and Storybook. The org is on the GitHub Free plan (20
+  # concurrent hosted jobs), which is the concrete cost.
+  #
+  # The matcher is scripts/ci-changes.py in the pinned .github commit. On
+  # merge_group every declared filter is true: the queue has no PR base to
+  # diff against. pull_request still filters. id-token: write is how that
+  # workflow reads its own commit; without it the job fails closed.
   changes:
-    name: Changed paths
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
     permissions:
       contents: read
-      # dorny/paths-filter reads the PR's file list through the API.
       pull-requests: read
-    outputs:
-      # merge_group has no PR base to diff against, and the queue exists to
-      # test the merged result — so every filter reports true there and the
-      # full suite runs. Path filtering stays in effect for pull_request
-      # and workflow_dispatch.
-      backend: ${{ github.event_name == 'merge_group' && 'true' || steps.filter.outputs.backend }}
-      frontend: ${{ github.event_name == 'merge_group' && 'true' || steps.filter.outputs.frontend }}
-      docs: ${{ github.event_name == 'merge_group' && 'true' || steps.filter.outputs.docs }}
-      ci_infra: ${{ github.event_name == 'merge_group' && 'true' || steps.filter.outputs.ci_infra }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
-        id: filter
-        if: github.event_name != 'merge_group'
-        with:
-          filters: |
-            backend:
-              - '**/*.go'
-              - 'go.mod'
-              - 'go.sum'
-              - 'Makefile'
-              - 'mk/**'
-              # The proto is the API contract and gen/ is what the Go and TS
-              # sides compile against; buf lint runs inside the backend job.
-              - 'proto/**'
-              - 'gen/**'
-              # The TS half of the generated tree lives under ui/, so `ui/**`
-              # alone would route a hand-edited generated file to the frontend
-              # job and skip the drift gate, which runs here.
-              - 'ui/src/gen/**'
-              - 'buf*.yaml'
-              # protoc-gen-es is a UI devDependency and stamps its version
-              # into every generated file, so a generator bump changes only
-              # these two. Without them the drift gate skipped on the PR and
-              # first ran in the merge queue (trellis#731, ejected 294 times).
-              - 'ui/package.json'
-              - 'ui/package-lock.json'
-            frontend:
-              - 'ui/**'
-              - 'gen/**'
-            docs:
-              - '**/*.md'
-            # Everything that *implements* a gate, not just the workflow that
-            # calls it. Naming scripts one at a time is the failure mode: a PR
-            # could rewrite scripts/check-theme-contract.py, run no job that
-            # used it, and merge green — CI Complete accepts `skipped`.
-            ci_infra:
-              - '.github/workflows/**'
-              - '.github/actions/**'
-              - 'scripts/**'
-              - '.golangci.yml'
-              - 'ui/biome.json'
-              - '.markdownlint.json'
-              - '.markdownlint-cli2.jsonc'
-              - '.pre-commit-config.yaml'
+      id-token: write
+    uses: MustardSeedNetworks/.github/.github/workflows/ci-changes.yml@e092081a97245d29978e229be7425179cc1dcde1 # .github#163
+    with:
+      filters: |
+        backend:
+          - '**/*.go'
+          - 'go.mod'
+          - 'go.sum'
+          - 'Makefile'
+          - 'mk/**'
+          # The proto is the API contract and gen/ is what the Go and TS
+          # sides compile against; buf lint runs inside the backend job.
+          - 'proto/**'
+          - 'gen/**'
+          # The TS half of the generated tree lives under ui/, so `ui/**`
+          # alone would route a hand-edited generated file to the frontend
+          # job and skip the drift gate, which runs here.
+          - 'ui/src/gen/**'
+          - 'buf*.yaml'
+          # protoc-gen-es stamps its version into every generated file, so a
+          # generator bump changes only these two. Without them the drift gate
+          # skipped on the PR and first ran in the merge queue (trellis#731,
+          # ejected 294 times).
+          - 'ui/package.json'
+          - 'ui/package-lock.json'
+        frontend:
+          - 'ui/**'
+          - 'gen/**'
+        docs:
+          - '**/*.md'
+        # Everything that *implements* a gate, not just the workflow that
+        # calls it. Naming scripts one at a time is the failure mode: a PR
+        # could rewrite scripts/check-theme-contract.py, run no job that
+        # used it, and merge green — CI Complete accepts `skipped`.
+        ci_infra:
+          - '.github/workflows/**'
+          - '.github/actions/**'
+          - 'scripts/**'
+          - '.golangci.yml'
+          - 'ui/biome.json'
+          - '.markdownlint.json'
+          - '.markdownlint-cli2.jsonc'
+          - '.pre-commit-config.yaml'
 
-  # Go-only CI for now. The fleet-shared reusable license-check/semgrep
-  # workflows (MustardSeedNetworks/.github) assume a ui/ npm project; wire
-  # those in once Trellis grows its UI. govulncheck is a hard gate per fleet
-  # policy.
-  backend:
-    name: Backend (Go)
+  # ===========================================================================
+  # UI bundle shared with the E2E daemon
+  # ===========================================================================
+  # ci-frontend typechecks and tests. It does not produce the production
+  # bundle. The Playwright image has no Go toolchain, so the daemon is built
+  # on ubuntu-24.04 from this artifact rather than by `make build-e2e` inside
+  # the browser job. backend and race compile against the tracked .gitkeep
+  # stub and do not download it.
+  build-ui:
+    name: Build UI (shared artifact)
     runs-on: ubuntu-latest
-    needs: [changes]
-    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.ci_infra == 'true'
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci_infra == 'true'
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/setup-go
+      - name: Set up Node.js
+        uses: ./.github/actions/setup-node
 
-      - name: Build
-        run: go build ./...
+      - name: Build the UI bundle
+        # `make ui` is the bundle `make build` embeds. A raw `npm run build`
+        # skips the clean of internal/api/ui, and a dirty directory changes
+        # the hash the daemon stamps.
+        run: make ui
 
-      - name: Vet
-        run: go vet ./...
-
-      - name: Test
-        # -covermode=atomic because the suite runs under -race: the default
-        # set/count modes are not race-safe, and a coverage counter data race
-        # would be reported as a test failure rather than as a coverage problem.
-        #
-        # gen/ is buf-generated protobuf, excluded from lint for the same reason:
-        # it is not ours. Left in, its ~1,550 untested statements were a quarter
-        # of the denominator, so the floor below measured how much generated code
-        # there is rather than how well ours is tested.
-        run: |
-          go test -race -covermode=atomic -coverprofile=coverage.out ./...
-          sed -i '\|^github.com/MustardSeedNetworks/trellis/gen/|d' coverage.out
-
-      - name: Check coverage threshold
-        run: |
-          COVERAGE=$(go tool cover -func=coverage.out | grep total: | awk '{print $3}' | sed 's/%//')
-          echo "Current coverage: ${COVERAGE}%"
-
-          # Anti-regression floor, not an aspiration. Handwritten code (gen/
-          # excluded above) measured 80.1% on Linux under Go 1.27.2, so 75
-          # leaves roughly five points of headroom for ordinary refactoring
-          # while still catching a real drop. The fleet minimum is 50; setting
-          # it there would leave a 30-point hole a regression could fall
-          # through unnoticed, which is exactly the critique seed's own
-          # threshold comment makes of its previous floor.
-          #
-          # Go 1.27.1 over-counted statements in straight-line blocks (a
-          # one-line `if` reported as 9), which read the same tree as 65.2%
-          # where 1.27.2 reads 59.3% with gen/ included. Compare numbers only
-          # within one toolchain.
-          #
-          # Ratchet plan (#235): raise as coverage rises. Never lower it to make
-          # a red build green -- fix or add the tests instead.
-          #   2026-Q4: 75 (current)
-          #   2027-Q2: 80
-          MIN_COVERAGE=75
-
-          if (( $(echo "$COVERAGE < $MIN_COVERAGE" | bc -l) )); then
-            echo "::error::Coverage ${COVERAGE}% is below the minimum of ${MIN_COVERAGE}%"
-            exit 1
-          fi
-
-      - name: Coverage summary
-        run: |
-          {
-            echo "### Go coverage"
-            echo
-            echo '```'
-            go tool cover -func=coverage.out | tail -n 20
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload coverage profile
+      - name: Upload built UI assets
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: go-coverage-profile
-          path: coverage.out
-          retention-days: 14
+          name: frontend-dist
+          path: internal/api/ui/
+          retention-days: 1
+          if-no-files-found: error
 
-      - name: Format check
-        run: test -z "$(gofmt -l .)"
-
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
-        with:
-          version: v2.14.0
-          # The repo ships .golangci.yml and `make lint` runs it, but CI never
-          # did — the other three products have gated on it for months. Full
-          # tree verified clean (0 issues) before this gate was added.
-          args: --timeout=5m
-          # The action's analysis cache can report findings that are NOT in the
-          # tree. On seed it failed this job twice with two nolintlint findings
-          # in untouched files, survived a plain re-run so it did not read as a
-          # flake, and went green the moment the cache entries were deleted
-          # (seed#2511, fixed in seed#2538). The key is
-          # golangci-lint.cache-<OS>-<week>-<module-hash>: it carries neither
-          # GOOS nor the linter config, so passes analysing different trees
-          # share one entry. A phantom is indistinguishable from a real finding
-          # and both obvious responses are wrong — editing production code to
-          # please it, or deleting a //nolint that is load-bearing elsewhere.
-          # Measured cost of always analysing the real tree: +14s (seed#2538).
-          skip-cache: true
-
-      # `go run <module>@<version>` rebuilt buf from source on every run: the
-      # step took 57s and 59s in the two most recent main runs, of which only
-      # ~4s was `go: downloading`. The rest was compile and link, and it never
-      # got cheaper, because setup-go keys its cache on this repo's go.sum —
-      # so the run that compiled buf found a cache HIT ("not saving cache") and
-      # discarded buf's object files at job end, every time.
-      #
-      # Caching the linked binary, rather than hoping the build cache carries
-      # it, is the whole fix. Resolution stays on the module proxy and sumdb:
-      # a miss runs `go install <module>@<version>`, never a curl'd release
-      # binary, which would trade that verification away for the same minute.
-      #
-      # The pinned version is read back out of the `go install` line below so
-      # there is exactly one copy of it. A hand-written cache key would let a
-      # Renovate bump of that line hit a stale key and lint with the OLD
-      # binary, passing quietly — the same shape of false clear as a stale
-      # local golangci-lint.
-      - name: Resolve the pinned buf version
-        id: buf
-        run: |
-          v=$(sed -n \
-            's|^ *run: go install github\.com/bufbuild/buf/cmd/buf@v\([0-9][0-9.]*\) *$|\1|p' \
-            .github/workflows/ci.yml)
-          if [ -z "$v" ]; then
-            echo "::error::could not read the pinned buf version out of ci.yml"
+  # ===========================================================================
+  # Backend (Go, macOS, Windows) — fleet-shared ci-backend.yml
+  # ===========================================================================
+  # One caller. Linux is build, vet, gofmt, golangci-lint, buf lint, the
+  # generated-code drift gate, tests, and the coverage floor. Race detection
+  # is the race caller: this test command is the coverage run, and the two
+  # cannot share one `go test` once they are different workflows.
+  #
+  # macOS builds and vets the tree, race-tests internal/capture, checks that
+  # cgo stays in that package, and builds again with CGO_ENABLED=0. Windows
+  # race-tests the capture backend and the daemon against the real ABI.
+  # Both stay off pull_request (skip-native-on-pull-request defaults true).
+  # The merge queue still runs them, because changes forces every filter true
+  # there. CGO_ENABLED=1 on Windows: `go test -race` refuses cgo off, and the
+  # capture backend is pure Go but the race runtime is not.
+  #
+  # lint-windows stays false. The shared job lints the whole tree with
+  # GOOS=windows on every event and has no only-new-issues input. This repo
+  # has not had that CI gate; `make lint` still runs the Windows pass locally.
+  #
+  # No libpcap. Trellis does not link it. Node is for `npx --package` in
+  # buf.gen.ui.yaml. npm ci is the install this job ran before
+  # `make check-generated`; the generator version comes from that file, not
+  # from node_modules.
+  backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.ci_infra == 'true'
+    permissions:
+      contents: read
+      actions: read
+    uses: MustardSeedNetworks/.github/.github/workflows/ci-backend.yml@e092081a97245d29978e229be7425179cc1dcde1 # .github#163
+    with:
+      install-libpcap: false
+      setup-node: true
+      ui-install: true
+      golangci-lint-version: v2.14.0
+      golangci-lint-args: --timeout=5m
+      lint-windows: false
+      cgo-enabled-windows: "1"
+      fetch-depth: 1
+      native-fetch-depth: 1
+      timeout-minutes: 20
+      build-command: go build ./...
+      darwin-test-command: |
+        go test -race ./internal/capture/...
+        python3 scripts/check-cgo-confinement.py
+        CGO_ENABLED=0 go build ./...
+      windows-test-command: go test -race ./internal/capture/... ./cmd/trellisd/...
+      extra-command: |
+        make fmt-check
+        make check-generated
+        "$(go env GOPATH)/bin/buf" lint
+      test-command: |
+        go test -covermode=atomic -coverprofile=coverage.out ./...
+        sed -i '\|^github.com/MustardSeedNetworks/trellis/gen/|d' coverage.out
+      coverage-command: |
+        COVERAGE=$(go tool cover -func=coverage.out | grep total: | awk '{print $3}' | sed 's/%//')
+        echo "Current coverage: ${COVERAGE}%"
+        # Anti-regression floor, not an aspiration. Handwritten code (gen/
+        # excluded above) measured 80.1% on Linux under Go 1.27.2, so 75
+        # leaves roughly five points of headroom for ordinary refactoring
+        # while still catching a real drop. The fleet minimum is 50; setting
+        # it there would leave a 30-point hole a regression could fall
+        # through unnoticed.
+        #
+        # Go 1.27.1 over-counted statements in straight-line blocks (a
+        # one-line `if` reported as 9), which read the same tree as 65.2%
+        # where 1.27.2 reads 59.3% with gen/ included. Compare numbers only
+        # within one toolchain.
+        #
+        # This command used to run under -race. The race detector is the race
+        # caller now; -covermode=atomic keeps the same counter mode the floor
+        # was measured with. Ratchet plan (#235): raise as coverage rises.
+        # Never lower it to make a red build green.
+        #   2026-Q4: 75 (current)
+        #   2027-Q2: 80
+        MIN_COVERAGE=75
+        below=$(echo "$COVERAGE < $MIN_COVERAGE" | bc -l)
+        case "$below" in
+          1*)
+            echo "::error::Coverage ${COVERAGE}% is below the minimum of ${MIN_COVERAGE}%"
             exit 1
-          fi
-          echo "version=$v" >> "$GITHUB_OUTPUT"
+            ;;
+        esac
+        {
+          echo "### Go coverage"
+          echo
+          echo '```'
+          go tool cover -func=coverage.out | tail -n 20
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Cache the buf binary
-        id: buf-cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/go/bin/buf
-          key: buf-${{ runner.os }}-${{ steps.buf.outputs.version }}
+  # ===========================================================================
+  # Go race detector — fleet-shared ci-race.yml
+  # ===========================================================================
+  # The coverage run above does not pass -race. This is the run that used to
+  # be `go test -race` on Linux, over the whole module. No libpcap. The suite
+  # does not read SKIP_NETWORK_TESTS; the shared default would export it.
+  race:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.ci_infra == 'true'
+    permissions:
+      contents: read
+      actions: read
+    uses: MustardSeedNetworks/.github/.github/workflows/ci-race.yml@e092081a97245d29978e229be7425179cc1dcde1 # .github#163
+    with:
+      install-libpcap: false
+      skip-network-tests: false
+      timeout-minutes: 20
+      test-command: go test -race ./...
 
-      # `go install` rather than `go run` is also what makes this pin visible
-      # to Renovate at all: the org preset's regex manager matches
-      # `go install <module>@<version>` in workflows and matched nothing in
-      # this file while the line said `go run`. An invisible pin goes stale
-      # silently, which the preset's own description calls worse than a
-      # floating one.
-      - name: Install buf
-        if: steps.buf-cache.outputs.cache-hit != 'true'
-        run: go install github.com/bufbuild/buf/cmd/buf@v1.73.0
+  # ===========================================================================
+  # Frontend — fleet-shared ci-frontend.yml
+  # ===========================================================================
+  # Defaults are `npx tsc --build --noEmit` and `npm run lint`. Token
+  # discipline runs before the tests. `npm run build` stays in the test
+  # command so a Vite failure is still this job's, including when the build
+  # job is waiting on a red backend. The build job separately runs `make
+  # build`, which is the release recipe, not a second copy of this one.
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci_infra == 'true'
+    permissions:
+      contents: read
+    uses: MustardSeedNetworks/.github/.github/workflows/ci-frontend.yml@e092081a97245d29978e229be7425179cc1dcde1 # .github#163
+    with:
+      timeout-minutes: 15
+      extra-command: ../scripts/check-token-discipline.sh
+      test-command: |
+        npm run test:coverage
+        npm run build
 
-      - name: Buf lint
-        # The pin below and the Makefile's BUF_INSTALL must stay in step: both
-        # are matched by the org preset's `go install <module>@<version>`
-        # manager, so Renovate moves them together, and `make lint` installs and
-        # asserts the same version rather than running whatever is on PATH.
-        env:
-          WANT: ${{ steps.buf.outputs.version }}
-        run: |
-          BUF="$(go env GOPATH)/bin/buf"
-          got=$("$BUF" --version)
-          if [ "$got" != "$WANT" ]; then
-            echo "::error::restored buf is $got, ci.yml pins $WANT"
-            exit 1
-          fi
-          "$BUF" lint
+  # ===========================================================================
+  # Storybook — fleet-shared ci-storybook.yml
+  # ===========================================================================
+  # Defaults match this repo: install-deps via the called workflow's
+  # apt-install, a retried Chromium download, test:storybook, and
+  # test:storybook:contract. The apt-install pin lives in the called
+  # workflow, not in this repo.
+  storybook:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci_infra == 'true'
+    permissions:
+      contents: read
+    uses: MustardSeedNetworks/.github/.github/workflows/ci-storybook.yml@e092081a97245d29978e229be7425179cc1dcde1 # .github#163
 
-      # generate-ts runs `npx --package=@bufbuild/protoc-gen-es@<version>`
-      # (buf.gen.ui.yaml). Node has to be the repo's pin; the package itself
-      # is versioned in that file, not by whatever node_modules resolves.
-      - uses: ./.github/actions/setup-node
-
-      - name: Install the UI dependencies
-        working-directory: ui
-        run: npm ci
-
-      # buf lint reads the .proto and never asks whether gen/ still matches it,
-      # so a contract edited without regenerating — or a generated file edited
-      # by hand — merged green. The target is the Makefile's, not a second copy
-      # of the commands, and the buf resolved above is the one it runs.
-      #
-      # Deterministic because each plugin's version is part of the command in
-      # buf.gen.yaml / buf.gen.ui.yaml. A BSR remote plugin cannot be this
-      # gate: anonymous runners are rate-limited, and an unpinned remote serves
-      # whatever was released last.
-      - name: Generated code is in step with the proto
-        run: make check-generated
-
-  # The ubuntu backend job builds the Linux nl80211 backend but never the
-  # Windows one, which reads WLAN_BSS_ENTRY straight out of memory wlanapi
-  # allocated. A wrong struct offset there does not fail loudly — every field
-  # after it is read from the wrong bytes — so the layout test has to run on a
-  # real Windows ABI, not be inferred from a cross-compile.
+  # ===========================================================================
+  # E2E — the UI as trellisd actually serves it. Fleet-shared ci-e2e.yml
+  # ===========================================================================
+  # Sharded chromium and webkit inside the pinned Playwright image. The image
+  # ships the browsers, so the shard never calls apt. It also has no Go
+  # toolchain, so the daemon is built here on ubuntu-24.04 with `make
+  # build-e2e` (the ldflags handshake.spec.ts asserts) and the shard only
+  # starts the binary. Playwright's webServer does that when E2E_SKIP_BUILD=1,
+  # which the called workflow sets. There is no @smoke tag in this suite, so
+  # the smoke job stays off: Playwright exits 1 when the grep matches nothing.
   #
-  # Not run on `pull_request`: the merge queue rebuilds every PR before it
-  # lands, so a PR push and the merge group ran this same job twice for one
-  # change. `CI Complete` is the required check and reports on both events, so
-  # the merge-group run is the one that gates a merge.
-  backend-windows:
-    name: Backend (Windows)
-    runs-on: windows-latest
-    needs: [changes]
-    if: >-
-      github.event_name != 'pull_request' &&
-      (needs.changes.outputs.backend == 'true' || needs.changes.outputs.ci_infra == 'true')
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: ./.github/actions/setup-go
-
-      - name: Build
-        run: go build ./...
-
-      - name: Vet
-        run: go vet ./...
-
-      # The runner has no Wi-Fi adapter, so TestLiveScan skips itself. What
-      # runs here is the struct layout against the real ABI and the IE parser.
-      #
-      # cmd/trellisd is here for the same reason: the port walk decides whether
-      # a bind failed on "address already in use", and Winsock reports that as
-      # a different errno from the one every other platform uses. Get it wrong
-      # and the walk silently never happens on Windows.
-      - name: Test
-        run: go test -race ./internal/capture/... ./cmd/trellisd/...
-
-  # Every darwin-only file is behind //go:build darwin && cgo, so the ubuntu
-  # backend job never compiles the capture backend. It reaches CoreWLAN through
-  # cgo and Objective-C, and a break there would leave every other check green —
-  # the blind spot that let Seed's macOS Wi-Fi rot into dead code unnoticed.
+  # Drafts still run the suite. skip-drafts defaults to true in the called
+  # workflow; this repo's gate did not skip them.
   #
-  # This job is also the only place docs/07-RISKS R5 can be enforced: cgo is
-  # part of the build on no other runner.
-  #
-  # Not run on `pull_request`: the merge queue rebuilds every PR before it
-  # lands, so a PR push and the merge group ran this same job twice for one
-  # change. `CI Complete` is the required check and reports on both events, so
-  # the merge-group run is the one that gates a merge.
-  backend-darwin:
-    name: Backend (macOS)
-    runs-on: macos-latest
-    needs: [changes]
-    if: >-
-      github.event_name != 'pull_request' &&
-      (needs.changes.outputs.backend == 'true' || needs.changes.outputs.ci_infra == 'true')
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: ./.github/actions/setup-go
-
-      - name: Build
-        run: go build ./...
-
-      - name: Vet
-        run: go vet ./...
-
-      # Linking, not merely compiling, is what proves the -framework LDFLAGS
-      # resolve: building a library package stops after the Objective-C compile.
-      # The capture test binary links the darwin implementation, covering both.
-      # These tests are pure mapping logic, so the runner needs no Wi-Fi adapter
-      # and no Location Services grant.
-      - name: Test
-        run: go test -race ./internal/capture/...
-
-      # R5 promises cgo stays out of the Go core and says "enforce via build/CI
-      # check". This is that check — and it can only run where cgo is actually
-      # in the build, which is here.
-      - name: cgo confinement (docs/07-RISKS R5)
-        run: python3 scripts/check-cgo-confinement.py
-
-      # The capture backend is behind `darwin && cgo`, so the tree has to
-      # compile without cgo too. Getting that constraint wrong fails with
-      # "undefined: corewlan.Scan", which reads like a dependency problem
-      # rather than a build-tag one.
-      - name: Build without cgo
-        run: CGO_ENABLED=0 go build ./...
+  # The hash grep that used to live in this job is the build job's assertion
+  # on `make build`. This daemon is build-e2e, and /__version is what the
+  # handshake spec reads.
+  e2e:
+    needs: [changes, build-ui, backend, frontend]
+    if: |
+      !cancelled() &&
+      needs.build-ui.result == 'success' &&
+      (needs.backend.result == 'success' || needs.backend.result == 'skipped') &&
+      (needs.frontend.result == 'success' || needs.frontend.result == 'skipped')
+    permissions:
+      contents: read
+      actions: write
+    uses: MustardSeedNetworks/.github/.github/workflows/ci-e2e.yml@e092081a97245d29978e229be7425179cc1dcde1 # .github#163
+    with:
+      skip-drafts: false
+      backend-result: ${{ needs.backend.result }}
+      frontend-result: ${{ needs.frontend.result }}
+      playwright-image: mcr.microsoft.com/playwright:v1.64.0-noble@sha256:06a9939e57531807f8d5fd76ce44b53165ffb7d7501d87ab10e285c20b1e971f
+      ui-artifact: frontend-dist
+      fetch-depth: 0
+      build-daemon: true
+      static-libpcap: false
+      daemon-build-command: |
+        test -s internal/api/ui/index.html
+        # The artifact is already the bundle. Satisfy make's UI prerequisites
+        # without npm: this job has Go and not Node, and a rebuild would need
+        # both. Touching the targets is what keeps `make build-e2e` on the
+        # go build line, which is the recipe that injects the ldflags.
+        mkdir -p ui/node_modules
+        touch ui/node_modules internal/api/ui/index.html
+        make build-e2e
+        cp bin/trellisd-e2e trellisd-e2e
+      daemon-binary: trellisd-e2e
+      daemon-artifact: trellis-e2e-daemon
+      timeout-minutes: 20
+      run-smoke: false
+      prepare-command: |
+        mkdir -p bin
+        cp trellisd-e2e bin/trellisd-e2e
+        chmod +x bin/trellisd-e2e
+      test-command: cd ui && npx playwright test --project="$BROWSER" --shard="$SHARD/$SHARD_COUNT"
 
   quality:
     name: Quality Checks
@@ -629,197 +577,6 @@ jobs:
           go install golang.org/x/vuln/cmd/govulncheck@v1.7.0
           govulncheck ./...
 
-  # ===========================================================================
-  # E2E — the UI as trellisd actually serves it
-  # ===========================================================================
-  # trellis had no browser coverage at all. The unit suite proves components
-  # render; it cannot see the daemon/UI seam, which is where this repo's known
-  # heatmap read-path defects lived -- and those passed unit tests that asserted
-  # counts rather than values.
-  #
-  # The daemon embeds the UI from internal/api/ui, so the UI is built first and
-  # the suite drives the resulting binary rather than a Vite dev server.
-  e2e:
-    name: E2E Browser Tests
-    runs-on: ubuntu-latest
-    needs: [changes]
-    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci_infra == 'true'
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: ./.github/actions/setup-go
-
-      - uses: ./.github/actions/setup-node
-
-      - name: Install
-        working-directory: ui
-        run: npm ci
-
-      - name: Install Playwright browsers
-        working-directory: ui
-        run: npx playwright install --with-deps chromium webkit
-
-      # Universal Build Contract. This is the one job with the UI embedded, so
-      # it is where a `make build` binary can be proven to carry the hash: the
-      # md5 the script computes must appear in the binary, or /__version would
-      # report "unknown" in production and deployment validation could not
-      # tell a pipeline build from a bare `go build`.
-      - name: Verify UIBuildHash embedded (Universal Build Contract)
-        run: |
-          make build
-          EXPECTED=$(./scripts/ui-build-hash.sh)
-          if [ "${#EXPECTED}" -ne 32 ]; then
-            echo "::error::UI build hash is not 32 hex chars: '$EXPECTED' — is internal/api/ui empty?"
-            exit 1
-          fi
-          if ! grep -a -q "$EXPECTED" bin/trellisd; then
-            echo "::error::bin/trellisd does not contain UIBuildHash $EXPECTED"
-            exit 1
-          fi
-          echo "bin/trellisd carries UIBuildHash $EXPECTED"
-
-      - name: Run E2E
-        working-directory: ui
-        # No --reporter: passing one REPLACES the config's reporter array, and
-        # the config writes the JSON the flake budget reads.
-        run: npm run test:e2e
-
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: always()
-        with:
-          name: playwright-report
-          path: ui/playwright-report/
-          retention-days: 7
-
-      # A test that fails then passes on retry reports `flaky` and the job exits
-      # 0, so a retry-pass looks exactly like a pass. Budget 0 from the start --
-      # this suite is new, so there is no existing flake debt to grandfather.
-      - name: Enforce flake budget
-        if: always()
-        uses: MustardSeedNetworks/.github/.github/actions/flake-budget@048d173dd72ca0f9e5fa832fb5b9fd2a6447e5e9 # v1.13.0
-        with:
-          report: ui/playwright-report/results.json
-          budget: "0"
-
-  frontend:
-    name: Frontend (React/TS)
-    runs-on: ubuntu-latest
-    needs: [changes]
-    if: needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci_infra == 'true'
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: ui
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: ./.github/actions/setup-node
-
-      - name: Install
-        run: npm ci
-
-      - name: Lint (Biome)
-        run: npm run lint
-
-      # Blocking, like the other three repos (#145). The script sat in the tree
-      # with no workflow running it, which is a gate that enforces nothing.
-      - name: Design token discipline
-        run: ../scripts/check-token-discipline.sh
-
-      # test:coverage, not test: the thresholds in ui/vitest.config.ts are the
-      # gate. Running plain `npm run test` executed every case and asked
-      # nothing about what they covered, which is how three survey files
-      # reached 0% unnoticed.
-      - name: Test (Vitest, coverage-gated)
-        run: npm run test:coverage
-
-      - name: Build (tsc strict + vite)
-        run: npm run build
-
-  # ============================================================================
-  # Storybook interaction and accessibility checks
-  # ============================================================================
-  # Trellis was the only UI repo without this gate. Stories render every
-  # component in real chromium with axe set to error, which is the one place
-  # colour contrast can be evaluated: jsdom has no canvas, so axe files it as
-  # 'incomplete' there and nothing fails.
-  storybook:
-    name: Storybook interactions and accessibility
-    runs-on: ubuntu-latest
-    needs: [changes]
-    if: needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci_infra == 'true'
-    timeout-minutes: 25
-    defaults:
-      run:
-        working-directory: ui
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: ./.github/actions/setup-node
-
-      - name: Install
-        run: npm ci
-
-      # Split from the browser download because `--with-deps` runs apt, and
-      # bundling them leaves the apt half with no step budget and no dpkg lock
-      # bound. seed lost a whole job budget to exactly that.
-      - name: Install Chromium OS dependencies
-        uses: MustardSeedNetworks/.github/.github/actions/apt-install@048d173dd72ca0f9e5fa832fb5b9fd2a6447e5e9 # v1.13.0
-        timeout-minutes: 10
-        with:
-          # cd ui explicitly: the job's defaults.run.working-directory does not
-          # reach inside a composite action's own steps.
-          command: cd ui && node ./node_modules/playwright/cli.js install-deps chromium
-
-      # Retried: the download fails intermittently with exit code 100, and an
-      # unretried failure has taken down merge-queue runs in the sibling repos.
-      - name: Install Chromium
-        timeout-minutes: 10
-        run: |
-          for attempt in 1 2 3; do
-            if node ./node_modules/playwright/cli.js install chromium; then
-              exit 0
-            fi
-            echo "::warning::Chromium download failed (attempt ${attempt}/3)"
-            sleep $((attempt * 15))
-          done
-          echo "::error::Chromium download failed after 3 attempts"
-          exit 1
-
-      - name: Run interaction and accessibility tests
-        env:
-          STORYBOOK_DISABLE_TELEMETRY: "1"
-        run: npm run test:storybook
-
-      # A harness that has never been shown to fail is not worth trusting.
-      # This re-runs the gate story with a defect injected — once a broken
-      # interaction, once an accessibility violation — and requires red.
-      - name: Verify injected defects fail the gate
-        env:
-          STORYBOOK_DISABLE_TELEMETRY: "1"
-        run: npm run test:storybook:contract
-
-  # ============================================================================
-  # Internationalization (i18n) Validation
-  # ============================================================================
-  # Blocking from day one: no --ratchet, no allow-list. The other three
-  # products retrofitted i18n and are still paying that down — trellis was
-  # localized at 22 files precisely so it never acquires the debt, and a gate
-  # that starts permissive is how the debt gets acquired.
-  #
-  # The checks live once in MustardSeedNetworks/.github; this repo keeps only
-  # its glossary, banned vocabulary, glossary exceptions, dynamic-prefix
-  # allow-list and hardcoded-copy baseline — the last two empty, and meant to
-  # stay that way.
   i18n:
     name: i18n Validation
     runs-on: ubuntu-latest
@@ -1090,9 +847,9 @@ jobs:
     # "nothing gates a merge".
     needs:
       - changes
+      - build-ui
       - backend
-      - backend-darwin
-      - backend-windows
+      - race
       - quality
       - workflow-lint
       - govulncheck
