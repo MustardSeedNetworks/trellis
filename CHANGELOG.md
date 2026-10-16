@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.11.0...v0.12.0) (2026-10-16)
+
+
+### Features
+
+* **survey:** show where the prediction disagrees with the walk (T-P6) ([#851](https://github.com/MustardSeedNetworks/trellis/issues/851)) ([1c30bea](https://github.com/MustardSeedNetworks/trellis/commit/1c30beaf1e3ac1e94542b9142650c8d340cd0b81))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#853](https://github.com/MustardSeedNetworks/trellis/issues/853)) ([af58103](https://github.com/MustardSeedNetworks/trellis/commit/af58103c1e6253cba6394e8cc167b0c709327135))
+
 ## [0.11.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.10.0...v0.11.0) (2026-10-16)
 
 
