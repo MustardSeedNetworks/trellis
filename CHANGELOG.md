@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.0...v0.12.1) (2026-10-16)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.54.0 ([#859](https://github.com/MustardSeedNetworks/trellis/issues/859)) ([b114ec4](https://github.com/MustardSeedNetworks/trellis/commit/b114ec45f686642574341ece4862ec45bd6c9613))
+
+
+### Continuous Integration
+
+* **workflows:** fold title, body and label rules into one pr-hygiene workflow ([#857](https://github.com/MustardSeedNetworks/trellis/issues/857)) ([5760fb1](https://github.com/MustardSeedNetworks/trellis/commit/5760fb140c0e14c678ec70a7c05d31a55de9ab68)), closes [#855](https://github.com/MustardSeedNetworks/trellis/issues/855)
+
 ## [0.12.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.11.0...v0.12.0) (2026-10-16)
 
 
