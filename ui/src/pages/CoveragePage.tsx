@@ -1,4 +1,4 @@
-import { Code, ConnectError } from '@connectrpc/connect';
+import { ConnectError } from '@connectrpc/connect';
 import { useQuery } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
 import { useState } from 'react';
@@ -10,16 +10,23 @@ import { HeatmapLegend } from '@/components/HeatmapLegend';
 import { HeatmapSurface } from '@/components/HeatmapSurface';
 import { PredictionView } from '@/components/PredictionView';
 import { surveyClient } from '@/lib/client';
-import { apField, heatmapOptions, METRICS, type Metric, metricName } from '@/lib/coverageLayers';
+import {
+  apField,
+  heatmapOptions,
+  isPredictedLayer,
+  METRICS,
+  type Metric,
+  metricName,
+} from '@/lib/coverageLayers';
 import {
   DEFAULT_THRESHOLDS,
   isCoverageMetric,
   parseThreshold,
   THRESHOLDS,
 } from '@/lib/coverageThreshold';
-import { formatCoverageScore, formatSignal } from '@/lib/format';
+import { describeCoverage, isUnmeasured, unmeasuredCopy } from '@/lib/coverageVerdict';
+import { formatSignal } from '@/lib/format';
 import { BANDS, type Band, isBand } from '@/lib/placement';
-import type { RollupState } from '@/ui/StatusRollup';
 
 /**
  * Coverage — Canvas.
@@ -47,6 +54,8 @@ export function CoveragePage() {
   /* A prediction is for one band; 5 GHz is where most clients are served. */
   const [band, setBand] = useState<Band>('5 GHz');
   const predicted = metric === 'predicted_rssi';
+  /* The delta is drawn like a measured map, but it is for one band too. */
+  const banded = isPredictedLayer(metric);
   /* One threshold per metric, not one control that changes unit under the
      operator: carrying -75 into a dB box would ask for a margin no radio has,
      and the number an operator settled on for one layer is still the one they
@@ -236,7 +245,7 @@ export function CoveragePage() {
           </div>
         </div>
 
-        {predicted ? (
+        {banded ? (
           <label
             className="flex min-w-0 flex-wrap items-center gap-2 text-sm"
             htmlFor="coverage-band"
@@ -399,24 +408,6 @@ interface SurfaceState {
 }
 
 /**
- * FailedPrecondition on a layer is the service saying the walk never measured
- * that metric — SNR from a radio that reports no noise floor (#600). It is a
- * fact about the survey, told apart by its code rather than its message
- * (#607), and never a failure to render or analyse.
- */
-function isUnmeasured(error: unknown): boolean {
-  return error != null && ConnectError.from(error).code === Code.FailedPrecondition;
-}
-
-/** What an unmeasured layer says, on the surface and in the findings alike. */
-function unmeasuredCopy(metric: Metric, metricLabel: string, t: TFunction<['common', 'pages']>) {
-  return {
-    headline: t('pages:coverage.layerUnmeasured', { metric: metricLabel }),
-    body: metric === 'snr' ? t('pages:coverage.snrUnmeasuredBody') : undefined,
-  };
-}
-
-/**
  * The surface says which of its several failures happened. A blank card would
  * read as "this floor has no coverage" in every one of them.
  */
@@ -457,10 +448,14 @@ function renderSurface(
   }
   if (isUnmeasured(heatmapError)) {
     const copy = unmeasuredCopy(metric, metricLabel, t);
+    /* A delta can be missing for several reasons — no scale, no BSSID placed,
+       a walk that never heard one — and only the service knows which. */
+    const body =
+      metric === 'predicted_delta' ? ConnectError.from(heatmapError).rawMessage : copy.body;
     return (
       <div className="flex flex-col gap-1 text-sm text-text-muted" data-testid="surface-message">
         <p className="font-medium text-text-primary">{copy.headline}</p>
-        {copy.body ? <p>{copy.body}</p> : null}
+        {body ? <p>{body}</p> : null}
       </div>
     );
   }
@@ -493,101 +488,4 @@ function renderSurface(
       metric={metric}
     />
   );
-}
-
-interface CoverageState {
-  metric: Metric;
-  metricLabel: string;
-  threshold: number;
-  unit: string;
-  hasSurvey: boolean;
-  loading: boolean;
-  error: unknown;
-  coverage: { coverageScore: number; deadZoneCount: number; recommendations: string[] } | undefined;
-  sampleCount: number | undefined;
-}
-
-interface CoverageVerdict {
-  state: RollupState;
-  headline: string;
-  body?: string;
-  figures: { label: string; value: string }[];
-  recommendations: string[];
-}
-
-/** Turns the analysis into the sentence the findings panel leads with. */
-function describeCoverage(
-  {
-    metric,
-    metricLabel,
-    threshold,
-    unit,
-    hasSurvey,
-    loading,
-    error,
-    coverage,
-    sampleCount,
-  }: CoverageState,
-  t: TFunction<['common', 'pages']>,
-): CoverageVerdict {
-  if (!hasSurvey) {
-    return {
-      state: 'unknown',
-      headline: t('pages:coverage.noSurveySelected'),
-      body: t('pages:coverage.noSurveySelectedBody'),
-      figures: [],
-      recommendations: [],
-    };
-  }
-  if (isUnmeasured(error)) {
-    return {
-      state: 'unknown',
-      ...unmeasuredCopy(metric, metricLabel, t),
-      figures: [],
-      recommendations: [],
-    };
-  }
-  if (error) {
-    return {
-      state: 'unknown',
-      headline: t('pages:coverage.notArriving'),
-      body: t('pages:coverage.surveyServiceSilent', { error: String(error) }),
-      figures: [],
-      recommendations: [],
-    };
-  }
-  if (loading || !coverage) {
-    return {
-      state: 'unknown',
-      headline: t('pages:coverage.analysing'),
-      figures: [],
-      recommendations: [],
-    };
-  }
-
-  const figures = [
-    { label: t('common:labels.coverageScore'), value: formatCoverageScore(coverage.coverageScore) },
-    { label: t('common:labels.deadZones'), value: String(coverage.deadZoneCount) },
-    {
-      label: t('common:labels.samples'),
-      value: sampleCount === undefined ? '—' : String(sampleCount),
-    },
-  ];
-
-  if (coverage.deadZoneCount === 0) {
-    return {
-      state: 'ok',
-      headline: t('pages:coverage.noDeadZones', { threshold, unit }),
-      figures,
-      recommendations: coverage.recommendations,
-    };
-  }
-  return {
-    state: 'warn',
-    headline: t('pages:coverage.deadZones', { count: coverage.deadZoneCount, threshold, unit }),
-    body:
-      metric === 'snr' ? t('pages:coverage.deadZoneBodySnr') : t('pages:coverage.deadZoneBodyRssi'),
-    figures,
-    recommendations: coverage.recommendations,
-  };
 }

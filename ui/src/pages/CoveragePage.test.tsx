@@ -478,4 +478,45 @@ describe('CoveragePage', () => {
       );
     });
   });
+
+  describe('the prediction error layer', () => {
+    it('is offered, and drawn as a map for the chosen band with no findings', async () => {
+      renderPage();
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Prediction error' }));
+      await waitFor(() =>
+        expect(getHeatmap).toHaveBeenCalledWith(
+          expect.objectContaining({ metric: 'predicted_delta', band: '5 GHz' }),
+        ),
+      );
+      fireEvent.change(screen.getByTestId('coverage-band'), { target: { value: '2.4 GHz' } });
+      await waitFor(() =>
+        expect(getHeatmap).toHaveBeenCalledWith(
+          expect.objectContaining({ metric: 'predicted_delta', band: '2.4 GHz' }),
+        ),
+      );
+      expect(await screen.findByTestId('surface-meta')).toBeInTheDocument();
+      expect(screen.queryByTestId('placement-panel')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('coverage-findings')).not.toBeInTheDocument();
+      expect(getCoverage).not.toHaveBeenCalledWith(
+        expect.objectContaining({ metric: 'predicted_delta' }),
+      );
+    });
+
+    it("quotes the service's reason when there is nothing to compare", async () => {
+      renderPage();
+      await screen.findByTestId('coverage-findings');
+      getHeatmap.mockRejectedValue(
+        new ConnectError(
+          "no walked point heard a placed AP's BSSID on 5 GHz",
+          Code.FailedPrecondition,
+        ),
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Prediction error' }));
+
+      const surface = await screen.findByText("no walked point heard a placed AP's BSSID on 5 GHz");
+      expect(surface.parentElement).not.toHaveClass('text-status-error');
+    });
+  });
 });

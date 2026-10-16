@@ -102,6 +102,22 @@ func TestGetHeatmapRefusesAPredictionTheFloorCannotCarry(t *testing.T) {
 	}
 }
 
+// A delta needs a walk to subtract: a planned floor nobody walked is a fact
+// about the survey, not a bad request.
+func TestGetHeatmapRefusesADeltaWithNothingWalked(t *testing.T) {
+	t.Parallel()
+
+	handler, id := plannedSurvey(t, 400, 300, 0.05, []survey.APLocation{
+		{ID: "ap1", X: 105, Y: 105, Band: "5 GHz", BSSID: "aa:bb:cc:00:00:01"},
+	})
+	_, err := handler.GetHeatmap(context.Background(), connect.NewRequest(&surveyv1.GetHeatmapRequest{
+		SurveyId: id, Metric: "predicted_delta", Band: "5 GHz",
+	}))
+	if connect.CodeOf(err) != connect.CodeFailedPrecondition {
+		t.Errorf("err = %v (%v), want FailedPrecondition", err, connect.CodeOf(err))
+	}
+}
+
 // BenchmarkGetHeatmapPredicted serves a prediction through the handler for the
 // PRD's reference floor: 5,000 m² (a 4000×2000 px plan at 0.025 m/px, so the
 // 10 px cells are 0.25 m) with 20 APs. The model's own share is

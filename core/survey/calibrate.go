@@ -88,17 +88,8 @@ func fitOrFallback(uncalibrated rf.Model, pairs []rf.Sample, band string, report
 func joinReadings(ap APLocation, samples []*SamplePoint, scaleM float64, band string) []rf.Sample {
 	var pairs []rf.Sample
 	for _, sp := range samples {
-		ps := getPassiveSampleFromPoint(sp)
-		if ps == nil {
-			continue
-		}
-		heard := math.Inf(-1)
-		for _, net := range ps.Networks {
-			if strings.EqualFold(net.BSSID, ap.BSSID) && bandLabel(net.Frequency, net.Channel) == band {
-				heard = math.Max(heard, float64(net.Signal))
-			}
-		}
-		if math.IsInf(heard, -1) {
+		heard, ok := strongestHeard(sp, band, func(bssid string) bool { return strings.EqualFold(bssid, ap.BSSID) })
+		if !ok {
 			continue
 		}
 		pairs = append(pairs, rf.Sample{
@@ -107,4 +98,20 @@ func joinReadings(ap APLocation, samples []*SamplePoint, scaleM float64, band st
 		})
 	}
 	return pairs
+}
+
+// strongestHeard is the strongest reading at sp, on band, of any BSSID match
+// accepts; false when sp heard none.
+func strongestHeard(sp *SamplePoint, band string, match func(bssid string) bool) (float64, bool) {
+	ps := getPassiveSampleFromPoint(sp)
+	if ps == nil {
+		return 0, false
+	}
+	heard := math.Inf(-1)
+	for _, net := range ps.Networks {
+		if match(net.BSSID) && bandLabel(net.Frequency, net.Channel) == band {
+			heard = math.Max(heard, float64(net.Signal))
+		}
+	}
+	return heard, !math.IsInf(heard, -1)
 }

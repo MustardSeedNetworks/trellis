@@ -179,6 +179,9 @@ func CalculateGridStats(grid [][]float64) GridStats {
 	var sum float64
 	for _, row := range grid {
 		for _, val := range row {
+			if math.IsNaN(val) {
+				continue
+			}
 			if val < stats.Min {
 				stats.Min = val
 			}

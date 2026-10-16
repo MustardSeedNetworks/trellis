@@ -34,6 +34,7 @@
     "loadingSurveys": "Loading surveys…",
     "metricDownload": "Download speed",
     "metricPredicted": "Predicted signal",
+    "metricPredictedDelta": "Prediction error",
     "noDeadZones": "No dead zones below {{threshold}} {{unit}}",
     "noPlacements": "No AP placed on {{band}}. Click the plan to place one.",
     "noPlanToPlace": "This floor has no plan. Upload one on Surveys to place APs on it.",

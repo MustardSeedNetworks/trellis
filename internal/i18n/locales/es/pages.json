@@ -34,6 +34,7 @@
     "loadingSurveys": "Cargando estudios…",
     "metricDownload": "Velocidad de descarga",
     "metricPredicted": "Señal prevista",
+    "metricPredictedDelta": "Error de predicción",
     "noDeadZones": "Sin zonas muertas por debajo de {{threshold}} {{unit}}",
     "noPlacements": "No hay ningún AP colocado en {{band}}. Haga clic en el plano para colocar uno.",
     "noPlanToPlace": "Esta planta no tiene plano. Suba uno en Estudios para colocar AP en él.",
