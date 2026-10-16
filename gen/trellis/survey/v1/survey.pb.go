@@ -1308,14 +1308,21 @@ type GetHeatmapRequest struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	SurveyId string                 `protobuf:"bytes,1,opt,name=survey_id,json=surveyId,proto3" json:"survey_id,omitempty"`
 	// Heatmap metric: "rssi", "snr", "density", "interference", "download",
-	// "upload" or "predicted_rssi", with "signal" and "cochannel" accepted as
-	// aliases for the first and fourth. Unrecognised values fall back to
-	// "rssi", as does the default.
+	// "upload", "predicted_rssi" or "predicted_delta", with "signal" and
+	// "cochannel" accepted as aliases for the first and fourth. Unrecognised
+	// values fall back to "rssi", as does the default.
 	//
 	// "predicted_rssi" is not measured: it is the best-server signal predicted
 	// from the floor's placed APs on `band`, over the same grid as the measured
 	// map. A floor with no scale or no AP placed on the band is refused with
 	// FAILED_PRECONDITION rather than drawn empty.
+	//
+	// "predicted_delta" is that prediction minus the walk, in dB, per cell the
+	// walk went through: positive where the plan promised more signal than the
+	// floor delivered. Only placements with a BSSID take part, since only they
+	// can be found in the walk. Cells the walk did not reach are NaN in `grid`
+	// and transparent in `png`. A floor whose walk never heard a placed BSSID
+	// on `band` is refused with FAILED_PRECONDITION.
 	Metric string `protobuf:"bytes,2,opt,name=metric,proto3" json:"metric,omitempty"`
 	// Floor to render. Empty means the survey's active floor.
 	//
@@ -1339,9 +1346,9 @@ type GetHeatmapRequest struct {
 	// have a per-AP reading; any other metric with a BSSID is refused, as is a
 	// BSSID no point on the floor heard.
 	Bssid *string `protobuf:"bytes,5,opt,name=bssid,proto3,oneof" json:"bssid,omitempty"`
-	// Band a "predicted_rssi" map is for: "2.4 GHz", "5 GHz" or "6 GHz", as a
-	// placement states its band. Required for that metric, ignored by the
-	// others. A placement that states no band is drawn on every band.
+	// Band a "predicted_rssi" or "predicted_delta" map is for: "2.4 GHz",
+	// "5 GHz" or "6 GHz", as a placement states its band. Required for those
+	// metrics, ignored by the others. A placement that states no band is drawn on every band.
 	Band          string `protobuf:"bytes,6,opt,name=band,proto3" json:"band,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1451,7 +1458,7 @@ type GetHeatmapResponse struct {
 	// Every access point heard on the floor, most-heard first, whether or not
 	// the request named one: what a caller offers as the choices for `bssid`.
 	AccessPoints []*HeardAccessPoint `protobuf:"bytes,13,rep,name=access_points,json=accessPoints,proto3" json:"access_points,omitempty"`
-	// For "predicted_rssi", one entry per placed AP drawn: whether its model was
+	// For the predicted metrics, one entry per placed AP drawn: whether its model was
 	// fitted to the floor's own walk, and if not, why. Empty for measured maps.
 	Calibrations  []*APCalibration `protobuf:"bytes,14,rep,name=calibrations,proto3" json:"calibrations,omitempty"`
 	unknownFields protoimpl.UnknownFields

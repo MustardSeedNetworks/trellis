@@ -31,6 +31,10 @@ const (
 	// HeatmapPredictedRSSI is signal predicted from the floor's placed APs
 	// rather than interpolated from a walk (ADR-0011).
 	HeatmapPredictedRSSI HeatmapType = "predicted_rssi"
+
+	// HeatmapPredictedDelta is the prediction minus the walk, per cell, where
+	// the floor has both: where the plan and the floor disagree.
+	HeatmapPredictedDelta HeatmapType = "predicted_delta"
 )
 
 // Heatmap type alias constants for user-friendly names.
@@ -101,7 +105,7 @@ type HeatmapConfig struct {
 	// Ignored by the metrics that have no floor.
 	Threshold float64
 	// Band is the band a prediction is for, spelled as a placement states it
-	// ("2.4 GHz", "5 GHz", "6 GHz"). Read by HeatmapPredictedRSSI only.
+	// ("2.4 GHz", "5 GHz", "6 GHz"). Read by the predicted types only.
 	Band string
 }
 
@@ -131,6 +135,8 @@ type HeatmapResult struct {
 	// Calibrations is, for a predicted map, how each placed AP drawn was
 	// fitted to the floor's walk. Empty for a measured map.
 	Calibrations []APCalibration `json:"calibrations,omitempty"`
+	// PredictionError summarises a predicted_delta map's cells; nil otherwise.
+	PredictionError *PredictionError `json:"predictionError,omitempty"`
 }
 
 // DefaultHeatmapConfig returns default configuration.
@@ -152,7 +158,7 @@ func GenerateHeatmap(survey *Survey, config HeatmapConfig) (*HeatmapResult, erro
 	if survey == nil {
 		return nil, errors.New("survey is nil")
 	}
-	if config.Type == HeatmapPredictedRSSI {
+	if config.Type == HeatmapPredictedRSSI || config.Type == HeatmapPredictedDelta {
 		return nil, errors.New("a prediction is drawn per floor: use GenerateFloorHeatmap")
 	}
 
@@ -177,8 +183,11 @@ func GenerateFloorHeatmap(floor *Floor, config HeatmapConfig) (*HeatmapResult, e
 	if floor == nil {
 		return nil, errors.New("floor is nil")
 	}
-	if config.Type == HeatmapPredictedRSSI {
+	switch config.Type {
+	case HeatmapPredictedRSSI:
 		return generatePredictedHeatmap(floor, config)
+	case HeatmapPredictedDelta:
+		return generatePredictedDeltaHeatmap(floor, config)
 	}
 	width, height := floorDimensions(floor)
 	if width == 0 || height == 0 {
@@ -370,6 +379,8 @@ func getColorScaleForType(ht HeatmapType, threshold float64) ColorScale {
 	switch ht {
 	case HeatmapRSSI, HeatmapSNR, HeatmapPredictedRSSI:
 		return CoverageScale(ht, coverageThreshold(ht, threshold))
+	case HeatmapPredictedDelta:
+		return predictionDeltaScale()
 	case HeatmapDensity:
 		return GetAPDensityColorScale()
 	case HeatmapInterference:
@@ -492,6 +503,11 @@ func renderHeatmapToImage(
 	for row := range rows {
 		for col := range cols {
 			value := grid[row][col]
+			// NaN is a cell with nothing to say (a delta where the walk did
+			// not go); it stays transparent so the plan shows through.
+			if math.IsNaN(value) {
+				continue
+			}
 			base := scale.GetColor(value)
 			// Set takes a straight-alpha colour here on purpose. image.RGBA
 			// stores premultiplied alpha and png.Encode un-premultiplies on
@@ -721,6 +737,8 @@ func ParseHeatmapType(s string) HeatmapType {
 		return HeatmapUpload
 	case string(HeatmapPredictedRSSI):
 		return HeatmapPredictedRSSI
+	case string(HeatmapPredictedDelta):
+		return HeatmapPredictedDelta
 	default:
 		return HeatmapRSSI
 	}

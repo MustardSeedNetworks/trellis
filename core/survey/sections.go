@@ -386,7 +386,46 @@ func (g *ReportGenerator) addFloorLayers(floor *Floor) {
 			}
 			continue
 		}
-		g.addFloorHeatmapPage(floor, layer.title, layer.unit, result)
+		g.addFloorHeatmapPage(floor, layer.title, layer.unit, result, fmt.Sprintf(
+			"%s across %d measured points, %.0f to %.0f %s.",
+			layer.title, result.SampleCount, result.Stats.Min, result.Stats.Max, layer.unit,
+		))
+	}
+	g.addFloorPrediction(floor)
+}
+
+// predictionBands is the order a floor's predictions are printed in.
+var predictionBands = []string{"2.4 GHz", "5 GHz", "6 GHz"}
+
+// addFloorPrediction prints, for each band the floor's placed APs were walked
+// on, the predicted map and where it disagrees with the walk, with the error
+// in numbers. A band with nothing to compare is silent: a prediction nobody
+// can check is the planner's view, and the report is about the floor.
+func (g *ReportGenerator) addFloorPrediction(floor *Floor) {
+	for _, band := range predictionBands {
+		config := DefaultHeatmapConfig()
+		config.Band = band
+		config.Type = HeatmapPredictedDelta
+		delta, err := GenerateFloorHeatmap(floor, config)
+		if err != nil {
+			continue
+		}
+		config.Type = HeatmapPredictedRSSI
+		predicted, err := GenerateFloorHeatmap(floor, config)
+		if err != nil {
+			continue
+		}
+		title := "Predicted Signal " + band
+		g.addFloorHeatmapPage(floor, title, "dBm", predicted, fmt.Sprintf(
+			"%s from %d placed APs, %.0f to %.0f dBm.",
+			title, len(predicted.Calibrations), predicted.Stats.Min, predicted.Stats.Max,
+		))
+		e := delta.PredictionError
+		g.addFloorHeatmapPage(floor, "Prediction Error "+band, "dB", delta, fmt.Sprintf(
+			"Predicted minus walked, over %d cells holding %d walked points: "+
+				"mean absolute error %.1f dB, 95th percentile %.1f dB.",
+			e.Cells, delta.SampleCount, e.MeanAbsDB, e.P95AbsDB,
+		))
 	}
 }
 
@@ -400,7 +439,7 @@ func (g *ReportGenerator) addFloorLayers(floor *Floor) {
 // so and moves on, because a page of correct statistics is worth more than a
 // failed report.
 func (g *ReportGenerator) addFloorHeatmapPage(
-	floor *Floor, title, unit string, result *HeatmapResult,
+	floor *Floor, title, unit string, result *HeatmapResult, caption string,
 ) {
 	g.pdf.AddPage()
 	g.addSectionHeader(fmt.Sprintf("%s: %s", title, floor.Name))
@@ -438,14 +477,7 @@ func (g *ReportGenerator) addFloorHeatmapPage(
 	g.pdf.Ln(pdfSpacingTiny)
 	g.pdf.SetFont("Arial", "I", pdfFontSizeTiny)
 	g.pdf.SetTextColor(pdfColorGrayMedium, pdfColorGrayMedium, pdfColorGrayMedium)
-	g.pdf.CellFormat(
-		0, pdfSpacingMedium,
-		fmt.Sprintf(
-			"%s across %d measured points, %.0f to %.0f %s.",
-			title, result.SampleCount, result.Stats.Min, result.Stats.Max, unit,
-		),
-		"", 1, "L", false, 0, "",
-	)
+	g.pdf.MultiCell(0, pdfSpacingMedium, caption, "", "L", false)
 }
 
 // addHeatmapKey prints the scale that painted the map above it.

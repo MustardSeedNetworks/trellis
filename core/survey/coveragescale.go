@@ -91,3 +91,32 @@ func coverageRange(metric HeatmapType) (minVal, maxVal float64) {
 	}
 	return rssiNoSignal, rssiExcellent
 }
+
+// predictionDeltaSpanDB is how far either side of zero the delta ramp runs
+// before it saturates: about twice G1's uncalibrated mean error (8.30 dB), so
+// a typical miss sits mid-ramp and only a gross one reaches the end.
+const predictionDeltaSpanDB = 15
+
+// colorDeltaAgrees is the neutral grey where prediction and walk agree.
+var colorDeltaAgrees = color.RGBA{R: 0xe6, G: 0xe6, B: 0xe6, A: colorChannelOpaque}
+
+// predictionDeltaScale is the ramp for prediction minus walk. It reuses the
+// coverage families so the meaning carries over: orange where the plan
+// promised more signal than the floor delivered, the side that leaves a room
+// short, and teal where the floor did better than planned. Agreement is a
+// light neutral and the colour deepens with the size of the miss, so the
+// lightness alone still ranks cells for a deuteranope.
+func predictionDeltaScale() ColorScale {
+	return ColorScale{
+		Name:   string(HeatmapPredictedDelta),
+		MinVal: -predictionDeltaSpanDB,
+		MaxVal: predictionDeltaSpanDB,
+		Stops: []ColorStop{
+			{Value: -predictionDeltaSpanDB, Color: colorCoverageMeets},
+			{Value: -predictionDeltaSpanDB / 3, Color: colorCoverageStrong},
+			{Value: 0, Color: colorDeltaAgrees},
+			{Value: predictionDeltaSpanDB / 3, Color: colorCoverageMarginal},
+			{Value: predictionDeltaSpanDB, Color: colorCoverageWorst},
+		},
+	}
+}

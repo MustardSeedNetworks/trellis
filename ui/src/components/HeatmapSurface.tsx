@@ -86,8 +86,10 @@ export function HeatmapSurface({
         return;
       }
 
+      /* NaN is a cell the layer has nothing to say about: a prediction error
+         where the walk never went. */
       const value = grid[row * gridCols + col];
-      if (value === undefined) {
+      if (value === undefined || Number.isNaN(value)) {
         setReading(null);
         return;
       }

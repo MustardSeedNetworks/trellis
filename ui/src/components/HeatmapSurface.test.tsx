@@ -97,6 +97,18 @@ describe('HeatmapSurface', () => {
     expect(readout).toHaveTextContent('Point at the surface');
   });
 
+  it('says nothing over a cell the layer left empty', () => {
+    // A prediction error is NaN wherever the walk did not go.
+    renderSurface({ grid: grid.map((v, i) => (i === 6 ? Number.NaN : v)), unit: 'dB' });
+    const image = layOutImage();
+
+    fireEvent.mouseMove(image, { clientX: 250, clientY: 150 });
+
+    const readout = screen.getByTestId('heatmap-readout');
+    expect(readout).not.toHaveTextContent('NaN');
+    expect(readout).toHaveTextContent('Point at the surface');
+  });
+
   it('drops the reading when the pointer leaves', () => {
     renderSurface();
     const image = layOutImage();

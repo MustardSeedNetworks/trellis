@@ -601,14 +601,21 @@ export type GetHeatmapRequest = Message<"trellis.survey.v1.GetHeatmapRequest"> &
 
   /**
    * Heatmap metric: "rssi", "snr", "density", "interference", "download",
-   * "upload" or "predicted_rssi", with "signal" and "cochannel" accepted as
-   * aliases for the first and fourth. Unrecognised values fall back to
-   * "rssi", as does the default.
+   * "upload", "predicted_rssi" or "predicted_delta", with "signal" and
+   * "cochannel" accepted as aliases for the first and fourth. Unrecognised
+   * values fall back to "rssi", as does the default.
    *
    * "predicted_rssi" is not measured: it is the best-server signal predicted
    * from the floor's placed APs on `band`, over the same grid as the measured
    * map. A floor with no scale or no AP placed on the band is refused with
    * FAILED_PRECONDITION rather than drawn empty.
+   *
+   * "predicted_delta" is that prediction minus the walk, in dB, per cell the
+   * walk went through: positive where the plan promised more signal than the
+   * floor delivered. Only placements with a BSSID take part, since only they
+   * can be found in the walk. Cells the walk did not reach are NaN in `grid`
+   * and transparent in `png`. A floor whose walk never heard a placed BSSID
+   * on `band` is refused with FAILED_PRECONDITION.
    *
    * @generated from field: string metric = 2;
    */
@@ -652,9 +659,9 @@ export type GetHeatmapRequest = Message<"trellis.survey.v1.GetHeatmapRequest"> &
   bssid?: string | undefined;
 
   /**
-   * Band a "predicted_rssi" map is for: "2.4 GHz", "5 GHz" or "6 GHz", as a
-   * placement states its band. Required for that metric, ignored by the
-   * others. A placement that states no band is drawn on every band.
+   * Band a "predicted_rssi" or "predicted_delta" map is for: "2.4 GHz",
+   * "5 GHz" or "6 GHz", as a placement states its band. Required for those
+   * metrics, ignored by the others. A placement that states no band is drawn on every band.
    *
    * @generated from field: string band = 6;
    */
@@ -760,7 +767,7 @@ export type GetHeatmapResponse = Message<"trellis.survey.v1.GetHeatmapResponse">
   accessPoints: HeardAccessPoint[];
 
   /**
-   * For "predicted_rssi", one entry per placed AP drawn: whether its model was
+   * For the predicted metrics, one entry per placed AP drawn: whether its model was
    * fitted to the floor's own walk, and if not, why. Empty for measured maps.
    *
    * @generated from field: repeated trellis.survey.v1.APCalibration calibrations = 14;

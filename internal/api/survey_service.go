@@ -369,7 +369,8 @@ func coverageMetric(name string) (survey.HeatmapType, error) {
 func layerError(err error) error {
 	if errors.Is(err, survey.ErrMetricUnmeasured) ||
 		errors.Is(err, survey.ErrFloorUnscaled) ||
-		errors.Is(err, survey.ErrNoPlacements) {
+		errors.Is(err, survey.ErrNoPlacements) ||
+		errors.Is(err, survey.ErrNothingToCompare) {
 		return connect.NewError(connect.CodeFailedPrecondition, err)
 	}
 	return connect.NewError(connect.CodeInvalidArgument, err)

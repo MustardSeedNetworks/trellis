@@ -10,7 +10,14 @@ import { HeatmapLegend } from '@/components/HeatmapLegend';
 import { HeatmapSurface } from '@/components/HeatmapSurface';
 import { PredictionView } from '@/components/PredictionView';
 import { surveyClient } from '@/lib/client';
-import { apField, heatmapOptions, METRICS, type Metric, metricName } from '@/lib/coverageLayers';
+import {
+  apField,
+  heatmapOptions,
+  isPredictedLayer,
+  METRICS,
+  type Metric,
+  metricName,
+} from '@/lib/coverageLayers';
 import {
   DEFAULT_THRESHOLDS,
   isCoverageMetric,
@@ -47,6 +54,8 @@ export function CoveragePage() {
   /* A prediction is for one band; 5 GHz is where most clients are served. */
   const [band, setBand] = useState<Band>('5 GHz');
   const predicted = metric === 'predicted_rssi';
+  /* The delta is drawn like a measured map, but it is for one band too. */
+  const banded = isPredictedLayer(metric);
   /* One threshold per metric, not one control that changes unit under the
      operator: carrying -75 into a dB box would ask for a margin no radio has,
      and the number an operator settled on for one layer is still the one they
@@ -236,7 +245,7 @@ export function CoveragePage() {
           </div>
         </div>
 
-        {predicted ? (
+        {banded ? (
           <label
             className="flex min-w-0 flex-wrap items-center gap-2 text-sm"
             htmlFor="coverage-band"
@@ -457,10 +466,14 @@ function renderSurface(
   }
   if (isUnmeasured(heatmapError)) {
     const copy = unmeasuredCopy(metric, metricLabel, t);
+    /* A delta can be missing for several reasons — no scale, no BSSID placed,
+       a walk that never heard one — and only the service knows which. */
+    const body =
+      metric === 'predicted_delta' ? ConnectError.from(heatmapError).rawMessage : copy.body;
     return (
       <div className="flex flex-col gap-1 text-sm text-text-muted" data-testid="surface-message">
         <p className="font-medium text-text-primary">{copy.headline}</p>
-        {copy.body ? <p>{copy.body}</p> : null}
+        {body ? <p>{body}</p> : null}
       </div>
     );
   }
