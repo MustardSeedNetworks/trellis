@@ -106,6 +106,9 @@
 - name: "dependencies"
   color: 0366D6
   description: "Dependency update."
+- name: "stop-updating"
+  color: B60205
+  description: "Renovate does not rebase or re-arm this PR"
 - name: "release: pending"
   color: EDEDED
   description: "Release automation is pending."
