@@ -43,7 +43,8 @@
     "react-dom": "19.3.0",
     "react-i18next": "17.0.16",
     "react-router": "8.4.0",
-    "tailwind-merge": "3.7.0"
+    "tailwind-merge": "3.7.0",
+    "tinymce": "7.9.1"
   },
   "devDependencies": {
     "@babel/core": "7.29.7",
