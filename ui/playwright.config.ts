@@ -20,6 +20,16 @@ const baseURL = `http://127.0.0.1:${PORT}`;
 
 export default defineConfig({
   testDir: './e2e',
+  // One test gets a minute. The slowest assertion in the suite waits 30s on
+  // a pin count; 60s covers a cold daemon without letting one case hold the
+  // job until GitHub kills it.
+  timeout: 60_000,
+  // The e2e job is timeout-minutes: 20. This must fire first so Playwright
+  // still writes playwright-report/results.json for the flake budget. A
+  // job-level kill drops that report and the failure looks like a runner
+  // timeout. The whole job, setup included, has been finishing in a few
+  // minutes; 15 leaves headroom under the 20.
+  globalTimeout: 15 * 60 * 1000,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   // retries 1, matching seed/stem/niac. One retry absorbs a transient; the

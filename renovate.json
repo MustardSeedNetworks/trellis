@@ -6,6 +6,41 @@
       "description": "babel-plugin-react-compiler 1.0.0 is built on @babel/types 7; under @babel/core 8 it skips every component with a defaulted destructured prop (#721). Lift when the compiler supports Babel 8.",
       "matchPackageNames": ["@babel/core"],
       "allowedVersions": "<8"
+    },
+    {
+      "description": "Regenerate protobuf output when a code generator or its runtime moves. The generated tree embeds the plugin version (survey_pb.ts's @generated stamp), so a bump that does not regenerate fails make check-generated in the merge queue, where the full suite always runs. fileFilters keep the task from committing anything outside the generated trees.",
+      "matchPackageNames": [
+        "/bufbuild\\/buf/",
+        "/protoc-gen-/",
+        "/^connectrpc\\.com\\/connect$/",
+        "/^@connectrpc\\/connect/",
+        "/^@bufbuild\\//"
+      ],
+      "postUpgradeTasks": {
+        "commands": ["make generate generate-ts"],
+        "fileFilters": ["gen/**", "ui/src/gen/**"],
+        "executionMode": "branch"
+      }
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "buf.gen.yaml pins the Go code generators as `go run` of `<module>@<version>`, split across YAML list items. The org preset's regex only sees `go install` in Makefiles and workflows, so without this the pin buf actually executes is invisible and goes stale.",
+      "managerFilePatterns": ["/^buf\\.gen\\.yaml$/"],
+      "matchStrings": [
+        "(?<depName>\\S+/cmd/protoc-gen-\\S+)@(?<currentValue>v\\d+\\.\\d+\\.\\d+)"
+      ],
+      "datasourceTemplate": "go"
+    },
+    {
+      "customType": "regex",
+      "description": "buf.gen.ui.yaml pins protoc-gen-es as `npx --package=@bufbuild/protoc-gen-es@<version>`. The npm manager sees ui/package.json and not this command, which is the one buf executes.",
+      "managerFilePatterns": ["/^buf\\.gen\\.ui\\.yaml$/"],
+      "matchStrings": [
+        "--package=(?<depName>@bufbuild/protoc-gen-es)@(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ],
+      "datasourceTemplate": "npm"
     }
   ]
 }

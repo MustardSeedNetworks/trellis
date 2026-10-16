@@ -1,6 +1,9 @@
 # CI/CD Pipeline
 
-The CI pipeline runs on every push and PR. **All checks must pass.**
+The CI pipeline runs on every pull request and merge-queue entry. Pushes to
+`main` run `ci-smoke.yml` instead: the merge queue already ran the full suite
+on the merged result, and release-please waits on that smoke succeeding.
+**All checks must pass.**
 
 ## GitHub Actions Workflows
 
@@ -48,6 +51,7 @@ untouched file.
 
 | Workflow | Purpose |
 | --- | --- |
+| `ci-smoke.yml` | Main-branch smoke. The success `release-please.yml` waits for; not the full suite |
 | `codeql.yml` | CodeQL security analysis (Go, JS/TS) |
 | `dead-code.yml` | Weekly dead code detection |
 | `docs-link-check.yml` | Weekly external link check |

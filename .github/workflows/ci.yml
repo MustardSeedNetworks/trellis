@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
   # Required for the merge queue: `CI Complete` is a required status check, so
@@ -12,21 +10,16 @@ on:
   workflow_dispatch:
 
 concurrency:
-  # Main gets a concurrency group per commit; PRs share one group per ref.
+  # This workflow does not run on push to main. A merge-queue burst used to
+  # push several commits within minutes; GitHub keeps one pending run per
+  # concurrency group and cancels the older, so intermediate main runs died
+  # queued and release-please (gated on workflow_run success) skipped them.
+  # Pushes to main now run ci-smoke.yml, one group per commit, which is the
+  # success release-please waits for. The full suite already ran in the
+  # merge queue on the merged result.
   #
-  # cancel-in-progress off on main protects a *running* main build. It does
-  # not protect a pending one: GitHub keeps at most one pending run per
-  # concurrency group and cancels the older pending run as soon as a newer one
-  # arrives. A merge-queue burst pushes several commits to main within
-  # minutes, so intermediate main runs were cancelled while still queued —
-  # zero jobs, no red check, nothing to retry. release-please is gated on
-  # `workflow_run.conclusion == 'success'`, so it was skipped for every one of
-  # those commits and they released nothing. That is how stem's v0.24.47 went
-  # missing while its three siblings released from the same batch.
-  #
-  # Keying main by SHA gives every commit its own group, so no main run is
-  # ever pending behind another and none can be cancelled.
-  #
+  # The SHA key stays: the fleet conformance check requires github.sha in
+  # this group, and a workflow_dispatch on main must not cancel another.
   # Superseded PR runs are still waste and still get cancelled.
   group: ${{ github.workflow }}-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
@@ -53,7 +46,8 @@ jobs:
     outputs:
       # merge_group has no PR base to diff against, and the queue exists to
       # test the merged result — so every filter reports true there and the
-      # full suite runs. Path filtering stays in effect for pull_request/push.
+      # full suite runs. Path filtering stays in effect for pull_request
+      # and workflow_dispatch.
       backend: ${{ github.event_name == 'merge_group' && 'true' || steps.filter.outputs.backend }}
       frontend: ${{ github.event_name == 'merge_group' && 'true' || steps.filter.outputs.frontend }}
       docs: ${{ github.event_name == 'merge_group' && 'true' || steps.filter.outputs.docs }}
@@ -275,10 +269,9 @@ jobs:
           fi
           "$BUF" lint
 
-      # The TS generator is a devDependency (buf.gen.ui.yaml), so the drift gate
-      # below needs the UI's node_modules. It lives in this job rather than the
-      # frontend one because buf — resolved, cached and version-asserted above —
-      # is the expensive half, and the proto contract is this job's already.
+      # generate-ts runs `npx --package=@bufbuild/protoc-gen-es@<version>`
+      # (buf.gen.ui.yaml). Node has to be the repo's pin; the package itself
+      # is versioned in that file, not by whatever node_modules resolves.
       - uses: ./.github/actions/setup-node
 
       - name: Install the UI dependencies
@@ -290,9 +283,10 @@ jobs:
       # by hand — merged green. The target is the Makefile's, not a second copy
       # of the commands, and the buf resolved above is the one it runs.
       #
-      # Deterministic because the generators are pinned local binaries: with BSR
-      # remote plugins this gate could not exist, since BSR serves whatever it
-      # released last and rate-limits anonymous callers like this runner.
+      # Deterministic because each plugin's version is part of the command in
+      # buf.gen.yaml / buf.gen.ui.yaml. A BSR remote plugin cannot be this
+      # gate: anonymous runners are rate-limited, and an unpinned remote serves
+      # whatever was released last.
       - name: Generated code is in step with the proto
         run: make check-generated
 
@@ -1064,9 +1058,11 @@ jobs:
   # instead of naming every job, so adding a job does not mean remembering to
   # update protection — the aggregator picks it up via `needs:`.
   #
-  # `if: always()` so it still runs when an upstream job fails; the step below
-  # decides pass/fail. Skipped counts as success: path-filtered jobs legitimately
-  # do not run.
+  # `if: ${{ !cancelled() }}` so a failed upstream still reaches this
+  # aggregator, while a cancelled run stays cancelled. `always()` also matches
+  # cancelled, and the step below then fails the run — a superseded PR or a
+  # cancelled merge-queue entry goes red instead of cancelled. Skipped counts
+  # as success: path-filtered jobs legitimately do not run.
   # Fails the build on any open High/Critical CodeQL alert on the default
   # branch. The CodeQL job itself reports success when the *analysis* succeeds,
   # regardless of what it found, so without this a repository can carry open
@@ -1112,7 +1108,7 @@ jobs:
       - docs-quality
       - build
       - phone-width
-    if: always()
+    if: ${{ !cancelled() }}
     steps:
       - name: Verify upstream results
         env:
