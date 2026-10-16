@@ -142,3 +142,4 @@ UI build first), but a real release always runs `ui/` through Vite first —
 Vite writes straight into `internal/api/ui/` (see `ui/vite.config.ts`'s
 `outDir`) — so the embedded `uiBuildHash` is non-empty and provable.
 `release.yml`'s `build-ui` job does this before `goreleaser` runs.
+
