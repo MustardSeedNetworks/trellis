@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.10.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.9.1...v0.10.0) (2026-10-16)
+
+
+### Features
+
+* **ui:** place APs on Coverage and see the predicted map ([#843](https://github.com/MustardSeedNetworks/trellis/issues/843)) ([9406b03](https://github.com/MustardSeedNetworks/trellis/commit/9406b03fac54aa916c7fce2c5793b1122e19766f))
+
+
+### Continuous Integration
+
+* **license:** scan PRs only when a dependency manifest changes ([#846](https://github.com/MustardSeedNetworks/trellis/issues/846)) ([6ce937b](https://github.com/MustardSeedNetworks/trellis/commit/6ce937b1335d20bf16af9704c84820b3dd2fea0d)), closes [#845](https://github.com/MustardSeedNetworks/trellis/issues/845)
+
 ## [0.9.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.9.0...v0.9.1) (2026-10-15)
 
 
