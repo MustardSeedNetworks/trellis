@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
