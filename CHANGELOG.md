@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.2](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.1...v0.12.2) (2026-10-17)
+
+
+### Bug Fixes
+
+* **deps:** update module golang.org/x/crypto to v0.58.0 ([#863](https://github.com/MustardSeedNetworks/trellis/issues/863)) ([2485e9a](https://github.com/MustardSeedNetworks/trellis/commit/2485e9a0a704cc561a297ac2dbe8b07be9562d4b))
+
+
+### Miscellaneous
+
+* **deps:** update dependency @types/node to v26.6.5 ([#862](https://github.com/MustardSeedNetworks/trellis/issues/862)) ([306ecdb](https://github.com/MustardSeedNetworks/trellis/commit/306ecdbf49aac02b9077634c61db0301552ec826))
+
 ## [0.12.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.0...v0.12.1) (2026-10-16)
 
 
