@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 )
 
 // Interceptor authenticates every RPC against the gate.
