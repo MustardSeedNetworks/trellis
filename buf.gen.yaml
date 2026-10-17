@@ -1,17 +1,29 @@
-# The plugins are LOCAL binaries, not BSR `remote:` plugins, and their versions
-# are pinned in the Makefile (PROTOC_GEN_GO_INSTALL, PROTOC_GEN_CONNECT_GO_INSTALL)
-# next to the reasoning. In short: a remote plugin is a BSR RPC serving whatever
-# was released last, which makes generation — and the drift gate in ci.yml that
-# depends on it — non-reproducible, bypasses the min-release-age embargo that
-# guards the npm side, and is rate-limited for anonymous callers such as a
-# GitHub-hosted runner. `make generate` puts the pinned binaries on PATH.
+# Plugins are local commands with the version in the argv, not BSR `remote:`
+# plugins. A remote plugin is a BSR RPC. Unpinned, it serves whatever was
+# released last; pinned, anonymous callers are still rate-limited
+# (`resource_exhausted`), and a GitHub-hosted runner shares that egress, so a
+# drift gate built on it is flaky-red. `go run <module>@<version>` is the pin:
+# buf executes that exact module, so a binary on PATH cannot change a byte of
+# gen/.
+#
+# Each version equals the runtime it generates against — go.mod's
+# google.golang.org/protobuf and connectrpc.com/connect. renovate.json tracks
+# the `<module>@<version>` literal and regenerates on the bump. On 2026-10-15
+# the merge queue failed `make check-generated` whenever a generator moved and
+# the committed tree still carried the previous stamp (survey_pb.ts).
 version: v2
 inputs:
   - directory: proto
 plugins:
-  - local: protoc-gen-go
+  - local:
+      - go
+      - run
+      - google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12
     out: gen
     opt: paths=source_relative
-  - local: protoc-gen-connect-go
+  - local:
+      - go
+      - run
+      - connectrpc.com/connect/cmd/protoc-gen-connect-go@v1.21.0
     out: gen
     opt: paths=source_relative
