@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.4](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.3...v0.12.4) (2026-10-17)
+
+
+### Bug Fixes
+
+* **auth:** adopt foundation pkg/password for the operator credential ([#869](https://github.com/MustardSeedNetworks/trellis/issues/869)) ([f2de0ff](https://github.com/MustardSeedNetworks/trellis/commit/f2de0ff0905d08f6efa8cf44901fdae3268d15ef)), closes [#868](https://github.com/MustardSeedNetworks/trellis/issues/868)
+* **ci:** pin protobuf generators and slim main pushes ([#860](https://github.com/MustardSeedNetworks/trellis/issues/860)) ([11a6563](https://github.com/MustardSeedNetworks/trellis/commit/11a65631af8eda84043200788a974dd628d39de8))
+
 ## [0.12.3](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.2...v0.12.3) (2026-10-17)
 
 
