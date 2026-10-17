@@ -11,23 +11,41 @@ on the merged result, and release-please waits on that smoke succeeding.
 
 | Job | Description | Checks |
 | --- | --- | --- |
-| `changes` | Changed-path filter | `dorny/paths-filter`; every expensive job keys its `if:` off this |
-| `backend` | Go checks | build, vet, test -race, gofmt, golangci-lint, buf lint |
-| `backend-darwin` | Go checks (macOS) | Builds and tests on `macos-latest`; only compiler for `*_darwin.go` |
-| `backend-windows` | Go checks (Windows) | Builds and tests on `windows-latest` |
-| `govulncheck` | Go vulnerability scan | `govulncheck` (hard gate) |
-| `frontend` | React/TS checks | Biome lint, Vitest, tsc + Vite build |
-| `e2e` | Browser tests | Playwright, chromium + webkit |
-| `i18n` | Internationalization | Fleet-shared i18n validator |
+| `changes` | Changed-path filter | Shared `ci-changes.yml`; every expensive job keys its `if:` off this |
+| `build-ui` | UI bundle artifact | `make ui`, uploaded for the E2E daemon |
+| `backend` | Go checks | Shared `ci-backend.yml`: build, vet, gofmt, golangci-lint, buf lint, `make check-generated`, coverage floor; macOS and Windows included |
+| `race` | Go race detector | Shared `ci-race.yml`: `go test -race ./...` |
+| `govulncheck` | Go vulnerability scan | `govulncheck` (hard gate), local |
+| `frontend` | React/TS checks | Shared `ci-frontend.yml`: Biome, Vitest coverage, `tsc --build`, token discipline, Vite build |
+| `e2e` | Browser tests | Shared `ci-e2e.yml`: Playwright chromium + webkit, sharded, against `trellisd-e2e` |
+| `i18n` | Internationalization | Fleet-shared i18n validator, local job |
 | `quality` | Code quality gates | banned vocabulary, file-size ratchet, theme contract |
-| `storybook` | Component interactions and a11y | Storybook test runner, axe |
+| `workflow-lint` | Workflow lint | actionlint and zizmor, local |
+| `storybook` | Component interactions and a11y | Shared `ci-storybook.yml` |
 | `docs-quality` | Markdown gate | `markdownlint-cli2` over the **whole** tree |
 | `build` | Build verification | `make build`, then asserts `uiBuildHash` is embedded |
+| `phone-width` | Phone width | Reusable 390x844 gate |
 | `security` | Security scans | npm audit, gitleaks, Trivy |
 | `semgrep` | SAST | Fleet-shared Semgrep rules (`MustardSeedNetworks/.github`) |
+| `dependency-review` | New dependency advisories | Reusable; pull requests only |
 | `ci-conformance` | Fleet CI conformance | Reusable, from `MustardSeedNetworks/.github` |
 | `codeql-alert-gate` | CodeQL alert gate | Fails on open High/Critical alerts |
-| `ci-complete` | Aggregate gate | The required status check |
+| `ci-complete` | Aggregate gate | The required status check, local so the name stays `CI Complete` |
+
+`changes`, `backend`, `race`, `frontend`, `storybook`, and `e2e` call
+`MustardSeedNetworks/.github` at `e092081a97245d29978e229be7425179cc1dcde1`.
+apt-install and flake-budget are pinned inside those workflows. This repo does
+not vendor them.
+
+Jobs that stay in this file, because those six workflows do not implement
+them: `build-ui` (the bundle the E2E daemon embeds), `quality`, `security`,
+`govulncheck`, `workflow-lint`, `i18n`, `docs-quality`, `build` (the `make
+build` contract), `phone-width`, and the existing reusable callers `semgrep`,
+`dependency-review`, `ci-conformance`, and `codeql-alert-gate`. `ci-complete`
+stays here too. macOS cgo confinement and the `CGO_ENABLED=0` build run inside
+the shared backend's macOS test command. The shared Windows golangci-lint job
+is off (`lint-windows: false`): this repo has not gated that pass in CI.
+`make lint` still runs it locally.
 
 Trellis has no C dataplane, so it carries no `c-lint` job. It has everything
 else the fleet runs: E2E, Storybook, i18n, the markdown gate, build

@@ -36,8 +36,9 @@ UI_SOURCES := $(shell find ui/src ui/public -type f 2>/dev/null) \
 GOLANGCI_LINT_VERSION := v2.14.0
 GOLANGCI_LINT := $(shell go env GOPATH)/bin/golangci-lint
 
-# Must match the buf pin in .github/workflows/ci.yml. Bare `buf` is the same
-# false clear as a stale golangci-lint: this machine had 1.71.0 while CI pinned
+# The buf pin. CI's drift gate is `make check-generated`, which installs this
+# binary; ci.yml does not carry a second copy. Bare `buf` is the same false
+# clear as a stale golangci-lint: this machine had 1.71.0 while CI pinned
 # 1.72.0, so `make lint` and CI were linting the protos with different rule sets.
 #
 # The version is derived FROM the install line, not the other way round. The org

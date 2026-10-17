@@ -70,9 +70,15 @@ export default defineConfig({
     // build-e2e swaps the radio for a scripted scanner (cmd/trellisd/
     // scanner_e2e.go) and nothing else: the runners have no Wi-Fi adapter, so
     // the walk in survey-walk.spec.ts could not otherwise store a point.
+    //
+    // CI builds that binary on ubuntu-24.04 and runs the suite in a Playwright
+    // image that has no Go. E2E_SKIP_BUILD=1 starts the binary the daemon job
+    // already wrote; a local run still builds through the Makefile.
     command:
-      'cd .. && make build-e2e && ' +
-      'TRELLIS_ADDR=127.0.0.1:18446 TRELLIS_DATA_DIR="$(mktemp -d)" bin/trellisd-e2e',
+      process.env.E2E_SKIP_BUILD === '1'
+        ? 'TRELLIS_ADDR=127.0.0.1:18446 TRELLIS_DATA_DIR="$(mktemp -d)" ../bin/trellisd-e2e'
+        : 'cd .. && make build-e2e && ' +
+          'TRELLIS_ADDR=127.0.0.1:18446 TRELLIS_DATA_DIR="$(mktemp -d)" bin/trellisd-e2e',
     url: `${baseURL}/__version`,
     reuseExistingServer: false,
     timeout: 180_000,
