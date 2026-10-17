@@ -8,7 +8,7 @@
       "allowedVersions": "<8"
     },
     {
-      "description": "Regenerate protobuf output when a code generator or its runtime moves. The generated tree embeds the plugin version (survey_pb.ts's @generated stamp), so a bump that does not regenerate fails make check-generated in the merge queue, where the full suite always runs. fileFilters keep the task from committing anything outside the generated trees.",
+      "description": "Regenerate protobuf output when a code generator or its runtime moves. The generated tree embeds the plugin version (survey_pb.ts's @generated stamp), so a bump that does not regenerate fails make check-generated in the merge queue, where the full suite always runs. fileFilters keep the task from committing anything outside the generated trees. minimumReleaseAge is restated on this entry: the org preset already soaks for seven days, and a packageRules entry that omits the key is flagged even when the preset applies.",
       "matchPackageNames": [
         "/bufbuild\\/buf/",
         "/protoc-gen-/",
@@ -16,6 +16,7 @@
         "/^@connectrpc\\/connect/",
         "/^@bufbuild\\//"
       ],
+      "minimumReleaseAge": "7 days",
       "postUpgradeTasks": {
         "commands": ["make generate generate-ts"],
         "fileFilters": ["gen/**", "ui/src/gen/**"],
