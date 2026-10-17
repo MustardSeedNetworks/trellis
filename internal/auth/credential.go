@@ -10,15 +10,12 @@
 package auth
 
 import (
-	"crypto/rand"
 	"crypto/subtle"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 
-	"golang.org/x/crypto/argon2"
+	"github.com/MustardSeedNetworks/foundation/pkg/password"
 )
 
 // Environment variables carrying the operator credential. Both must be set
@@ -26,19 +23,6 @@ import (
 const (
 	EnvUsername = "TRELLIS_AUTH_USERNAME"
 	EnvPassword = "TRELLIS_AUTH_PASSWORD"
-)
-
-// Argon2id RFC 9106 second-recommended parameters, the same values Seed and
-// Stem use. Keeping them identical across the fleet means a hash produced by
-// one product is readable by the others if the credential ever moves.
-const (
-	argon2Memory  = 64 * 1024 // KiB
-	argon2Time    = 3
-	argon2Threads = 4
-	argon2SaltLen = 16
-	argon2KeyLen  = 32
-
-	argon2idPrefix = "$argon2id$"
 )
 
 // MinPasswordLength is the shortest operator password accepted. A surveyor's
@@ -70,17 +54,17 @@ type Credential struct {
 	hash     string
 }
 
-// NewCredential hashes password and returns the credential to verify against.
-func NewCredential(username, password string) (Credential, error) {
-	if username == "" || password == "" {
+// NewCredential hashes pass and returns the credential to verify against.
+func NewCredential(username, pass string) (Credential, error) {
+	if username == "" || pass == "" {
 		return Credential{}, ErrMissingCredentials
 	}
-	if len(password) < MinPasswordLength {
+	if len(pass) < MinPasswordLength {
 		return Credential{}, ErrPasswordTooShort
 	}
-	hash, err := hashPassword(password)
+	hash, err := password.Hash(pass)
 	if err != nil {
-		return Credential{}, err
+		return Credential{}, fmt.Errorf("hash operator password: %w", err)
 	}
 	return Credential{username: username, hash: hash}, nil
 }
@@ -99,83 +83,20 @@ func (c Credential) Username() string { return c.username }
 // Hash returns the PHC-encoded Argon2id hash, empty if unconfigured.
 func (c Credential) Hash() string { return c.hash }
 
-// Verify reports whether username and password are the configured credential.
+// Verify reports whether username and pass are the configured credential.
 //
-// An unconfigured Credential refuses every input, including the empty one: the
-// comparison runs against an empty stored hash, which no password can produce.
-func (c Credential) Verify(username, password string) error {
+// An unconfigured Credential refuses every input, including the empty one.
+func (c Credential) Verify(username, pass string) error {
 	if !c.Configured() {
 		return ErrInvalidCredentials
 	}
 	// Both halves are compared in constant time and neither short-circuits, so
 	// a wrong username costs the same as a wrong password.
 	userOK := subtle.ConstantTimeCompare([]byte(username), []byte(c.username)) == 1
-	passOK := verifyPassword(password, c.hash)
-	if !userOK || !passOK {
+	// An error means an empty or oversized input; either is a wrong password.
+	passOK, err := password.Verify(c.hash, pass)
+	if err != nil || !userOK || !passOK {
 		return ErrInvalidCredentials
 	}
 	return nil
-}
-
-// hashPassword returns a PHC-encoded Argon2id hash of password.
-func hashPassword(password string) (string, error) {
-	salt := make([]byte, argon2SaltLen)
-	if _, err := rand.Read(salt); err != nil {
-		return "", fmt.Errorf("generate salt: %w", err)
-	}
-	key := argon2.IDKey([]byte(password), salt, argon2Time, argon2Memory, argon2Threads, argon2KeyLen)
-	return fmt.Sprintf("%sv=%d$m=%d,t=%d,p=%d$%s$%s",
-		argon2idPrefix, argon2.Version, argon2Memory, argon2Time, argon2Threads,
-		base64.RawStdEncoding.EncodeToString(salt),
-		base64.RawStdEncoding.EncodeToString(key),
-	), nil
-}
-
-// verifyPassword reports whether password produces encoded.
-func verifyPassword(password, encoded string) bool {
-	salt, want, memory, time, threads, ok := parsePHC(encoded)
-	if !ok {
-		return false
-	}
-	// The stored key must be exactly the length we produce. Deriving to
-	// len(want) instead would let a malformed hash choose the comparison
-	// length, and a one-byte key would then match one password in 256.
-	if len(want) != argon2KeyLen {
-		return false
-	}
-	got := argon2.IDKey([]byte(password), salt, time, memory, threads, argon2KeyLen)
-	return subtle.ConstantTimeCompare(got, want) == 1
-}
-
-// parsePHC decodes a PHC-encoded Argon2id string. The cost parameters are read
-// back from the hash rather than assumed, so a credential hashed under earlier
-// parameters still verifies if the constants above are ever raised.
-func parsePHC(encoded string) (salt, key []byte, memory, time uint32, threads uint8, ok bool) {
-	if !strings.HasPrefix(encoded, argon2idPrefix) {
-		return nil, nil, 0, 0, 0, false
-	}
-	parts := strings.Split(encoded, "$")
-	// "", "argon2id", "v=19", "m=..,t=..,p=..", salt, key
-	const wantParts = 6
-	if len(parts) != wantParts {
-		return nil, nil, 0, 0, 0, false
-	}
-	var version int
-	if _, err := fmt.Sscanf(parts[2], "v=%d", &version); err != nil || version != argon2.Version {
-		return nil, nil, 0, 0, 0, false
-	}
-	var m, t uint32
-	var p uint8
-	if _, err := fmt.Sscanf(parts[3], "m=%d,t=%d,p=%d", &m, &t, &p); err != nil {
-		return nil, nil, 0, 0, 0, false
-	}
-	salt, err := base64.RawStdEncoding.DecodeString(parts[4])
-	if err != nil {
-		return nil, nil, 0, 0, 0, false
-	}
-	key, err = base64.RawStdEncoding.DecodeString(parts[5])
-	if err != nil {
-		return nil, nil, 0, 0, 0, false
-	}
-	return salt, key, m, t, p, true
 }
