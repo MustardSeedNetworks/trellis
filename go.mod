@@ -4,14 +4,13 @@ go 1.27.2
 
 require (
 	connectrpc.com/connect v1.21.0
-	github.com/MustardSeedNetworks/foundation v0.7.4
+	github.com/MustardSeedNetworks/foundation v0.13.2
 	github.com/go-pdf/fpdf v0.9.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/mdlayher/genetlink v1.4.0
 	github.com/mdlayher/netlink v1.11.2
 	github.com/pressly/goose/v3 v3.28.0
-	golang.org/x/crypto v0.58.0
 	golang.org/x/sys v0.49.0
 	google.golang.org/protobuf v1.36.12
 	modernc.org/sqlite v1.60.1
@@ -28,11 +27,12 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/sethvargo/go-retry v0.4.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
+	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20260908205506-85c1c2202aba // indirect
-	golang.org/x/mod v0.41.0 // indirect
+	golang.org/x/mod v0.42.0 // indirect
 	golang.org/x/net v0.60.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
-	golang.org/x/tools v0.50.0 // indirect
+	golang.org/x/tools v0.51.0 // indirect
 	honnef.co/go/tools v0.8.1 // indirect
 	modernc.org/libc v1.77.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect

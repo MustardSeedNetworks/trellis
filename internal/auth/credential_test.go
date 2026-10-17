@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/MustardSeedNetworks/foundation/pkg/password"
+
 	"github.com/MustardSeedNetworks/trellis/internal/auth"
 )
 
@@ -40,6 +42,7 @@ func TestCredentialRefusesWrongInput(t *testing.T) {
 		"password as user": {testPassword, "surveyor"},
 		"password prefix":  {"surveyor", testPassword[:len(testPassword)-1]},
 		"username case":    {"Surveyor", testPassword},
+		"oversized":        {"surveyor", strings.Repeat("x", password.MaxBytes+1)},
 	} {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
@@ -71,6 +74,16 @@ func TestCredentialRefusesAShortPassword(t *testing.T) {
 	t.Parallel()
 	if _, err := auth.NewCredential("surveyor", "short"); !errors.Is(err, auth.ErrPasswordTooShort) {
 		t.Fatalf("NewCredential with a short password = %v, want ErrPasswordTooShort", err)
+	}
+}
+
+// foundation bounds the input rather than truncating it, so an oversized
+// password is refused when the credential is built, not silently shortened.
+func TestCredentialRefusesAnOversizedPassword(t *testing.T) {
+	t.Parallel()
+	_, err := auth.NewCredential("surveyor", strings.Repeat("x", password.MaxBytes+1))
+	if !errors.Is(err, password.ErrInput) {
+		t.Fatalf("NewCredential with an oversized password = %v, want password.ErrInput", err)
 	}
 }
 
