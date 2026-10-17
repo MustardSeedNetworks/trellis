@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.5](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.4...v0.12.5) (2026-10-17)
+
+
+### Continuous Integration
+
+* **workflows:** call shared product workflows for the common jobs ([#861](https://github.com/MustardSeedNetworks/trellis/issues/861)) ([9010c45](https://github.com/MustardSeedNetworks/trellis/commit/9010c4537dbb24c258829b04beca12fe97e4cb92))
+
 ## [0.12.4](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.3...v0.12.4) (2026-10-17)
 
 
