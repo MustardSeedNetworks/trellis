@@ -542,9 +542,17 @@ jobs:
       # Not continue-on-error: a silent upload failure leaves the Security tab
       # showing an older scan, so the dashboard reads "clean" because nothing
       # new arrived rather than because nothing was found.
+      #
+      # merge_group skips the upload only. GitHub deletes
+      # refs/heads/gh-readonly-queue/... before upload-sarif posts, and the
+      # code-scanning API then rejects the call with "ref ... not found"
+      # (.github#174). That would fail this job and drop the PR from the
+      # queue. The scan above still runs, and the finding gate below still
+      # fails the job, so a merge-queue run stays closed on CRITICAL/HIGH.
+      # The pull_request run already published the SARIF for the same commits.
       - name: Upload Trivy results
         uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
-        if: always() && hashFiles('trivy-results.sarif') != ''
+        if: always() && github.event_name != 'merge_group' && !startsWith(github.ref, 'refs/heads/gh-readonly-queue/') && hashFiles('trivy-results.sarif') != ''
         with:
           sarif_file: trivy-results.sarif
 
@@ -638,7 +646,7 @@ jobs:
 
   # Fleet-shared SAST gate (MustardSeedNetworks/.github, pinned).
   semgrep:
-    uses: MustardSeedNetworks/.github/.github/workflows/semgrep.yml@048d173dd72ca0f9e5fa832fb5b9fd2a6447e5e9 # v1.13.0
+    uses: MustardSeedNetworks/.github/.github/workflows/semgrep.yml@8f012be52b47d0be45104b0ed8d3eb72f20840f5 # .github#174
     permissions:
       contents: read
       # v1.8.0 publishes the all-severity SARIF to code scanning. The
