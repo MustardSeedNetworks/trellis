@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.3](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.2...v0.12.3) (2026-10-17)
+
+
+### Bug Fixes
+
+* **deps:** update dependency i18next to v26.4.3 ([#865](https://github.com/MustardSeedNetworks/trellis/issues/865)) ([1bfb605](https://github.com/MustardSeedNetworks/trellis/commit/1bfb605f0247f08522916c012e9a3960c752afe7))
+* **deps:** update dependency lucide-react to v1.55.0 ([#866](https://github.com/MustardSeedNetworks/trellis/issues/866)) ([0eb1267](https://github.com/MustardSeedNetworks/trellis/commit/0eb12675e81a6a7605e0368a894ddab835a5dd17))
+
 ## [0.12.2](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.1...v0.12.2) (2026-10-17)
 
 
