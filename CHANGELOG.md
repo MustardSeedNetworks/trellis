@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.7](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.6...v0.12.7) (2026-10-18)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @tanstack/react-query to v5.104.2 ([#876](https://github.com/MustardSeedNetworks/trellis/issues/876)) ([43c13a1](https://github.com/MustardSeedNetworks/trellis/commit/43c13a16ca3fdaad59726b330a97d02cb68d940b))
+* **deps:** update module github.com/pressly/goose/v3 to v3.29.0 ([#877](https://github.com/MustardSeedNetworks/trellis/issues/877)) ([33abad1](https://github.com/MustardSeedNetworks/trellis/commit/33abad1074424573905a5d7963ea4c15fe8dd348))
+
 ## [0.12.6](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.5...v0.12.6) (2026-10-18)
 
 
