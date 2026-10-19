@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.8](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.7...v0.12.8) (2026-10-19)
+
+
+### Bug Fixes
+
+* **deps:** update dependency i18next to v26.4.4 ([#881](https://github.com/MustardSeedNetworks/trellis/issues/881)) ([70bed18](https://github.com/MustardSeedNetworks/trellis/commit/70bed18cea1d4f220de4c9f1196e0c1cc1834661))
+
+
+### Miscellaneous
+
+* **deps:** update ossf/scorecard-action action to v2.5.0 ([#879](https://github.com/MustardSeedNetworks/trellis/issues/879)) ([c547ac3](https://github.com/MustardSeedNetworks/trellis/commit/c547ac37c19cffa19784c128b9af71de94ff5df2))
+
 ## [0.12.7](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.6...v0.12.7) (2026-10-18)
 
 
