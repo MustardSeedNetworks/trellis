@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.11](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.10...v0.12.11) (2026-10-20)
+
+
+### Miscellaneous
+
+* **deps:** update storybook monorepo to v10.6.2 ([#886](https://github.com/MustardSeedNetworks/trellis/issues/886)) ([c021515](https://github.com/MustardSeedNetworks/trellis/commit/c021515135999b8d7aae0d04b653cd7b57bdb8ea))
+
 ## [0.12.10](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.9...v0.12.10) (2026-10-20)
 
 
