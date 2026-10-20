@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.10](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.9...v0.12.10) (2026-10-20)
+
+
+### Miscellaneous
+
+* **deps:** update actions/create-github-app-token action to v3.3.0 ([#887](https://github.com/MustardSeedNetworks/trellis/issues/887)) ([707fab3](https://github.com/MustardSeedNetworks/trellis/commit/707fab38891f69bd981cfd9439d812c20560892f))
+* **deps:** update module honnef.co/go/tools to v0.8.2 ([#885](https://github.com/MustardSeedNetworks/trellis/issues/885)) ([760cd06](https://github.com/MustardSeedNetworks/trellis/commit/760cd06cd181c3f5918c8472361593a656e74626))
+
 ## [0.12.9](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.8...v0.12.9) (2026-10-20)
 
 
