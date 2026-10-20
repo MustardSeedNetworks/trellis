@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.9](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.8...v0.12.9) (2026-10-20)
+
+
+### Miscellaneous
+
+* **deps:** update frontend toolchain to v5.0.4 ([#882](https://github.com/MustardSeedNetworks/trellis/issues/882)) ([7a79d3b](https://github.com/MustardSeedNetworks/trellis/commit/7a79d3b50ef78b0886aac3177430cd39b224ed2b))
+
 ## [0.12.8](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.7...v0.12.8) (2026-10-19)
 
 
