@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.12.14](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.13...v0.12.14) (2026-10-27)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @tanstack/react-query to v5.104.5 ([#901](https://github.com/MustardSeedNetworks/trellis/issues/901)) ([e0df186](https://github.com/MustardSeedNetworks/trellis/commit/e0df1861b72ca392cef0124cca32d14c15bb3103))
+
+
+### Miscellaneous
+
+* **deps:** update dependency postcss to v8.5.31 ([#909](https://github.com/MustardSeedNetworks/trellis/issues/909)) ([06f4887](https://github.com/MustardSeedNetworks/trellis/commit/06f4887ab61f42ad499f95a85be7feb2dd774928))
+* **deps:** update github/codeql-action action to v4.39.0 ([#911](https://github.com/MustardSeedNetworks/trellis/issues/911)) ([6f21aec](https://github.com/MustardSeedNetworks/trellis/commit/6f21aec0600a9cf0d6b944c54761bb0ac14eaed1))
+* **deps:** update mustardseednetworks/.github action to v1.14.0 ([#912](https://github.com/MustardSeedNetworks/trellis/issues/912)) ([6fc2853](https://github.com/MustardSeedNetworks/trellis/commit/6fc285383819fa8af0a82f49aee7d292e6c5c420))
+
 ## [0.12.13](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.12...v0.12.13) (2026-10-27)
 
 
