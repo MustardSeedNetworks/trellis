@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.13](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.12...v0.12.13) (2026-10-27)
+
+
+### Bug Fixes
+
+* **deps:** build with go1.27.3 for GO-2026-6809 ([#904](https://github.com/MustardSeedNetworks/trellis/issues/904)) ([6746dff](https://github.com/MustardSeedNetworks/trellis/commit/6746dff3ce5d6dad4a02df048982139238fb57c7)), closes [#903](https://github.com/MustardSeedNetworks/trellis/issues/903)
+* **deps:** update go dependencies ([#898](https://github.com/MustardSeedNetworks/trellis/issues/898)) ([258f059](https://github.com/MustardSeedNetworks/trellis/commit/258f0592d9513586cc32303a9a4047f20e2f57a9))
+
 ## [0.12.12](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.11...v0.12.12) (2026-10-20)
 
 
