@@ -170,7 +170,7 @@ jobs:
       # lines. The action runs inside ci-backend.yml. The next line is the
       # version that workflow is given, and the string the grep matches.
       # golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
-      golangci-lint-version: v2.14.0
+      golangci-lint-version: v2.15.0
       golangci-lint-args: --timeout=5m
       lint-windows: false
       cgo-enabled-windows: "1"
