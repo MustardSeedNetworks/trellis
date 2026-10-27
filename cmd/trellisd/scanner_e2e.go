@@ -81,9 +81,17 @@ type scriptedScanner struct {
 // fadeSteps how many captures it fades for before the cycle restarts. The
 // weakest level, -66 dBm, stays above the default -75 dBm dead-zone floor so a
 // walk reads as covered until the threshold is raised.
+//
+// labNoiseFloorDBm puts that AP's margin inside the SNR analysis range at every
+// step: 39, 33, 27, 21 dB, under the 40 dB ceiling and over the 20 dB default.
+// A walk's three captures land on whichever steps the shared counter gives
+// them, so a spec raising the threshold to its ceiling has to find a gap at
+// every point whatever the phase. At -95 dBm the peak was 47 dB, and a walk
+// that drew only the top two steps read as covered at 40 (trellis#915).
 const (
-	fadePerScanDBm = 6
-	fadeSteps      = 4
+	fadePerScanDBm   = 6
+	fadeSteps        = 4
+	labNoiseFloorDBm = -87
 	// Busy enough to be a real reading, quiet enough that the live view's
 	// verdict is decided by the SNR the fade drives rather than by congestion.
 	scriptedUtilizationPercent = 18
@@ -102,7 +110,7 @@ func (s *scriptedScanner) Scan(ctx context.Context) ([]wifi.ScannedNetwork, erro
 	return []wifi.ScannedNetwork{
 		{SSID: "Trellis Lab", BSSID: "02:00:00:00:00:01", Signal: -48 - fade,
 			Channel: 36, Frequency: 5180, Security: "WPA3", ChannelWidth: 80,
-			NoiseFloor: -95, SNR: 47 - fade, HTMode: "VHT80", LastSeen: seen,
+			NoiseFloor: labNoiseFloorDBm, SNR: -48 - fade - labNoiseFloorDBm, HTMode: "VHT80", LastSeen: seen,
 			Associated: true, ChannelUtilization: &utilization},
 		{SSID: "Trellis Lab", BSSID: "02:00:00:00:00:02", Signal: -62,
 			Channel: 6, Frequency: 2437, Security: "WPA2", ChannelWidth: 20,
