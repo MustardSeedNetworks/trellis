@@ -551,7 +551,7 @@ jobs:
       # fails the job, so a merge-queue run stays closed on CRITICAL/HIGH.
       # The pull_request run already published the SARIF for the same commits.
       - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         if: always() && github.event_name != 'merge_group' && !startsWith(github.ref, 'refs/heads/gh-readonly-queue/') && hashFiles('trivy-results.sarif') != ''
         with:
           sarif_file: trivy-results.sarif
