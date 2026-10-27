@@ -67,8 +67,8 @@ test('analyses the SNR layer in dB, on its own threshold', async ({ page }) => {
   await expect(page.locator('#coverage-threshold')).toHaveValue('20');
   await expect(page.getByTestId('coverage-threshold-unit')).toHaveText('dB');
   await expect(findings).toContainText('SNR margin findings');
-  // The scripted radio's strongest AP fades from 47 dB of margin down, so all
-  // three points clear 20 dB.
+  // The scripted radio's strongest AP fades from 39 dB of margin to 21 dB, so
+  // all three points clear 20 dB.
   await expect(findings).toContainText('No dead zones below 20 dB');
   await expect(findings).toHaveAttribute('data-state', 'ok');
 
@@ -76,6 +76,7 @@ test('analyses the SNR layer in dB, on its own threshold', async ({ page }) => {
   // are about noise rather than about adding access points.
   await page.locator('#coverage-threshold').fill('40');
   await expect(findings).toContainText('below 40 dB');
+  await expect(findings).not.toContainText('No dead zones');
   await expect(findings).toHaveAttribute('data-state', 'warn');
   await expect(findings).toContainText(/noise|interference|channel/i);
 
@@ -212,7 +213,7 @@ test('reads the live airspace and stops taking the radio when paused', async ({ 
   await page.goto('/live');
 
   const rollup = page.getByTestId('status-rollup');
-  // The scripted radio is joined to Trellis Lab, whose SNR fades 47 → 29 dB
+  // The scripted radio is joined to Trellis Lab, whose SNR fades 39 → 21 dB
   // across the cycle and stays above the 20 dB the page calls weak.
   await expect(rollup).toContainText('Connected to Trellis Lab');
   await expect(rollup).toHaveAttribute('data-state', 'ok');
