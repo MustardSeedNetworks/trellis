@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 	"github.com/MustardSeedNetworks/trellis/internal/auth"
 	"google.golang.org/protobuf/types/known/emptypb"
 )

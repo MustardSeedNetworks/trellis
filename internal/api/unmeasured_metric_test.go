@@ -10,7 +10,7 @@ import (
 	"context"
 	"testing"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
 	"github.com/MustardSeedNetworks/trellis/internal/api"

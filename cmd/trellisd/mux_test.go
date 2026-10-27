@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
 	"github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1/surveyv1connect"
 	"github.com/MustardSeedNetworks/trellis/internal/auth"

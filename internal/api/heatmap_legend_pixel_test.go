@@ -12,7 +12,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
