@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.15](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.14...v0.12.15) (2026-10-27)
+
+
+### Bug Fixes
+
+* **deps:** update dependency react-router to v8.5.0 ([#914](https://github.com/MustardSeedNetworks/trellis/issues/914)) ([1db44ca](https://github.com/MustardSeedNetworks/trellis/commit/1db44ca05d28041cf5b9f4d8d0d5f23d58bd5359))
+* **deps:** update frontend toolchain ([#897](https://github.com/MustardSeedNetworks/trellis/issues/897)) ([df2c18e](https://github.com/MustardSeedNetworks/trellis/commit/df2c18e55a6435070d55d81484ec89013796f4f5))
+
 ## [0.12.14](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.13...v0.12.14) (2026-10-27)
 
 
