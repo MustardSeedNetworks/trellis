@@ -170,7 +170,7 @@ jobs:
       # lines. The action runs inside ci-backend.yml. The next line is the
       # version that workflow is given, and the string the grep matches.
       # golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
-      golangci-lint-version: v2.14.0
+      golangci-lint-version: v2.15.0
       golangci-lint-args: --timeout=5m
       lint-windows: false
       cgo-enabled-windows: "1"
@@ -551,7 +551,7 @@ jobs:
       # fails the job, so a merge-queue run stays closed on CRITICAL/HIGH.
       # The pull_request run already published the SARIF for the same commits.
       - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         if: always() && github.event_name != 'merge_group' && !startsWith(github.ref, 'refs/heads/gh-readonly-queue/') && hashFiles('trivy-results.sarif') != ''
         with:
           sarif_file: trivy-results.sarif
@@ -675,7 +675,7 @@ jobs:
   # ci-complete still needs: [dependency-review].
   dependency-review:
     if: github.event_name == 'pull_request'
-    uses: MustardSeedNetworks/.github/.github/workflows/dependency-review.yml@048d173dd72ca0f9e5fa832fb5b9fd2a6447e5e9 # v1.13.0
+    uses: MustardSeedNetworks/.github/.github/workflows/dependency-review.yml@76eb579ee0cbdef0a2aef9d9df1ae9ca38cad6bd # v1.14.0
     permissions:
       contents: read
       # Only to post the findings comment when it fails.
@@ -841,7 +841,7 @@ jobs:
   # severity, several of which encode deliberate decisions.
   codeql-alert-gate:
     name: CodeQL Alert Gate
-    uses: MustardSeedNetworks/.github/.github/workflows/codeql-alert-gate.yml@048d173dd72ca0f9e5fa832fb5b9fd2a6447e5e9 # v1.13.0
+    uses: MustardSeedNetworks/.github/.github/workflows/codeql-alert-gate.yml@76eb579ee0cbdef0a2aef9d9df1ae9ca38cad6bd # v1.14.0
     permissions:
       security-events: read
 
