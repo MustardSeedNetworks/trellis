@@ -11,7 +11,6 @@ import (
 	"errors"
 	"testing"
 
-	"connectrpc.com/connect"
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
@@ -32,11 +31,11 @@ func (s fixedScanner) Scan(context.Context) ([]wifi.ScannedNetwork, error) {
 func capabilityOf(t *testing.T, h *api.SurveyServiceHandler) *surveyv1.GetCaptureCapabilityResponse {
 	t.Helper()
 	resp, err := h.GetCaptureCapability(context.Background(),
-		connect.NewRequest(&surveyv1.GetCaptureCapabilityRequest{}))
+		&surveyv1.GetCaptureCapabilityRequest{})
 	if err != nil {
 		t.Fatalf("GetCaptureCapability: %v", err)
 	}
-	return resp.Msg
+	return resp
 }
 
 func handlerForTest(t *testing.T, scanner survey.Scanner) *api.SurveyServiceHandler {

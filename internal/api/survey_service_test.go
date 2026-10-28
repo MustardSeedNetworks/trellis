@@ -16,7 +16,8 @@ import (
 	"strings"
 	"testing"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connecthttp"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
@@ -84,13 +85,14 @@ func TestSurveyServiceEndToEnd(t *testing.T) {
 	mgr := mustManager(t, dir, nil, nil, nil, nil)
 	handler := api.NewSurveyServiceHandler(mgr)
 
+	rpc := connect.NewServer()
+	surveyv1connect.RegisterSurveyServiceHandler(rpc, handler)
 	mux := http.NewServeMux()
-	path, connectHandler := surveyv1connect.NewSurveyServiceHandler(handler)
-	mux.Handle(path, connectHandler)
+	connecthttp.Mount(mux, rpc)
 	srv := httptest.NewServer(mux)
 	t.Cleanup(srv.Close)
 
-	client := surveyv1connect.NewSurveyServiceClient(srv.Client(), srv.URL)
+	client := surveyv1connect.NewSurveyServiceClient(connect.NewClient(connecthttp.NewTransport(srv.Client(), srv.URL)))
 	ctx := context.Background()
 
 	// --- ImportAirMapper over the API ---------------------------------
@@ -100,14 +102,14 @@ func TestSurveyServiceEndToEnd(t *testing.T) {
 	)
 	amp := buildAMP(t, w, h, scalePpf)
 
-	importResp, err := client.ImportAirMapper(ctx, connect.NewRequest(&surveyv1.ImportAirMapperRequest{
+	importResp, err := client.ImportAirMapper(ctx, &surveyv1.ImportAirMapperRequest{
 		Name:    "Everett HQ",
 		AmpData: amp,
-	}))
+	})
 	if err != nil {
 		t.Fatalf("ImportAirMapper: %v", err)
 	}
-	summary := importResp.Msg.GetSurvey()
+	summary := importResp.GetSurvey()
 	if summary.GetId() == "" {
 		t.Fatal("ImportAirMapper: empty survey id")
 	}
@@ -165,14 +167,14 @@ func TestSurveyServiceEndToEnd(t *testing.T) {
 	}
 
 	// --- GetHeatmap over the API ---------------------------------------
-	heatmapResp, err := client.GetHeatmap(ctx, connect.NewRequest(&surveyv1.GetHeatmapRequest{
+	heatmapResp, err := client.GetHeatmap(ctx, &surveyv1.GetHeatmapRequest{
 		SurveyId: surveyID,
 		Metric:   "rssi",
-	}))
+	})
 	if err != nil {
 		t.Fatalf("GetHeatmap: %v", err)
 	}
-	hm := heatmapResp.Msg
+	hm := heatmapResp
 	if len(hm.GetPng()) < 8 || !strings.HasPrefix(string(hm.GetPng()[:8]), "\x89PNG") {
 		t.Errorf("heatmap response is not a PNG (len=%d)", len(hm.GetPng()))
 	}
@@ -207,14 +209,14 @@ func TestSurveyServiceEndToEnd(t *testing.T) {
 	}
 
 	// --- GetCoverage over the API ---------------------------------------
-	coverageResp, err := client.GetCoverage(ctx, connect.NewRequest(&surveyv1.GetCoverageRequest{
+	coverageResp, err := client.GetCoverage(ctx, &surveyv1.GetCoverageRequest{
 		SurveyId:  surveyID,
 		Threshold: proto.Int32(-75),
-	}))
+	})
 	if err != nil {
 		t.Fatalf("GetCoverage: %v", err)
 	}
-	cov := coverageResp.Msg
+	cov := coverageResp
 	if cov.GetCoverageScore() < 0 || cov.GetCoverageScore() > 100 {
 		t.Errorf("CoverageScore = %.1f, want 0..100", cov.GetCoverageScore())
 	}
@@ -223,26 +225,26 @@ func TestSurveyServiceEndToEnd(t *testing.T) {
 	}
 
 	// --- ListSurveys / GetSurvey / DeleteSurvey round trip --------------
-	listResp, err := client.ListSurveys(ctx, connect.NewRequest(&surveyv1.ListSurveysRequest{}))
+	listResp, err := client.ListSurveys(ctx, &surveyv1.ListSurveysRequest{})
 	if err != nil {
 		t.Fatalf("ListSurveys: %v", err)
 	}
-	if len(listResp.Msg.GetSurveys()) != 1 {
-		t.Errorf("ListSurveys returned %d surveys, want 1", len(listResp.Msg.GetSurveys()))
+	if len(listResp.GetSurveys()) != 1 {
+		t.Errorf("ListSurveys returned %d surveys, want 1", len(listResp.GetSurveys()))
 	}
 
-	getResp, err := client.GetSurvey(ctx, connect.NewRequest(&surveyv1.GetSurveyRequest{Id: surveyID}))
+	getResp, err := client.GetSurvey(ctx, &surveyv1.GetSurveyRequest{Id: surveyID})
 	if err != nil {
 		t.Fatalf("GetSurvey: %v", err)
 	}
-	if getResp.Msg.GetSurvey().GetSampleCount() != int32(len(points)) {
-		t.Errorf("GetSurvey SampleCount = %d, want %d", getResp.Msg.GetSurvey().GetSampleCount(), len(points))
+	if getResp.GetSurvey().GetSampleCount() != int32(len(points)) {
+		t.Errorf("GetSurvey SampleCount = %d, want %d", getResp.GetSurvey().GetSampleCount(), len(points))
 	}
 
-	if _, err := client.DeleteSurvey(ctx, connect.NewRequest(&surveyv1.DeleteSurveyRequest{Id: surveyID})); err != nil {
+	if _, err := client.DeleteSurvey(ctx, &surveyv1.DeleteSurveyRequest{Id: surveyID}); err != nil {
 		t.Fatalf("DeleteSurvey: %v", err)
 	}
-	if _, err := client.GetSurvey(ctx, connect.NewRequest(&surveyv1.GetSurveyRequest{Id: surveyID})); err == nil {
+	if _, err := client.GetSurvey(ctx, &surveyv1.GetSurveyRequest{Id: surveyID}); err == nil {
 		t.Error("GetSurvey after delete: expected error, got nil")
 	} else if connect.CodeOf(err) != connect.CodeNotFound {
 		t.Errorf("GetSurvey after delete: code = %v, want CodeNotFound", connect.CodeOf(err))
@@ -258,15 +260,16 @@ func TestGetSurveyNotFound(t *testing.T) {
 	mgr := mustManager(t, dir, nil, nil, nil, nil)
 	handler := api.NewSurveyServiceHandler(mgr)
 
+	rpc := connect.NewServer()
+	surveyv1connect.RegisterSurveyServiceHandler(rpc, handler)
 	mux := http.NewServeMux()
-	path, connectHandler := surveyv1connect.NewSurveyServiceHandler(handler)
-	mux.Handle(path, connectHandler)
+	connecthttp.Mount(mux, rpc)
 	srv := httptest.NewServer(mux)
 	t.Cleanup(srv.Close)
 
-	client := surveyv1connect.NewSurveyServiceClient(srv.Client(), srv.URL)
+	client := surveyv1connect.NewSurveyServiceClient(connect.NewClient(connecthttp.NewTransport(srv.Client(), srv.URL)))
 
-	_, err := client.GetSurvey(context.Background(), connect.NewRequest(&surveyv1.GetSurveyRequest{Id: "nonexistent"}))
+	_, err := client.GetSurvey(context.Background(), &surveyv1.GetSurveyRequest{Id: "nonexistent"})
 	if err == nil {
 		t.Fatal("expected error for unknown survey id")
 	}
@@ -284,18 +287,19 @@ func TestImportAirMapperInvalidArgument(t *testing.T) {
 	mgr := mustManager(t, dir, nil, nil, nil, nil)
 	handler := api.NewSurveyServiceHandler(mgr)
 
+	rpc := connect.NewServer()
+	surveyv1connect.RegisterSurveyServiceHandler(rpc, handler)
 	mux := http.NewServeMux()
-	path, connectHandler := surveyv1connect.NewSurveyServiceHandler(handler)
-	mux.Handle(path, connectHandler)
+	connecthttp.Mount(mux, rpc)
 	srv := httptest.NewServer(mux)
 	t.Cleanup(srv.Close)
 
-	client := surveyv1connect.NewSurveyServiceClient(srv.Client(), srv.URL)
+	client := surveyv1connect.NewSurveyServiceClient(connect.NewClient(connecthttp.NewTransport(srv.Client(), srv.URL)))
 
-	_, err := client.ImportAirMapper(context.Background(), connect.NewRequest(&surveyv1.ImportAirMapperRequest{
+	_, err := client.ImportAirMapper(context.Background(), &surveyv1.ImportAirMapperRequest{
 		Name:    "",
 		AmpData: []byte("irrelevant"),
-	}))
+	})
 	if err == nil {
 		t.Fatal("expected error for empty name")
 	}
@@ -323,14 +327,14 @@ func TestGetHeatmapRendersTheMetricThatWasAskedFor(t *testing.T) {
 		{"not-a-metric", "rssi"},
 	} {
 		got, err := handler.GetHeatmap(context.Background(),
-			connect.NewRequest(&surveyv1.GetHeatmapRequest{SurveyId: id, Metric: tc.asked}))
+			&surveyv1.GetHeatmapRequest{SurveyId: id, Metric: tc.asked})
 		if err != nil {
 			t.Fatalf("GetHeatmap(%q): %v", tc.asked, err)
 		}
 		// The handler used to test for "snr" and send everything else to RSSI,
 		// so a download layer came back as a signal layer labelled Mbps.
-		if got.Msg.GetMetric() != tc.want {
-			t.Errorf("asked for %q, rendered %q, want %q", tc.asked, got.Msg.GetMetric(), tc.want)
+		if got.GetMetric() != tc.want {
+			t.Errorf("asked for %q, rendered %q, want %q", tc.asked, got.GetMetric(), tc.want)
 		}
 	}
 }
@@ -341,30 +345,30 @@ func TestAThroughputLayerLeavesOutThePointsThatMeasuredNoThroughput(t *testing.T
 	handler, id := measuredSurvey(t)
 
 	download, err := handler.GetHeatmap(context.Background(),
-		connect.NewRequest(&surveyv1.GetHeatmapRequest{SurveyId: id, Metric: "download"}))
+		&surveyv1.GetHeatmapRequest{SurveyId: id, Metric: "download"})
 	if err != nil {
 		t.Fatalf("GetHeatmap(download): %v", err)
 	}
 	// Three passive points and one active one. A passive scan measured no
 	// throughput; rendering its dBm here would put a plausible number in the
 	// wrong unit onto the map.
-	if got := download.Msg.GetSampleCount(); got != 1 {
+	if got := download.GetSampleCount(); got != 1 {
 		t.Errorf("download layer holds %d points, want the 1 that measured a rate", got)
 	}
 	// Within a Mbps: the value travels through the interpolator, which is
 	// float arithmetic, so pinning it exactly would be pinning the rounding.
-	if got := download.Msg.GetMax(); got < 220.5 || got > 221.5 {
+	if got := download.GetMax(); got < 220.5 || got > 221.5 {
 		t.Errorf("download layer maxes at %v Mbps, want the measured 221", got)
 	}
 
 	signal, err := handler.GetHeatmap(context.Background(),
-		connect.NewRequest(&surveyv1.GetHeatmapRequest{SurveyId: id, Metric: "rssi"}))
+		&surveyv1.GetHeatmapRequest{SurveyId: id, Metric: "rssi"})
 	if err != nil {
 		t.Fatalf("GetHeatmap(rssi): %v", err)
 	}
 	// The signal layer is the other way round: the active point carries the
 	// association it ran over, so it belongs there too.
-	if got := signal.Msg.GetSampleCount(); got != 4 {
+	if got := signal.GetSampleCount(); got != 4 {
 		t.Errorf("signal layer holds %d points, want all 4", got)
 	}
 }
@@ -380,30 +384,30 @@ func measuredSurvey(t *testing.T) (*api.SurveyServiceHandler, string) {
 	handler := api.NewSurveyServiceHandler(manager)
 
 	created, err := handler.CreateSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "measured", Interface: "en0"}))
+		&surveyv1.CreateSurveyRequest{Name: "measured", Interface: "en0"})
 	if err != nil {
 		t.Fatalf("CreateSurvey: %v", err)
 	}
-	id := created.Msg.GetSurvey().GetId()
+	id := created.GetSurvey().GetId()
 
 	if _, err := handler.SetThroughputTarget(context.Background(),
-		connect.NewRequest(&surveyv1.SetThroughputTargetRequest{
+		&surveyv1.SetThroughputTargetRequest{
 			SurveyId: id, Server: "10.44.10.9",
-		})); err != nil {
+		}); err != nil {
 		t.Fatalf("SetThroughputTarget: %v", err)
 	}
 	if _, err := handler.StartSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.StartSurveyRequest{Id: id})); err != nil {
+		&surveyv1.StartSurveyRequest{Id: id}); err != nil {
 		t.Fatalf("StartSurvey: %v", err)
 	}
 	for _, at := range []struct{ x, y int32 }{{10, 10}, {200, 100}, {400, 300}} {
 		if _, err := handler.CapturePoint(context.Background(),
-			connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: at.x, Y: at.y})); err != nil {
+			&surveyv1.CapturePointRequest{SurveyId: id, X: at.x, Y: at.y}); err != nil {
 			t.Fatalf("CapturePoint: %v", err)
 		}
 	}
 	if _, err := handler.MeasureThroughput(context.Background(),
-		connect.NewRequest(&surveyv1.MeasureThroughputRequest{SurveyId: id, X: 300, Y: 200})); err != nil {
+		&surveyv1.MeasureThroughputRequest{SurveyId: id, X: 300, Y: 200}); err != nil {
 		t.Fatalf("MeasureThroughput: %v", err)
 	}
 	return handler, id

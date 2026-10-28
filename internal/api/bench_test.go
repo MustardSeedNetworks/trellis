@@ -16,7 +16,6 @@ import (
 	"fmt"
 	"testing"
 
-	"connectrpc.com/connect"
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
@@ -86,7 +85,7 @@ func BenchmarkFloorReads(b *testing.B) {
 			handler := api.NewSurveyServiceHandler(mgr)
 
 			b.Run("GetHeatmap", func(b *testing.B) {
-				req := connect.NewRequest(&surveyv1.GetHeatmapRequest{SurveyId: id, Metric: "rssi"})
+				req := &surveyv1.GetHeatmapRequest{SurveyId: id, Metric: "rssi"}
 				for b.Loop() {
 					if _, err := handler.GetHeatmap(ctx, req); err != nil {
 						b.Fatalf("GetHeatmap: %v", err)
@@ -94,7 +93,7 @@ func BenchmarkFloorReads(b *testing.B) {
 				}
 			})
 			b.Run("GetCoverage", func(b *testing.B) {
-				req := connect.NewRequest(&surveyv1.GetCoverageRequest{SurveyId: id, Metric: "rssi"})
+				req := &surveyv1.GetCoverageRequest{SurveyId: id, Metric: "rssi"}
 				for b.Loop() {
 					if _, err := handler.GetCoverage(ctx, req); err != nil {
 						b.Fatalf("GetCoverage: %v", err)

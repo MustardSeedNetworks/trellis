@@ -14,7 +14,7 @@ import (
 	"sync"
 	"testing"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
@@ -70,18 +70,18 @@ func twoAPFloorSurvey(t *testing.T) (*api.SurveyServiceHandler, string) {
 	handler := api.NewSurveyServiceHandler(mustManager(t, t.TempDir(), scanner, nil, nil, nil))
 	ctx := context.Background()
 	created, err := handler.CreateSurvey(ctx,
-		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "two APs", Interface: "en0"}))
+		&surveyv1.CreateSurveyRequest{Name: "two APs", Interface: "en0"})
 	if err != nil {
 		t.Fatalf("CreateSurvey: %v", err)
 	}
-	id := created.Msg.GetSurvey().GetId()
+	id := created.GetSurvey().GetId()
 	if _, err := handler.StartSurvey(ctx,
-		connect.NewRequest(&surveyv1.StartSurveyRequest{Id: id})); err != nil {
+		&surveyv1.StartSurveyRequest{Id: id}); err != nil {
 		t.Fatalf("StartSurvey: %v", err)
 	}
 	for _, x := range []int32{20, 120, 220, 320} {
 		if _, err := handler.CapturePoint(ctx,
-			connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: x, Y: 40})); err != nil {
+			&surveyv1.CapturePointRequest{SurveyId: id, X: x, Y: 40}); err != nil {
 			t.Fatalf("CapturePoint(%d): %v", x, err)
 		}
 	}
@@ -115,24 +115,24 @@ func TestGetHeatmap_UnfilteredFloorIsTheStrongestAPView(t *testing.T) {
 		{"snr", "be533788cb1ef946429fa052f180d6da892588ad9a4de95530363e81b96b4b12"},
 	} {
 		got, err := handler.GetHeatmap(ctx,
-			connect.NewRequest(&surveyv1.GetHeatmapRequest{SurveyId: id, Metric: tc.metric}))
+			&surveyv1.GetHeatmapRequest{SurveyId: id, Metric: tc.metric})
 		if err != nil {
 			t.Fatalf("GetHeatmap(%s): %v", tc.metric, err)
 		}
-		if d := fieldDigest(got.Msg); d != tc.digest {
+		if d := fieldDigest(got); d != tc.digest {
 			t.Errorf("%s heatmap digest = %s, want %s (main's strongest-AP view)", tc.metric, d, tc.digest)
 		}
 	}
 
 	coverage, err := handler.GetCoverage(ctx,
-		connect.NewRequest(&surveyv1.GetCoverageRequest{SurveyId: id}))
+		&surveyv1.GetCoverageRequest{SurveyId: id})
 	if err != nil {
 		t.Fatalf("GetCoverage: %v", err)
 	}
-	if got := coverage.Msg.GetDeadZoneCount(); got != 0 {
+	if got := coverage.GetDeadZoneCount(); got != 0 {
 		t.Errorf("strongest-AP dead zones = %d, want 0: one AP or the other covers every point", got)
 	}
-	if got := coverage.Msg.GetCoverageScore(); got != 100 {
+	if got := coverage.GetCoverageScore(); got != 100 {
 		t.Errorf("strongest-AP coverage score = %v, want 100", got)
 	}
 }
@@ -145,23 +145,23 @@ func TestGetHeatmap_ABSSIDDrawsWhereThatAPServes(t *testing.T) {
 
 	render := func(bssid *string) *surveyv1.GetHeatmapResponse {
 		t.Helper()
-		got, err := handler.GetHeatmap(ctx, connect.NewRequest(&surveyv1.GetHeatmapRequest{
+		got, err := handler.GetHeatmap(ctx, &surveyv1.GetHeatmapRequest{
 			SurveyId: id, Metric: "rssi", Bssid: bssid,
-		}))
+		})
 		if err != nil {
 			t.Fatalf("GetHeatmap(bssid=%v): %v", bssid, err)
 		}
-		return got.Msg
+		return got
 	}
 	coverage := func(bssid *string) *surveyv1.GetCoverageResponse {
 		t.Helper()
-		got, err := handler.GetCoverage(ctx, connect.NewRequest(&surveyv1.GetCoverageRequest{
+		got, err := handler.GetCoverage(ctx, &surveyv1.GetCoverageRequest{
 			SurveyId: id, Bssid: bssid,
-		}))
+		})
 		if err != nil {
 			t.Fatalf("GetCoverage(bssid=%v): %v", bssid, err)
 		}
-		return got.Msg
+		return got
 	}
 
 	all := render(nil)
@@ -223,11 +223,11 @@ func TestGetHeatmap_ListsTheFloorsAPsForTheSelector(t *testing.T) {
 	// from must not collapse to the one AP it just picked.
 	for _, bssid := range []*string{nil, &east} {
 		got, err := handler.GetHeatmap(context.Background(),
-			connect.NewRequest(&surveyv1.GetHeatmapRequest{SurveyId: id, Bssid: bssid}))
+			&surveyv1.GetHeatmapRequest{SurveyId: id, Bssid: bssid})
 		if err != nil {
 			t.Fatalf("GetHeatmap(bssid=%v): %v", bssid, err)
 		}
-		aps := got.Msg.GetAccessPoints()
+		aps := got.GetAccessPoints()
 		want := []struct {
 			bssid   string
 			channel int32
@@ -268,9 +268,9 @@ func TestPerAPRequestsRefuseWhatTheyCannotAnswer(t *testing.T) {
 		{"empty BSSID", "rssi", ""},
 	} {
 		bssid := tc.bssid
-		_, err := handler.GetHeatmap(ctx, connect.NewRequest(&surveyv1.GetHeatmapRequest{
+		_, err := handler.GetHeatmap(ctx, &surveyv1.GetHeatmapRequest{
 			SurveyId: id, Metric: tc.metric, Bssid: &bssid,
-		}))
+		})
 		if connect.CodeOf(err) != connect.CodeInvalidArgument {
 			t.Errorf("GetHeatmap %s: err = %v, want InvalidArgument", tc.name, err)
 		}
@@ -282,9 +282,9 @@ func TestPerAPRequestsRefuseWhatTheyCannotAnswer(t *testing.T) {
 	}
 
 	for _, bssid := range []string{unheard, ""} {
-		_, err := handler.GetCoverage(ctx, connect.NewRequest(&surveyv1.GetCoverageRequest{
+		_, err := handler.GetCoverage(ctx, &surveyv1.GetCoverageRequest{
 			SurveyId: id, Bssid: &bssid,
-		}))
+		})
 		if connect.CodeOf(err) != connect.CodeInvalidArgument {
 			t.Errorf("GetCoverage(bssid=%q): err = %v, want InvalidArgument", bssid, err)
 		}

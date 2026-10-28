@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
@@ -39,14 +39,14 @@ func walkedSurvey(t *testing.T, scanner scriptedScanner) (*api.SurveyServiceHand
 	handler := api.NewSurveyServiceHandler(mustManager(t, t.TempDir(), scanner, nil, nil, nil))
 
 	created, err := handler.CreateSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "live", Interface: "en0"}))
+		&surveyv1.CreateSurveyRequest{Name: "live", Interface: "en0"})
 	if err != nil {
 		t.Fatalf("CreateSurvey: %v", err)
 	}
-	id := created.Msg.GetSurvey().GetId()
+	id := created.GetSurvey().GetId()
 
 	if _, err := handler.StartSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.StartSurveyRequest{Id: id})); err != nil {
+		&surveyv1.StartSurveyRequest{Id: id}); err != nil {
 		t.Fatalf("StartSurvey: %v", err)
 	}
 	return handler, id
@@ -63,12 +63,12 @@ func TestCapturePointReturnsTheScan(t *testing.T) {
 	}})
 
 	resp, err := handler.CapturePoint(context.Background(),
-		connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: 100, Y: 200}))
+		&surveyv1.CapturePointRequest{SurveyId: id, X: 100, Y: 200})
 	if err != nil {
 		t.Fatalf("CapturePoint: %v", err)
 	}
 
-	got := resp.Msg.GetNetworks()
+	got := resp.GetNetworks()
 	if len(got) != 2 {
 		t.Fatalf("networks = %d, want 2", len(got))
 	}
@@ -104,12 +104,12 @@ func TestCapturePointReturnsTheScan(t *testing.T) {
 		t.Errorf("networks[0].noise_floor_dbm = %d, want -96", strongest.GetNoiseFloorDbm())
 	}
 
-	if resp.Msg.GetUniqueBssids() != 2 {
-		t.Errorf("unique_bssids = %d, want 2", resp.Msg.GetUniqueBssids())
+	if resp.GetUniqueBssids() != 2 {
+		t.Errorf("unique_bssids = %d, want 2", resp.GetUniqueBssids())
 	}
-	if resp.Msg.GetApCount_2_4Ghz() != 1 || resp.Msg.GetApCount_5Ghz() != 1 {
+	if resp.GetApCount_2_4Ghz() != 1 || resp.GetApCount_5Ghz() != 1 {
 		t.Errorf("band counts = 2.4:%d 5:%d, want 1 and 1",
-			resp.Msg.GetApCount_2_4Ghz(), resp.Msg.GetApCount_5Ghz())
+			resp.GetApCount_2_4Ghz(), resp.GetApCount_5Ghz())
 	}
 }
 
@@ -127,11 +127,11 @@ func TestCapturePointLeavesAnUnmeasuredFloorAbsent(t *testing.T) {
 	}})
 
 	resp, err := handler.CapturePoint(context.Background(),
-		connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: 1, Y: 1}))
+		&surveyv1.CapturePointRequest{SurveyId: id, X: 1, Y: 1})
 	if err != nil {
 		t.Fatalf("CapturePoint: %v", err)
 	}
-	got := resp.Msg.GetNetworks()
+	got := resp.GetNetworks()
 	if len(got) != 1 {
 		t.Fatalf("networks = %d, want 1", len(got))
 	}
@@ -146,7 +146,7 @@ func TestCapturePointPermissionDeniedCarriesTheRemedy(t *testing.T) {
 	handler, id := walkedSurvey(t, scriptedScanner{err: capture.ErrPermission})
 
 	_, err := handler.CapturePoint(context.Background(),
-		connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: 1, Y: 1}))
+		&surveyv1.CapturePointRequest{SurveyId: id, X: 1, Y: 1})
 	if err == nil {
 		t.Fatal("CapturePoint with a denied scan: want error, got nil")
 	}
@@ -167,18 +167,18 @@ func TestCapturePointWithoutABackend(t *testing.T) {
 
 	handler := api.NewSurveyServiceHandler(mustManager(t, t.TempDir(), nil, nil, nil, nil))
 	created, err := handler.CreateSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "no radio"}))
+		&surveyv1.CreateSurveyRequest{Name: "no radio"})
 	if err != nil {
 		t.Fatalf("CreateSurvey: %v", err)
 	}
-	id := created.Msg.GetSurvey().GetId()
+	id := created.GetSurvey().GetId()
 	if _, err := handler.StartSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.StartSurveyRequest{Id: id})); err != nil {
+		&surveyv1.StartSurveyRequest{Id: id}); err != nil {
 		t.Fatalf("StartSurvey: %v", err)
 	}
 
 	_, err = handler.CapturePoint(context.Background(),
-		connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id}))
+		&surveyv1.CapturePointRequest{SurveyId: id})
 	if got := connect.CodeOf(err); got != connect.CodeUnimplemented {
 		t.Errorf("code = %v, want %v (a host with no radio, not a broken request)", got, connect.CodeUnimplemented)
 	}
@@ -190,15 +190,15 @@ func TestCapturePointBeforeStartIsRefused(t *testing.T) {
 	handler := api.NewSurveyServiceHandler(
 		mustManager(t, t.TempDir(), scriptedScanner{}, nil, nil, nil))
 	created, err := handler.CreateSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "not started"}))
+		&surveyv1.CreateSurveyRequest{Name: "not started"})
 	if err != nil {
 		t.Fatalf("CreateSurvey: %v", err)
 	}
 
 	_, err = handler.CapturePoint(context.Background(),
-		connect.NewRequest(&surveyv1.CapturePointRequest{
-			SurveyId: created.Msg.GetSurvey().GetId(),
-		}))
+		&surveyv1.CapturePointRequest{
+			SurveyId: created.GetSurvey().GetId(),
+		})
 	if got := connect.CodeOf(err); got != connect.CodeFailedPrecondition {
 		t.Errorf("code = %v, want %v", got, connect.CodeFailedPrecondition)
 	}
@@ -211,7 +211,7 @@ func TestCapturePointUnknownSurvey(t *testing.T) {
 		mustManager(t, t.TempDir(), scriptedScanner{}, nil, nil, nil))
 
 	_, err := handler.CapturePoint(context.Background(),
-		connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: "does-not-exist"}))
+		&surveyv1.CapturePointRequest{SurveyId: "does-not-exist"})
 	if got := connect.CodeOf(err); got != connect.CodeNotFound {
 		t.Errorf("code = %v, want %v", got, connect.CodeNotFound)
 	}
@@ -223,30 +223,30 @@ func TestSurveyLifecycleReportsStatus(t *testing.T) {
 	handler, id := walkedSurvey(t, scriptedScanner{})
 
 	paused, err := handler.PauseSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.PauseSurveyRequest{Id: id}))
+		&surveyv1.PauseSurveyRequest{Id: id})
 	if err != nil {
 		t.Fatalf("PauseSurvey: %v", err)
 	}
-	if got := paused.Msg.GetSurvey().GetStatus(); got != "paused" {
+	if got := paused.GetSurvey().GetStatus(); got != "paused" {
 		t.Errorf("status after pause = %q, want %q", got, "paused")
 	}
 
 	// A paused survey must refuse samples; that is the point of pausing.
 	if _, err := handler.CapturePoint(context.Background(),
-		connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id})); err == nil {
+		&surveyv1.CapturePointRequest{SurveyId: id}); err == nil {
 		t.Error("CapturePoint on a paused survey: want error, got nil")
 	}
 
 	if _, err := handler.StartSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.StartSurveyRequest{Id: id})); err != nil {
+		&surveyv1.StartSurveyRequest{Id: id}); err != nil {
 		t.Fatalf("StartSurvey after pause: %v", err)
 	}
 	done, err := handler.CompleteSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.CompleteSurveyRequest{Id: id}))
+		&surveyv1.CompleteSurveyRequest{Id: id})
 	if err != nil {
 		t.Fatalf("CompleteSurvey: %v", err)
 	}
-	if got := done.Msg.GetSurvey().GetStatus(); got != "completed" {
+	if got := done.GetSurvey().GetStatus(); got != "completed" {
 		t.Errorf("status after complete = %q, want %q", got, "completed")
 	}
 }
@@ -258,7 +258,7 @@ func TestCreateSurveyRequiresAName(t *testing.T) {
 		mustManager(t, t.TempDir(), scriptedScanner{}, nil, nil, nil))
 
 	_, err := handler.CreateSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "   "}))
+		&surveyv1.CreateSurveyRequest{Name: "   "})
 	if got := connect.CodeOf(err); got != connect.CodeInvalidArgument {
 		t.Errorf("code = %v, want %v", got, connect.CodeInvalidArgument)
 	}
@@ -277,18 +277,18 @@ func TestListSamplesReturnsStoredPointsInCaptureOrder(t *testing.T) {
 
 	for _, p := range [][2]int32{{100, 200}, {300, 50}} {
 		if _, err := handler.CapturePoint(context.Background(),
-			connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: p[0], Y: p[1]})); err != nil {
+			&surveyv1.CapturePointRequest{SurveyId: id, X: p[0], Y: p[1]}); err != nil {
 			t.Fatalf("CapturePoint(%v): %v", p, err)
 		}
 	}
 
 	resp, err := handler.ListSamples(context.Background(),
-		connect.NewRequest(&surveyv1.ListSamplesRequest{SurveyId: id}))
+		&surveyv1.ListSamplesRequest{SurveyId: id})
 	if err != nil {
 		t.Fatalf("ListSamples: %v", err)
 	}
 
-	got := resp.Msg.GetSamples()
+	got := resp.GetSamples()
 	if len(got) != 2 {
 		t.Fatalf("samples = %d, want 2", len(got))
 	}
@@ -314,16 +314,16 @@ func TestListSamplesEmptyAirspaceHasNoStrongest(t *testing.T) {
 
 	handler, id := walkedSurvey(t, scriptedScanner{networks: []wifi.ScannedNetwork{}})
 	if _, err := handler.CapturePoint(context.Background(),
-		connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: 1, Y: 1})); err != nil {
+		&surveyv1.CapturePointRequest{SurveyId: id, X: 1, Y: 1}); err != nil {
 		t.Fatalf("CapturePoint: %v", err)
 	}
 
 	resp, err := handler.ListSamples(context.Background(),
-		connect.NewRequest(&surveyv1.ListSamplesRequest{SurveyId: id}))
+		&surveyv1.ListSamplesRequest{SurveyId: id})
 	if err != nil {
 		t.Fatalf("ListSamples: %v", err)
 	}
-	got := resp.Msg.GetSamples()
+	got := resp.GetSamples()
 	if len(got) != 1 || got[0].GetNetworkCount() != 0 || got[0].StrongestDbm != nil {
 		t.Fatalf("empty scan should store one point with no networks and no strongest signal; got %v", got)
 	}
@@ -334,7 +334,7 @@ func TestListSamplesUnknownSurveyIsNotFound(t *testing.T) {
 
 	handler := api.NewSurveyServiceHandler(mustManager(t, t.TempDir(), nil, nil, nil, nil))
 	_, err := handler.ListSamples(context.Background(),
-		connect.NewRequest(&surveyv1.ListSamplesRequest{SurveyId: "nope"}))
+		&surveyv1.ListSamplesRequest{SurveyId: "nope"})
 	if connect.CodeOf(err) != connect.CodeNotFound {
 		t.Fatalf("code = %v, want NotFound", connect.CodeOf(err))
 	}
@@ -355,12 +355,12 @@ func TestScanReturnsTheAirspaceSortedAndTranslated(t *testing.T) {
 	}, nil, nil, nil))
 
 	before := time.Now().Add(-time.Second)
-	got, err := handler.Scan(context.Background(), connect.NewRequest(&surveyv1.ScanRequest{}))
+	got, err := handler.Scan(context.Background(), &surveyv1.ScanRequest{})
 	if err != nil {
 		t.Fatalf("Scan: %v", err)
 	}
 
-	networks := got.Msg.GetNetworks()
+	networks := got.GetNetworks()
 	if len(networks) != 2 {
 		t.Fatalf("networks = %d, want 2", len(networks))
 	}
@@ -381,7 +381,7 @@ func TestScanReturnsTheAirspaceSortedAndTranslated(t *testing.T) {
 		t.Errorf("unreported utilization reached the wire as %d%%",
 			networks[1].GetChannelUtilizationPercent())
 	}
-	if at := got.Msg.GetScannedAt().AsTime(); at.Before(before) {
+	if at := got.GetScannedAt().AsTime(); at.Before(before) {
 		t.Errorf("scanned_at = %s, want a stamp from this scan", at)
 	}
 }
@@ -391,7 +391,7 @@ func TestScanWithoutARadioIsUnimplemented(t *testing.T) {
 
 	handler := api.NewSurveyServiceHandler(mustManager(t, t.TempDir(), nil, nil, nil, nil))
 
-	_, err := handler.Scan(context.Background(), connect.NewRequest(&surveyv1.ScanRequest{}))
+	_, err := handler.Scan(context.Background(), &surveyv1.ScanRequest{})
 	if connect.CodeOf(err) != connect.CodeUnimplemented {
 		t.Fatalf("Scan with no backend = %v (%s), want unimplemented", err, connect.CodeOf(err))
 	}
@@ -406,24 +406,24 @@ func TestContinuousCaptureRidesOnTheSurveySummary(t *testing.T) {
 
 	// Never started: absent, not a zero-valued "stopped at (0,0)".
 	got, err := handler.GetSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.GetSurveyRequest{Id: id}))
+		&surveyv1.GetSurveyRequest{Id: id})
 	if err != nil {
 		t.Fatalf("GetSurvey: %v", err)
 	}
-	if got.Msg.GetSurvey().Capture != nil {
-		t.Errorf("capture = %v on a survey that never had one", got.Msg.GetSurvey().GetCapture())
+	if got.GetSurvey().Capture != nil {
+		t.Errorf("capture = %v on a survey that never had one", got.GetSurvey().GetCapture())
 	}
 
 	started, err := handler.StartContinuousCapture(context.Background(),
-		connect.NewRequest(&surveyv1.StartContinuousCaptureRequest{SurveyId: id, X: 140, Y: 260}))
+		&surveyv1.StartContinuousCaptureRequest{SurveyId: id, X: 140, Y: 260})
 	if err != nil {
 		t.Fatalf("StartContinuousCapture: %v", err)
 	}
 	t.Cleanup(func() {
 		_, _ = handler.StopContinuousCapture(context.Background(),
-			connect.NewRequest(&surveyv1.StopContinuousCaptureRequest{SurveyId: id}))
+			&surveyv1.StopContinuousCaptureRequest{SurveyId: id})
 	})
-	if capture := started.Msg.GetCapture(); !capture.GetRunning() ||
+	if capture := started.GetCapture(); !capture.GetRunning() ||
 		capture.GetX() != 140 || capture.GetY() != 260 {
 		t.Fatalf("capture = %v, want running at (140,260)", capture)
 	}
@@ -431,21 +431,21 @@ func TestContinuousCaptureRidesOnTheSurveySummary(t *testing.T) {
 	// A client that reloads mid-walk reads it off the summary it already polls;
 	// a walk a reload cannot see is a walk the operator starts twice.
 	got, err = handler.GetSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.GetSurveyRequest{Id: id}))
+		&surveyv1.GetSurveyRequest{Id: id})
 	if err != nil {
 		t.Fatalf("GetSurvey: %v", err)
 	}
-	if capture := got.Msg.GetSurvey().GetCapture(); !capture.GetRunning() || capture.GetX() != 140 {
+	if capture := got.GetSurvey().GetCapture(); !capture.GetRunning() || capture.GetX() != 140 {
 		t.Fatalf("summary capture = %v, want the running walk", capture)
 	}
 
 	if _, err := handler.StopContinuousCapture(context.Background(),
-		connect.NewRequest(&surveyv1.StopContinuousCaptureRequest{SurveyId: id})); err != nil {
+		&surveyv1.StopContinuousCaptureRequest{SurveyId: id}); err != nil {
 		t.Fatalf("StopContinuousCapture: %v", err)
 	}
 	got, _ = handler.GetSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.GetSurveyRequest{Id: id}))
-	if capture := got.Msg.GetSurvey().GetCapture(); capture.GetRunning() {
+		&surveyv1.GetSurveyRequest{Id: id})
+	if capture := got.GetSurvey().GetCapture(); capture.GetRunning() {
 		t.Errorf("capture still running after a stop: %v", capture)
 	}
 }
@@ -455,21 +455,21 @@ func TestStartContinuousCaptureRefusedOnASurveyThatIsNotWalking(t *testing.T) {
 
 	handler := api.NewSurveyServiceHandler(mustManager(t, t.TempDir(), scriptedScanner{}, nil, nil, nil))
 	created, err := handler.CreateSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "idle", Interface: "en0"}))
+		&surveyv1.CreateSurveyRequest{Name: "idle", Interface: "en0"})
 	if err != nil {
 		t.Fatalf("CreateSurvey: %v", err)
 	}
 
 	_, err = handler.StartContinuousCapture(context.Background(),
-		connect.NewRequest(&surveyv1.StartContinuousCaptureRequest{
-			SurveyId: created.Msg.GetSurvey().GetId(),
-		}))
+		&surveyv1.StartContinuousCaptureRequest{
+			SurveyId: created.GetSurvey().GetId(),
+		})
 	if connect.CodeOf(err) != connect.CodeFailedPrecondition {
 		t.Fatalf("start on an unstarted survey = %v (%s), want failed_precondition", err, connect.CodeOf(err))
 	}
 
 	_, err = handler.StartContinuousCapture(context.Background(),
-		connect.NewRequest(&surveyv1.StartContinuousCaptureRequest{SurveyId: "no-such-survey"}))
+		&surveyv1.StartContinuousCaptureRequest{SurveyId: "no-such-survey"})
 	if connect.CodeOf(err) != connect.CodeNotFound {
 		t.Fatalf("start on an unknown survey = %v (%s), want not_found", err, connect.CodeOf(err))
 	}
@@ -482,7 +482,7 @@ func TestStoppingACaptureThatIsNotRunningIsNotAnError(t *testing.T) {
 	// there was one. A stop that errored would make each of them noisy.
 	handler, id := walkedSurvey(t, scriptedScanner{})
 	if _, err := handler.StopContinuousCapture(context.Background(),
-		connect.NewRequest(&surveyv1.StopContinuousCaptureRequest{SurveyId: id})); err != nil {
+		&surveyv1.StopContinuousCaptureRequest{SurveyId: id}); err != nil {
 		t.Fatalf("StopContinuousCapture with nothing running: %v", err)
 	}
 }
@@ -497,29 +497,29 @@ func TestListSamplesTellsPlacedReadingsFromPinnedOnes(t *testing.T) {
 	// One pinned reading, then a walk that is marked twice so the readings
 	// between the marks are placed along the way.
 	if _, err := handler.CapturePoint(context.Background(),
-		connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: 10, Y: 10})); err != nil {
+		&surveyv1.CapturePointRequest{SurveyId: id, X: 10, Y: 10}); err != nil {
 		t.Fatalf("CapturePoint: %v", err)
 	}
 	for _, at := range []struct{ x, y int32 }{{20, 20}, {200, 100}} {
 		if _, err := handler.StartContinuousCapture(context.Background(),
-			connect.NewRequest(&surveyv1.StartContinuousCaptureRequest{
+			&surveyv1.StartContinuousCaptureRequest{
 				SurveyId: id, X: at.x, Y: at.y,
-			})); err != nil {
+			}); err != nil {
 			t.Fatalf("StartContinuousCapture: %v", err)
 		}
 	}
 	if _, err := handler.StopContinuousCapture(context.Background(),
-		connect.NewRequest(&surveyv1.StopContinuousCaptureRequest{SurveyId: id})); err != nil {
+		&surveyv1.StopContinuousCaptureRequest{SurveyId: id}); err != nil {
 		t.Fatalf("StopContinuousCapture: %v", err)
 	}
 
 	got, err := handler.ListSamples(context.Background(),
-		connect.NewRequest(&surveyv1.ListSamplesRequest{SurveyId: id}))
+		&surveyv1.ListSamplesRequest{SurveyId: id})
 	if err != nil {
 		t.Fatalf("ListSamples: %v", err)
 	}
 
-	samples := got.Msg.GetSamples()
+	samples := got.GetSamples()
 	if len(samples) == 0 {
 		t.Fatal("no samples")
 	}
@@ -551,33 +551,33 @@ func TestListSamplesCarriesAFailedAttemptWithNoNumbers(t *testing.T) {
 	handler := api.NewSurveyServiceHandler(
 		mustManager(t, t.TempDir(), scriptedScanner{}, nil, failingMeter{}, nil))
 	created, err := handler.CreateSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "active", Interface: "en0"}))
+		&surveyv1.CreateSurveyRequest{Name: "active", Interface: "en0"})
 	if err != nil {
 		t.Fatalf("CreateSurvey: %v", err)
 	}
-	id := created.Msg.GetSurvey().GetId()
+	id := created.GetSurvey().GetId()
 	if _, err := handler.SetThroughputTarget(context.Background(),
-		connect.NewRequest(&surveyv1.SetThroughputTargetRequest{
+		&surveyv1.SetThroughputTargetRequest{
 			SurveyId: id, Server: "10.44.10.9", DurationSec: 5,
-		})); err != nil {
+		}); err != nil {
 		t.Fatalf("SetThroughputTarget: %v", err)
 	}
 	if _, err := handler.StartSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.StartSurveyRequest{Id: id})); err != nil {
+		&surveyv1.StartSurveyRequest{Id: id}); err != nil {
 		t.Fatalf("StartSurvey: %v", err)
 	}
 
 	if _, err := handler.MeasureThroughput(context.Background(),
-		connect.NewRequest(&surveyv1.MeasureThroughputRequest{SurveyId: id, X: 12, Y: 34})); err == nil {
+		&surveyv1.MeasureThroughputRequest{SurveyId: id, X: 12, Y: 34}); err == nil {
 		t.Fatal("MeasureThroughput against an unreachable server should report the failure")
 	}
 
 	resp, err := handler.ListSamples(context.Background(),
-		connect.NewRequest(&surveyv1.ListSamplesRequest{SurveyId: id}))
+		&surveyv1.ListSamplesRequest{SurveyId: id})
 	if err != nil {
 		t.Fatalf("ListSamples: %v", err)
 	}
-	got := resp.Msg.GetSamples()
+	got := resp.GetSamples()
 	if len(got) != 1 {
 		t.Fatalf("samples = %d, want the failed attempt to be one of them", len(got))
 	}
@@ -610,58 +610,58 @@ func TestCountsExcludeAFailedAttempt(t *testing.T) {
 			{SSID: "Near", BSSID: "aa:bb:cc:00:00:02", Signal: -41, Channel: 52, Frequency: 5260},
 		}}, nil, failingMeter{}, nil))
 	created, err := handler.CreateSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "counts", Interface: "en0"}))
+		&surveyv1.CreateSurveyRequest{Name: "counts", Interface: "en0"})
 	if err != nil {
 		t.Fatalf("CreateSurvey: %v", err)
 	}
-	id := created.Msg.GetSurvey().GetId()
+	id := created.GetSurvey().GetId()
 	if _, err := handler.SetThroughputTarget(context.Background(),
-		connect.NewRequest(&surveyv1.SetThroughputTargetRequest{
+		&surveyv1.SetThroughputTargetRequest{
 			SurveyId: id, Server: "10.44.10.9", DurationSec: 5,
-		})); err != nil {
+		}); err != nil {
 		t.Fatalf("SetThroughputTarget: %v", err)
 	}
 	if _, err := handler.StartSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.StartSurveyRequest{Id: id})); err != nil {
+		&surveyv1.StartSurveyRequest{Id: id}); err != nil {
 		t.Fatalf("StartSurvey: %v", err)
 	}
 	if _, err := handler.CapturePoint(context.Background(),
-		connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: 10, Y: 10})); err != nil {
+		&surveyv1.CapturePointRequest{SurveyId: id, X: 10, Y: 10}); err != nil {
 		t.Fatalf("CapturePoint: %v", err)
 	}
 	if _, err := handler.MeasureThroughput(context.Background(),
-		connect.NewRequest(&surveyv1.MeasureThroughputRequest{SurveyId: id, X: 99, Y: 99})); err == nil {
+		&surveyv1.MeasureThroughputRequest{SurveyId: id, X: 99, Y: 99}); err == nil {
 		t.Fatal("the scripted meter should have failed")
 	}
 
 	got, err := handler.GetSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.GetSurveyRequest{Id: id}))
+		&surveyv1.GetSurveyRequest{Id: id})
 	if err != nil {
 		t.Fatalf("GetSurvey: %v", err)
 	}
-	if n := got.Msg.GetSurvey().GetSampleCount(); n != 1 {
+	if n := got.GetSurvey().GetSampleCount(); n != 1 {
 		t.Errorf("survey sample_count = %d, want 1 measurement", n)
 	}
 
 	floors, err := handler.ListFloors(context.Background(),
-		connect.NewRequest(&surveyv1.ListFloorsRequest{SurveyId: id}))
+		&surveyv1.ListFloorsRequest{SurveyId: id})
 	if err != nil {
 		t.Fatalf("ListFloors: %v", err)
 	}
-	if len(floors.Msg.GetFloors()) != 1 {
-		t.Fatalf("floors = %d, want 1", len(floors.Msg.GetFloors()))
+	if len(floors.GetFloors()) != 1 {
+		t.Fatalf("floors = %d, want 1", len(floors.GetFloors()))
 	}
-	if n := floors.Msg.GetFloors()[0].GetSampleCount(); n != 1 {
+	if n := floors.GetFloors()[0].GetSampleCount(); n != 1 {
 		t.Errorf("floor sample_count = %d, want 1 measurement", n)
 	}
 
 	// Both points are still on the map: the attempt is drawn, just not counted.
 	samples, err := handler.ListSamples(context.Background(),
-		connect.NewRequest(&surveyv1.ListSamplesRequest{SurveyId: id}))
+		&surveyv1.ListSamplesRequest{SurveyId: id})
 	if err != nil {
 		t.Fatalf("ListSamples: %v", err)
 	}
-	if n := len(samples.Msg.GetSamples()); n != 2 {
+	if n := len(samples.GetSamples()); n != 2 {
 		t.Errorf("ListSamples returned %d points, want the reading and the attempt", n)
 	}
 }
@@ -674,15 +674,15 @@ func TestSetThroughputTargetRejectsAnOutOfRangeDuration(t *testing.T) {
 	handler := api.NewSurveyServiceHandler(
 		mustManager(t, t.TempDir(), scriptedScanner{}, nil, failingMeter{}, nil))
 	created, err := handler.CreateSurvey(context.Background(),
-		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "active", Interface: "en0"}))
+		&surveyv1.CreateSurveyRequest{Name: "active", Interface: "en0"})
 	if err != nil {
 		t.Fatalf("CreateSurvey: %v", err)
 	}
 
 	_, err = handler.SetThroughputTarget(context.Background(),
-		connect.NewRequest(&surveyv1.SetThroughputTargetRequest{
-			SurveyId: created.Msg.GetSurvey().GetId(), Server: "10.44.10.9", DurationSec: 999999,
-		}))
+		&surveyv1.SetThroughputTargetRequest{
+			SurveyId: created.GetSurvey().GetId(), Server: "10.44.10.9", DurationSec: 999999,
+		})
 	if connect.CodeOf(err) != connect.CodeInvalidArgument {
 		t.Fatalf("SetThroughputTarget(999999 s) = %v (code %v), want InvalidArgument",
 			err, connect.CodeOf(err))
