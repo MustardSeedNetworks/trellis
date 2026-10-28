@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.18](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.17...v0.12.18) (2026-10-28)
+
+
+### Bug Fixes
+
+* **deps:** update dependency i18next to v26.5.4 ([#920](https://github.com/MustardSeedNetworks/trellis/issues/920)) ([65f09a5](https://github.com/MustardSeedNetworks/trellis/commit/65f09a58db4264a70b3aa176959a2c6ff8865ce1))
+
+
+### Miscellaneous
+
+* **deps:** update node.js to v26.12.1 ([#918](https://github.com/MustardSeedNetworks/trellis/issues/918)) ([8943ee5](https://github.com/MustardSeedNetworks/trellis/commit/8943ee5a1c11492b13ae71f985d3a308af599674))
+
 ## [0.12.17](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.16...v0.12.17) (2026-10-28)
 
 
