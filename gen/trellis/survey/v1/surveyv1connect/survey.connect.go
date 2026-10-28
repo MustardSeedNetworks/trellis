@@ -13,182 +13,393 @@
 package surveyv1connect
 
 import (
-	connect "connectrpc.com/connect"
+	connect "connectrpc.com/connect/v2"
 	context "context"
-	errors "errors"
 	v1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
-	http "net/http"
-	strings "strings"
+	sync "sync"
 )
-
-// This is a compile-time assertion to ensure that this generated file and the connect package are
-// compatible. If you get a compiler error that this constant is not defined, this code was
-// generated with a version of connect newer than the one compiled into your binary. You can fix the
-// problem by either regenerating this code with an older version of connect or updating the connect
-// version compiled into your binary.
-const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// SurveyServiceName is the fully-qualified name of the SurveyService service.
 	SurveyServiceName = "trellis.survey.v1.SurveyService"
 )
 
-// These constants are the fully-qualified names of the RPCs defined in this package. They're
-// exposed at runtime as Spec.Procedure and as the final two segments of the HTTP route.
+// These constants are the procedure names of the RPCs defined in this package. They're exposed at
+// runtime as Spec.Procedure and as the final two segments of the HTTP route.
 //
 // Note that these are different from the fully-qualified method names used by
 // google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// SurveyServiceImportAirMapperProcedure is the fully-qualified name of the SurveyService's
+	// SurveyServiceImportAirMapperProcedure is the procedure name of the SurveyService's
 	// ImportAirMapper RPC.
 	SurveyServiceImportAirMapperProcedure = "/trellis.survey.v1.SurveyService/ImportAirMapper"
-	// SurveyServiceImportAirMagnetProcedure is the fully-qualified name of the SurveyService's
+	// SurveyServiceImportAirMagnetProcedure is the procedure name of the SurveyService's
 	// ImportAirMagnet RPC.
 	SurveyServiceImportAirMagnetProcedure = "/trellis.survey.v1.SurveyService/ImportAirMagnet"
-	// SurveyServiceListSurveysProcedure is the fully-qualified name of the SurveyService's ListSurveys
-	// RPC.
+	// SurveyServiceListSurveysProcedure is the procedure name of the SurveyService's ListSurveys RPC.
 	SurveyServiceListSurveysProcedure = "/trellis.survey.v1.SurveyService/ListSurveys"
-	// SurveyServiceGetSurveyProcedure is the fully-qualified name of the SurveyService's GetSurvey RPC.
+	// SurveyServiceGetSurveyProcedure is the procedure name of the SurveyService's GetSurvey RPC.
 	SurveyServiceGetSurveyProcedure = "/trellis.survey.v1.SurveyService/GetSurvey"
-	// SurveyServiceDeleteSurveyProcedure is the fully-qualified name of the SurveyService's
-	// DeleteSurvey RPC.
+	// SurveyServiceDeleteSurveyProcedure is the procedure name of the SurveyService's DeleteSurvey RPC.
 	SurveyServiceDeleteSurveyProcedure = "/trellis.survey.v1.SurveyService/DeleteSurvey"
-	// SurveyServiceGetHeatmapProcedure is the fully-qualified name of the SurveyService's GetHeatmap
-	// RPC.
+	// SurveyServiceGetHeatmapProcedure is the procedure name of the SurveyService's GetHeatmap RPC.
 	SurveyServiceGetHeatmapProcedure = "/trellis.survey.v1.SurveyService/GetHeatmap"
-	// SurveyServiceGetCoverageProcedure is the fully-qualified name of the SurveyService's GetCoverage
-	// RPC.
+	// SurveyServiceGetCoverageProcedure is the procedure name of the SurveyService's GetCoverage RPC.
 	SurveyServiceGetCoverageProcedure = "/trellis.survey.v1.SurveyService/GetCoverage"
-	// SurveyServiceListFloorsProcedure is the fully-qualified name of the SurveyService's ListFloors
-	// RPC.
+	// SurveyServiceListFloorsProcedure is the procedure name of the SurveyService's ListFloors RPC.
 	SurveyServiceListFloorsProcedure = "/trellis.survey.v1.SurveyService/ListFloors"
-	// SurveyServiceGetFloorProcedure is the fully-qualified name of the SurveyService's GetFloor RPC.
+	// SurveyServiceGetFloorProcedure is the procedure name of the SurveyService's GetFloor RPC.
 	SurveyServiceGetFloorProcedure = "/trellis.survey.v1.SurveyService/GetFloor"
-	// SurveyServiceCreateFloorProcedure is the fully-qualified name of the SurveyService's CreateFloor
-	// RPC.
+	// SurveyServiceCreateFloorProcedure is the procedure name of the SurveyService's CreateFloor RPC.
 	SurveyServiceCreateFloorProcedure = "/trellis.survey.v1.SurveyService/CreateFloor"
-	// SurveyServiceSetActiveFloorProcedure is the fully-qualified name of the SurveyService's
-	// SetActiveFloor RPC.
+	// SurveyServiceSetActiveFloorProcedure is the procedure name of the SurveyService's SetActiveFloor
+	// RPC.
 	SurveyServiceSetActiveFloorProcedure = "/trellis.survey.v1.SurveyService/SetActiveFloor"
-	// SurveyServiceUpdateFloorProcedure is the fully-qualified name of the SurveyService's UpdateFloor
-	// RPC.
+	// SurveyServiceUpdateFloorProcedure is the procedure name of the SurveyService's UpdateFloor RPC.
 	SurveyServiceUpdateFloorProcedure = "/trellis.survey.v1.SurveyService/UpdateFloor"
-	// SurveyServiceDeleteFloorProcedure is the fully-qualified name of the SurveyService's DeleteFloor
-	// RPC.
+	// SurveyServiceDeleteFloorProcedure is the procedure name of the SurveyService's DeleteFloor RPC.
 	SurveyServiceDeleteFloorProcedure = "/trellis.survey.v1.SurveyService/DeleteFloor"
-	// SurveyServiceGenerateReportProcedure is the fully-qualified name of the SurveyService's
-	// GenerateReport RPC.
+	// SurveyServiceGenerateReportProcedure is the procedure name of the SurveyService's GenerateReport
+	// RPC.
 	SurveyServiceGenerateReportProcedure = "/trellis.survey.v1.SurveyService/GenerateReport"
-	// SurveyServiceCreateSurveyProcedure is the fully-qualified name of the SurveyService's
-	// CreateSurvey RPC.
+	// SurveyServiceCreateSurveyProcedure is the procedure name of the SurveyService's CreateSurvey RPC.
 	SurveyServiceCreateSurveyProcedure = "/trellis.survey.v1.SurveyService/CreateSurvey"
-	// SurveyServiceStartSurveyProcedure is the fully-qualified name of the SurveyService's StartSurvey
-	// RPC.
+	// SurveyServiceStartSurveyProcedure is the procedure name of the SurveyService's StartSurvey RPC.
 	SurveyServiceStartSurveyProcedure = "/trellis.survey.v1.SurveyService/StartSurvey"
-	// SurveyServicePauseSurveyProcedure is the fully-qualified name of the SurveyService's PauseSurvey
-	// RPC.
+	// SurveyServicePauseSurveyProcedure is the procedure name of the SurveyService's PauseSurvey RPC.
 	SurveyServicePauseSurveyProcedure = "/trellis.survey.v1.SurveyService/PauseSurvey"
-	// SurveyServiceCompleteSurveyProcedure is the fully-qualified name of the SurveyService's
-	// CompleteSurvey RPC.
-	SurveyServiceCompleteSurveyProcedure = "/trellis.survey.v1.SurveyService/CompleteSurvey"
-	// SurveyServiceCapturePointProcedure is the fully-qualified name of the SurveyService's
-	// CapturePoint RPC.
-	SurveyServiceCapturePointProcedure = "/trellis.survey.v1.SurveyService/CapturePoint"
-	// SurveyServiceListSamplesProcedure is the fully-qualified name of the SurveyService's ListSamples
+	// SurveyServiceCompleteSurveyProcedure is the procedure name of the SurveyService's CompleteSurvey
 	// RPC.
+	SurveyServiceCompleteSurveyProcedure = "/trellis.survey.v1.SurveyService/CompleteSurvey"
+	// SurveyServiceCapturePointProcedure is the procedure name of the SurveyService's CapturePoint RPC.
+	SurveyServiceCapturePointProcedure = "/trellis.survey.v1.SurveyService/CapturePoint"
+	// SurveyServiceListSamplesProcedure is the procedure name of the SurveyService's ListSamples RPC.
 	SurveyServiceListSamplesProcedure = "/trellis.survey.v1.SurveyService/ListSamples"
-	// SurveyServiceScanProcedure is the fully-qualified name of the SurveyService's Scan RPC.
+	// SurveyServiceScanProcedure is the procedure name of the SurveyService's Scan RPC.
 	SurveyServiceScanProcedure = "/trellis.survey.v1.SurveyService/Scan"
-	// SurveyServiceGetCaptureCapabilityProcedure is the fully-qualified name of the SurveyService's
+	// SurveyServiceGetCaptureCapabilityProcedure is the procedure name of the SurveyService's
 	// GetCaptureCapability RPC.
 	SurveyServiceGetCaptureCapabilityProcedure = "/trellis.survey.v1.SurveyService/GetCaptureCapability"
-	// SurveyServiceStartContinuousCaptureProcedure is the fully-qualified name of the SurveyService's
+	// SurveyServiceStartContinuousCaptureProcedure is the procedure name of the SurveyService's
 	// StartContinuousCapture RPC.
 	SurveyServiceStartContinuousCaptureProcedure = "/trellis.survey.v1.SurveyService/StartContinuousCapture"
-	// SurveyServiceStopContinuousCaptureProcedure is the fully-qualified name of the SurveyService's
+	// SurveyServiceStopContinuousCaptureProcedure is the procedure name of the SurveyService's
 	// StopContinuousCapture RPC.
 	SurveyServiceStopContinuousCaptureProcedure = "/trellis.survey.v1.SurveyService/StopContinuousCapture"
-	// SurveyServiceMeasureThroughputProcedure is the fully-qualified name of the SurveyService's
+	// SurveyServiceMeasureThroughputProcedure is the procedure name of the SurveyService's
 	// MeasureThroughput RPC.
 	SurveyServiceMeasureThroughputProcedure = "/trellis.survey.v1.SurveyService/MeasureThroughput"
-	// SurveyServiceSetThroughputTargetProcedure is the fully-qualified name of the SurveyService's
+	// SurveyServiceSetThroughputTargetProcedure is the procedure name of the SurveyService's
 	// SetThroughputTarget RPC.
 	SurveyServiceSetThroughputTargetProcedure = "/trellis.survey.v1.SurveyService/SetThroughputTarget"
-	// SurveyServiceSetFloorPlanProcedure is the fully-qualified name of the SurveyService's
-	// SetFloorPlan RPC.
+	// SurveyServiceSetFloorPlanProcedure is the procedure name of the SurveyService's SetFloorPlan RPC.
 	SurveyServiceSetFloorPlanProcedure = "/trellis.survey.v1.SurveyService/SetFloorPlan"
-	// SurveyServiceCalibrateFloorPlanProcedure is the fully-qualified name of the SurveyService's
+	// SurveyServiceCalibrateFloorPlanProcedure is the procedure name of the SurveyService's
 	// CalibrateFloorPlan RPC.
 	SurveyServiceCalibrateFloorPlanProcedure = "/trellis.survey.v1.SurveyService/CalibrateFloorPlan"
-	// SurveyServiceGetFloorPlanImageProcedure is the fully-qualified name of the SurveyService's
+	// SurveyServiceGetFloorPlanImageProcedure is the procedure name of the SurveyService's
 	// GetFloorPlanImage RPC.
 	SurveyServiceGetFloorPlanImageProcedure = "/trellis.survey.v1.SurveyService/GetFloorPlanImage"
-	// SurveyServiceListAPPlacementsProcedure is the fully-qualified name of the SurveyService's
+	// SurveyServiceListAPPlacementsProcedure is the procedure name of the SurveyService's
 	// ListAPPlacements RPC.
 	SurveyServiceListAPPlacementsProcedure = "/trellis.survey.v1.SurveyService/ListAPPlacements"
-	// SurveyServiceCreateAPPlacementProcedure is the fully-qualified name of the SurveyService's
+	// SurveyServiceCreateAPPlacementProcedure is the procedure name of the SurveyService's
 	// CreateAPPlacement RPC.
 	SurveyServiceCreateAPPlacementProcedure = "/trellis.survey.v1.SurveyService/CreateAPPlacement"
-	// SurveyServiceUpdateAPPlacementProcedure is the fully-qualified name of the SurveyService's
+	// SurveyServiceUpdateAPPlacementProcedure is the procedure name of the SurveyService's
 	// UpdateAPPlacement RPC.
 	SurveyServiceUpdateAPPlacementProcedure = "/trellis.survey.v1.SurveyService/UpdateAPPlacement"
-	// SurveyServiceDeleteAPPlacementProcedure is the fully-qualified name of the SurveyService's
+	// SurveyServiceDeleteAPPlacementProcedure is the procedure name of the SurveyService's
 	// DeleteAPPlacement RPC.
 	SurveyServiceDeleteAPPlacementProcedure = "/trellis.survey.v1.SurveyService/DeleteAPPlacement"
+)
+
+var (
+	surveyServiceImportAirMapperSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("ImportAirMapper"),
+			Procedure:  SurveyServiceImportAirMapperProcedure,
+		}
+	})
+	surveyServiceImportAirMagnetSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("ImportAirMagnet"),
+			Procedure:  SurveyServiceImportAirMagnetProcedure,
+		}
+	})
+	surveyServiceListSurveysSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("ListSurveys"),
+			Procedure:  SurveyServiceListSurveysProcedure,
+		}
+	})
+	surveyServiceGetSurveySpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("GetSurvey"),
+			Procedure:  SurveyServiceGetSurveyProcedure,
+		}
+	})
+	surveyServiceDeleteSurveySpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("DeleteSurvey"),
+			Procedure:  SurveyServiceDeleteSurveyProcedure,
+		}
+	})
+	surveyServiceGetHeatmapSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("GetHeatmap"),
+			Procedure:  SurveyServiceGetHeatmapProcedure,
+		}
+	})
+	surveyServiceGetCoverageSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("GetCoverage"),
+			Procedure:  SurveyServiceGetCoverageProcedure,
+		}
+	})
+	surveyServiceListFloorsSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("ListFloors"),
+			Procedure:  SurveyServiceListFloorsProcedure,
+		}
+	})
+	surveyServiceGetFloorSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("GetFloor"),
+			Procedure:  SurveyServiceGetFloorProcedure,
+		}
+	})
+	surveyServiceCreateFloorSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("CreateFloor"),
+			Procedure:  SurveyServiceCreateFloorProcedure,
+		}
+	})
+	surveyServiceSetActiveFloorSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("SetActiveFloor"),
+			Procedure:  SurveyServiceSetActiveFloorProcedure,
+		}
+	})
+	surveyServiceUpdateFloorSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("UpdateFloor"),
+			Procedure:  SurveyServiceUpdateFloorProcedure,
+		}
+	})
+	surveyServiceDeleteFloorSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("DeleteFloor"),
+			Procedure:  SurveyServiceDeleteFloorProcedure,
+		}
+	})
+	surveyServiceGenerateReportSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("GenerateReport"),
+			Procedure:  SurveyServiceGenerateReportProcedure,
+		}
+	})
+	surveyServiceCreateSurveySpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("CreateSurvey"),
+			Procedure:  SurveyServiceCreateSurveyProcedure,
+		}
+	})
+	surveyServiceStartSurveySpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("StartSurvey"),
+			Procedure:  SurveyServiceStartSurveyProcedure,
+		}
+	})
+	surveyServicePauseSurveySpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("PauseSurvey"),
+			Procedure:  SurveyServicePauseSurveyProcedure,
+		}
+	})
+	surveyServiceCompleteSurveySpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("CompleteSurvey"),
+			Procedure:  SurveyServiceCompleteSurveyProcedure,
+		}
+	})
+	surveyServiceCapturePointSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("CapturePoint"),
+			Procedure:  SurveyServiceCapturePointProcedure,
+		}
+	})
+	surveyServiceListSamplesSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("ListSamples"),
+			Procedure:  SurveyServiceListSamplesProcedure,
+		}
+	})
+	surveyServiceScanSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("Scan"),
+			Procedure:  SurveyServiceScanProcedure,
+		}
+	})
+	surveyServiceGetCaptureCapabilitySpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("GetCaptureCapability"),
+			Procedure:  SurveyServiceGetCaptureCapabilityProcedure,
+		}
+	})
+	surveyServiceStartContinuousCaptureSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("StartContinuousCapture"),
+			Procedure:  SurveyServiceStartContinuousCaptureProcedure,
+		}
+	})
+	surveyServiceStopContinuousCaptureSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("StopContinuousCapture"),
+			Procedure:  SurveyServiceStopContinuousCaptureProcedure,
+		}
+	})
+	surveyServiceMeasureThroughputSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("MeasureThroughput"),
+			Procedure:  SurveyServiceMeasureThroughputProcedure,
+		}
+	})
+	surveyServiceSetThroughputTargetSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("SetThroughputTarget"),
+			Procedure:  SurveyServiceSetThroughputTargetProcedure,
+		}
+	})
+	surveyServiceSetFloorPlanSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("SetFloorPlan"),
+			Procedure:  SurveyServiceSetFloorPlanProcedure,
+		}
+	})
+	surveyServiceCalibrateFloorPlanSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("CalibrateFloorPlan"),
+			Procedure:  SurveyServiceCalibrateFloorPlanProcedure,
+		}
+	})
+	surveyServiceGetFloorPlanImageSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("GetFloorPlanImage"),
+			Procedure:  SurveyServiceGetFloorPlanImageProcedure,
+		}
+	})
+	surveyServiceListAPPlacementsSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("ListAPPlacements"),
+			Procedure:  SurveyServiceListAPPlacementsProcedure,
+		}
+	})
+	surveyServiceCreateAPPlacementSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("CreateAPPlacement"),
+			Procedure:  SurveyServiceCreateAPPlacementProcedure,
+		}
+	})
+	surveyServiceUpdateAPPlacementSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("UpdateAPPlacement"),
+			Procedure:  SurveyServiceUpdateAPPlacementProcedure,
+		}
+	})
+	surveyServiceDeleteAPPlacementSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods().ByName("DeleteAPPlacement"),
+			Procedure:  SurveyServiceDeleteAPPlacementProcedure,
+		}
+	})
 )
 
 // SurveyServiceClient is a client for the trellis.survey.v1.SurveyService service.
 type SurveyServiceClient interface {
 	// ImportAirMapper imports an AirMapper (.amp) archive into a new stored
 	// survey.
-	ImportAirMapper(context.Context, *connect.Request[v1.ImportAirMapperRequest]) (*connect.Response[v1.ImportAirMapperResponse], error)
+	ImportAirMapper(context.Context, *v1.ImportAirMapperRequest) (*v1.ImportAirMapperResponse, error)
 	// ImportAirMagnet imports an AirMagnet Survey (.svd) export into a new
 	// stored survey. Unlike an AirMapper archive it carries no floor plan: the
 	// plan is a separate file in the AirMagnet project directory.
-	ImportAirMagnet(context.Context, *connect.Request[v1.ImportAirMagnetRequest]) (*connect.Response[v1.ImportAirMagnetResponse], error)
+	ImportAirMagnet(context.Context, *v1.ImportAirMagnetRequest) (*v1.ImportAirMagnetResponse, error)
 	// ListSurveys returns summaries of every stored survey.
-	ListSurveys(context.Context, *connect.Request[v1.ListSurveysRequest]) (*connect.Response[v1.ListSurveysResponse], error)
+	ListSurveys(context.Context, *v1.ListSurveysRequest) (*v1.ListSurveysResponse, error)
 	// GetSurvey returns a single stored survey by ID.
-	GetSurvey(context.Context, *connect.Request[v1.GetSurveyRequest]) (*connect.Response[v1.GetSurveyResponse], error)
+	GetSurvey(context.Context, *v1.GetSurveyRequest) (*v1.GetSurveyResponse, error)
 	// DeleteSurvey removes a stored survey.
-	DeleteSurvey(context.Context, *connect.Request[v1.DeleteSurveyRequest]) (*connect.Response[v1.DeleteSurveyResponse], error)
+	DeleteSurvey(context.Context, *v1.DeleteSurveyRequest) (*v1.DeleteSurveyResponse, error)
 	// GetHeatmap renders a measured-signal heatmap for a survey's active floor.
-	GetHeatmap(context.Context, *connect.Request[v1.GetHeatmapRequest]) (*connect.Response[v1.GetHeatmapResponse], error)
+	GetHeatmap(context.Context, *v1.GetHeatmapRequest) (*v1.GetHeatmapResponse, error)
 	// GetCoverage runs dead-zone detection over a survey's measured samples.
-	GetCoverage(context.Context, *connect.Request[v1.GetCoverageRequest]) (*connect.Response[v1.GetCoverageResponse], error)
+	GetCoverage(context.Context, *v1.GetCoverageRequest) (*v1.GetCoverageResponse, error)
 	// ListFloors returns every floor of a survey, lowest level first.
-	ListFloors(context.Context, *connect.Request[v1.ListFloorsRequest]) (*connect.Response[v1.ListFloorsResponse], error)
+	ListFloors(context.Context, *v1.ListFloorsRequest) (*v1.ListFloorsResponse, error)
 	// GetFloor returns one floor of a survey by ID.
-	GetFloor(context.Context, *connect.Request[v1.GetFloorRequest]) (*connect.Response[v1.GetFloorResponse], error)
+	GetFloor(context.Context, *v1.GetFloorRequest) (*v1.GetFloorResponse, error)
 	// CreateFloor adds a storey to an existing survey. A survey opened to be
 	// walked has one floor; a building has more, and until this RPC the extra
 	// ones could only arrive from an import.
-	CreateFloor(context.Context, *connect.Request[v1.CreateFloorRequest]) (*connect.Response[v1.CreateFloorResponse], error)
+	CreateFloor(context.Context, *v1.CreateFloorRequest) (*v1.CreateFloorResponse, error)
 	// SetActiveFloor chooses the floor a walk collects onto. Creating a floor
 	// does not switch to it: an operator adds the floors of a building up front
 	// and then walks them one at a time.
-	SetActiveFloor(context.Context, *connect.Request[v1.SetActiveFloorRequest]) (*connect.Response[v1.SetActiveFloorResponse], error)
+	SetActiveFloor(context.Context, *v1.SetActiveFloorRequest) (*v1.SetActiveFloorResponse, error)
 	// UpdateFloor renames a floor and sets its storey number. Both fields are
 	// written: a ground floor is level 0, which proto3 cannot tell from an
 	// absent field, so the caller sends the pair it wants stored.
-	UpdateFloor(context.Context, *connect.Request[v1.UpdateFloorRequest]) (*connect.Response[v1.UpdateFloorResponse], error)
+	UpdateFloor(context.Context, *v1.UpdateFloorRequest) (*v1.UpdateFloorResponse, error)
 	// DeleteFloor removes a storey and everything measured on it. The last
 	// floor of a survey cannot be deleted: a survey collects onto a floor.
-	DeleteFloor(context.Context, *connect.Request[v1.DeleteFloorRequest]) (*connect.Response[v1.DeleteFloorResponse], error)
+	DeleteFloor(context.Context, *v1.DeleteFloorRequest) (*v1.DeleteFloorResponse, error)
 	// GenerateReport renders a PDF report for a survey.
-	GenerateReport(context.Context, *connect.Request[v1.GenerateReportRequest]) (*connect.Response[v1.GenerateReportResponse], error)
+	GenerateReport(context.Context, *v1.GenerateReportRequest) (*v1.GenerateReportResponse, error)
 	// CreateSurvey opens a new, empty survey to walk. The measured counterpart
 	// of ImportAirMapper: the samples come from this host's radio rather than
 	// from a file.
-	CreateSurvey(context.Context, *connect.Request[v1.CreateSurveyRequest]) (*connect.Response[v1.CreateSurveyResponse], error)
+	CreateSurvey(context.Context, *v1.CreateSurveyRequest) (*v1.CreateSurveyResponse, error)
 	// StartSurvey moves a survey into the state that accepts samples.
-	StartSurvey(context.Context, *connect.Request[v1.StartSurveyRequest]) (*connect.Response[v1.StartSurveyResponse], error)
+	StartSurvey(context.Context, *v1.StartSurveyRequest) (*v1.StartSurveyResponse, error)
 	// PauseSurvey stops a survey accepting samples without completing it.
-	PauseSurvey(context.Context, *connect.Request[v1.PauseSurveyRequest]) (*connect.Response[v1.PauseSurveyResponse], error)
+	PauseSurvey(context.Context, *v1.PauseSurveyRequest) (*v1.PauseSurveyResponse, error)
 	// CompleteSurvey closes a survey to further samples.
-	CompleteSurvey(context.Context, *connect.Request[v1.CompleteSurveyRequest]) (*connect.Response[v1.CompleteSurveyResponse], error)
+	CompleteSurvey(context.Context, *v1.CompleteSurveyRequest) (*v1.CompleteSurveyResponse, error)
 	// CapturePoint scans the airspace and records what it sees at a position on
 	// the survey's active floor.
 	//
@@ -196,11 +407,11 @@ type SurveyServiceClient interface {
 	// returns cached values if asked again inside its cache window, so a stream
 	// would deliver duplicates at whatever rate the client asked for. The
 	// surveyor stands at a point, captures it, and moves — one call per point.
-	CapturePoint(context.Context, *connect.Request[v1.CapturePointRequest]) (*connect.Response[v1.CapturePointResponse], error)
+	CapturePoint(context.Context, *v1.CapturePointRequest) (*v1.CapturePointResponse, error)
 	// ListSamples returns the points stored on a survey's active floor, in
 	// capture order. SurveySummary carries only a count; this is what lets a
 	// client draw where a walk has already been, across a reload or a restart.
-	ListSamples(context.Context, *connect.Request[v1.ListSamplesRequest]) (*connect.Response[v1.ListSamplesResponse], error)
+	ListSamples(context.Context, *v1.ListSamplesRequest) (*v1.ListSamplesResponse, error)
 	// Scan reads the airspace and records nothing. It is what the live analysis
 	// view runs on, and it belongs to no survey: a reading taken while someone
 	// is looking at a page was taken at no position on any floor.
@@ -208,11 +419,11 @@ type SurveyServiceClient interface {
 	// Unary for the same reason CapturePoint is: a scan blocks in the driver for
 	// seconds and the radio serves its cache inside that window, so a stream
 	// would repeat itself at whatever rate a client asked for. The client polls.
-	Scan(context.Context, *connect.Request[v1.ScanRequest]) (*connect.Response[v1.ScanResponse], error)
+	Scan(context.Context, *v1.ScanRequest) (*v1.ScanResponse, error)
 	// GetCaptureCapability says whether this host can measure at all, so a
 	// client can explain that before an operator sets out rather than after a
 	// walk fails. A host with no radio still browses and reports.
-	GetCaptureCapability(context.Context, *connect.Request[v1.GetCaptureCapabilityRequest]) (*connect.Response[v1.GetCaptureCapabilityResponse], error)
+	GetCaptureCapability(context.Context, *v1.GetCaptureCapabilityRequest) (*v1.GetCaptureCapabilityResponse, error)
 	// StartContinuousCapture samples repeatedly at a position until it is
 	// stopped — the walking half of a measured survey, where CapturePoint is the
 	// stop-and-go half.
@@ -220,10 +431,10 @@ type SurveyServiceClient interface {
 	// Calling it again on a running survey moves the capture rather than starting
 	// a second one: it is the operator saying "I am here now", which is the whole
 	// interaction in a walking survey.
-	StartContinuousCapture(context.Context, *connect.Request[v1.StartContinuousCaptureRequest]) (*connect.Response[v1.StartContinuousCaptureResponse], error)
+	StartContinuousCapture(context.Context, *v1.StartContinuousCaptureRequest) (*v1.StartContinuousCaptureResponse, error)
 	// StopContinuousCapture ends a survey's capture loop. Stopping one that is not
 	// running is not an error.
-	StopContinuousCapture(context.Context, *connect.Request[v1.StopContinuousCaptureRequest]) (*connect.Response[v1.StopContinuousCaptureResponse], error)
+	StopContinuousCapture(context.Context, *v1.StopContinuousCaptureRequest) (*v1.StopContinuousCaptureResponse, error)
 	// MeasureThroughput runs a throughput test at a position and stores what it
 	// measured — the active half of a survey, where the scan-based points are the
 	// passive half. A strong signal on a congested channel carries very little,
@@ -232,505 +443,97 @@ type SurveyServiceClient interface {
 	// Stop-and-go by nature: the test takes seconds in each direction and means
 	// nothing if the operator moves during it, so there is no continuous
 	// equivalent.
-	MeasureThroughput(context.Context, *connect.Request[v1.MeasureThroughputRequest]) (*connect.Response[v1.MeasureThroughputResponse], error)
+	MeasureThroughput(context.Context, *v1.MeasureThroughputRequest) (*v1.MeasureThroughputResponse, error)
 	// SetThroughputTarget names the server a survey's active measurements run
 	// against. Survey state rather than a per-measurement argument: comparing two
 	// positions only means something if both were measured against the same
 	// thing.
-	SetThroughputTarget(context.Context, *connect.Request[v1.SetThroughputTargetRequest]) (*connect.Response[v1.SetThroughputTargetResponse], error)
+	SetThroughputTarget(context.Context, *v1.SetThroughputTargetRequest) (*v1.SetThroughputTargetResponse, error)
 	// SetFloorPlan stores an image as a floor's plan. Until now a plan could only
 	// arrive inside an AirMapper archive, so a survey walked with this product
 	// had nothing to draw its points on.
-	SetFloorPlan(context.Context, *connect.Request[v1.SetFloorPlanRequest]) (*connect.Response[v1.SetFloorPlanResponse], error)
+	SetFloorPlan(context.Context, *v1.SetFloorPlanRequest) (*v1.SetFloorPlanResponse, error)
 	// CalibrateFloorPlan sets how many metres a pixel of the plan is, from two
 	// points the operator marked and the real distance between them. A plan
 	// carries no scale of its own, and every distance the analysis reports —
 	// a dead zone's radius, most of all — is in pixels until this is set.
-	CalibrateFloorPlan(context.Context, *connect.Request[v1.CalibrateFloorPlanRequest]) (*connect.Response[v1.CalibrateFloorPlanResponse], error)
+	CalibrateFloorPlan(context.Context, *v1.CalibrateFloorPlanRequest) (*v1.CalibrateFloorPlanResponse, error)
 	// GetFloorPlanImage returns a floor's plan image.
 	//
 	// Its own call rather than a field on Floor: a plan runs to megabytes, and
 	// ListFloors is polled while a survey is walked. A client fetches the image
 	// once and the list stays light.
-	GetFloorPlanImage(context.Context, *connect.Request[v1.GetFloorPlanImageRequest]) (*connect.Response[v1.GetFloorPlanImageResponse], error)
+	GetFloorPlanImage(context.Context, *v1.GetFloorPlanImageRequest) (*v1.GetFloorPlanImageResponse, error)
 	// The APs placed on a floor's plan, imported or placed by hand. They are what
 	// the predicted map is drawn from.
-	ListAPPlacements(context.Context, *connect.Request[v1.ListAPPlacementsRequest]) (*connect.Response[v1.ListAPPlacementsResponse], error)
+	ListAPPlacements(context.Context, *v1.ListAPPlacementsRequest) (*v1.ListAPPlacementsResponse, error)
 	// CreateAPPlacement places an AP on a floor by hand. Planning a floor nobody
 	// has walked starts here: until now a placement existed only if an importer
 	// wrote it.
-	CreateAPPlacement(context.Context, *connect.Request[v1.CreateAPPlacementRequest]) (*connect.Response[v1.CreateAPPlacementResponse], error)
+	CreateAPPlacement(context.Context, *v1.CreateAPPlacementRequest) (*v1.CreateAPPlacementResponse, error)
 	// UpdateAPPlacement moves a placed AP or changes its label, power or band.
 	// The BSSID an importer recorded is kept.
-	UpdateAPPlacement(context.Context, *connect.Request[v1.UpdateAPPlacementRequest]) (*connect.Response[v1.UpdateAPPlacementResponse], error)
+	UpdateAPPlacement(context.Context, *v1.UpdateAPPlacementRequest) (*v1.UpdateAPPlacementResponse, error)
 	// DeleteAPPlacement removes a placed AP from its floor.
-	DeleteAPPlacement(context.Context, *connect.Request[v1.DeleteAPPlacementRequest]) (*connect.Response[v1.DeleteAPPlacementResponse], error)
+	DeleteAPPlacement(context.Context, *v1.DeleteAPPlacementRequest) (*v1.DeleteAPPlacementResponse, error)
 }
 
-// NewSurveyServiceClient constructs a client for the trellis.survey.v1.SurveyService service. By
-// default, it uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses,
-// and sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the
-// connect.WithGRPC() or connect.WithGRPCWeb() options.
-//
-// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
-// http://api.acme.com or https://acme.com/grpc).
-func NewSurveyServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) SurveyServiceClient {
-	baseURL = strings.TrimRight(baseURL, "/")
-	surveyServiceMethods := v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods()
-	return &surveyServiceClient{
-		importAirMapper: connect.NewClient[v1.ImportAirMapperRequest, v1.ImportAirMapperResponse](
-			httpClient,
-			baseURL+SurveyServiceImportAirMapperProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("ImportAirMapper")),
-			connect.WithClientOptions(opts...),
-		),
-		importAirMagnet: connect.NewClient[v1.ImportAirMagnetRequest, v1.ImportAirMagnetResponse](
-			httpClient,
-			baseURL+SurveyServiceImportAirMagnetProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("ImportAirMagnet")),
-			connect.WithClientOptions(opts...),
-		),
-		listSurveys: connect.NewClient[v1.ListSurveysRequest, v1.ListSurveysResponse](
-			httpClient,
-			baseURL+SurveyServiceListSurveysProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("ListSurveys")),
-			connect.WithClientOptions(opts...),
-		),
-		getSurvey: connect.NewClient[v1.GetSurveyRequest, v1.GetSurveyResponse](
-			httpClient,
-			baseURL+SurveyServiceGetSurveyProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("GetSurvey")),
-			connect.WithClientOptions(opts...),
-		),
-		deleteSurvey: connect.NewClient[v1.DeleteSurveyRequest, v1.DeleteSurveyResponse](
-			httpClient,
-			baseURL+SurveyServiceDeleteSurveyProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("DeleteSurvey")),
-			connect.WithClientOptions(opts...),
-		),
-		getHeatmap: connect.NewClient[v1.GetHeatmapRequest, v1.GetHeatmapResponse](
-			httpClient,
-			baseURL+SurveyServiceGetHeatmapProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("GetHeatmap")),
-			connect.WithClientOptions(opts...),
-		),
-		getCoverage: connect.NewClient[v1.GetCoverageRequest, v1.GetCoverageResponse](
-			httpClient,
-			baseURL+SurveyServiceGetCoverageProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("GetCoverage")),
-			connect.WithClientOptions(opts...),
-		),
-		listFloors: connect.NewClient[v1.ListFloorsRequest, v1.ListFloorsResponse](
-			httpClient,
-			baseURL+SurveyServiceListFloorsProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("ListFloors")),
-			connect.WithClientOptions(opts...),
-		),
-		getFloor: connect.NewClient[v1.GetFloorRequest, v1.GetFloorResponse](
-			httpClient,
-			baseURL+SurveyServiceGetFloorProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("GetFloor")),
-			connect.WithClientOptions(opts...),
-		),
-		createFloor: connect.NewClient[v1.CreateFloorRequest, v1.CreateFloorResponse](
-			httpClient,
-			baseURL+SurveyServiceCreateFloorProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("CreateFloor")),
-			connect.WithClientOptions(opts...),
-		),
-		setActiveFloor: connect.NewClient[v1.SetActiveFloorRequest, v1.SetActiveFloorResponse](
-			httpClient,
-			baseURL+SurveyServiceSetActiveFloorProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("SetActiveFloor")),
-			connect.WithClientOptions(opts...),
-		),
-		updateFloor: connect.NewClient[v1.UpdateFloorRequest, v1.UpdateFloorResponse](
-			httpClient,
-			baseURL+SurveyServiceUpdateFloorProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("UpdateFloor")),
-			connect.WithClientOptions(opts...),
-		),
-		deleteFloor: connect.NewClient[v1.DeleteFloorRequest, v1.DeleteFloorResponse](
-			httpClient,
-			baseURL+SurveyServiceDeleteFloorProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("DeleteFloor")),
-			connect.WithClientOptions(opts...),
-		),
-		generateReport: connect.NewClient[v1.GenerateReportRequest, v1.GenerateReportResponse](
-			httpClient,
-			baseURL+SurveyServiceGenerateReportProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("GenerateReport")),
-			connect.WithClientOptions(opts...),
-		),
-		createSurvey: connect.NewClient[v1.CreateSurveyRequest, v1.CreateSurveyResponse](
-			httpClient,
-			baseURL+SurveyServiceCreateSurveyProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("CreateSurvey")),
-			connect.WithClientOptions(opts...),
-		),
-		startSurvey: connect.NewClient[v1.StartSurveyRequest, v1.StartSurveyResponse](
-			httpClient,
-			baseURL+SurveyServiceStartSurveyProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("StartSurvey")),
-			connect.WithClientOptions(opts...),
-		),
-		pauseSurvey: connect.NewClient[v1.PauseSurveyRequest, v1.PauseSurveyResponse](
-			httpClient,
-			baseURL+SurveyServicePauseSurveyProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("PauseSurvey")),
-			connect.WithClientOptions(opts...),
-		),
-		completeSurvey: connect.NewClient[v1.CompleteSurveyRequest, v1.CompleteSurveyResponse](
-			httpClient,
-			baseURL+SurveyServiceCompleteSurveyProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("CompleteSurvey")),
-			connect.WithClientOptions(opts...),
-		),
-		capturePoint: connect.NewClient[v1.CapturePointRequest, v1.CapturePointResponse](
-			httpClient,
-			baseURL+SurveyServiceCapturePointProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("CapturePoint")),
-			connect.WithClientOptions(opts...),
-		),
-		listSamples: connect.NewClient[v1.ListSamplesRequest, v1.ListSamplesResponse](
-			httpClient,
-			baseURL+SurveyServiceListSamplesProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("ListSamples")),
-			connect.WithClientOptions(opts...),
-		),
-		scan: connect.NewClient[v1.ScanRequest, v1.ScanResponse](
-			httpClient,
-			baseURL+SurveyServiceScanProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("Scan")),
-			connect.WithClientOptions(opts...),
-		),
-		getCaptureCapability: connect.NewClient[v1.GetCaptureCapabilityRequest, v1.GetCaptureCapabilityResponse](
-			httpClient,
-			baseURL+SurveyServiceGetCaptureCapabilityProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("GetCaptureCapability")),
-			connect.WithClientOptions(opts...),
-		),
-		startContinuousCapture: connect.NewClient[v1.StartContinuousCaptureRequest, v1.StartContinuousCaptureResponse](
-			httpClient,
-			baseURL+SurveyServiceStartContinuousCaptureProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("StartContinuousCapture")),
-			connect.WithClientOptions(opts...),
-		),
-		stopContinuousCapture: connect.NewClient[v1.StopContinuousCaptureRequest, v1.StopContinuousCaptureResponse](
-			httpClient,
-			baseURL+SurveyServiceStopContinuousCaptureProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("StopContinuousCapture")),
-			connect.WithClientOptions(opts...),
-		),
-		measureThroughput: connect.NewClient[v1.MeasureThroughputRequest, v1.MeasureThroughputResponse](
-			httpClient,
-			baseURL+SurveyServiceMeasureThroughputProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("MeasureThroughput")),
-			connect.WithClientOptions(opts...),
-		),
-		setThroughputTarget: connect.NewClient[v1.SetThroughputTargetRequest, v1.SetThroughputTargetResponse](
-			httpClient,
-			baseURL+SurveyServiceSetThroughputTargetProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("SetThroughputTarget")),
-			connect.WithClientOptions(opts...),
-		),
-		setFloorPlan: connect.NewClient[v1.SetFloorPlanRequest, v1.SetFloorPlanResponse](
-			httpClient,
-			baseURL+SurveyServiceSetFloorPlanProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("SetFloorPlan")),
-			connect.WithClientOptions(opts...),
-		),
-		calibrateFloorPlan: connect.NewClient[v1.CalibrateFloorPlanRequest, v1.CalibrateFloorPlanResponse](
-			httpClient,
-			baseURL+SurveyServiceCalibrateFloorPlanProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("CalibrateFloorPlan")),
-			connect.WithClientOptions(opts...),
-		),
-		getFloorPlanImage: connect.NewClient[v1.GetFloorPlanImageRequest, v1.GetFloorPlanImageResponse](
-			httpClient,
-			baseURL+SurveyServiceGetFloorPlanImageProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("GetFloorPlanImage")),
-			connect.WithClientOptions(opts...),
-		),
-		listAPPlacements: connect.NewClient[v1.ListAPPlacementsRequest, v1.ListAPPlacementsResponse](
-			httpClient,
-			baseURL+SurveyServiceListAPPlacementsProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("ListAPPlacements")),
-			connect.WithClientOptions(opts...),
-		),
-		createAPPlacement: connect.NewClient[v1.CreateAPPlacementRequest, v1.CreateAPPlacementResponse](
-			httpClient,
-			baseURL+SurveyServiceCreateAPPlacementProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("CreateAPPlacement")),
-			connect.WithClientOptions(opts...),
-		),
-		updateAPPlacement: connect.NewClient[v1.UpdateAPPlacementRequest, v1.UpdateAPPlacementResponse](
-			httpClient,
-			baseURL+SurveyServiceUpdateAPPlacementProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("UpdateAPPlacement")),
-			connect.WithClientOptions(opts...),
-		),
-		deleteAPPlacement: connect.NewClient[v1.DeleteAPPlacementRequest, v1.DeleteAPPlacementResponse](
-			httpClient,
-			baseURL+SurveyServiceDeleteAPPlacementProcedure,
-			connect.WithSchema(surveyServiceMethods.ByName("DeleteAPPlacement")),
-			connect.WithClientOptions(opts...),
-		),
-	}
-}
-
-// surveyServiceClient implements SurveyServiceClient.
-type surveyServiceClient struct {
-	importAirMapper        *connect.Client[v1.ImportAirMapperRequest, v1.ImportAirMapperResponse]
-	importAirMagnet        *connect.Client[v1.ImportAirMagnetRequest, v1.ImportAirMagnetResponse]
-	listSurveys            *connect.Client[v1.ListSurveysRequest, v1.ListSurveysResponse]
-	getSurvey              *connect.Client[v1.GetSurveyRequest, v1.GetSurveyResponse]
-	deleteSurvey           *connect.Client[v1.DeleteSurveyRequest, v1.DeleteSurveyResponse]
-	getHeatmap             *connect.Client[v1.GetHeatmapRequest, v1.GetHeatmapResponse]
-	getCoverage            *connect.Client[v1.GetCoverageRequest, v1.GetCoverageResponse]
-	listFloors             *connect.Client[v1.ListFloorsRequest, v1.ListFloorsResponse]
-	getFloor               *connect.Client[v1.GetFloorRequest, v1.GetFloorResponse]
-	createFloor            *connect.Client[v1.CreateFloorRequest, v1.CreateFloorResponse]
-	setActiveFloor         *connect.Client[v1.SetActiveFloorRequest, v1.SetActiveFloorResponse]
-	updateFloor            *connect.Client[v1.UpdateFloorRequest, v1.UpdateFloorResponse]
-	deleteFloor            *connect.Client[v1.DeleteFloorRequest, v1.DeleteFloorResponse]
-	generateReport         *connect.Client[v1.GenerateReportRequest, v1.GenerateReportResponse]
-	createSurvey           *connect.Client[v1.CreateSurveyRequest, v1.CreateSurveyResponse]
-	startSurvey            *connect.Client[v1.StartSurveyRequest, v1.StartSurveyResponse]
-	pauseSurvey            *connect.Client[v1.PauseSurveyRequest, v1.PauseSurveyResponse]
-	completeSurvey         *connect.Client[v1.CompleteSurveyRequest, v1.CompleteSurveyResponse]
-	capturePoint           *connect.Client[v1.CapturePointRequest, v1.CapturePointResponse]
-	listSamples            *connect.Client[v1.ListSamplesRequest, v1.ListSamplesResponse]
-	scan                   *connect.Client[v1.ScanRequest, v1.ScanResponse]
-	getCaptureCapability   *connect.Client[v1.GetCaptureCapabilityRequest, v1.GetCaptureCapabilityResponse]
-	startContinuousCapture *connect.Client[v1.StartContinuousCaptureRequest, v1.StartContinuousCaptureResponse]
-	stopContinuousCapture  *connect.Client[v1.StopContinuousCaptureRequest, v1.StopContinuousCaptureResponse]
-	measureThroughput      *connect.Client[v1.MeasureThroughputRequest, v1.MeasureThroughputResponse]
-	setThroughputTarget    *connect.Client[v1.SetThroughputTargetRequest, v1.SetThroughputTargetResponse]
-	setFloorPlan           *connect.Client[v1.SetFloorPlanRequest, v1.SetFloorPlanResponse]
-	calibrateFloorPlan     *connect.Client[v1.CalibrateFloorPlanRequest, v1.CalibrateFloorPlanResponse]
-	getFloorPlanImage      *connect.Client[v1.GetFloorPlanImageRequest, v1.GetFloorPlanImageResponse]
-	listAPPlacements       *connect.Client[v1.ListAPPlacementsRequest, v1.ListAPPlacementsResponse]
-	createAPPlacement      *connect.Client[v1.CreateAPPlacementRequest, v1.CreateAPPlacementResponse]
-	updateAPPlacement      *connect.Client[v1.UpdateAPPlacementRequest, v1.UpdateAPPlacementResponse]
-	deleteAPPlacement      *connect.Client[v1.DeleteAPPlacementRequest, v1.DeleteAPPlacementResponse]
-}
-
-// ImportAirMapper calls trellis.survey.v1.SurveyService.ImportAirMapper.
-func (c *surveyServiceClient) ImportAirMapper(ctx context.Context, req *connect.Request[v1.ImportAirMapperRequest]) (*connect.Response[v1.ImportAirMapperResponse], error) {
-	return c.importAirMapper.CallUnary(ctx, req)
-}
-
-// ImportAirMagnet calls trellis.survey.v1.SurveyService.ImportAirMagnet.
-func (c *surveyServiceClient) ImportAirMagnet(ctx context.Context, req *connect.Request[v1.ImportAirMagnetRequest]) (*connect.Response[v1.ImportAirMagnetResponse], error) {
-	return c.importAirMagnet.CallUnary(ctx, req)
-}
-
-// ListSurveys calls trellis.survey.v1.SurveyService.ListSurveys.
-func (c *surveyServiceClient) ListSurveys(ctx context.Context, req *connect.Request[v1.ListSurveysRequest]) (*connect.Response[v1.ListSurveysResponse], error) {
-	return c.listSurveys.CallUnary(ctx, req)
-}
-
-// GetSurvey calls trellis.survey.v1.SurveyService.GetSurvey.
-func (c *surveyServiceClient) GetSurvey(ctx context.Context, req *connect.Request[v1.GetSurveyRequest]) (*connect.Response[v1.GetSurveyResponse], error) {
-	return c.getSurvey.CallUnary(ctx, req)
-}
-
-// DeleteSurvey calls trellis.survey.v1.SurveyService.DeleteSurvey.
-func (c *surveyServiceClient) DeleteSurvey(ctx context.Context, req *connect.Request[v1.DeleteSurveyRequest]) (*connect.Response[v1.DeleteSurveyResponse], error) {
-	return c.deleteSurvey.CallUnary(ctx, req)
-}
-
-// GetHeatmap calls trellis.survey.v1.SurveyService.GetHeatmap.
-func (c *surveyServiceClient) GetHeatmap(ctx context.Context, req *connect.Request[v1.GetHeatmapRequest]) (*connect.Response[v1.GetHeatmapResponse], error) {
-	return c.getHeatmap.CallUnary(ctx, req)
-}
-
-// GetCoverage calls trellis.survey.v1.SurveyService.GetCoverage.
-func (c *surveyServiceClient) GetCoverage(ctx context.Context, req *connect.Request[v1.GetCoverageRequest]) (*connect.Response[v1.GetCoverageResponse], error) {
-	return c.getCoverage.CallUnary(ctx, req)
-}
-
-// ListFloors calls trellis.survey.v1.SurveyService.ListFloors.
-func (c *surveyServiceClient) ListFloors(ctx context.Context, req *connect.Request[v1.ListFloorsRequest]) (*connect.Response[v1.ListFloorsResponse], error) {
-	return c.listFloors.CallUnary(ctx, req)
-}
-
-// GetFloor calls trellis.survey.v1.SurveyService.GetFloor.
-func (c *surveyServiceClient) GetFloor(ctx context.Context, req *connect.Request[v1.GetFloorRequest]) (*connect.Response[v1.GetFloorResponse], error) {
-	return c.getFloor.CallUnary(ctx, req)
-}
-
-// CreateFloor calls trellis.survey.v1.SurveyService.CreateFloor.
-func (c *surveyServiceClient) CreateFloor(ctx context.Context, req *connect.Request[v1.CreateFloorRequest]) (*connect.Response[v1.CreateFloorResponse], error) {
-	return c.createFloor.CallUnary(ctx, req)
-}
-
-// SetActiveFloor calls trellis.survey.v1.SurveyService.SetActiveFloor.
-func (c *surveyServiceClient) SetActiveFloor(ctx context.Context, req *connect.Request[v1.SetActiveFloorRequest]) (*connect.Response[v1.SetActiveFloorResponse], error) {
-	return c.setActiveFloor.CallUnary(ctx, req)
-}
-
-// UpdateFloor calls trellis.survey.v1.SurveyService.UpdateFloor.
-func (c *surveyServiceClient) UpdateFloor(ctx context.Context, req *connect.Request[v1.UpdateFloorRequest]) (*connect.Response[v1.UpdateFloorResponse], error) {
-	return c.updateFloor.CallUnary(ctx, req)
-}
-
-// DeleteFloor calls trellis.survey.v1.SurveyService.DeleteFloor.
-func (c *surveyServiceClient) DeleteFloor(ctx context.Context, req *connect.Request[v1.DeleteFloorRequest]) (*connect.Response[v1.DeleteFloorResponse], error) {
-	return c.deleteFloor.CallUnary(ctx, req)
-}
-
-// GenerateReport calls trellis.survey.v1.SurveyService.GenerateReport.
-func (c *surveyServiceClient) GenerateReport(ctx context.Context, req *connect.Request[v1.GenerateReportRequest]) (*connect.Response[v1.GenerateReportResponse], error) {
-	return c.generateReport.CallUnary(ctx, req)
-}
-
-// CreateSurvey calls trellis.survey.v1.SurveyService.CreateSurvey.
-func (c *surveyServiceClient) CreateSurvey(ctx context.Context, req *connect.Request[v1.CreateSurveyRequest]) (*connect.Response[v1.CreateSurveyResponse], error) {
-	return c.createSurvey.CallUnary(ctx, req)
-}
-
-// StartSurvey calls trellis.survey.v1.SurveyService.StartSurvey.
-func (c *surveyServiceClient) StartSurvey(ctx context.Context, req *connect.Request[v1.StartSurveyRequest]) (*connect.Response[v1.StartSurveyResponse], error) {
-	return c.startSurvey.CallUnary(ctx, req)
-}
-
-// PauseSurvey calls trellis.survey.v1.SurveyService.PauseSurvey.
-func (c *surveyServiceClient) PauseSurvey(ctx context.Context, req *connect.Request[v1.PauseSurveyRequest]) (*connect.Response[v1.PauseSurveyResponse], error) {
-	return c.pauseSurvey.CallUnary(ctx, req)
-}
-
-// CompleteSurvey calls trellis.survey.v1.SurveyService.CompleteSurvey.
-func (c *surveyServiceClient) CompleteSurvey(ctx context.Context, req *connect.Request[v1.CompleteSurveyRequest]) (*connect.Response[v1.CompleteSurveyResponse], error) {
-	return c.completeSurvey.CallUnary(ctx, req)
-}
-
-// CapturePoint calls trellis.survey.v1.SurveyService.CapturePoint.
-func (c *surveyServiceClient) CapturePoint(ctx context.Context, req *connect.Request[v1.CapturePointRequest]) (*connect.Response[v1.CapturePointResponse], error) {
-	return c.capturePoint.CallUnary(ctx, req)
-}
-
-// ListSamples calls trellis.survey.v1.SurveyService.ListSamples.
-func (c *surveyServiceClient) ListSamples(ctx context.Context, req *connect.Request[v1.ListSamplesRequest]) (*connect.Response[v1.ListSamplesResponse], error) {
-	return c.listSamples.CallUnary(ctx, req)
-}
-
-// Scan calls trellis.survey.v1.SurveyService.Scan.
-func (c *surveyServiceClient) Scan(ctx context.Context, req *connect.Request[v1.ScanRequest]) (*connect.Response[v1.ScanResponse], error) {
-	return c.scan.CallUnary(ctx, req)
-}
-
-// GetCaptureCapability calls trellis.survey.v1.SurveyService.GetCaptureCapability.
-func (c *surveyServiceClient) GetCaptureCapability(ctx context.Context, req *connect.Request[v1.GetCaptureCapabilityRequest]) (*connect.Response[v1.GetCaptureCapabilityResponse], error) {
-	return c.getCaptureCapability.CallUnary(ctx, req)
-}
-
-// StartContinuousCapture calls trellis.survey.v1.SurveyService.StartContinuousCapture.
-func (c *surveyServiceClient) StartContinuousCapture(ctx context.Context, req *connect.Request[v1.StartContinuousCaptureRequest]) (*connect.Response[v1.StartContinuousCaptureResponse], error) {
-	return c.startContinuousCapture.CallUnary(ctx, req)
-}
-
-// StopContinuousCapture calls trellis.survey.v1.SurveyService.StopContinuousCapture.
-func (c *surveyServiceClient) StopContinuousCapture(ctx context.Context, req *connect.Request[v1.StopContinuousCaptureRequest]) (*connect.Response[v1.StopContinuousCaptureResponse], error) {
-	return c.stopContinuousCapture.CallUnary(ctx, req)
-}
-
-// MeasureThroughput calls trellis.survey.v1.SurveyService.MeasureThroughput.
-func (c *surveyServiceClient) MeasureThroughput(ctx context.Context, req *connect.Request[v1.MeasureThroughputRequest]) (*connect.Response[v1.MeasureThroughputResponse], error) {
-	return c.measureThroughput.CallUnary(ctx, req)
-}
-
-// SetThroughputTarget calls trellis.survey.v1.SurveyService.SetThroughputTarget.
-func (c *surveyServiceClient) SetThroughputTarget(ctx context.Context, req *connect.Request[v1.SetThroughputTargetRequest]) (*connect.Response[v1.SetThroughputTargetResponse], error) {
-	return c.setThroughputTarget.CallUnary(ctx, req)
-}
-
-// SetFloorPlan calls trellis.survey.v1.SurveyService.SetFloorPlan.
-func (c *surveyServiceClient) SetFloorPlan(ctx context.Context, req *connect.Request[v1.SetFloorPlanRequest]) (*connect.Response[v1.SetFloorPlanResponse], error) {
-	return c.setFloorPlan.CallUnary(ctx, req)
-}
-
-// CalibrateFloorPlan calls trellis.survey.v1.SurveyService.CalibrateFloorPlan.
-func (c *surveyServiceClient) CalibrateFloorPlan(ctx context.Context, req *connect.Request[v1.CalibrateFloorPlanRequest]) (*connect.Response[v1.CalibrateFloorPlanResponse], error) {
-	return c.calibrateFloorPlan.CallUnary(ctx, req)
-}
-
-// GetFloorPlanImage calls trellis.survey.v1.SurveyService.GetFloorPlanImage.
-func (c *surveyServiceClient) GetFloorPlanImage(ctx context.Context, req *connect.Request[v1.GetFloorPlanImageRequest]) (*connect.Response[v1.GetFloorPlanImageResponse], error) {
-	return c.getFloorPlanImage.CallUnary(ctx, req)
-}
-
-// ListAPPlacements calls trellis.survey.v1.SurveyService.ListAPPlacements.
-func (c *surveyServiceClient) ListAPPlacements(ctx context.Context, req *connect.Request[v1.ListAPPlacementsRequest]) (*connect.Response[v1.ListAPPlacementsResponse], error) {
-	return c.listAPPlacements.CallUnary(ctx, req)
-}
-
-// CreateAPPlacement calls trellis.survey.v1.SurveyService.CreateAPPlacement.
-func (c *surveyServiceClient) CreateAPPlacement(ctx context.Context, req *connect.Request[v1.CreateAPPlacementRequest]) (*connect.Response[v1.CreateAPPlacementResponse], error) {
-	return c.createAPPlacement.CallUnary(ctx, req)
-}
-
-// UpdateAPPlacement calls trellis.survey.v1.SurveyService.UpdateAPPlacement.
-func (c *surveyServiceClient) UpdateAPPlacement(ctx context.Context, req *connect.Request[v1.UpdateAPPlacementRequest]) (*connect.Response[v1.UpdateAPPlacementResponse], error) {
-	return c.updateAPPlacement.CallUnary(ctx, req)
-}
-
-// DeleteAPPlacement calls trellis.survey.v1.SurveyService.DeleteAPPlacement.
-func (c *surveyServiceClient) DeleteAPPlacement(ctx context.Context, req *connect.Request[v1.DeleteAPPlacementRequest]) (*connect.Response[v1.DeleteAPPlacementResponse], error) {
-	return c.deleteAPPlacement.CallUnary(ctx, req)
+// NewSurveyServiceClient constructs a client for the trellis.survey.v1.SurveyService service.
+// Multiple service clients may share a single connect.Client.
+func NewSurveyServiceClient(client *connect.Client) SurveyServiceClient {
+	return &surveyServiceClient{client: client}
 }
 
 // SurveyServiceHandler is an implementation of the trellis.survey.v1.SurveyService service.
 type SurveyServiceHandler interface {
 	// ImportAirMapper imports an AirMapper (.amp) archive into a new stored
 	// survey.
-	ImportAirMapper(context.Context, *connect.Request[v1.ImportAirMapperRequest]) (*connect.Response[v1.ImportAirMapperResponse], error)
+	ImportAirMapper(context.Context, *v1.ImportAirMapperRequest) (*v1.ImportAirMapperResponse, error)
 	// ImportAirMagnet imports an AirMagnet Survey (.svd) export into a new
 	// stored survey. Unlike an AirMapper archive it carries no floor plan: the
 	// plan is a separate file in the AirMagnet project directory.
-	ImportAirMagnet(context.Context, *connect.Request[v1.ImportAirMagnetRequest]) (*connect.Response[v1.ImportAirMagnetResponse], error)
+	ImportAirMagnet(context.Context, *v1.ImportAirMagnetRequest) (*v1.ImportAirMagnetResponse, error)
 	// ListSurveys returns summaries of every stored survey.
-	ListSurveys(context.Context, *connect.Request[v1.ListSurveysRequest]) (*connect.Response[v1.ListSurveysResponse], error)
+	ListSurveys(context.Context, *v1.ListSurveysRequest) (*v1.ListSurveysResponse, error)
 	// GetSurvey returns a single stored survey by ID.
-	GetSurvey(context.Context, *connect.Request[v1.GetSurveyRequest]) (*connect.Response[v1.GetSurveyResponse], error)
+	GetSurvey(context.Context, *v1.GetSurveyRequest) (*v1.GetSurveyResponse, error)
 	// DeleteSurvey removes a stored survey.
-	DeleteSurvey(context.Context, *connect.Request[v1.DeleteSurveyRequest]) (*connect.Response[v1.DeleteSurveyResponse], error)
+	DeleteSurvey(context.Context, *v1.DeleteSurveyRequest) (*v1.DeleteSurveyResponse, error)
 	// GetHeatmap renders a measured-signal heatmap for a survey's active floor.
-	GetHeatmap(context.Context, *connect.Request[v1.GetHeatmapRequest]) (*connect.Response[v1.GetHeatmapResponse], error)
+	GetHeatmap(context.Context, *v1.GetHeatmapRequest) (*v1.GetHeatmapResponse, error)
 	// GetCoverage runs dead-zone detection over a survey's measured samples.
-	GetCoverage(context.Context, *connect.Request[v1.GetCoverageRequest]) (*connect.Response[v1.GetCoverageResponse], error)
+	GetCoverage(context.Context, *v1.GetCoverageRequest) (*v1.GetCoverageResponse, error)
 	// ListFloors returns every floor of a survey, lowest level first.
-	ListFloors(context.Context, *connect.Request[v1.ListFloorsRequest]) (*connect.Response[v1.ListFloorsResponse], error)
+	ListFloors(context.Context, *v1.ListFloorsRequest) (*v1.ListFloorsResponse, error)
 	// GetFloor returns one floor of a survey by ID.
-	GetFloor(context.Context, *connect.Request[v1.GetFloorRequest]) (*connect.Response[v1.GetFloorResponse], error)
+	GetFloor(context.Context, *v1.GetFloorRequest) (*v1.GetFloorResponse, error)
 	// CreateFloor adds a storey to an existing survey. A survey opened to be
 	// walked has one floor; a building has more, and until this RPC the extra
 	// ones could only arrive from an import.
-	CreateFloor(context.Context, *connect.Request[v1.CreateFloorRequest]) (*connect.Response[v1.CreateFloorResponse], error)
+	CreateFloor(context.Context, *v1.CreateFloorRequest) (*v1.CreateFloorResponse, error)
 	// SetActiveFloor chooses the floor a walk collects onto. Creating a floor
 	// does not switch to it: an operator adds the floors of a building up front
 	// and then walks them one at a time.
-	SetActiveFloor(context.Context, *connect.Request[v1.SetActiveFloorRequest]) (*connect.Response[v1.SetActiveFloorResponse], error)
+	SetActiveFloor(context.Context, *v1.SetActiveFloorRequest) (*v1.SetActiveFloorResponse, error)
 	// UpdateFloor renames a floor and sets its storey number. Both fields are
 	// written: a ground floor is level 0, which proto3 cannot tell from an
 	// absent field, so the caller sends the pair it wants stored.
-	UpdateFloor(context.Context, *connect.Request[v1.UpdateFloorRequest]) (*connect.Response[v1.UpdateFloorResponse], error)
+	UpdateFloor(context.Context, *v1.UpdateFloorRequest) (*v1.UpdateFloorResponse, error)
 	// DeleteFloor removes a storey and everything measured on it. The last
 	// floor of a survey cannot be deleted: a survey collects onto a floor.
-	DeleteFloor(context.Context, *connect.Request[v1.DeleteFloorRequest]) (*connect.Response[v1.DeleteFloorResponse], error)
+	DeleteFloor(context.Context, *v1.DeleteFloorRequest) (*v1.DeleteFloorResponse, error)
 	// GenerateReport renders a PDF report for a survey.
-	GenerateReport(context.Context, *connect.Request[v1.GenerateReportRequest]) (*connect.Response[v1.GenerateReportResponse], error)
+	GenerateReport(context.Context, *v1.GenerateReportRequest) (*v1.GenerateReportResponse, error)
 	// CreateSurvey opens a new, empty survey to walk. The measured counterpart
 	// of ImportAirMapper: the samples come from this host's radio rather than
 	// from a file.
-	CreateSurvey(context.Context, *connect.Request[v1.CreateSurveyRequest]) (*connect.Response[v1.CreateSurveyResponse], error)
+	CreateSurvey(context.Context, *v1.CreateSurveyRequest) (*v1.CreateSurveyResponse, error)
 	// StartSurvey moves a survey into the state that accepts samples.
-	StartSurvey(context.Context, *connect.Request[v1.StartSurveyRequest]) (*connect.Response[v1.StartSurveyResponse], error)
+	StartSurvey(context.Context, *v1.StartSurveyRequest) (*v1.StartSurveyResponse, error)
 	// PauseSurvey stops a survey accepting samples without completing it.
-	PauseSurvey(context.Context, *connect.Request[v1.PauseSurveyRequest]) (*connect.Response[v1.PauseSurveyResponse], error)
+	PauseSurvey(context.Context, *v1.PauseSurveyRequest) (*v1.PauseSurveyResponse, error)
 	// CompleteSurvey closes a survey to further samples.
-	CompleteSurvey(context.Context, *connect.Request[v1.CompleteSurveyRequest]) (*connect.Response[v1.CompleteSurveyResponse], error)
+	CompleteSurvey(context.Context, *v1.CompleteSurveyRequest) (*v1.CompleteSurveyResponse, error)
 	// CapturePoint scans the airspace and records what it sees at a position on
 	// the survey's active floor.
 	//
@@ -738,11 +541,11 @@ type SurveyServiceHandler interface {
 	// returns cached values if asked again inside its cache window, so a stream
 	// would deliver duplicates at whatever rate the client asked for. The
 	// surveyor stands at a point, captures it, and moves — one call per point.
-	CapturePoint(context.Context, *connect.Request[v1.CapturePointRequest]) (*connect.Response[v1.CapturePointResponse], error)
+	CapturePoint(context.Context, *v1.CapturePointRequest) (*v1.CapturePointResponse, error)
 	// ListSamples returns the points stored on a survey's active floor, in
 	// capture order. SurveySummary carries only a count; this is what lets a
 	// client draw where a walk has already been, across a reload or a restart.
-	ListSamples(context.Context, *connect.Request[v1.ListSamplesRequest]) (*connect.Response[v1.ListSamplesResponse], error)
+	ListSamples(context.Context, *v1.ListSamplesRequest) (*v1.ListSamplesResponse, error)
 	// Scan reads the airspace and records nothing. It is what the live analysis
 	// view runs on, and it belongs to no survey: a reading taken while someone
 	// is looking at a page was taken at no position on any floor.
@@ -750,11 +553,11 @@ type SurveyServiceHandler interface {
 	// Unary for the same reason CapturePoint is: a scan blocks in the driver for
 	// seconds and the radio serves its cache inside that window, so a stream
 	// would repeat itself at whatever rate a client asked for. The client polls.
-	Scan(context.Context, *connect.Request[v1.ScanRequest]) (*connect.Response[v1.ScanResponse], error)
+	Scan(context.Context, *v1.ScanRequest) (*v1.ScanResponse, error)
 	// GetCaptureCapability says whether this host can measure at all, so a
 	// client can explain that before an operator sets out rather than after a
 	// walk fails. A host with no radio still browses and reports.
-	GetCaptureCapability(context.Context, *connect.Request[v1.GetCaptureCapabilityRequest]) (*connect.Response[v1.GetCaptureCapabilityResponse], error)
+	GetCaptureCapability(context.Context, *v1.GetCaptureCapabilityRequest) (*v1.GetCaptureCapabilityResponse, error)
 	// StartContinuousCapture samples repeatedly at a position until it is
 	// stopped — the walking half of a measured survey, where CapturePoint is the
 	// stop-and-go half.
@@ -762,10 +565,10 @@ type SurveyServiceHandler interface {
 	// Calling it again on a running survey moves the capture rather than starting
 	// a second one: it is the operator saying "I am here now", which is the whole
 	// interaction in a walking survey.
-	StartContinuousCapture(context.Context, *connect.Request[v1.StartContinuousCaptureRequest]) (*connect.Response[v1.StartContinuousCaptureResponse], error)
+	StartContinuousCapture(context.Context, *v1.StartContinuousCaptureRequest) (*v1.StartContinuousCaptureResponse, error)
 	// StopContinuousCapture ends a survey's capture loop. Stopping one that is not
 	// running is not an error.
-	StopContinuousCapture(context.Context, *connect.Request[v1.StopContinuousCaptureRequest]) (*connect.Response[v1.StopContinuousCaptureResponse], error)
+	StopContinuousCapture(context.Context, *v1.StopContinuousCaptureRequest) (*v1.StopContinuousCaptureResponse, error)
 	// MeasureThroughput runs a throughput test at a position and stores what it
 	// measured — the active half of a survey, where the scan-based points are the
 	// passive half. A strong signal on a congested channel carries very little,
@@ -774,451 +577,879 @@ type SurveyServiceHandler interface {
 	// Stop-and-go by nature: the test takes seconds in each direction and means
 	// nothing if the operator moves during it, so there is no continuous
 	// equivalent.
-	MeasureThroughput(context.Context, *connect.Request[v1.MeasureThroughputRequest]) (*connect.Response[v1.MeasureThroughputResponse], error)
+	MeasureThroughput(context.Context, *v1.MeasureThroughputRequest) (*v1.MeasureThroughputResponse, error)
 	// SetThroughputTarget names the server a survey's active measurements run
 	// against. Survey state rather than a per-measurement argument: comparing two
 	// positions only means something if both were measured against the same
 	// thing.
-	SetThroughputTarget(context.Context, *connect.Request[v1.SetThroughputTargetRequest]) (*connect.Response[v1.SetThroughputTargetResponse], error)
+	SetThroughputTarget(context.Context, *v1.SetThroughputTargetRequest) (*v1.SetThroughputTargetResponse, error)
 	// SetFloorPlan stores an image as a floor's plan. Until now a plan could only
 	// arrive inside an AirMapper archive, so a survey walked with this product
 	// had nothing to draw its points on.
-	SetFloorPlan(context.Context, *connect.Request[v1.SetFloorPlanRequest]) (*connect.Response[v1.SetFloorPlanResponse], error)
+	SetFloorPlan(context.Context, *v1.SetFloorPlanRequest) (*v1.SetFloorPlanResponse, error)
 	// CalibrateFloorPlan sets how many metres a pixel of the plan is, from two
 	// points the operator marked and the real distance between them. A plan
 	// carries no scale of its own, and every distance the analysis reports —
 	// a dead zone's radius, most of all — is in pixels until this is set.
-	CalibrateFloorPlan(context.Context, *connect.Request[v1.CalibrateFloorPlanRequest]) (*connect.Response[v1.CalibrateFloorPlanResponse], error)
+	CalibrateFloorPlan(context.Context, *v1.CalibrateFloorPlanRequest) (*v1.CalibrateFloorPlanResponse, error)
 	// GetFloorPlanImage returns a floor's plan image.
 	//
 	// Its own call rather than a field on Floor: a plan runs to megabytes, and
 	// ListFloors is polled while a survey is walked. A client fetches the image
 	// once and the list stays light.
-	GetFloorPlanImage(context.Context, *connect.Request[v1.GetFloorPlanImageRequest]) (*connect.Response[v1.GetFloorPlanImageResponse], error)
+	GetFloorPlanImage(context.Context, *v1.GetFloorPlanImageRequest) (*v1.GetFloorPlanImageResponse, error)
 	// The APs placed on a floor's plan, imported or placed by hand. They are what
 	// the predicted map is drawn from.
-	ListAPPlacements(context.Context, *connect.Request[v1.ListAPPlacementsRequest]) (*connect.Response[v1.ListAPPlacementsResponse], error)
+	ListAPPlacements(context.Context, *v1.ListAPPlacementsRequest) (*v1.ListAPPlacementsResponse, error)
 	// CreateAPPlacement places an AP on a floor by hand. Planning a floor nobody
 	// has walked starts here: until now a placement existed only if an importer
 	// wrote it.
-	CreateAPPlacement(context.Context, *connect.Request[v1.CreateAPPlacementRequest]) (*connect.Response[v1.CreateAPPlacementResponse], error)
+	CreateAPPlacement(context.Context, *v1.CreateAPPlacementRequest) (*v1.CreateAPPlacementResponse, error)
 	// UpdateAPPlacement moves a placed AP or changes its label, power or band.
 	// The BSSID an importer recorded is kept.
-	UpdateAPPlacement(context.Context, *connect.Request[v1.UpdateAPPlacementRequest]) (*connect.Response[v1.UpdateAPPlacementResponse], error)
+	UpdateAPPlacement(context.Context, *v1.UpdateAPPlacementRequest) (*v1.UpdateAPPlacementResponse, error)
 	// DeleteAPPlacement removes a placed AP from its floor.
-	DeleteAPPlacement(context.Context, *connect.Request[v1.DeleteAPPlacementRequest]) (*connect.Response[v1.DeleteAPPlacementResponse], error)
+	DeleteAPPlacement(context.Context, *v1.DeleteAPPlacementRequest) (*v1.DeleteAPPlacementResponse, error)
 }
 
-// NewSurveyServiceHandler builds an HTTP handler from the service implementation. It returns the
-// path on which to mount the handler and the handler itself.
-//
-// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
-// and JSON codecs. They also support gzip compression.
-func NewSurveyServiceHandler(svc SurveyServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	surveyServiceMethods := v1.File_trellis_survey_v1_survey_proto.Services().ByName("SurveyService").Methods()
-	surveyServiceImportAirMapperHandler := connect.NewUnaryHandler(
-		SurveyServiceImportAirMapperProcedure,
-		svc.ImportAirMapper,
-		connect.WithSchema(surveyServiceMethods.ByName("ImportAirMapper")),
-		connect.WithHandlerOptions(opts...),
+// RegisterSurveyServiceHandler registers svc as the trellis.survey.v1.SurveyService implementation
+// on server.
+func RegisterSurveyServiceHandler(server *connect.Server, svc SurveyServiceHandler) {
+	adapter := surveyServiceHandler{svc: svc}
+	server.Register(
+		connect.Method{Spec: surveyServiceImportAirMapperSpec(), Handler: adapter.importAirMapper},
+		connect.Method{Spec: surveyServiceImportAirMagnetSpec(), Handler: adapter.importAirMagnet},
+		connect.Method{Spec: surveyServiceListSurveysSpec(), Handler: adapter.listSurveys},
+		connect.Method{Spec: surveyServiceGetSurveySpec(), Handler: adapter.getSurvey},
+		connect.Method{Spec: surveyServiceDeleteSurveySpec(), Handler: adapter.deleteSurvey},
+		connect.Method{Spec: surveyServiceGetHeatmapSpec(), Handler: adapter.getHeatmap},
+		connect.Method{Spec: surveyServiceGetCoverageSpec(), Handler: adapter.getCoverage},
+		connect.Method{Spec: surveyServiceListFloorsSpec(), Handler: adapter.listFloors},
+		connect.Method{Spec: surveyServiceGetFloorSpec(), Handler: adapter.getFloor},
+		connect.Method{Spec: surveyServiceCreateFloorSpec(), Handler: adapter.createFloor},
+		connect.Method{Spec: surveyServiceSetActiveFloorSpec(), Handler: adapter.setActiveFloor},
+		connect.Method{Spec: surveyServiceUpdateFloorSpec(), Handler: adapter.updateFloor},
+		connect.Method{Spec: surveyServiceDeleteFloorSpec(), Handler: adapter.deleteFloor},
+		connect.Method{Spec: surveyServiceGenerateReportSpec(), Handler: adapter.generateReport},
+		connect.Method{Spec: surveyServiceCreateSurveySpec(), Handler: adapter.createSurvey},
+		connect.Method{Spec: surveyServiceStartSurveySpec(), Handler: adapter.startSurvey},
+		connect.Method{Spec: surveyServicePauseSurveySpec(), Handler: adapter.pauseSurvey},
+		connect.Method{Spec: surveyServiceCompleteSurveySpec(), Handler: adapter.completeSurvey},
+		connect.Method{Spec: surveyServiceCapturePointSpec(), Handler: adapter.capturePoint},
+		connect.Method{Spec: surveyServiceListSamplesSpec(), Handler: adapter.listSamples},
+		connect.Method{Spec: surveyServiceScanSpec(), Handler: adapter.scan},
+		connect.Method{Spec: surveyServiceGetCaptureCapabilitySpec(), Handler: adapter.getCaptureCapability},
+		connect.Method{Spec: surveyServiceStartContinuousCaptureSpec(), Handler: adapter.startContinuousCapture},
+		connect.Method{Spec: surveyServiceStopContinuousCaptureSpec(), Handler: adapter.stopContinuousCapture},
+		connect.Method{Spec: surveyServiceMeasureThroughputSpec(), Handler: adapter.measureThroughput},
+		connect.Method{Spec: surveyServiceSetThroughputTargetSpec(), Handler: adapter.setThroughputTarget},
+		connect.Method{Spec: surveyServiceSetFloorPlanSpec(), Handler: adapter.setFloorPlan},
+		connect.Method{Spec: surveyServiceCalibrateFloorPlanSpec(), Handler: adapter.calibrateFloorPlan},
+		connect.Method{Spec: surveyServiceGetFloorPlanImageSpec(), Handler: adapter.getFloorPlanImage},
+		connect.Method{Spec: surveyServiceListAPPlacementsSpec(), Handler: adapter.listAPPlacements},
+		connect.Method{Spec: surveyServiceCreateAPPlacementSpec(), Handler: adapter.createAPPlacement},
+		connect.Method{Spec: surveyServiceUpdateAPPlacementSpec(), Handler: adapter.updateAPPlacement},
+		connect.Method{Spec: surveyServiceDeleteAPPlacementSpec(), Handler: adapter.deleteAPPlacement},
 	)
-	surveyServiceImportAirMagnetHandler := connect.NewUnaryHandler(
-		SurveyServiceImportAirMagnetProcedure,
-		svc.ImportAirMagnet,
-		connect.WithSchema(surveyServiceMethods.ByName("ImportAirMagnet")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceListSurveysHandler := connect.NewUnaryHandler(
-		SurveyServiceListSurveysProcedure,
-		svc.ListSurveys,
-		connect.WithSchema(surveyServiceMethods.ByName("ListSurveys")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceGetSurveyHandler := connect.NewUnaryHandler(
-		SurveyServiceGetSurveyProcedure,
-		svc.GetSurvey,
-		connect.WithSchema(surveyServiceMethods.ByName("GetSurvey")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceDeleteSurveyHandler := connect.NewUnaryHandler(
-		SurveyServiceDeleteSurveyProcedure,
-		svc.DeleteSurvey,
-		connect.WithSchema(surveyServiceMethods.ByName("DeleteSurvey")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceGetHeatmapHandler := connect.NewUnaryHandler(
-		SurveyServiceGetHeatmapProcedure,
-		svc.GetHeatmap,
-		connect.WithSchema(surveyServiceMethods.ByName("GetHeatmap")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceGetCoverageHandler := connect.NewUnaryHandler(
-		SurveyServiceGetCoverageProcedure,
-		svc.GetCoverage,
-		connect.WithSchema(surveyServiceMethods.ByName("GetCoverage")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceListFloorsHandler := connect.NewUnaryHandler(
-		SurveyServiceListFloorsProcedure,
-		svc.ListFloors,
-		connect.WithSchema(surveyServiceMethods.ByName("ListFloors")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceGetFloorHandler := connect.NewUnaryHandler(
-		SurveyServiceGetFloorProcedure,
-		svc.GetFloor,
-		connect.WithSchema(surveyServiceMethods.ByName("GetFloor")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceCreateFloorHandler := connect.NewUnaryHandler(
-		SurveyServiceCreateFloorProcedure,
-		svc.CreateFloor,
-		connect.WithSchema(surveyServiceMethods.ByName("CreateFloor")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceSetActiveFloorHandler := connect.NewUnaryHandler(
-		SurveyServiceSetActiveFloorProcedure,
-		svc.SetActiveFloor,
-		connect.WithSchema(surveyServiceMethods.ByName("SetActiveFloor")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceUpdateFloorHandler := connect.NewUnaryHandler(
-		SurveyServiceUpdateFloorProcedure,
-		svc.UpdateFloor,
-		connect.WithSchema(surveyServiceMethods.ByName("UpdateFloor")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceDeleteFloorHandler := connect.NewUnaryHandler(
-		SurveyServiceDeleteFloorProcedure,
-		svc.DeleteFloor,
-		connect.WithSchema(surveyServiceMethods.ByName("DeleteFloor")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceGenerateReportHandler := connect.NewUnaryHandler(
-		SurveyServiceGenerateReportProcedure,
-		svc.GenerateReport,
-		connect.WithSchema(surveyServiceMethods.ByName("GenerateReport")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceCreateSurveyHandler := connect.NewUnaryHandler(
-		SurveyServiceCreateSurveyProcedure,
-		svc.CreateSurvey,
-		connect.WithSchema(surveyServiceMethods.ByName("CreateSurvey")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceStartSurveyHandler := connect.NewUnaryHandler(
-		SurveyServiceStartSurveyProcedure,
-		svc.StartSurvey,
-		connect.WithSchema(surveyServiceMethods.ByName("StartSurvey")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServicePauseSurveyHandler := connect.NewUnaryHandler(
-		SurveyServicePauseSurveyProcedure,
-		svc.PauseSurvey,
-		connect.WithSchema(surveyServiceMethods.ByName("PauseSurvey")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceCompleteSurveyHandler := connect.NewUnaryHandler(
-		SurveyServiceCompleteSurveyProcedure,
-		svc.CompleteSurvey,
-		connect.WithSchema(surveyServiceMethods.ByName("CompleteSurvey")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceCapturePointHandler := connect.NewUnaryHandler(
-		SurveyServiceCapturePointProcedure,
-		svc.CapturePoint,
-		connect.WithSchema(surveyServiceMethods.ByName("CapturePoint")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceListSamplesHandler := connect.NewUnaryHandler(
-		SurveyServiceListSamplesProcedure,
-		svc.ListSamples,
-		connect.WithSchema(surveyServiceMethods.ByName("ListSamples")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceScanHandler := connect.NewUnaryHandler(
-		SurveyServiceScanProcedure,
-		svc.Scan,
-		connect.WithSchema(surveyServiceMethods.ByName("Scan")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceGetCaptureCapabilityHandler := connect.NewUnaryHandler(
-		SurveyServiceGetCaptureCapabilityProcedure,
-		svc.GetCaptureCapability,
-		connect.WithSchema(surveyServiceMethods.ByName("GetCaptureCapability")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceStartContinuousCaptureHandler := connect.NewUnaryHandler(
-		SurveyServiceStartContinuousCaptureProcedure,
-		svc.StartContinuousCapture,
-		connect.WithSchema(surveyServiceMethods.ByName("StartContinuousCapture")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceStopContinuousCaptureHandler := connect.NewUnaryHandler(
-		SurveyServiceStopContinuousCaptureProcedure,
-		svc.StopContinuousCapture,
-		connect.WithSchema(surveyServiceMethods.ByName("StopContinuousCapture")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceMeasureThroughputHandler := connect.NewUnaryHandler(
-		SurveyServiceMeasureThroughputProcedure,
-		svc.MeasureThroughput,
-		connect.WithSchema(surveyServiceMethods.ByName("MeasureThroughput")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceSetThroughputTargetHandler := connect.NewUnaryHandler(
-		SurveyServiceSetThroughputTargetProcedure,
-		svc.SetThroughputTarget,
-		connect.WithSchema(surveyServiceMethods.ByName("SetThroughputTarget")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceSetFloorPlanHandler := connect.NewUnaryHandler(
-		SurveyServiceSetFloorPlanProcedure,
-		svc.SetFloorPlan,
-		connect.WithSchema(surveyServiceMethods.ByName("SetFloorPlan")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceCalibrateFloorPlanHandler := connect.NewUnaryHandler(
-		SurveyServiceCalibrateFloorPlanProcedure,
-		svc.CalibrateFloorPlan,
-		connect.WithSchema(surveyServiceMethods.ByName("CalibrateFloorPlan")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceGetFloorPlanImageHandler := connect.NewUnaryHandler(
-		SurveyServiceGetFloorPlanImageProcedure,
-		svc.GetFloorPlanImage,
-		connect.WithSchema(surveyServiceMethods.ByName("GetFloorPlanImage")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceListAPPlacementsHandler := connect.NewUnaryHandler(
-		SurveyServiceListAPPlacementsProcedure,
-		svc.ListAPPlacements,
-		connect.WithSchema(surveyServiceMethods.ByName("ListAPPlacements")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceCreateAPPlacementHandler := connect.NewUnaryHandler(
-		SurveyServiceCreateAPPlacementProcedure,
-		svc.CreateAPPlacement,
-		connect.WithSchema(surveyServiceMethods.ByName("CreateAPPlacement")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceUpdateAPPlacementHandler := connect.NewUnaryHandler(
-		SurveyServiceUpdateAPPlacementProcedure,
-		svc.UpdateAPPlacement,
-		connect.WithSchema(surveyServiceMethods.ByName("UpdateAPPlacement")),
-		connect.WithHandlerOptions(opts...),
-	)
-	surveyServiceDeleteAPPlacementHandler := connect.NewUnaryHandler(
-		SurveyServiceDeleteAPPlacementProcedure,
-		svc.DeleteAPPlacement,
-		connect.WithSchema(surveyServiceMethods.ByName("DeleteAPPlacement")),
-		connect.WithHandlerOptions(opts...),
-	)
-	return "/trellis.survey.v1.SurveyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case SurveyServiceImportAirMapperProcedure:
-			surveyServiceImportAirMapperHandler.ServeHTTP(w, r)
-		case SurveyServiceImportAirMagnetProcedure:
-			surveyServiceImportAirMagnetHandler.ServeHTTP(w, r)
-		case SurveyServiceListSurveysProcedure:
-			surveyServiceListSurveysHandler.ServeHTTP(w, r)
-		case SurveyServiceGetSurveyProcedure:
-			surveyServiceGetSurveyHandler.ServeHTTP(w, r)
-		case SurveyServiceDeleteSurveyProcedure:
-			surveyServiceDeleteSurveyHandler.ServeHTTP(w, r)
-		case SurveyServiceGetHeatmapProcedure:
-			surveyServiceGetHeatmapHandler.ServeHTTP(w, r)
-		case SurveyServiceGetCoverageProcedure:
-			surveyServiceGetCoverageHandler.ServeHTTP(w, r)
-		case SurveyServiceListFloorsProcedure:
-			surveyServiceListFloorsHandler.ServeHTTP(w, r)
-		case SurveyServiceGetFloorProcedure:
-			surveyServiceGetFloorHandler.ServeHTTP(w, r)
-		case SurveyServiceCreateFloorProcedure:
-			surveyServiceCreateFloorHandler.ServeHTTP(w, r)
-		case SurveyServiceSetActiveFloorProcedure:
-			surveyServiceSetActiveFloorHandler.ServeHTTP(w, r)
-		case SurveyServiceUpdateFloorProcedure:
-			surveyServiceUpdateFloorHandler.ServeHTTP(w, r)
-		case SurveyServiceDeleteFloorProcedure:
-			surveyServiceDeleteFloorHandler.ServeHTTP(w, r)
-		case SurveyServiceGenerateReportProcedure:
-			surveyServiceGenerateReportHandler.ServeHTTP(w, r)
-		case SurveyServiceCreateSurveyProcedure:
-			surveyServiceCreateSurveyHandler.ServeHTTP(w, r)
-		case SurveyServiceStartSurveyProcedure:
-			surveyServiceStartSurveyHandler.ServeHTTP(w, r)
-		case SurveyServicePauseSurveyProcedure:
-			surveyServicePauseSurveyHandler.ServeHTTP(w, r)
-		case SurveyServiceCompleteSurveyProcedure:
-			surveyServiceCompleteSurveyHandler.ServeHTTP(w, r)
-		case SurveyServiceCapturePointProcedure:
-			surveyServiceCapturePointHandler.ServeHTTP(w, r)
-		case SurveyServiceListSamplesProcedure:
-			surveyServiceListSamplesHandler.ServeHTTP(w, r)
-		case SurveyServiceScanProcedure:
-			surveyServiceScanHandler.ServeHTTP(w, r)
-		case SurveyServiceGetCaptureCapabilityProcedure:
-			surveyServiceGetCaptureCapabilityHandler.ServeHTTP(w, r)
-		case SurveyServiceStartContinuousCaptureProcedure:
-			surveyServiceStartContinuousCaptureHandler.ServeHTTP(w, r)
-		case SurveyServiceStopContinuousCaptureProcedure:
-			surveyServiceStopContinuousCaptureHandler.ServeHTTP(w, r)
-		case SurveyServiceMeasureThroughputProcedure:
-			surveyServiceMeasureThroughputHandler.ServeHTTP(w, r)
-		case SurveyServiceSetThroughputTargetProcedure:
-			surveyServiceSetThroughputTargetHandler.ServeHTTP(w, r)
-		case SurveyServiceSetFloorPlanProcedure:
-			surveyServiceSetFloorPlanHandler.ServeHTTP(w, r)
-		case SurveyServiceCalibrateFloorPlanProcedure:
-			surveyServiceCalibrateFloorPlanHandler.ServeHTTP(w, r)
-		case SurveyServiceGetFloorPlanImageProcedure:
-			surveyServiceGetFloorPlanImageHandler.ServeHTTP(w, r)
-		case SurveyServiceListAPPlacementsProcedure:
-			surveyServiceListAPPlacementsHandler.ServeHTTP(w, r)
-		case SurveyServiceCreateAPPlacementProcedure:
-			surveyServiceCreateAPPlacementHandler.ServeHTTP(w, r)
-		case SurveyServiceUpdateAPPlacementProcedure:
-			surveyServiceUpdateAPPlacementHandler.ServeHTTP(w, r)
-		case SurveyServiceDeleteAPPlacementProcedure:
-			surveyServiceDeleteAPPlacementHandler.ServeHTTP(w, r)
-		default:
-			http.NotFound(w, r)
-		}
-	})
 }
 
 // UnimplementedSurveyServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedSurveyServiceHandler struct{}
 
-func (UnimplementedSurveyServiceHandler) ImportAirMapper(context.Context, *connect.Request[v1.ImportAirMapperRequest]) (*connect.Response[v1.ImportAirMapperResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.ImportAirMapper is not implemented"))
+func (UnimplementedSurveyServiceHandler) ImportAirMapper(context.Context, *v1.ImportAirMapperRequest) (*v1.ImportAirMapperResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.ImportAirMapper is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) ImportAirMagnet(context.Context, *connect.Request[v1.ImportAirMagnetRequest]) (*connect.Response[v1.ImportAirMagnetResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.ImportAirMagnet is not implemented"))
+func (UnimplementedSurveyServiceHandler) ImportAirMagnet(context.Context, *v1.ImportAirMagnetRequest) (*v1.ImportAirMagnetResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.ImportAirMagnet is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) ListSurveys(context.Context, *connect.Request[v1.ListSurveysRequest]) (*connect.Response[v1.ListSurveysResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.ListSurveys is not implemented"))
+func (UnimplementedSurveyServiceHandler) ListSurveys(context.Context, *v1.ListSurveysRequest) (*v1.ListSurveysResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.ListSurveys is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) GetSurvey(context.Context, *connect.Request[v1.GetSurveyRequest]) (*connect.Response[v1.GetSurveyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.GetSurvey is not implemented"))
+func (UnimplementedSurveyServiceHandler) GetSurvey(context.Context, *v1.GetSurveyRequest) (*v1.GetSurveyResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.GetSurvey is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) DeleteSurvey(context.Context, *connect.Request[v1.DeleteSurveyRequest]) (*connect.Response[v1.DeleteSurveyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.DeleteSurvey is not implemented"))
+func (UnimplementedSurveyServiceHandler) DeleteSurvey(context.Context, *v1.DeleteSurveyRequest) (*v1.DeleteSurveyResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.DeleteSurvey is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) GetHeatmap(context.Context, *connect.Request[v1.GetHeatmapRequest]) (*connect.Response[v1.GetHeatmapResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.GetHeatmap is not implemented"))
+func (UnimplementedSurveyServiceHandler) GetHeatmap(context.Context, *v1.GetHeatmapRequest) (*v1.GetHeatmapResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.GetHeatmap is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) GetCoverage(context.Context, *connect.Request[v1.GetCoverageRequest]) (*connect.Response[v1.GetCoverageResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.GetCoverage is not implemented"))
+func (UnimplementedSurveyServiceHandler) GetCoverage(context.Context, *v1.GetCoverageRequest) (*v1.GetCoverageResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.GetCoverage is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) ListFloors(context.Context, *connect.Request[v1.ListFloorsRequest]) (*connect.Response[v1.ListFloorsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.ListFloors is not implemented"))
+func (UnimplementedSurveyServiceHandler) ListFloors(context.Context, *v1.ListFloorsRequest) (*v1.ListFloorsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.ListFloors is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) GetFloor(context.Context, *connect.Request[v1.GetFloorRequest]) (*connect.Response[v1.GetFloorResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.GetFloor is not implemented"))
+func (UnimplementedSurveyServiceHandler) GetFloor(context.Context, *v1.GetFloorRequest) (*v1.GetFloorResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.GetFloor is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) CreateFloor(context.Context, *connect.Request[v1.CreateFloorRequest]) (*connect.Response[v1.CreateFloorResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.CreateFloor is not implemented"))
+func (UnimplementedSurveyServiceHandler) CreateFloor(context.Context, *v1.CreateFloorRequest) (*v1.CreateFloorResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.CreateFloor is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) SetActiveFloor(context.Context, *connect.Request[v1.SetActiveFloorRequest]) (*connect.Response[v1.SetActiveFloorResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.SetActiveFloor is not implemented"))
+func (UnimplementedSurveyServiceHandler) SetActiveFloor(context.Context, *v1.SetActiveFloorRequest) (*v1.SetActiveFloorResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.SetActiveFloor is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) UpdateFloor(context.Context, *connect.Request[v1.UpdateFloorRequest]) (*connect.Response[v1.UpdateFloorResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.UpdateFloor is not implemented"))
+func (UnimplementedSurveyServiceHandler) UpdateFloor(context.Context, *v1.UpdateFloorRequest) (*v1.UpdateFloorResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.UpdateFloor is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) DeleteFloor(context.Context, *connect.Request[v1.DeleteFloorRequest]) (*connect.Response[v1.DeleteFloorResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.DeleteFloor is not implemented"))
+func (UnimplementedSurveyServiceHandler) DeleteFloor(context.Context, *v1.DeleteFloorRequest) (*v1.DeleteFloorResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.DeleteFloor is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) GenerateReport(context.Context, *connect.Request[v1.GenerateReportRequest]) (*connect.Response[v1.GenerateReportResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.GenerateReport is not implemented"))
+func (UnimplementedSurveyServiceHandler) GenerateReport(context.Context, *v1.GenerateReportRequest) (*v1.GenerateReportResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.GenerateReport is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) CreateSurvey(context.Context, *connect.Request[v1.CreateSurveyRequest]) (*connect.Response[v1.CreateSurveyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.CreateSurvey is not implemented"))
+func (UnimplementedSurveyServiceHandler) CreateSurvey(context.Context, *v1.CreateSurveyRequest) (*v1.CreateSurveyResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.CreateSurvey is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) StartSurvey(context.Context, *connect.Request[v1.StartSurveyRequest]) (*connect.Response[v1.StartSurveyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.StartSurvey is not implemented"))
+func (UnimplementedSurveyServiceHandler) StartSurvey(context.Context, *v1.StartSurveyRequest) (*v1.StartSurveyResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.StartSurvey is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) PauseSurvey(context.Context, *connect.Request[v1.PauseSurveyRequest]) (*connect.Response[v1.PauseSurveyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.PauseSurvey is not implemented"))
+func (UnimplementedSurveyServiceHandler) PauseSurvey(context.Context, *v1.PauseSurveyRequest) (*v1.PauseSurveyResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.PauseSurvey is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) CompleteSurvey(context.Context, *connect.Request[v1.CompleteSurveyRequest]) (*connect.Response[v1.CompleteSurveyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.CompleteSurvey is not implemented"))
+func (UnimplementedSurveyServiceHandler) CompleteSurvey(context.Context, *v1.CompleteSurveyRequest) (*v1.CompleteSurveyResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.CompleteSurvey is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) CapturePoint(context.Context, *connect.Request[v1.CapturePointRequest]) (*connect.Response[v1.CapturePointResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.CapturePoint is not implemented"))
+func (UnimplementedSurveyServiceHandler) CapturePoint(context.Context, *v1.CapturePointRequest) (*v1.CapturePointResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.CapturePoint is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) ListSamples(context.Context, *connect.Request[v1.ListSamplesRequest]) (*connect.Response[v1.ListSamplesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.ListSamples is not implemented"))
+func (UnimplementedSurveyServiceHandler) ListSamples(context.Context, *v1.ListSamplesRequest) (*v1.ListSamplesResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.ListSamples is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) Scan(context.Context, *connect.Request[v1.ScanRequest]) (*connect.Response[v1.ScanResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.Scan is not implemented"))
+func (UnimplementedSurveyServiceHandler) Scan(context.Context, *v1.ScanRequest) (*v1.ScanResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.Scan is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) GetCaptureCapability(context.Context, *connect.Request[v1.GetCaptureCapabilityRequest]) (*connect.Response[v1.GetCaptureCapabilityResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.GetCaptureCapability is not implemented"))
+func (UnimplementedSurveyServiceHandler) GetCaptureCapability(context.Context, *v1.GetCaptureCapabilityRequest) (*v1.GetCaptureCapabilityResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.GetCaptureCapability is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) StartContinuousCapture(context.Context, *connect.Request[v1.StartContinuousCaptureRequest]) (*connect.Response[v1.StartContinuousCaptureResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.StartContinuousCapture is not implemented"))
+func (UnimplementedSurveyServiceHandler) StartContinuousCapture(context.Context, *v1.StartContinuousCaptureRequest) (*v1.StartContinuousCaptureResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.StartContinuousCapture is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) StopContinuousCapture(context.Context, *connect.Request[v1.StopContinuousCaptureRequest]) (*connect.Response[v1.StopContinuousCaptureResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.StopContinuousCapture is not implemented"))
+func (UnimplementedSurveyServiceHandler) StopContinuousCapture(context.Context, *v1.StopContinuousCaptureRequest) (*v1.StopContinuousCaptureResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.StopContinuousCapture is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) MeasureThroughput(context.Context, *connect.Request[v1.MeasureThroughputRequest]) (*connect.Response[v1.MeasureThroughputResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.MeasureThroughput is not implemented"))
+func (UnimplementedSurveyServiceHandler) MeasureThroughput(context.Context, *v1.MeasureThroughputRequest) (*v1.MeasureThroughputResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.MeasureThroughput is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) SetThroughputTarget(context.Context, *connect.Request[v1.SetThroughputTargetRequest]) (*connect.Response[v1.SetThroughputTargetResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.SetThroughputTarget is not implemented"))
+func (UnimplementedSurveyServiceHandler) SetThroughputTarget(context.Context, *v1.SetThroughputTargetRequest) (*v1.SetThroughputTargetResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.SetThroughputTarget is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) SetFloorPlan(context.Context, *connect.Request[v1.SetFloorPlanRequest]) (*connect.Response[v1.SetFloorPlanResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.SetFloorPlan is not implemented"))
+func (UnimplementedSurveyServiceHandler) SetFloorPlan(context.Context, *v1.SetFloorPlanRequest) (*v1.SetFloorPlanResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.SetFloorPlan is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) CalibrateFloorPlan(context.Context, *connect.Request[v1.CalibrateFloorPlanRequest]) (*connect.Response[v1.CalibrateFloorPlanResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.CalibrateFloorPlan is not implemented"))
+func (UnimplementedSurveyServiceHandler) CalibrateFloorPlan(context.Context, *v1.CalibrateFloorPlanRequest) (*v1.CalibrateFloorPlanResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.CalibrateFloorPlan is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) GetFloorPlanImage(context.Context, *connect.Request[v1.GetFloorPlanImageRequest]) (*connect.Response[v1.GetFloorPlanImageResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.GetFloorPlanImage is not implemented"))
+func (UnimplementedSurveyServiceHandler) GetFloorPlanImage(context.Context, *v1.GetFloorPlanImageRequest) (*v1.GetFloorPlanImageResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.GetFloorPlanImage is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) ListAPPlacements(context.Context, *connect.Request[v1.ListAPPlacementsRequest]) (*connect.Response[v1.ListAPPlacementsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.ListAPPlacements is not implemented"))
+func (UnimplementedSurveyServiceHandler) ListAPPlacements(context.Context, *v1.ListAPPlacementsRequest) (*v1.ListAPPlacementsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.ListAPPlacements is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) CreateAPPlacement(context.Context, *connect.Request[v1.CreateAPPlacementRequest]) (*connect.Response[v1.CreateAPPlacementResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.CreateAPPlacement is not implemented"))
+func (UnimplementedSurveyServiceHandler) CreateAPPlacement(context.Context, *v1.CreateAPPlacementRequest) (*v1.CreateAPPlacementResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.CreateAPPlacement is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) UpdateAPPlacement(context.Context, *connect.Request[v1.UpdateAPPlacementRequest]) (*connect.Response[v1.UpdateAPPlacementResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.UpdateAPPlacement is not implemented"))
+func (UnimplementedSurveyServiceHandler) UpdateAPPlacement(context.Context, *v1.UpdateAPPlacementRequest) (*v1.UpdateAPPlacementResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.UpdateAPPlacement is not implemented")
 }
 
-func (UnimplementedSurveyServiceHandler) DeleteAPPlacement(context.Context, *connect.Request[v1.DeleteAPPlacementRequest]) (*connect.Response[v1.DeleteAPPlacementResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("trellis.survey.v1.SurveyService.DeleteAPPlacement is not implemented"))
+func (UnimplementedSurveyServiceHandler) DeleteAPPlacement(context.Context, *v1.DeleteAPPlacementRequest) (*v1.DeleteAPPlacementResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "trellis.survey.v1.SurveyService.DeleteAPPlacement is not implemented")
+}
+
+type surveyServiceClient struct {
+	client *connect.Client
+}
+
+func (c *surveyServiceClient) ImportAirMapper(ctx context.Context, req *v1.ImportAirMapperRequest) (*v1.ImportAirMapperResponse, error) {
+	var res v1.ImportAirMapperResponse
+	if err := c.client.CallUnary(ctx, surveyServiceImportAirMapperSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) ImportAirMagnet(ctx context.Context, req *v1.ImportAirMagnetRequest) (*v1.ImportAirMagnetResponse, error) {
+	var res v1.ImportAirMagnetResponse
+	if err := c.client.CallUnary(ctx, surveyServiceImportAirMagnetSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) ListSurveys(ctx context.Context, req *v1.ListSurveysRequest) (*v1.ListSurveysResponse, error) {
+	var res v1.ListSurveysResponse
+	if err := c.client.CallUnary(ctx, surveyServiceListSurveysSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) GetSurvey(ctx context.Context, req *v1.GetSurveyRequest) (*v1.GetSurveyResponse, error) {
+	var res v1.GetSurveyResponse
+	if err := c.client.CallUnary(ctx, surveyServiceGetSurveySpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) DeleteSurvey(ctx context.Context, req *v1.DeleteSurveyRequest) (*v1.DeleteSurveyResponse, error) {
+	var res v1.DeleteSurveyResponse
+	if err := c.client.CallUnary(ctx, surveyServiceDeleteSurveySpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) GetHeatmap(ctx context.Context, req *v1.GetHeatmapRequest) (*v1.GetHeatmapResponse, error) {
+	var res v1.GetHeatmapResponse
+	if err := c.client.CallUnary(ctx, surveyServiceGetHeatmapSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) GetCoverage(ctx context.Context, req *v1.GetCoverageRequest) (*v1.GetCoverageResponse, error) {
+	var res v1.GetCoverageResponse
+	if err := c.client.CallUnary(ctx, surveyServiceGetCoverageSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) ListFloors(ctx context.Context, req *v1.ListFloorsRequest) (*v1.ListFloorsResponse, error) {
+	var res v1.ListFloorsResponse
+	if err := c.client.CallUnary(ctx, surveyServiceListFloorsSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) GetFloor(ctx context.Context, req *v1.GetFloorRequest) (*v1.GetFloorResponse, error) {
+	var res v1.GetFloorResponse
+	if err := c.client.CallUnary(ctx, surveyServiceGetFloorSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) CreateFloor(ctx context.Context, req *v1.CreateFloorRequest) (*v1.CreateFloorResponse, error) {
+	var res v1.CreateFloorResponse
+	if err := c.client.CallUnary(ctx, surveyServiceCreateFloorSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) SetActiveFloor(ctx context.Context, req *v1.SetActiveFloorRequest) (*v1.SetActiveFloorResponse, error) {
+	var res v1.SetActiveFloorResponse
+	if err := c.client.CallUnary(ctx, surveyServiceSetActiveFloorSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) UpdateFloor(ctx context.Context, req *v1.UpdateFloorRequest) (*v1.UpdateFloorResponse, error) {
+	var res v1.UpdateFloorResponse
+	if err := c.client.CallUnary(ctx, surveyServiceUpdateFloorSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) DeleteFloor(ctx context.Context, req *v1.DeleteFloorRequest) (*v1.DeleteFloorResponse, error) {
+	var res v1.DeleteFloorResponse
+	if err := c.client.CallUnary(ctx, surveyServiceDeleteFloorSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) GenerateReport(ctx context.Context, req *v1.GenerateReportRequest) (*v1.GenerateReportResponse, error) {
+	var res v1.GenerateReportResponse
+	if err := c.client.CallUnary(ctx, surveyServiceGenerateReportSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) CreateSurvey(ctx context.Context, req *v1.CreateSurveyRequest) (*v1.CreateSurveyResponse, error) {
+	var res v1.CreateSurveyResponse
+	if err := c.client.CallUnary(ctx, surveyServiceCreateSurveySpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) StartSurvey(ctx context.Context, req *v1.StartSurveyRequest) (*v1.StartSurveyResponse, error) {
+	var res v1.StartSurveyResponse
+	if err := c.client.CallUnary(ctx, surveyServiceStartSurveySpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) PauseSurvey(ctx context.Context, req *v1.PauseSurveyRequest) (*v1.PauseSurveyResponse, error) {
+	var res v1.PauseSurveyResponse
+	if err := c.client.CallUnary(ctx, surveyServicePauseSurveySpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) CompleteSurvey(ctx context.Context, req *v1.CompleteSurveyRequest) (*v1.CompleteSurveyResponse, error) {
+	var res v1.CompleteSurveyResponse
+	if err := c.client.CallUnary(ctx, surveyServiceCompleteSurveySpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) CapturePoint(ctx context.Context, req *v1.CapturePointRequest) (*v1.CapturePointResponse, error) {
+	var res v1.CapturePointResponse
+	if err := c.client.CallUnary(ctx, surveyServiceCapturePointSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) ListSamples(ctx context.Context, req *v1.ListSamplesRequest) (*v1.ListSamplesResponse, error) {
+	var res v1.ListSamplesResponse
+	if err := c.client.CallUnary(ctx, surveyServiceListSamplesSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) Scan(ctx context.Context, req *v1.ScanRequest) (*v1.ScanResponse, error) {
+	var res v1.ScanResponse
+	if err := c.client.CallUnary(ctx, surveyServiceScanSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) GetCaptureCapability(ctx context.Context, req *v1.GetCaptureCapabilityRequest) (*v1.GetCaptureCapabilityResponse, error) {
+	var res v1.GetCaptureCapabilityResponse
+	if err := c.client.CallUnary(ctx, surveyServiceGetCaptureCapabilitySpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) StartContinuousCapture(ctx context.Context, req *v1.StartContinuousCaptureRequest) (*v1.StartContinuousCaptureResponse, error) {
+	var res v1.StartContinuousCaptureResponse
+	if err := c.client.CallUnary(ctx, surveyServiceStartContinuousCaptureSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) StopContinuousCapture(ctx context.Context, req *v1.StopContinuousCaptureRequest) (*v1.StopContinuousCaptureResponse, error) {
+	var res v1.StopContinuousCaptureResponse
+	if err := c.client.CallUnary(ctx, surveyServiceStopContinuousCaptureSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) MeasureThroughput(ctx context.Context, req *v1.MeasureThroughputRequest) (*v1.MeasureThroughputResponse, error) {
+	var res v1.MeasureThroughputResponse
+	if err := c.client.CallUnary(ctx, surveyServiceMeasureThroughputSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) SetThroughputTarget(ctx context.Context, req *v1.SetThroughputTargetRequest) (*v1.SetThroughputTargetResponse, error) {
+	var res v1.SetThroughputTargetResponse
+	if err := c.client.CallUnary(ctx, surveyServiceSetThroughputTargetSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) SetFloorPlan(ctx context.Context, req *v1.SetFloorPlanRequest) (*v1.SetFloorPlanResponse, error) {
+	var res v1.SetFloorPlanResponse
+	if err := c.client.CallUnary(ctx, surveyServiceSetFloorPlanSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) CalibrateFloorPlan(ctx context.Context, req *v1.CalibrateFloorPlanRequest) (*v1.CalibrateFloorPlanResponse, error) {
+	var res v1.CalibrateFloorPlanResponse
+	if err := c.client.CallUnary(ctx, surveyServiceCalibrateFloorPlanSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) GetFloorPlanImage(ctx context.Context, req *v1.GetFloorPlanImageRequest) (*v1.GetFloorPlanImageResponse, error) {
+	var res v1.GetFloorPlanImageResponse
+	if err := c.client.CallUnary(ctx, surveyServiceGetFloorPlanImageSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) ListAPPlacements(ctx context.Context, req *v1.ListAPPlacementsRequest) (*v1.ListAPPlacementsResponse, error) {
+	var res v1.ListAPPlacementsResponse
+	if err := c.client.CallUnary(ctx, surveyServiceListAPPlacementsSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) CreateAPPlacement(ctx context.Context, req *v1.CreateAPPlacementRequest) (*v1.CreateAPPlacementResponse, error) {
+	var res v1.CreateAPPlacementResponse
+	if err := c.client.CallUnary(ctx, surveyServiceCreateAPPlacementSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) UpdateAPPlacement(ctx context.Context, req *v1.UpdateAPPlacementRequest) (*v1.UpdateAPPlacementResponse, error) {
+	var res v1.UpdateAPPlacementResponse
+	if err := c.client.CallUnary(ctx, surveyServiceUpdateAPPlacementSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *surveyServiceClient) DeleteAPPlacement(ctx context.Context, req *v1.DeleteAPPlacementRequest) (*v1.DeleteAPPlacementResponse, error) {
+	var res v1.DeleteAPPlacementResponse
+	if err := c.client.CallUnary(ctx, surveyServiceDeleteAPPlacementSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+type surveyServiceHandler struct{ svc SurveyServiceHandler }
+
+func (h surveyServiceHandler) importAirMapper(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ImportAirMapperRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ImportAirMapper(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) importAirMagnet(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ImportAirMagnetRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ImportAirMagnet(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) listSurveys(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ListSurveysRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ListSurveys(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) getSurvey(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetSurveyRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetSurvey(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) deleteSurvey(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.DeleteSurveyRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.DeleteSurvey(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) getHeatmap(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetHeatmapRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetHeatmap(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) getCoverage(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetCoverageRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetCoverage(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) listFloors(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ListFloorsRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ListFloors(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) getFloor(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetFloorRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetFloor(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) createFloor(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CreateFloorRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CreateFloor(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) setActiveFloor(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.SetActiveFloorRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.SetActiveFloor(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) updateFloor(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.UpdateFloorRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.UpdateFloor(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) deleteFloor(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.DeleteFloorRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.DeleteFloor(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) generateReport(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GenerateReportRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GenerateReport(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) createSurvey(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CreateSurveyRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CreateSurvey(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) startSurvey(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.StartSurveyRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.StartSurvey(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) pauseSurvey(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.PauseSurveyRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.PauseSurvey(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) completeSurvey(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CompleteSurveyRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CompleteSurvey(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) capturePoint(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CapturePointRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CapturePoint(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) listSamples(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ListSamplesRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ListSamples(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) scan(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ScanRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.Scan(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) getCaptureCapability(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetCaptureCapabilityRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetCaptureCapability(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) startContinuousCapture(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.StartContinuousCaptureRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.StartContinuousCapture(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) stopContinuousCapture(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.StopContinuousCaptureRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.StopContinuousCapture(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) measureThroughput(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.MeasureThroughputRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.MeasureThroughput(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) setThroughputTarget(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.SetThroughputTargetRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.SetThroughputTarget(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) setFloorPlan(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.SetFloorPlanRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.SetFloorPlan(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) calibrateFloorPlan(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CalibrateFloorPlanRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CalibrateFloorPlan(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) getFloorPlanImage(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetFloorPlanImageRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetFloorPlanImage(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) listAPPlacements(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ListAPPlacementsRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ListAPPlacements(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) createAPPlacement(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CreateAPPlacementRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CreateAPPlacement(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) updateAPPlacement(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.UpdateAPPlacementRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.UpdateAPPlacement(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h surveyServiceHandler) deleteAPPlacement(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.DeleteAPPlacementRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.DeleteAPPlacement(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
 }
