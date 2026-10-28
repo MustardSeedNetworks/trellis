@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"sync"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
@@ -62,40 +62,40 @@ func (h *SurveyServiceHandler) SetCaptureCapability(c CaptureCapability) {
 // survey.
 func (h *SurveyServiceHandler) ImportAirMapper(
 	_ context.Context,
-	req *connect.Request[surveyv1.ImportAirMapperRequest],
-) (*connect.Response[surveyv1.ImportAirMapperResponse], error) {
-	name := req.Msg.GetName()
+	req *surveyv1.ImportAirMapperRequest,
+) (*surveyv1.ImportAirMapperResponse, error) {
+	name := req.GetName()
 	if name == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("name is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "name is required")
 	}
-	data := req.Msg.GetAmpData()
+	data := req.GetAmpData()
 	if len(data) == 0 {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("amp_data is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "amp_data is required")
 	}
 
 	svy, err := h.manager.ImportAirMapper(name, data)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, err.Error()).WithCause(err)
 	}
 
-	return connect.NewResponse(&surveyv1.ImportAirMapperResponse{
+	return &surveyv1.ImportAirMapperResponse{
 		Survey: h.surveySummary(svy),
-	}), nil
+	}, nil
 }
 
 // ImportAirMagnet imports an AirMagnet Survey (.svd) export into a new stored
 // survey.
 func (h *SurveyServiceHandler) ImportAirMagnet(
 	_ context.Context,
-	req *connect.Request[surveyv1.ImportAirMagnetRequest],
-) (*connect.Response[surveyv1.ImportAirMagnetResponse], error) {
-	name := req.Msg.GetName()
+	req *surveyv1.ImportAirMagnetRequest,
+) (*surveyv1.ImportAirMagnetResponse, error) {
+	name := req.GetName()
 	if name == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("name is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "name is required")
 	}
-	data := req.Msg.GetSvdData()
+	data := req.GetSvdData()
 	if len(data) == 0 {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("svd_data is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "svd_data is required")
 	}
 
 	svy, err := h.manager.ImportAirMagnet(name, data)
@@ -104,25 +104,25 @@ func (h *SurveyServiceHandler) ImportAirMagnet(
 		// sent — the wrong format, a planner simulation, a layout with no
 		// position column — so it belongs to the request, and the message
 		// carries the reason to the operator uploading it.
-		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, err.Error()).WithCause(err)
 	}
 
-	return connect.NewResponse(&surveyv1.ImportAirMagnetResponse{
+	return &surveyv1.ImportAirMagnetResponse{
 		Survey: h.surveySummary(svy),
-	}), nil
+	}, nil
 }
 
 // GetCaptureCapability says whether this host can take a measurement.
 func (h *SurveyServiceHandler) GetCaptureCapability(
 	_ context.Context,
-	_ *connect.Request[surveyv1.GetCaptureCapabilityRequest],
-) (*connect.Response[surveyv1.GetCaptureCapabilityResponse], error) {
+	_ *surveyv1.GetCaptureCapabilityRequest,
+) (*surveyv1.GetCaptureCapabilityResponse, error) {
 	c := h.captureCapability()
-	return connect.NewResponse(&surveyv1.GetCaptureCapabilityResponse{
+	return &surveyv1.GetCaptureCapabilityResponse{
 		Available: c.Available,
 		Reason:    c.Reason,
 		Remedy:    c.Remedy,
-	}), nil
+	}, nil
 }
 
 // captureCapability returns what the daemon reported, or what the store alone
@@ -144,25 +144,25 @@ func (h *SurveyServiceHandler) captureCapability() CaptureCapability {
 // ListSurveys returns summaries of every stored survey.
 func (h *SurveyServiceHandler) ListSurveys(
 	_ context.Context,
-	_ *connect.Request[surveyv1.ListSurveysRequest],
-) (*connect.Response[surveyv1.ListSurveysResponse], error) {
+	_ *surveyv1.ListSurveysRequest,
+) (*surveyv1.ListSurveysResponse, error) {
 	surveys := h.manager.ListSurveys()
 	summaries := make([]*surveyv1.SurveySummary, 0, len(surveys))
 	for _, svy := range surveys {
 		summaries = append(summaries, h.surveySummary(svy))
 	}
 
-	return connect.NewResponse(&surveyv1.ListSurveysResponse{Surveys: summaries}), nil
+	return &surveyv1.ListSurveysResponse{Surveys: summaries}, nil
 }
 
 // GetSurvey returns a single stored survey by ID.
 func (h *SurveyServiceHandler) GetSurvey(
 	_ context.Context,
-	req *connect.Request[surveyv1.GetSurveyRequest],
-) (*connect.Response[surveyv1.GetSurveyResponse], error) {
-	id := req.Msg.GetId()
+	req *surveyv1.GetSurveyRequest,
+) (*surveyv1.GetSurveyResponse, error) {
+	id := req.GetId()
 	if id == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "id is required")
 	}
 
 	svy, err := h.manager.GetSurvey(id)
@@ -170,35 +170,35 @@ func (h *SurveyServiceHandler) GetSurvey(
 		return nil, notFoundOrInternal(err)
 	}
 
-	return connect.NewResponse(&surveyv1.GetSurveyResponse{Survey: h.surveySummary(svy)}), nil
+	return &surveyv1.GetSurveyResponse{Survey: h.surveySummary(svy)}, nil
 }
 
 // DeleteSurvey removes a stored survey.
 func (h *SurveyServiceHandler) DeleteSurvey(
 	_ context.Context,
-	req *connect.Request[surveyv1.DeleteSurveyRequest],
-) (*connect.Response[surveyv1.DeleteSurveyResponse], error) {
-	id := req.Msg.GetId()
+	req *surveyv1.DeleteSurveyRequest,
+) (*surveyv1.DeleteSurveyResponse, error) {
+	id := req.GetId()
 	if id == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "id is required")
 	}
 
 	if err := h.manager.DeleteSurvey(id); err != nil {
 		return nil, notFoundOrInternal(err)
 	}
 
-	return connect.NewResponse(&surveyv1.DeleteSurveyResponse{}), nil
+	return &surveyv1.DeleteSurveyResponse{}, nil
 }
 
 // GetHeatmap renders a measured-signal heatmap for the floor a request names,
 // or the survey's active floor when it names none.
 func (h *SurveyServiceHandler) GetHeatmap(
 	_ context.Context,
-	req *connect.Request[surveyv1.GetHeatmapRequest],
-) (*connect.Response[surveyv1.GetHeatmapResponse], error) {
-	surveyID := req.Msg.GetSurveyId()
+	req *surveyv1.GetHeatmapRequest,
+) (*surveyv1.GetHeatmapResponse, error) {
+	surveyID := req.GetSurveyId()
 	if surveyID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "survey_id is required")
 	}
 
 	svy, err := h.manager.GetSurvey(surveyID)
@@ -212,13 +212,13 @@ func (h *SurveyServiceHandler) GetHeatmap(
 	// everything else to RSSI, so a client asking for a download layer was
 	// handed a signal one labelled Mbps — the values looked plausible and were
 	// in the wrong unit.
-	config.Type = survey.ParseHeatmapType(req.Msg.GetMetric())
+	config.Type = survey.ParseHeatmapType(req.GetMetric())
 	// Zero is "the metric's default", resolved in the domain rather than here
 	// so the heatmap and the dead-zone analysis cannot disagree about it.
-	config.Threshold = req.Msg.GetThreshold()
-	config.Band = req.Msg.GetBand()
+	config.Threshold = req.GetThreshold()
+	config.Band = req.GetBand()
 
-	floor, err := floorOf(svy, req.Msg.GetFloorId())
+	floor, err := floorOf(svy, req.GetFloorId())
 	if err != nil {
 		return nil, err
 	}
@@ -226,13 +226,13 @@ func (h *SurveyServiceHandler) GetHeatmap(
 	// not shrink to one entry once an AP is picked.
 	heard := survey.APInventory(floor.Samples)
 
-	if req.Msg.Bssid != nil {
+	if req.Bssid != nil {
 		if !survey.SupportsPerAPView(config.Type) {
-			return nil, connect.NewError(connect.CodeInvalidArgument,
-				fmt.Errorf("metric %q has no per-AP reading; use %q or %q",
-					config.Type, survey.HeatmapRSSI, survey.HeatmapSNR))
+			return nil, connect.Errorf(connect.CodeInvalidArgument,
+				"metric %q has no per-AP reading; use %q or %q",
+				config.Type, survey.HeatmapRSSI, survey.HeatmapSNR)
 		}
-		if floor, err = apView(floor, req.Msg.GetBssid()); err != nil {
+		if floor, err = apView(floor, req.GetBssid()); err != nil {
 			return nil, err
 		}
 	}
@@ -242,7 +242,7 @@ func (h *SurveyServiceHandler) GetHeatmap(
 		return nil, layerError(err)
 	}
 
-	return connect.NewResponse(&surveyv1.GetHeatmapResponse{
+	return &surveyv1.GetHeatmapResponse{
 		Png:          result.Image,
 		Width:        int32(result.Width),
 		Height:       int32(result.Height),
@@ -257,7 +257,7 @@ func (h *SurveyServiceHandler) GetHeatmap(
 		CellSize:     int32Of(result.CellSize),
 		AccessPoints: heardAccessPoints(heard),
 		Calibrations: apCalibrations(result.Calibrations),
-	}), nil
+	}, nil
 }
 
 func apCalibrations(in []survey.APCalibration) []*surveyv1.APCalibration {
@@ -284,7 +284,7 @@ func apCalibrations(in []survey.APCalibration) []*surveyv1.APCalibration {
 func apView(floor *survey.Floor, bssid string) (*survey.Floor, error) {
 	view, err := floor.ForBSSID(bssid)
 	if errors.Is(err, survey.ErrBSSIDNotHeard) {
-		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, err.Error()).WithCause(err)
 	}
 	return view, err
 }
@@ -352,10 +352,10 @@ func coverageMetric(name string) (survey.HeatmapType, error) {
 	}
 	metric := survey.HeatmapType(name)
 	if !survey.SupportsCoverageAnalysis(metric) {
-		return "", connect.NewError(
+		return "", connect.Errorf(
 			connect.CodeInvalidArgument,
-			fmt.Errorf("metric %q has no dead-zone analysis; use %q or %q",
-				name, survey.HeatmapRSSI, survey.HeatmapSNR),
+			"metric %q has no dead-zone analysis; use %q or %q",
+			name, survey.HeatmapRSSI, survey.HeatmapSNR,
 		)
 	}
 	return metric, nil
@@ -371,19 +371,19 @@ func layerError(err error) error {
 		errors.Is(err, survey.ErrFloorUnscaled) ||
 		errors.Is(err, survey.ErrNoPlacements) ||
 		errors.Is(err, survey.ErrNothingToCompare) {
-		return connect.NewError(connect.CodeFailedPrecondition, err)
+		return connect.NewError(connect.CodeFailedPrecondition, err.Error()).WithCause(err)
 	}
-	return connect.NewError(connect.CodeInvalidArgument, err)
+	return connect.NewError(connect.CodeInvalidArgument, err.Error()).WithCause(err)
 }
 
 // GetCoverage runs dead-zone detection over one floor's measured samples.
 func (h *SurveyServiceHandler) GetCoverage(
 	_ context.Context,
-	req *connect.Request[surveyv1.GetCoverageRequest],
-) (*connect.Response[surveyv1.GetCoverageResponse], error) {
-	surveyID := req.Msg.GetSurveyId()
+	req *surveyv1.GetCoverageRequest,
+) (*surveyv1.GetCoverageResponse, error) {
+	surveyID := req.GetSurveyId()
 	if surveyID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "survey_id is required")
 	}
 
 	svy, err := h.manager.GetSurvey(surveyID)
@@ -391,7 +391,7 @@ func (h *SurveyServiceHandler) GetCoverage(
 		return nil, notFoundOrInternal(err)
 	}
 
-	metric, err := coverageMetric(req.Msg.GetMetric())
+	metric, err := coverageMetric(req.GetMetric())
 	if err != nil {
 		return nil, err
 	}
@@ -400,19 +400,19 @@ func (h *SurveyServiceHandler) GetCoverage(
 	// there is no one number that means "unset" under both. A caller that
 	// omits the threshold gets the metric's own.
 	threshold := survey.DefaultThresholdFor(metric)
-	if req.Msg.Threshold != nil {
-		threshold = int(req.Msg.GetThreshold())
+	if req.Threshold != nil {
+		threshold = int(req.GetThreshold())
 	}
 
 	// Coverage is scored per floor, like the heatmap beside it: a whole-survey
 	// score would answer a question about the building while the picture on
 	// screen shows one storey.
-	floor, err := floorOf(svy, req.Msg.GetFloorId())
+	floor, err := floorOf(svy, req.GetFloorId())
 	if err != nil {
 		return nil, err
 	}
-	if req.Msg.Bssid != nil {
-		if floor, err = apView(floor, req.Msg.GetBssid()); err != nil {
+	if req.Bssid != nil {
+		if floor, err = apView(floor, req.GetBssid()); err != nil {
 			return nil, err
 		}
 	}
@@ -422,23 +422,23 @@ func (h *SurveyServiceHandler) GetCoverage(
 		return nil, layerError(err)
 	}
 
-	return connect.NewResponse(&surveyv1.GetCoverageResponse{
+	return &surveyv1.GetCoverageResponse{
 		CoverageScore:   analysis.CoverageScore,
 		DeadZoneCount:   int32(len(analysis.DeadZones)),
 		Recommendations: analysis.Recommendations,
 		Metric:          analysis.Metric,
 		Threshold:       int32(analysis.Threshold),
-	}), nil
+	}, nil
 }
 
 // GenerateReport renders a PDF report for a survey.
 func (h *SurveyServiceHandler) GenerateReport(
 	_ context.Context,
-	req *connect.Request[surveyv1.GenerateReportRequest],
-) (*connect.Response[surveyv1.GenerateReportResponse], error) {
-	surveyID := req.Msg.GetSurveyId()
+	req *surveyv1.GenerateReportRequest,
+) (*surveyv1.GenerateReportResponse, error) {
+	surveyID := req.GetSurveyId()
 	if surveyID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "survey_id is required")
 	}
 
 	svy, err := h.manager.GetSurvey(surveyID)
@@ -446,17 +446,17 @@ func (h *SurveyServiceHandler) GenerateReport(
 		return nil, notFoundOrInternal(err)
 	}
 
-	options, err := reportOptions(req.Msg.GetOptions())
+	options, err := reportOptions(req.GetOptions())
 	if err != nil {
 		return nil, err
 	}
 
 	pdf, err := survey.NewReportGenerator(svy, options).Generate()
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, connect.NewError(connect.CodeInternal, err.Error()).WithCause(err)
 	}
 
-	return connect.NewResponse(&surveyv1.GenerateReportResponse{Pdf: pdf}), nil
+	return &surveyv1.GenerateReportResponse{Pdf: pdf}, nil
 }
 
 // reportOptions maps the request's section choices onto the generator's.
@@ -530,7 +530,7 @@ func captureStatusOf(status *survey.CaptureStatus) *surveyv1.CaptureStatus {
 // surfaces as CodeInternal.
 func notFoundOrInternal(err error) error {
 	if errors.Is(err, survey.ErrSurveyNotFound) || errors.Is(err, survey.ErrFloorNotFound) {
-		return connect.NewError(connect.CodeNotFound, err)
+		return connect.NewError(connect.CodeNotFound, err.Error()).WithCause(err)
 	}
-	return connect.NewError(connect.CodeInternal, err)
+	return connect.NewError(connect.CodeInternal, err.Error()).WithCause(err)
 }

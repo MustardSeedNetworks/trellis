@@ -6,7 +6,7 @@ import (
 	"context"
 	"testing"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
@@ -36,24 +36,24 @@ func createAP(
 	t *testing.T, h *api.SurveyServiceHandler, surveyID, floorID string, edit *surveyv1.APPlacementEdit,
 ) *surveyv1.APPlacement {
 	t.Helper()
-	resp, err := h.CreateAPPlacement(context.Background(), connect.NewRequest(&surveyv1.CreateAPPlacementRequest{
+	resp, err := h.CreateAPPlacement(context.Background(), &surveyv1.CreateAPPlacementRequest{
 		SurveyId: surveyID, FloorId: floorID, Placement: edit,
-	}))
+	})
 	if err != nil {
 		t.Fatalf("CreateAPPlacement: %v", err)
 	}
-	return resp.Msg.GetPlacement()
+	return resp.GetPlacement()
 }
 
 func listAPs(t *testing.T, h *api.SurveyServiceHandler, surveyID, floorID string) []*surveyv1.APPlacement {
 	t.Helper()
-	resp, err := h.ListAPPlacements(context.Background(), connect.NewRequest(&surveyv1.ListAPPlacementsRequest{
+	resp, err := h.ListAPPlacements(context.Background(), &surveyv1.ListAPPlacementsRequest{
 		SurveyId: surveyID, FloorId: floorID,
-	}))
+	})
 	if err != nil {
 		t.Fatalf("ListAPPlacements: %v", err)
 	}
-	return resp.Msg.GetPlacements()
+	return resp.GetPlacements()
 }
 
 func TestCreateAPPlacementPlacesAnAPOnTheFloor(t *testing.T) {
@@ -92,15 +92,15 @@ func TestUpdateAPPlacementMovesItAndChangesItsSettings(t *testing.T) {
 		X: 10, Y: 10, Label: "AP-1", TxPowerDbm: proto.Float64(20), Band: "2.4 GHz",
 	})
 
-	resp, err := h.UpdateAPPlacement(context.Background(), connect.NewRequest(&surveyv1.UpdateAPPlacementRequest{
+	resp, err := h.UpdateAPPlacement(context.Background(), &surveyv1.UpdateAPPlacementRequest{
 		SurveyId: surveyID, FloorId: floorID, PlacementId: created.GetId(),
 		Placement: &surveyv1.APPlacementEdit{X: 799, Y: 599, Label: "AP-1 moved", Band: "6 GHz"},
-	}))
+	})
 	if err != nil {
 		t.Fatalf("UpdateAPPlacement: %v", err)
 	}
 	want := &surveyv1.APPlacement{Id: created.GetId(), X: 799, Y: 599, Label: "AP-1 moved", Band: "6 GHz"}
-	if got := resp.Msg.GetPlacement(); !proto.Equal(got, want) {
+	if got := resp.GetPlacement(); !proto.Equal(got, want) {
 		t.Fatalf("updated = %v, want %v", got, want)
 	}
 	if listed := listAPs(t, h, surveyID, floorID); len(listed) != 1 || !proto.Equal(listed[0], want) {
@@ -114,19 +114,19 @@ func TestDeleteAPPlacementReturnsTheRemainingOnes(t *testing.T) {
 	gone := createAP(t, h, surveyID, floorID, &surveyv1.APPlacementEdit{X: 10, Y: 10, Label: "gone"})
 	kept := createAP(t, h, surveyID, floorID, &surveyv1.APPlacementEdit{X: 20, Y: 20, Label: "kept"})
 
-	resp, err := h.DeleteAPPlacement(context.Background(), connect.NewRequest(&surveyv1.DeleteAPPlacementRequest{
+	resp, err := h.DeleteAPPlacement(context.Background(), &surveyv1.DeleteAPPlacementRequest{
 		SurveyId: surveyID, FloorId: floorID, PlacementId: gone.GetId(),
-	}))
+	})
 	if err != nil {
 		t.Fatalf("DeleteAPPlacement: %v", err)
 	}
-	if remaining := resp.Msg.GetPlacements(); len(remaining) != 1 || !proto.Equal(remaining[0], kept) {
+	if remaining := resp.GetPlacements(); len(remaining) != 1 || !proto.Equal(remaining[0], kept) {
 		t.Fatalf("remaining = %v, want exactly %v", remaining, kept)
 	}
 
-	_, err = h.DeleteAPPlacement(context.Background(), connect.NewRequest(&surveyv1.DeleteAPPlacementRequest{
+	_, err = h.DeleteAPPlacement(context.Background(), &surveyv1.DeleteAPPlacementRequest{
 		SurveyId: surveyID, FloorId: floorID, PlacementId: gone.GetId(),
-	}))
+	})
 	if connect.CodeOf(err) != connect.CodeNotFound {
 		t.Fatalf("deleting it twice = %v, want NotFound", err)
 	}
@@ -188,23 +188,23 @@ func TestAPPlacementWritesAreRefused(t *testing.T) {
 			return createErr(h, surveyID, "no-such-floor", &surveyv1.APPlacementEdit{X: 1, Y: 1})
 		}, connect.CodeNotFound},
 		{"move off the plan", func() error {
-			_, err := h.UpdateAPPlacement(context.Background(), connect.NewRequest(&surveyv1.UpdateAPPlacementRequest{
+			_, err := h.UpdateAPPlacement(context.Background(), &surveyv1.UpdateAPPlacementRequest{
 				SurveyId: surveyID, FloorId: floorID, PlacementId: existing.GetId(),
 				Placement: &surveyv1.APPlacementEdit{X: 10, Y: 600},
-			}))
+			})
 			return err
 		}, connect.CodeInvalidArgument},
 		{"update an unknown placement", func() error {
-			_, err := h.UpdateAPPlacement(context.Background(), connect.NewRequest(&surveyv1.UpdateAPPlacementRequest{
+			_, err := h.UpdateAPPlacement(context.Background(), &surveyv1.UpdateAPPlacementRequest{
 				SurveyId: surveyID, FloorId: floorID, PlacementId: "no-such-ap",
 				Placement: &surveyv1.APPlacementEdit{X: 1, Y: 1},
-			}))
+			})
 			return err
 		}, connect.CodeNotFound},
 		{"update without a placement ID", func() error {
-			_, err := h.UpdateAPPlacement(context.Background(), connect.NewRequest(&surveyv1.UpdateAPPlacementRequest{
+			_, err := h.UpdateAPPlacement(context.Background(), &surveyv1.UpdateAPPlacementRequest{
 				SurveyId: surveyID, FloorId: floorID, Placement: &surveyv1.APPlacementEdit{X: 1, Y: 1},
-			}))
+			})
 			return err
 		}, connect.CodeInvalidArgument},
 	} {
@@ -220,8 +220,8 @@ func TestAPPlacementWritesAreRefused(t *testing.T) {
 }
 
 func createErr(h *api.SurveyServiceHandler, surveyID, floorID string, edit *surveyv1.APPlacementEdit) error {
-	_, err := h.CreateAPPlacement(context.Background(), connect.NewRequest(&surveyv1.CreateAPPlacementRequest{
+	_, err := h.CreateAPPlacement(context.Background(), &surveyv1.CreateAPPlacementRequest{
 		SurveyId: surveyID, FloorId: floorID, Placement: edit,
-	}))
+	})
 	return err
 }
