@@ -135,12 +135,12 @@ def check_scope_triggers() -> list[str]:
 
 
 def check_gate_table() -> list[str]:
-    """Every scripts/check-* is either selectable or named as not input-driven."""
+    """Every scripts/check-* is selectable."""
     failures = []
     scripts = {f"scripts/{p.name}" for p in (vt.ROOT / "scripts").glob("check-*")}
-    known = {g.script for g in vt.GATES} | vt.NOT_INPUT_DRIVEN
+    known = {g.script for g in vt.GATES}
     for missing in sorted(scripts - known):
-        failures.append(f"{missing} is in neither GATES nor NOT_INPUT_DRIVEN")
+        failures.append(f"{missing} is not in GATES")
     for stale in sorted(known - scripts):
         failures.append(f"{stale} is listed but does not exist")
     if steps(plan_for(["core/leaf/leaf.go"]), "gate cgo-confinement"):

@@ -347,9 +347,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Enforce customer-facing vocabulary policy
-        run: python3 scripts/check-banned-vocabulary.py
-
       - name: File-size gate (baseline-ratchet)
         run: ./scripts/check-file-size.sh
 
@@ -369,19 +366,15 @@ jobs:
       - name: Theme contract (semantic classes resolve)
         run: python3 scripts/check-theme-contract.py
 
-      # Tailwind emits variants only for utilities, so `sm:` on a class from
-      # `@layer components` compiles to nothing (.github#80). Trellis has no
-      # such use today; the gate keeps it that way, as in its three siblings.
-      - name: Variants on @layer components classes
-        run: |
-          python3 scripts/test-check-component-variants.py
-          python3 scripts/check-component-variants.py
-
-      # The four products each own their tsconfig, so the strictness flags
-      # drift silently — a missing one never announces itself, it just checks
-      # less than its sibling does.
-      - name: TypeScript strictness contract
-        run: python3 scripts/check-tsconfig-flags.py
+      # The fleet's shared gates, one copy in .github (G-21): the vocabulary
+      # policy, variants on `@layer components` classes (Tailwind compiles
+      # `sm:` on one to nothing, .github#80) and the TypeScript strictness
+      # contract. scripts/shared-check.sh reads this pin to run the same copy
+      # locally.
+      - name: Shared repo checks
+        uses: MustardSeedNetworks/.github/.github/actions/repo-checks@ac322c3ed131b623f15df0e1e939e5a093673e00 # .github#192, untagged
+        with:
+          checks: banned-vocabulary component-variants tsconfig-flags
 
       # The inner loop's selection: a reverse dependency it misses is a test
       # that silently stops running between edits.
