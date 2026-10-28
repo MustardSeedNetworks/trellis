@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
@@ -15,64 +15,64 @@ import (
 // ListAPPlacements returns the APs placed on a floor.
 func (h *SurveyServiceHandler) ListAPPlacements(
 	_ context.Context,
-	req *connect.Request[surveyv1.ListAPPlacementsRequest],
-) (*connect.Response[surveyv1.ListAPPlacementsResponse], error) {
-	_, floor, err := h.floorFor(req.Msg.GetSurveyId(), req.Msg.GetFloorId())
+	req *surveyv1.ListAPPlacementsRequest,
+) (*surveyv1.ListAPPlacementsResponse, error) {
+	_, floor, err := h.floorFor(req.GetSurveyId(), req.GetFloorId())
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&surveyv1.ListAPPlacementsResponse{
+	return &surveyv1.ListAPPlacementsResponse{
 		Placements: toAPPlacements(floor.APLocations),
-	}), nil
+	}, nil
 }
 
 // CreateAPPlacement places an AP on a floor by hand.
 func (h *SurveyServiceHandler) CreateAPPlacement(
 	_ context.Context,
-	req *connect.Request[surveyv1.CreateAPPlacementRequest],
-) (*connect.Response[surveyv1.CreateAPPlacementResponse], error) {
-	svy, floor, err := h.floorFor(req.Msg.GetSurveyId(), req.Msg.GetFloorId())
+	req *surveyv1.CreateAPPlacementRequest,
+) (*surveyv1.CreateAPPlacementResponse, error) {
+	svy, floor, err := h.floorFor(req.GetSurveyId(), req.GetFloorId())
 	if err != nil {
 		return nil, err
 	}
-	ap, err := h.manager.AddAPPlacement(svy.ID, floor.ID, fromAPPlacementEdit(req.Msg.GetPlacement()))
+	ap, err := h.manager.AddAPPlacement(svy.ID, floor.ID, fromAPPlacementEdit(req.GetPlacement()))
 	if err != nil {
 		return nil, placementError(err)
 	}
-	return connect.NewResponse(&surveyv1.CreateAPPlacementResponse{Placement: toAPPlacement(ap)}), nil
+	return &surveyv1.CreateAPPlacementResponse{Placement: toAPPlacement(ap)}, nil
 }
 
 // UpdateAPPlacement moves a placed AP or changes its label, power or band.
 func (h *SurveyServiceHandler) UpdateAPPlacement(
 	_ context.Context,
-	req *connect.Request[surveyv1.UpdateAPPlacementRequest],
-) (*connect.Response[surveyv1.UpdateAPPlacementResponse], error) {
-	placementID := req.Msg.GetPlacementId()
+	req *surveyv1.UpdateAPPlacementRequest,
+) (*surveyv1.UpdateAPPlacementResponse, error) {
+	placementID := req.GetPlacementId()
 	if placementID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("placement_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "placement_id is required")
 	}
-	svy, floor, err := h.floorFor(req.Msg.GetSurveyId(), req.Msg.GetFloorId())
+	svy, floor, err := h.floorFor(req.GetSurveyId(), req.GetFloorId())
 	if err != nil {
 		return nil, err
 	}
 	ap, err := h.manager.UpdateAPPlacement(svy.ID, floor.ID, placementID,
-		fromAPPlacementEdit(req.Msg.GetPlacement()))
+		fromAPPlacementEdit(req.GetPlacement()))
 	if err != nil {
 		return nil, placementError(err)
 	}
-	return connect.NewResponse(&surveyv1.UpdateAPPlacementResponse{Placement: toAPPlacement(ap)}), nil
+	return &surveyv1.UpdateAPPlacementResponse{Placement: toAPPlacement(ap)}, nil
 }
 
 // DeleteAPPlacement removes a placed AP and returns the floor's remaining ones.
 func (h *SurveyServiceHandler) DeleteAPPlacement(
 	_ context.Context,
-	req *connect.Request[surveyv1.DeleteAPPlacementRequest],
-) (*connect.Response[surveyv1.DeleteAPPlacementResponse], error) {
-	placementID := req.Msg.GetPlacementId()
+	req *surveyv1.DeleteAPPlacementRequest,
+) (*surveyv1.DeleteAPPlacementResponse, error) {
+	placementID := req.GetPlacementId()
 	if placementID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("placement_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "placement_id is required")
 	}
-	svy, floor, err := h.floorFor(req.Msg.GetSurveyId(), req.Msg.GetFloorId())
+	svy, floor, err := h.floorFor(req.GetSurveyId(), req.GetFloorId())
 	if err != nil {
 		return nil, err
 	}
@@ -80,9 +80,9 @@ func (h *SurveyServiceHandler) DeleteAPPlacement(
 	if err != nil {
 		return nil, placementError(err)
 	}
-	return connect.NewResponse(&surveyv1.DeleteAPPlacementResponse{
+	return &surveyv1.DeleteAPPlacementResponse{
 		Placements: toAPPlacements(remaining),
-	}), nil
+	}, nil
 }
 
 // placementError maps a placement failure onto a code that says whose problem
@@ -94,15 +94,15 @@ func placementError(err error) error {
 	case errors.Is(err, survey.ErrSurveyNotFound),
 		errors.Is(err, survey.ErrFloorNotFound),
 		errors.Is(err, survey.ErrPlacementNotFound):
-		return connect.NewError(connect.CodeNotFound, err)
+		return connect.NewError(connect.CodeNotFound, err.Error()).WithCause(err)
 	case errors.Is(err, survey.ErrNoFloorPlan):
-		return connect.NewError(connect.CodeFailedPrecondition, err)
+		return connect.NewError(connect.CodeFailedPrecondition, err.Error()).WithCause(err)
 	case errors.Is(err, survey.ErrPlacementOffPlan),
 		errors.Is(err, survey.ErrUnknownBand),
 		errors.Is(err, survey.ErrTxPowerRange):
-		return connect.NewError(connect.CodeInvalidArgument, err)
+		return connect.NewError(connect.CodeInvalidArgument, err.Error()).WithCause(err)
 	default:
-		return connect.NewError(connect.CodeInternal, err)
+		return connect.NewError(connect.CodeInternal, err.Error()).WithCause(err)
 	}
 }
 

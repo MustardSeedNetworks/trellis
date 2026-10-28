@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"sort"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
@@ -18,11 +18,11 @@ import (
 // ListFloors returns every floor of a survey, lowest level first.
 func (h *SurveyServiceHandler) ListFloors(
 	_ context.Context,
-	req *connect.Request[surveyv1.ListFloorsRequest],
-) (*connect.Response[surveyv1.ListFloorsResponse], error) {
-	surveyID := req.Msg.GetSurveyId()
+	req *surveyv1.ListFloorsRequest,
+) (*surveyv1.ListFloorsResponse, error) {
+	surveyID := req.GetSurveyId()
 	if surveyID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "survey_id is required")
 	}
 
 	svy, err := h.manager.GetSurvey(surveyID)
@@ -45,20 +45,20 @@ func (h *SurveyServiceHandler) ListFloors(
 		return floors[i].GetLevel() < floors[j].GetLevel()
 	})
 
-	return connect.NewResponse(&surveyv1.ListFloorsResponse{Floors: floors}), nil
+	return &surveyv1.ListFloorsResponse{Floors: floors}, nil
 }
 
 // GetFloor returns one floor of a survey by ID.
 func (h *SurveyServiceHandler) GetFloor(
 	_ context.Context,
-	req *connect.Request[surveyv1.GetFloorRequest],
-) (*connect.Response[surveyv1.GetFloorResponse], error) {
-	surveyID, floorID := req.Msg.GetSurveyId(), req.Msg.GetFloorId()
+	req *surveyv1.GetFloorRequest,
+) (*surveyv1.GetFloorResponse, error) {
+	surveyID, floorID := req.GetSurveyId(), req.GetFloorId()
 	if surveyID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "survey_id is required")
 	}
 	if floorID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("floor_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "floor_id is required")
 	}
 
 	svy, err := h.manager.GetSurvey(surveyID)
@@ -70,9 +70,9 @@ func (h *SurveyServiceHandler) GetFloor(
 		return nil, notFoundOrInternal(err)
 	}
 
-	return connect.NewResponse(&surveyv1.GetFloorResponse{
+	return &surveyv1.GetFloorResponse{
 		Floor: toFloor(floor, svy.GetActiveFloor()),
-	}), nil
+	}, nil
 }
 
 // CreateFloor adds a storey to a survey.
@@ -82,68 +82,68 @@ func (h *SurveyServiceHandler) GetFloor(
 // floor being measured.
 func (h *SurveyServiceHandler) CreateFloor(
 	_ context.Context,
-	req *connect.Request[surveyv1.CreateFloorRequest],
-) (*connect.Response[surveyv1.CreateFloorResponse], error) {
-	surveyID, name := req.Msg.GetSurveyId(), req.Msg.GetName()
+	req *surveyv1.CreateFloorRequest,
+) (*surveyv1.CreateFloorResponse, error) {
+	surveyID, name := req.GetSurveyId(), req.GetName()
 	if surveyID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "survey_id is required")
 	}
 
 	// AddFloor refuses a blank name itself, so there is one rule about what a
 	// floor may be called rather than two that can drift apart.
-	floor, err := h.manager.AddFloor(surveyID, name, int(req.Msg.GetLevel()))
+	floor, err := h.manager.AddFloor(surveyID, name, int(req.GetLevel()))
 	if err != nil {
 		return nil, floorError(err)
 	}
 
-	return connect.NewResponse(&surveyv1.CreateFloorResponse{
+	return &surveyv1.CreateFloorResponse{
 		Floor: h.floorAfterChange(surveyID, floor.ID),
-	}), nil
+	}, nil
 }
 
 // SetActiveFloor moves the walk onto another floor of the same survey.
 func (h *SurveyServiceHandler) SetActiveFloor(
 	_ context.Context,
-	req *connect.Request[surveyv1.SetActiveFloorRequest],
-) (*connect.Response[surveyv1.SetActiveFloorResponse], error) {
-	surveyID, floorID := req.Msg.GetSurveyId(), req.Msg.GetFloorId()
+	req *surveyv1.SetActiveFloorRequest,
+) (*surveyv1.SetActiveFloorResponse, error) {
+	surveyID, floorID := req.GetSurveyId(), req.GetFloorId()
 	if surveyID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "survey_id is required")
 	}
 	if floorID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("floor_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "floor_id is required")
 	}
 
 	if err := h.manager.SetActiveFloor(surveyID, floorID); err != nil {
 		return nil, floorError(err)
 	}
 
-	return connect.NewResponse(&surveyv1.SetActiveFloorResponse{
+	return &surveyv1.SetActiveFloorResponse{
 		Floor: h.floorAfterChange(surveyID, floorID),
-	}), nil
+	}, nil
 }
 
 // UpdateFloor renames a floor and sets its storey number.
 func (h *SurveyServiceHandler) UpdateFloor(
 	_ context.Context,
-	req *connect.Request[surveyv1.UpdateFloorRequest],
-) (*connect.Response[surveyv1.UpdateFloorResponse], error) {
-	surveyID, floorID := req.Msg.GetSurveyId(), req.Msg.GetFloorId()
+	req *surveyv1.UpdateFloorRequest,
+) (*surveyv1.UpdateFloorResponse, error) {
+	surveyID, floorID := req.GetSurveyId(), req.GetFloorId()
 	if surveyID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "survey_id is required")
 	}
 	if floorID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("floor_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "floor_id is required")
 	}
 
 	if err := h.manager.UpdateFloor(surveyID, floorID,
-		req.Msg.GetName(), int(req.Msg.GetLevel())); err != nil {
+		req.GetName(), int(req.GetLevel())); err != nil {
 		return nil, floorError(err)
 	}
 
-	return connect.NewResponse(&surveyv1.UpdateFloorResponse{
+	return &surveyv1.UpdateFloorResponse{
 		Floor: h.floorAfterChange(surveyID, floorID),
-	}), nil
+	}, nil
 }
 
 // DeleteFloor removes a storey and the measurements walked on it.
@@ -153,14 +153,14 @@ func (h *SurveyServiceHandler) UpdateFloor(
 // the new state from the request it sent.
 func (h *SurveyServiceHandler) DeleteFloor(
 	ctx context.Context,
-	req *connect.Request[surveyv1.DeleteFloorRequest],
-) (*connect.Response[surveyv1.DeleteFloorResponse], error) {
-	surveyID, floorID := req.Msg.GetSurveyId(), req.Msg.GetFloorId()
+	req *surveyv1.DeleteFloorRequest,
+) (*surveyv1.DeleteFloorResponse, error) {
+	surveyID, floorID := req.GetSurveyId(), req.GetFloorId()
 	if surveyID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "survey_id is required")
 	}
 	if floorID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("floor_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "floor_id is required")
 	}
 
 	if err := h.manager.DeleteFloor(surveyID, floorID); err != nil {
@@ -168,13 +168,13 @@ func (h *SurveyServiceHandler) DeleteFloor(
 	}
 
 	listed, err := h.ListFloors(ctx,
-		connect.NewRequest(&surveyv1.ListFloorsRequest{SurveyId: surveyID}))
+		&surveyv1.ListFloorsRequest{SurveyId: surveyID})
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&surveyv1.DeleteFloorResponse{
-		Floors: listed.Msg.GetFloors(),
-	}), nil
+	return &surveyv1.DeleteFloorResponse{
+		Floors: listed.GetFloors(),
+	}, nil
 }
 
 // floorError maps a floor failure onto a code that says whose problem it is.
@@ -183,9 +183,9 @@ func (h *SurveyServiceHandler) DeleteFloor(
 func floorError(err error) error {
 	switch {
 	case errors.Is(err, survey.ErrFloorNameEmpty):
-		return connect.NewError(connect.CodeInvalidArgument, err)
+		return connect.NewError(connect.CodeInvalidArgument, err.Error()).WithCause(err)
 	case errors.Is(err, survey.ErrLastFloor):
-		return connect.NewError(connect.CodeFailedPrecondition, err)
+		return connect.NewError(connect.CodeFailedPrecondition, err.Error()).WithCause(err)
 	default:
 		return notFoundOrInternal(err)
 	}
@@ -214,39 +214,39 @@ func toFloor(floor *survey.Floor, active *survey.Floor) *surveyv1.Floor {
 // SetFloorPlan stores an image as a floor's plan.
 func (h *SurveyServiceHandler) SetFloorPlan(
 	_ context.Context,
-	req *connect.Request[surveyv1.SetFloorPlanRequest],
-) (*connect.Response[surveyv1.SetFloorPlanResponse], error) {
-	svy, floor, err := h.floorFor(req.Msg.GetSurveyId(), req.Msg.GetFloorId())
+	req *surveyv1.SetFloorPlanRequest,
+) (*surveyv1.SetFloorPlanResponse, error) {
+	svy, floor, err := h.floorFor(req.GetSurveyId(), req.GetFloorId())
 	if err != nil {
 		return nil, err
 	}
-	if err := h.manager.SetFloorPlan(svy.ID, floor.ID, req.Msg.GetImage()); err != nil {
+	if err := h.manager.SetFloorPlan(svy.ID, floor.ID, req.GetImage()); err != nil {
 		return nil, planError(err)
 	}
-	return connect.NewResponse(&surveyv1.SetFloorPlanResponse{
+	return &surveyv1.SetFloorPlanResponse{
 		Floor: h.floorAfterChange(svy.ID, floor.ID),
-	}), nil
+	}, nil
 }
 
 // CalibrateFloorPlan sets how many metres a pixel of the plan is.
 func (h *SurveyServiceHandler) CalibrateFloorPlan(
 	_ context.Context,
-	req *connect.Request[surveyv1.CalibrateFloorPlanRequest],
-) (*connect.Response[surveyv1.CalibrateFloorPlanResponse], error) {
-	svy, floor, err := h.floorFor(req.Msg.GetSurveyId(), req.Msg.GetFloorId())
+	req *surveyv1.CalibrateFloorPlanRequest,
+) (*surveyv1.CalibrateFloorPlanResponse, error) {
+	svy, floor, err := h.floorFor(req.GetSurveyId(), req.GetFloorId())
 	if err != nil {
 		return nil, err
 	}
 	if err := h.manager.CalibrateFloorPlan(svy.ID, floor.ID,
-		survey.Position{X: int(req.Msg.GetX1()), Y: int(req.Msg.GetY1())},
-		survey.Position{X: int(req.Msg.GetX2()), Y: int(req.Msg.GetY2())},
-		req.Msg.GetMetres(),
+		survey.Position{X: int(req.GetX1()), Y: int(req.GetY1())},
+		survey.Position{X: int(req.GetX2()), Y: int(req.GetY2())},
+		req.GetMetres(),
 	); err != nil {
 		return nil, planError(err)
 	}
-	return connect.NewResponse(&surveyv1.CalibrateFloorPlanResponse{
+	return &surveyv1.CalibrateFloorPlanResponse{
 		Floor: h.floorAfterChange(svy.ID, floor.ID),
-	}), nil
+	}, nil
 }
 
 // GetFloorPlanImage returns a floor's plan image, or nothing when it has none.
@@ -256,26 +256,26 @@ func (h *SurveyServiceHandler) CalibrateFloorPlan(
 // from a failure.
 func (h *SurveyServiceHandler) GetFloorPlanImage(
 	_ context.Context,
-	req *connect.Request[surveyv1.GetFloorPlanImageRequest],
-) (*connect.Response[surveyv1.GetFloorPlanImageResponse], error) {
-	_, floor, err := h.floorFor(req.Msg.GetSurveyId(), req.Msg.GetFloorId())
+	req *surveyv1.GetFloorPlanImageRequest,
+) (*surveyv1.GetFloorPlanImageResponse, error) {
+	_, floor, err := h.floorFor(req.GetSurveyId(), req.GetFloorId())
 	if err != nil {
 		return nil, err
 	}
 	if floor.FloorPlan == nil {
-		return connect.NewResponse(&surveyv1.GetFloorPlanImageResponse{}), nil
+		return &surveyv1.GetFloorPlanImageResponse{}, nil
 	}
 
 	image, err := base64.StdEncoding.DecodeString(floor.FloorPlan.ImageData)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal,
-			fmt.Errorf("decode stored floor plan: %w", err))
+			fmt.Errorf("decode stored floor plan: %w", err).Error())
 	}
-	return connect.NewResponse(&surveyv1.GetFloorPlanImageResponse{
+	return &surveyv1.GetFloorPlanImageResponse{
 		Image:  image,
 		Width:  int32Of(floor.FloorPlan.Width),
 		Height: int32Of(floor.FloorPlan.Height),
-	}), nil
+	}, nil
 }
 
 // floorFor resolves the survey and floor a request named, with an empty floor
@@ -285,7 +285,7 @@ func (h *SurveyServiceHandler) floorFor(
 ) (*survey.Survey, *survey.Floor, error) {
 	if surveyID == "" {
 		return nil, nil, connect.NewError(connect.CodeInvalidArgument,
-			errors.New("survey_id is required"))
+			"survey_id is required")
 	}
 	svy, err := h.manager.GetSurvey(surveyID)
 	if err != nil {
@@ -314,15 +314,15 @@ func (h *SurveyServiceHandler) floorAfterChange(surveyID, floorID string) *surve
 func planError(err error) error {
 	switch {
 	case errors.Is(err, survey.ErrSurveyNotFound), errors.Is(err, survey.ErrFloorNotFound):
-		return connect.NewError(connect.CodeNotFound, err)
+		return connect.NewError(connect.CodeNotFound, err.Error()).WithCause(err)
 	case errors.Is(err, survey.ErrNoFloorPlan),
 		errors.Is(err, survey.ErrPlanWouldStrandSamples):
 		// Both are true statements about the survey's current state rather
 		// than faults in the request, and the message carries what the
 		// operator needs to decide what to do next.
-		return connect.NewError(connect.CodeFailedPrecondition, err)
+		return connect.NewError(connect.CodeFailedPrecondition, err.Error()).WithCause(err)
 	default:
-		return connect.NewError(connect.CodeInvalidArgument, err)
+		return connect.NewError(connect.CodeInvalidArgument, err.Error()).WithCause(err)
 	}
 }
 
@@ -335,7 +335,7 @@ func floorOf(svy *survey.Survey, floorID string) (*survey.Floor, error) {
 		floor := svy.GetActiveFloor()
 		if floor == nil {
 			return nil, connect.NewError(connect.CodeFailedPrecondition,
-				errors.New("survey has no floors"))
+				"survey has no floors")
 		}
 		return floor, nil
 	}
@@ -343,7 +343,7 @@ func floorOf(svy *survey.Survey, floorID string) (*survey.Floor, error) {
 	floor := svy.GetFloorByID(floorID)
 	if floor == nil {
 		return nil, connect.NewError(connect.CodeNotFound,
-			errors.New("floor not found: "+floorID))
+			"floor not found: "+floorID)
 	}
 	return floor, nil
 }

@@ -8,7 +8,7 @@ import (
 	"math"
 	"testing"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
@@ -46,13 +46,13 @@ func TestGetHeatmapServesAPrediction(t *testing.T) {
 	handler, id := plannedSurvey(t, 400, 300, 0.05, []survey.APLocation{
 		{ID: "ap1", X: 105, Y: 105, Band: "5 GHz", BSSID: "aa:bb:cc:00:00:01"},
 	})
-	got, err := handler.GetHeatmap(context.Background(), connect.NewRequest(&surveyv1.GetHeatmapRequest{
+	got, err := handler.GetHeatmap(context.Background(), &surveyv1.GetHeatmapRequest{
 		SurveyId: id, Metric: "predicted_rssi", Band: "5 GHz",
-	}))
+	})
 	if err != nil {
 		t.Fatalf("GetHeatmap(predicted_rssi): %v", err)
 	}
-	msg := got.Msg
+	msg := got
 	if msg.GetMetric() != "predicted_rssi" {
 		t.Errorf("metric = %q, want predicted_rssi", msg.GetMetric())
 	}
@@ -92,9 +92,9 @@ func TestGetHeatmapRefusesAPredictionTheFloorCannotCarry(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			handler, id := plannedSurvey(t, 400, 300, tc.scaleM, tc.aps)
-			_, err := handler.GetHeatmap(context.Background(), connect.NewRequest(&surveyv1.GetHeatmapRequest{
+			_, err := handler.GetHeatmap(context.Background(), &surveyv1.GetHeatmapRequest{
 				SurveyId: id, Metric: "predicted_rssi", Band: tc.band,
-			}))
+			})
 			if connect.CodeOf(err) != tc.want {
 				t.Errorf("err = %v (%v), want %v", err, connect.CodeOf(err), tc.want)
 			}
@@ -110,9 +110,9 @@ func TestGetHeatmapRefusesADeltaWithNothingWalked(t *testing.T) {
 	handler, id := plannedSurvey(t, 400, 300, 0.05, []survey.APLocation{
 		{ID: "ap1", X: 105, Y: 105, Band: "5 GHz", BSSID: "aa:bb:cc:00:00:01"},
 	})
-	_, err := handler.GetHeatmap(context.Background(), connect.NewRequest(&surveyv1.GetHeatmapRequest{
+	_, err := handler.GetHeatmap(context.Background(), &surveyv1.GetHeatmapRequest{
 		SurveyId: id, Metric: "predicted_delta", Band: "5 GHz",
-	}))
+	})
 	if connect.CodeOf(err) != connect.CodeFailedPrecondition {
 		t.Errorf("err = %v (%v), want FailedPrecondition", err, connect.CodeOf(err))
 	}
@@ -134,7 +134,7 @@ func BenchmarkGetHeatmapPredicted(b *testing.B) {
 		}
 	}
 	handler, id := plannedSurvey(b, w, h, 0.025, aps)
-	req := connect.NewRequest(&surveyv1.GetHeatmapRequest{SurveyId: id, Metric: "predicted_rssi", Band: "5 GHz"})
+	req := &surveyv1.GetHeatmapRequest{SurveyId: id, Metric: "predicted_rssi", Band: "5 GHz"}
 	for b.Loop() {
 		if _, err := handler.GetHeatmap(context.Background(), req); err != nil {
 			b.Fatalf("GetHeatmap: %v", err)
