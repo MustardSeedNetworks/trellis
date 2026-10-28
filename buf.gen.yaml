@@ -7,7 +7,7 @@
 # gen/.
 #
 # Each version equals the runtime it generates against — go.mod's
-# google.golang.org/protobuf and connectrpc.com/connect. renovate.json tracks
+# google.golang.org/protobuf and connectrpc.com/connect/v2. renovate.json tracks
 # the `<module>@<version>` literal and regenerates on the bump. On 2026-10-15
 # the merge queue failed `make check-generated` whenever a generator moved and
 # the committed tree still carried the previous stamp (survey_pb.ts).
@@ -24,6 +24,6 @@ plugins:
   - local:
       - go
       - run
-      - connectrpc.com/connect/cmd/protoc-gen-connect-go@v1.21.0
+      - connectrpc.com/connect/v2/cmd/protoc-gen-connect-go@v2.0.2
     out: gen
     opt: paths=source_relative

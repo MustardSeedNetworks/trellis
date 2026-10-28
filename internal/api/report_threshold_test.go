@@ -16,7 +16,7 @@ import (
 	"strings"
 	"testing"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
 	"github.com/MustardSeedNetworks/trellis/internal/api"
@@ -60,18 +60,18 @@ func marginFloorSurvey(t *testing.T) (*api.SurveyServiceHandler, string) {
 	ctx := context.Background()
 
 	created, err := handler.CreateSurvey(ctx,
-		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "margin", Interface: "en0"}))
+		&surveyv1.CreateSurveyRequest{Name: "margin", Interface: "en0"})
 	if err != nil {
 		t.Fatalf("CreateSurvey: %v", err)
 	}
-	id := created.Msg.GetSurvey().GetId()
+	id := created.GetSurvey().GetId()
 	if _, err := handler.StartSurvey(ctx,
-		connect.NewRequest(&surveyv1.StartSurveyRequest{Id: id})); err != nil {
+		&surveyv1.StartSurveyRequest{Id: id}); err != nil {
 		t.Fatalf("StartSurvey: %v", err)
 	}
 	for _, at := range []struct{ x, y int32 }{{10, 10}, {60, 10}, {110, 10}, {160, 10}} {
 		if _, err := handler.CapturePoint(ctx,
-			connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: at.x, Y: at.y})); err != nil {
+			&surveyv1.CapturePointRequest{SurveyId: id, X: at.x, Y: at.y}); err != nil {
 			t.Fatalf("CapturePoint: %v", err)
 		}
 	}
@@ -82,11 +82,11 @@ func generateFindings(t *testing.T, options *surveyv1.ReportOptions) string {
 	t.Helper()
 	handler, id := marginFloorSurvey(t)
 	resp, err := handler.GenerateReport(context.Background(),
-		connect.NewRequest(&surveyv1.GenerateReportRequest{SurveyId: id, Options: options}))
+		&surveyv1.GenerateReportRequest{SurveyId: id, Options: options})
 	if err != nil {
 		t.Fatalf("GenerateReport: %v", err)
 	}
-	return reportText(t, resp.Msg.GetPdf())
+	return reportText(t, resp.GetPdf())
 }
 
 func TestGenerateReport_AnalysesAtTheRequestedMetricAndThreshold(t *testing.T) {
@@ -119,9 +119,9 @@ func TestGenerateReport_RefusesAMetricWithNoDeadZoneRule(t *testing.T) {
 
 	handler, id := marginFloorSurvey(t)
 	_, err := handler.GenerateReport(context.Background(),
-		connect.NewRequest(&surveyv1.GenerateReportRequest{
+		&surveyv1.GenerateReportRequest{
 			SurveyId: id, Options: &surveyv1.ReportOptions{Metric: "throughput"},
-		}))
+		})
 
 	if connect.CodeOf(err) != connect.CodeInvalidArgument {
 		t.Errorf("err = %v, want InvalidArgument", err)

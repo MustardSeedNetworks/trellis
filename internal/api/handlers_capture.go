@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -55,71 +55,71 @@ func permissionFix() string {
 // CreateSurvey opens a new, empty survey to walk.
 func (h *SurveyServiceHandler) CreateSurvey(
 	_ context.Context,
-	req *connect.Request[surveyv1.CreateSurveyRequest],
-) (*connect.Response[surveyv1.CreateSurveyResponse], error) {
-	name := strings.TrimSpace(req.Msg.GetName())
+	req *surveyv1.CreateSurveyRequest,
+) (*surveyv1.CreateSurveyResponse, error) {
+	name := strings.TrimSpace(req.GetName())
 	if name == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("name is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "name is required")
 	}
 
 	// Passive is the only type this service can gather; see CreateSurveyRequest.
 	created, err := h.manager.CreateSurvey(
-		name, req.Msg.GetDescription(), req.Msg.GetInterface(), survey.TypePassive)
+		name, req.GetDescription(), req.GetInterface(), survey.TypePassive)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, connect.NewError(connect.CodeInternal, err.Error()).WithCause(err)
 	}
 
-	return connect.NewResponse(&surveyv1.CreateSurveyResponse{Survey: h.surveySummary(created)}), nil
+	return &surveyv1.CreateSurveyResponse{Survey: h.surveySummary(created)}, nil
 }
 
 // StartSurvey moves a survey into the state that accepts samples.
 func (h *SurveyServiceHandler) StartSurvey(
 	_ context.Context,
-	req *connect.Request[surveyv1.StartSurveyRequest],
-) (*connect.Response[surveyv1.StartSurveyResponse], error) {
-	s, err := h.transition(req.Msg.GetId(), h.manager.StartSurvey)
+	req *surveyv1.StartSurveyRequest,
+) (*surveyv1.StartSurveyResponse, error) {
+	s, err := h.transition(req.GetId(), h.manager.StartSurvey)
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&surveyv1.StartSurveyResponse{Survey: h.surveySummary(s)}), nil
+	return &surveyv1.StartSurveyResponse{Survey: h.surveySummary(s)}, nil
 }
 
 // PauseSurvey stops a survey accepting samples without completing it.
 func (h *SurveyServiceHandler) PauseSurvey(
 	_ context.Context,
-	req *connect.Request[surveyv1.PauseSurveyRequest],
-) (*connect.Response[surveyv1.PauseSurveyResponse], error) {
-	s, err := h.transition(req.Msg.GetId(), h.manager.PauseSurvey)
+	req *surveyv1.PauseSurveyRequest,
+) (*surveyv1.PauseSurveyResponse, error) {
+	s, err := h.transition(req.GetId(), h.manager.PauseSurvey)
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&surveyv1.PauseSurveyResponse{Survey: h.surveySummary(s)}), nil
+	return &surveyv1.PauseSurveyResponse{Survey: h.surveySummary(s)}, nil
 }
 
 // CompleteSurvey closes a survey to further samples.
 func (h *SurveyServiceHandler) CompleteSurvey(
 	_ context.Context,
-	req *connect.Request[surveyv1.CompleteSurveyRequest],
-) (*connect.Response[surveyv1.CompleteSurveyResponse], error) {
-	s, err := h.transition(req.Msg.GetId(), h.manager.CompleteSurvey)
+	req *surveyv1.CompleteSurveyRequest,
+) (*surveyv1.CompleteSurveyResponse, error) {
+	s, err := h.transition(req.GetId(), h.manager.CompleteSurvey)
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&surveyv1.CompleteSurveyResponse{Survey: h.surveySummary(s)}), nil
+	return &surveyv1.CompleteSurveyResponse{Survey: h.surveySummary(s)}, nil
 }
 
 // CapturePoint scans the airspace and records it at a position on the survey's
 // active floor.
 func (h *SurveyServiceHandler) CapturePoint(
 	ctx context.Context,
-	req *connect.Request[surveyv1.CapturePointRequest],
-) (*connect.Response[surveyv1.CapturePointResponse], error) {
-	id := req.Msg.GetSurveyId()
+	req *surveyv1.CapturePointRequest,
+) (*surveyv1.CapturePointResponse, error) {
+	id := req.GetSurveyId()
 	if id == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "survey_id is required")
 	}
 
-	sample, err := h.manager.CapturePoint(ctx, id, int(req.Msg.GetX()), int(req.Msg.GetY()))
+	sample, err := h.manager.CapturePoint(ctx, id, int(req.GetX()), int(req.GetY()))
 	if err != nil {
 		return nil, captureError(err)
 	}
@@ -137,14 +137,14 @@ func (h *SurveyServiceHandler) CapturePoint(
 	for i, n := range sample.Networks {
 		reply.Networks[i] = scannedNetworkOf(n)
 	}
-	return connect.NewResponse(reply), nil
+	return reply, nil
 }
 
 // Scan reads the airspace and stores nothing. The live analysis view polls it.
 func (h *SurveyServiceHandler) Scan(
 	ctx context.Context,
-	_ *connect.Request[surveyv1.ScanRequest],
-) (*connect.Response[surveyv1.ScanResponse], error) {
+	_ *surveyv1.ScanRequest,
+) (*surveyv1.ScanResponse, error) {
 	networks, err := h.manager.Scan(ctx)
 	if err != nil {
 		return nil, captureError(err)
@@ -157,25 +157,25 @@ func (h *SurveyServiceHandler) Scan(
 	for i := range networks {
 		reply.Networks[i] = scannedNetworkOf(&networks[i])
 	}
-	return connect.NewResponse(reply), nil
+	return reply, nil
 }
 
 // StartContinuousCapture begins, or moves, a survey's walking capture.
 func (h *SurveyServiceHandler) StartContinuousCapture(
 	_ context.Context,
-	req *connect.Request[surveyv1.StartContinuousCaptureRequest],
-) (*connect.Response[surveyv1.StartContinuousCaptureResponse], error) {
-	id := req.Msg.GetSurveyId()
+	req *surveyv1.StartContinuousCaptureRequest,
+) (*surveyv1.StartContinuousCaptureResponse, error) {
+	id := req.GetSurveyId()
 	if id == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "survey_id is required")
 	}
 
-	if err := h.manager.StartContinuousCapture(id, int(req.Msg.GetX()), int(req.Msg.GetY())); err != nil {
+	if err := h.manager.StartContinuousCapture(id, int(req.GetX()), int(req.GetY())); err != nil {
 		return nil, captureError(err)
 	}
-	return connect.NewResponse(&surveyv1.StartContinuousCaptureResponse{
+	return &surveyv1.StartContinuousCaptureResponse{
 		Capture: captureStatusOf(h.manager.CapturingAt(id)),
-	}), nil
+	}, nil
 }
 
 // StopContinuousCapture ends a survey's walking capture. Stopping one that is
@@ -183,32 +183,32 @@ func (h *SurveyServiceHandler) StartContinuousCapture(
 // without knowing whether there was one.
 func (h *SurveyServiceHandler) StopContinuousCapture(
 	_ context.Context,
-	req *connect.Request[surveyv1.StopContinuousCaptureRequest],
-) (*connect.Response[surveyv1.StopContinuousCaptureResponse], error) {
-	id := req.Msg.GetSurveyId()
+	req *surveyv1.StopContinuousCaptureRequest,
+) (*surveyv1.StopContinuousCaptureResponse, error) {
+	id := req.GetSurveyId()
 	if id == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "survey_id is required")
 	}
 
 	h.manager.StopContinuousCapture(id)
-	return connect.NewResponse(&surveyv1.StopContinuousCaptureResponse{}), nil
+	return &surveyv1.StopContinuousCaptureResponse{}, nil
 }
 
 // MeasureThroughput runs an active measurement at a position and stores it.
 func (h *SurveyServiceHandler) MeasureThroughput(
 	ctx context.Context,
-	req *connect.Request[surveyv1.MeasureThroughputRequest],
-) (*connect.Response[surveyv1.MeasureThroughputResponse], error) {
-	id := req.Msg.GetSurveyId()
+	req *surveyv1.MeasureThroughputRequest,
+) (*surveyv1.MeasureThroughputResponse, error) {
+	id := req.GetSurveyId()
 	if id == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "survey_id is required")
 	}
 
-	sample, err := h.manager.MeasureThroughput(ctx, id, int(req.Msg.GetX()), int(req.Msg.GetY()))
+	sample, err := h.manager.MeasureThroughput(ctx, id, int(req.GetX()), int(req.GetY()))
 	if err != nil {
 		return nil, captureError(err)
 	}
-	return connect.NewResponse(&surveyv1.MeasureThroughputResponse{
+	return &surveyv1.MeasureThroughputResponse{
 		Reading: &surveyv1.ThroughputReading{
 			DownloadMbps: sample.DownloadMbps,
 			UploadMbps:   sample.UploadMbps,
@@ -216,22 +216,22 @@ func (h *SurveyServiceHandler) MeasureThroughput(
 			Bssid:        sample.BSSID,
 			SignalDbm:    int32Of(sample.RSSI),
 		},
-	}), nil
+	}, nil
 }
 
 // SetThroughputTarget names the server a survey's active measurements run
 // against.
 func (h *SurveyServiceHandler) SetThroughputTarget(
 	_ context.Context,
-	req *connect.Request[surveyv1.SetThroughputTargetRequest],
-) (*connect.Response[surveyv1.SetThroughputTargetResponse], error) {
-	id := req.Msg.GetSurveyId()
+	req *surveyv1.SetThroughputTargetRequest,
+) (*surveyv1.SetThroughputTargetResponse, error) {
+	id := req.GetSurveyId()
 	if id == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "survey_id is required")
 	}
 
 	if err := h.manager.SetThroughputTarget(
-		id, strings.TrimSpace(req.Msg.GetServer()), int(req.Msg.GetDurationSec()),
+		id, strings.TrimSpace(req.GetServer()), int(req.GetDurationSec()),
 	); err != nil {
 		return nil, captureError(err)
 	}
@@ -239,9 +239,9 @@ func (h *SurveyServiceHandler) SetThroughputTarget(
 	if err != nil {
 		return nil, captureError(err)
 	}
-	return connect.NewResponse(&surveyv1.SetThroughputTargetResponse{
+	return &surveyv1.SetThroughputTargetResponse{
 		Survey: h.surveySummary(s),
-	}), nil
+	}, nil
 }
 
 // transition applies a state change by ID and returns the survey as it stands
@@ -251,15 +251,15 @@ func (h *SurveyServiceHandler) transition(
 	apply func(string) error,
 ) (*survey.Survey, error) {
 	if id == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "id is required")
 	}
 	if err := apply(id); err != nil {
 		if errors.Is(err, survey.ErrSurveyNotFound) {
-			return nil, connect.NewError(connect.CodeNotFound, err)
+			return nil, connect.NewError(connect.CodeNotFound, err.Error()).WithCause(err)
 		}
 		// A refused transition is the caller asking for something the survey's
 		// current state does not allow, not a server fault.
-		return nil, connect.NewError(connect.CodeFailedPrecondition, err)
+		return nil, connect.NewError(connect.CodeFailedPrecondition, err.Error()).WithCause(err)
 	}
 	return h.manager.GetSurvey(id)
 }
@@ -269,35 +269,35 @@ func (h *SurveyServiceHandler) transition(
 func captureError(err error) error {
 	switch {
 	case errors.Is(err, survey.ErrSurveyNotFound):
-		return connect.NewError(connect.CodeNotFound, err)
+		return connect.NewError(connect.CodeNotFound, err.Error()).WithCause(err)
 
 	case errors.Is(err, survey.ErrInvalidTestDuration):
-		return connect.NewError(connect.CodeInvalidArgument, err)
+		return connect.NewError(connect.CodeInvalidArgument, err.Error()).WithCause(err)
 
 	case errors.Is(err, capture.ErrPermission):
 		// The one failure an operator fixes by doing something. Burying it in
 		// CodeInternal would hide the remedy behind "internal error".
 		return connect.NewError(connect.CodeFailedPrecondition,
-			fmt.Errorf("%w%s", err, permissionFix()))
+			fmt.Errorf("%w%s", err, permissionFix()).Error())
 
 	case errors.Is(err, capture.ErrUnsupported), errors.Is(err, survey.ErrNoScanner),
 		errors.Is(err, survey.ErrNoThroughputMeter):
-		return connect.NewError(connect.CodeUnimplemented, err)
+		return connect.NewError(connect.CodeUnimplemented, err.Error()).WithCause(err)
 
 	case errors.Is(err, throughput.ErrNotInstalled), errors.Is(err, throughput.ErrNoAddress):
 		// Both are things an operator does something about — install iperf3,
 		// join a network — so they carry their own remedy and must not be
 		// buried in an internal error.
-		return connect.NewError(connect.CodeFailedPrecondition, err)
+		return connect.NewError(connect.CodeFailedPrecondition, err.Error()).WithCause(err)
 
 	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
-		return connect.NewError(connect.CodeCanceled, err)
+		return connect.NewError(connect.CodeCanceled, err.Error()).WithCause(err)
 
 	default:
 		// Everything else is either a refused state transition (survey not in
 		// progress, no active floor) or a radio failure. Both are conditions of
 		// the request, not server faults.
-		return connect.NewError(connect.CodeFailedPrecondition, err)
+		return connect.NewError(connect.CodeFailedPrecondition, err.Error()).WithCause(err)
 	}
 }
 
@@ -365,11 +365,11 @@ func withThroughput(
 // capture order.
 func (h *SurveyServiceHandler) ListSamples(
 	_ context.Context,
-	req *connect.Request[surveyv1.ListSamplesRequest],
-) (*connect.Response[surveyv1.ListSamplesResponse], error) {
-	id := req.Msg.GetSurveyId()
+	req *surveyv1.ListSamplesRequest,
+) (*surveyv1.ListSamplesResponse, error) {
+	id := req.GetSurveyId()
 	if id == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("survey_id is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "survey_id is required")
 	}
 
 	svy, err := h.manager.GetSurvey(id)
@@ -380,14 +380,14 @@ func (h *SurveyServiceHandler) ListSamples(
 	reply := &surveyv1.ListSamplesResponse{}
 	floor := svy.GetActiveFloor()
 	if floor == nil {
-		return connect.NewResponse(reply), nil
+		return reply, nil
 	}
 
 	reply.Samples = make([]*surveyv1.SurveySample, 0, len(floor.Samples))
 	for _, sp := range floor.Samples {
 		reply.Samples = append(reply.Samples, surveySampleOf(sp))
 	}
-	return connect.NewResponse(reply), nil
+	return reply, nil
 }
 
 // surveySampleOf reduces a stored point to its drawable facts.

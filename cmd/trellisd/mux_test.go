@@ -6,12 +6,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connecthttp"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
 	"github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1/surveyv1connect"
 	"github.com/MustardSeedNetworks/trellis/internal/auth"
@@ -231,20 +233,23 @@ func TestGatedMuxLeavesTheUnauthenticatedRoutesOpen(t *testing.T) {
 // google.protobuf.Empty, which needs no generation.
 const testStreamProcedure = "/trellis.test.v1.StreamService/Stream"
 
-// handleTestStream registers that procedure on mux behind handlerOptions, the
-// option set newMux serves the survey service with. Registering it any other
-// way would prove only that an interceptor handed to a handler runs.
+// testStreamSpec describes testStreamProcedure.
+var testStreamSpec = connect.Spec{StreamType: connect.StreamTypeServer, Procedure: testStreamProcedure}
+
+// handleTestStream registers that procedure on mux through newRPCServer and
+// mountRPC, the way newMux serves the survey service. Registering it any other
+// way would prove only that an interceptor handed to a server runs.
 func handleTestStream(mux *http.ServeMux, gate *auth.Gate) {
-	handler := connect.NewServerStreamHandler(
-		testStreamProcedure,
-		func(context.Context, *connect.Request[emptypb.Empty], *connect.ServerStream[emptypb.Empty]) error {
+	server := newRPCServer(gate)
+	server.Register(connect.Method{
+		Spec: testStreamSpec,
+		Handler: func(context.Context, connect.Spec, connect.ServerStream) error {
 			// The same oracle the unary control uses: reaching the handler is
 			// what "unimplemented" proves.
-			return connect.NewError(connect.CodeUnimplemented, errors.New("test stream"))
+			return connect.NewError(connect.CodeUnimplemented, "test stream")
 		},
-		handlerOptions(gate)...,
-	)
-	mux.Handle(testStreamProcedure, handler)
+	})
+	mountRPC(mux, server)
 }
 
 // callStreamAnonymously calls it with a real Connect client over a real
@@ -257,22 +262,27 @@ func callStreamAnonymously(t *testing.T, mux *http.ServeMux) error {
 	server := httptest.NewServer(mux)
 	t.Cleanup(server.Close)
 
-	client := connect.NewClient[emptypb.Empty, emptypb.Empty](server.Client(), server.URL+testStreamProcedure)
-	stream, err := client.CallServerStream(t.Context(), connect.NewRequest(&emptypb.Empty{}))
+	client := connect.NewClient(connecthttp.NewTransport(server.Client(), server.URL))
+	stream, err := client.CallServerStream(t.Context(), testStreamSpec, &emptypb.Empty{})
 	if err != nil {
 		return err
 	}
 	defer func() { _ = stream.Close() }()
 	// Drain it; the stream error is what is asserted.
-	for stream.Receive() {
+	for {
+		if err := stream.Receive(&emptypb.Empty{}); err != nil {
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
+			return err
+		}
 	}
-	return stream.Err()
 }
 
 // TestGatedMuxRefusesAStreamingRPCAnonymously is the streaming half of the
-// composition test. connect.UnaryInterceptorFunc implements the streaming
-// halves of connect.Interceptor as no-ops, so a gate built from one leaves the
-// first streaming RPC served with no authentication at all (#521).
+// composition test. Under connect v1 a gate built from a UnaryInterceptorFunc
+// left the first streaming RPC served with no authentication at all (#521);
+// this keeps any later shape of the gate from doing the same.
 func TestGatedMuxRefusesAStreamingRPCAnonymously(t *testing.T) {
 	mux, gate := gatedMuxAndGate(t)
 	handleTestStream(mux, gate)
