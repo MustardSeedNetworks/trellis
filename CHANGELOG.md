@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.16](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.15...v0.12.16) (2026-10-28)
+
+
+### Bug Fixes
+
+* **deps:** migrate to connectrpc.com/connect v2 ([#926](https://github.com/MustardSeedNetworks/trellis/issues/926)) ([6e56399](https://github.com/MustardSeedNetworks/trellis/commit/6e56399c831fd672f3902fc72409e5dc728f71a1))
+
 ## [0.12.15](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.14...v0.12.15) (2026-10-27)
 
 
