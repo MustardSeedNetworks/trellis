@@ -63,7 +63,7 @@ async function findHorizontalOverflow(page: Page): Promise<Overflow[]> {
     const VISUALLY_HIDDEN_PX = 2;
     const found: { selector: string; scrollWidth: number; clientWidth: number }[] = [];
 
-    const describe = (el: Element): string => {
+    const selectorFor = (el: Element): string => {
       const testId = el.getAttribute('data-testid');
       if (testId) return `[data-testid="${testId}"]`;
       const cls = el.className;
@@ -91,7 +91,7 @@ async function findHorizontalOverflow(page: Page): Promise<Overflow[]> {
 
       if (el.scrollWidth > el.clientWidth + TOLERANCE_PX) {
         found.push({
-          selector: describe(el),
+          selector: selectorFor(el),
           scrollWidth: el.scrollWidth,
           clientWidth: el.clientWidth,
         });
