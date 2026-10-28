@@ -10,7 +10,7 @@ import (
 	"context"
 	"testing"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
 	"github.com/MustardSeedNetworks/trellis/internal/api"
@@ -29,18 +29,18 @@ func noisyFloorSurvey(t *testing.T) (*api.SurveyServiceHandler, string) {
 	ctx := context.Background()
 
 	created, err := handler.CreateSurvey(ctx,
-		connect.NewRequest(&surveyv1.CreateSurveyRequest{Name: "noisy", Interface: "en0"}))
+		&surveyv1.CreateSurveyRequest{Name: "noisy", Interface: "en0"})
 	if err != nil {
 		t.Fatalf("CreateSurvey: %v", err)
 	}
-	id := created.Msg.GetSurvey().GetId()
+	id := created.GetSurvey().GetId()
 	if _, err := handler.StartSurvey(ctx,
-		connect.NewRequest(&surveyv1.StartSurveyRequest{Id: id})); err != nil {
+		&surveyv1.StartSurveyRequest{Id: id}); err != nil {
 		t.Fatalf("StartSurvey: %v", err)
 	}
 	for _, at := range []struct{ x, y int32 }{{10, 10}, {60, 10}, {110, 10}, {160, 10}} {
 		if _, err := handler.CapturePoint(ctx,
-			connect.NewRequest(&surveyv1.CapturePointRequest{SurveyId: id, X: at.x, Y: at.y})); err != nil {
+			&surveyv1.CapturePointRequest{SurveyId: id, X: at.x, Y: at.y}); err != nil {
 			t.Fatalf("CapturePoint: %v", err)
 		}
 	}
@@ -53,41 +53,41 @@ func TestGetCoverage_SNRAndRSSIDisagreeOnTheSameFloor(t *testing.T) {
 	handler, id := noisyFloorSurvey(t)
 	ctx := context.Background()
 
-	rssi, err := handler.GetCoverage(ctx, connect.NewRequest(&surveyv1.GetCoverageRequest{
+	rssi, err := handler.GetCoverage(ctx, &surveyv1.GetCoverageRequest{
 		SurveyId: id, Metric: "rssi",
-	}))
+	})
 	if err != nil {
 		t.Fatalf("GetCoverage(rssi): %v", err)
 	}
-	if rssi.Msg.GetDeadZoneCount() != 0 || rssi.Msg.GetCoverageScore() != 100 {
+	if rssi.GetDeadZoneCount() != 0 || rssi.GetCoverageScore() != 100 {
 		t.Errorf("rssi: %d dead zone(s) at %.1f%% on a -55 dBm floor, want none at 100%%",
-			rssi.Msg.GetDeadZoneCount(), rssi.Msg.GetCoverageScore())
+			rssi.GetDeadZoneCount(), rssi.GetCoverageScore())
 	}
-	if rssi.Msg.GetMetric() != "rssi" || rssi.Msg.GetThreshold() != -75 {
+	if rssi.GetMetric() != "rssi" || rssi.GetThreshold() != -75 {
 		t.Errorf("rssi echoes metric=%q threshold=%d, want rssi and -75 dBm",
-			rssi.Msg.GetMetric(), rssi.Msg.GetThreshold())
+			rssi.GetMetric(), rssi.GetThreshold())
 	}
 
-	snr, err := handler.GetCoverage(ctx, connect.NewRequest(&surveyv1.GetCoverageRequest{
+	snr, err := handler.GetCoverage(ctx, &surveyv1.GetCoverageRequest{
 		SurveyId: id, Metric: "snr",
-	}))
+	})
 	if err != nil {
 		t.Fatalf("GetCoverage(snr): %v", err)
 	}
 	// Neither analysis borrows the other's threshold: -75 would pass every
 	// sample here, and the default that arrives must be the dB one.
-	if snr.Msg.GetThreshold() != 20 {
+	if snr.GetThreshold() != 20 {
 		t.Errorf("snr threshold = %d, want the 20 dB default and not the -75 dBm one",
-			snr.Msg.GetThreshold())
+			snr.GetThreshold())
 	}
-	if snr.Msg.GetMetric() != "snr" {
-		t.Errorf("snr echoes metric=%q, want snr", snr.Msg.GetMetric())
+	if snr.GetMetric() != "snr" {
+		t.Errorf("snr echoes metric=%q, want snr", snr.GetMetric())
 	}
-	if snr.Msg.GetDeadZoneCount() == 0 {
+	if snr.GetDeadZoneCount() == 0 {
 		t.Error("snr: no dead zone at 8 dB of margin against a 20 dB floor")
 	}
-	if snr.Msg.GetCoverageScore() != 0 {
-		t.Errorf("snr coverage score = %.1f, want 0", snr.Msg.GetCoverageScore())
+	if snr.GetCoverageScore() != 0 {
+		t.Errorf("snr coverage score = %.1f, want 0", snr.GetCoverageScore())
 	}
 }
 
@@ -99,18 +99,18 @@ func TestGetCoverage_ExplicitThresholdIsHonouredPerMetric(t *testing.T) {
 
 	// 5 dB of required margin: 8 dB clears it, so the same floor that fails at
 	// the default passes here. A borrowed dBm threshold could not do this.
-	resp, err := handler.GetCoverage(ctx, connect.NewRequest(&surveyv1.GetCoverageRequest{
+	resp, err := handler.GetCoverage(ctx, &surveyv1.GetCoverageRequest{
 		SurveyId: id, Metric: "snr", Threshold: proto.Int32(5),
-	}))
+	})
 	if err != nil {
 		t.Fatalf("GetCoverage(snr, 5 dB): %v", err)
 	}
-	if resp.Msg.GetThreshold() != 5 {
-		t.Errorf("threshold echoed as %d, want 5", resp.Msg.GetThreshold())
+	if resp.GetThreshold() != 5 {
+		t.Errorf("threshold echoed as %d, want 5", resp.GetThreshold())
 	}
-	if resp.Msg.GetDeadZoneCount() != 0 || resp.Msg.GetCoverageScore() != 100 {
+	if resp.GetDeadZoneCount() != 0 || resp.GetCoverageScore() != 100 {
 		t.Errorf("%d dead zone(s) at %.1f%% with 8 dB against a 5 dB floor, want none at 100%%",
-			resp.Msg.GetDeadZoneCount(), resp.Msg.GetCoverageScore())
+			resp.GetDeadZoneCount(), resp.GetCoverageScore())
 	}
 }
 
@@ -122,9 +122,9 @@ func TestGetCoverage_MetricWithoutARuleIsRefused(t *testing.T) {
 	// The heatmap renders download throughput. Answering about RSSI under that
 	// heading is the defect the metric parameter closes, so this is an error,
 	// not a fallback.
-	_, err := handler.GetCoverage(context.Background(), connect.NewRequest(&surveyv1.GetCoverageRequest{
+	_, err := handler.GetCoverage(context.Background(), &surveyv1.GetCoverageRequest{
 		SurveyId: id, Metric: "download",
-	}))
+	})
 	if connect.CodeOf(err) != connect.CodeInvalidArgument {
 		t.Errorf("GetCoverage(download) = %v, want InvalidArgument", connect.CodeOf(err))
 	}
