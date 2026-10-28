@@ -14,7 +14,6 @@ import (
 	"context"
 	"testing"
 
-	"connectrpc.com/connect"
 	"github.com/MustardSeedNetworks/trellis/internal/api"
 
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
@@ -24,14 +23,14 @@ func TestCaptureCapabilityWithoutARadio(t *testing.T) {
 	handler := api.NewSurveyServiceHandler(mustManager(t, t.TempDir(), nil, nil, nil, nil))
 
 	resp, err := handler.GetCaptureCapability(context.Background(),
-		connect.NewRequest(&surveyv1.GetCaptureCapabilityRequest{}))
+		&surveyv1.GetCaptureCapabilityRequest{})
 	if err != nil {
 		t.Fatalf("GetCaptureCapability: %v", err)
 	}
-	if resp.Msg.GetAvailable() {
+	if resp.GetAvailable() {
 		t.Error("a manager with no scanner reported a radio")
 	}
-	if resp.Msg.GetReason() == "" {
+	if resp.GetReason() == "" {
 		t.Error("unavailable with no reason — the client has nothing to show the operator")
 	}
 }
@@ -47,12 +46,12 @@ func TestCaptureCapabilityReportsWhatTheDaemonLearned(t *testing.T) {
 	})
 
 	resp, err := handler.GetCaptureCapability(context.Background(),
-		connect.NewRequest(&surveyv1.GetCaptureCapabilityRequest{}))
+		&surveyv1.GetCaptureCapabilityRequest{})
 	if err != nil {
 		t.Fatalf("GetCaptureCapability: %v", err)
 	}
-	if resp.Msg.GetReason() != "capture: permission denied" ||
-		resp.Msg.GetRemedy() != "enable Trellis in System Settings" {
-		t.Errorf("reported %q / %q", resp.Msg.GetReason(), resp.Msg.GetRemedy())
+	if resp.GetReason() != "capture: permission denied" ||
+		resp.GetRemedy() != "enable Trellis in System Settings" {
+		t.Errorf("reported %q / %q", resp.GetReason(), resp.GetRemedy())
 	}
 }

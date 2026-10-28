@@ -4,32 +4,24 @@ package auth_test
 
 import (
 	"context"
+	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connecthttp"
 	"github.com/MustardSeedNetworks/trellis/internal/auth"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// callWith runs the gate's interceptor over a request carrying h and reports
-// whether the call reached the handler.
+// callWith runs a unary RPC carrying h through a real server behind the gate's
+// interceptor and reports whether the call reached the handler.
 func callWith(t *testing.T, g *auth.Gate, h http.Header) (reached bool, err error) {
 	t.Helper()
-	req := connect.NewRequest(&struct{}{})
-	for k, vs := range h {
-		for _, v := range vs {
-			req.Header().Add(k, v)
-		}
-	}
-	next := func(context.Context, connect.AnyRequest) (connect.AnyResponse, error) {
-		reached = true
-		return connect.NewResponse(&struct{}{}), nil
-	}
-	_, err = g.Interceptor().WrapUnary(next)(context.Background(), req)
-	return reached, err
+	return call(t, g, h, connect.StreamTypeUnary)
 }
 
 func TestInterceptorAdmitsALiveSession(t *testing.T) {
@@ -109,48 +101,64 @@ func TestInterceptorRefusesALoggedOutSession(t *testing.T) {
 	}
 }
 
-// streamProcedure is a procedure no proto declares; google.protobuf.Empty needs
+// testProcedure is a procedure no proto declares; google.protobuf.Empty needs
 // no generation. The gate is transport-level, so the messages are irrelevant to
 // what these tests assert.
-const streamProcedure = "/trellis.test.v1.StreamService/Stream"
+const testProcedure = "/trellis.test.v1.TestService/Call"
 
-// callStreamWith opens a streaming RPC carrying h through a real server behind
-// the gate's interceptor, and reports whether the call reached the handler. A
-// hand-built connect.StreamingHandlerConn is not worth the risk here: it has a
-// dozen methods and a fake that stubs the wrong one fails as a panic rather
-// than as an assertion.
+// callStreamWith is callWith for a server-streaming RPC. Every survey RPC is
+// unary today; the streaming tests keep the first streaming one from being
+// served unauthenticated (#521).
 func callStreamWith(t *testing.T, g *auth.Gate, h http.Header) (reached bool, err error) {
 	t.Helper()
+	return call(t, g, h, connect.StreamTypeServer)
+}
 
-	handler := connect.NewServerStreamHandler(
-		streamProcedure,
-		func(context.Context, *connect.Request[emptypb.Empty], *connect.ServerStream[emptypb.Empty]) error {
+// call opens an RPC of the given stream type carrying h over HTTP to a server
+// behind the gate's interceptor, the transport the daemon serves, and reports
+// whether the call reached the handler.
+func call(t *testing.T, g *auth.Gate, h http.Header, streamType connect.StreamType) (reached bool, err error) {
+	t.Helper()
+
+	spec := connect.Spec{StreamType: streamType, Procedure: testProcedure}
+	rpc := connect.NewServer(g.Interceptor())
+	rpc.Register(connect.Method{
+		Spec: spec,
+		Handler: func(_ context.Context, _ connect.Spec, stream connect.ServerStream) error {
+			if err := stream.Receive(&emptypb.Empty{}); err != nil {
+				return err
+			}
 			reached = true
-			return nil
+			return stream.Send(&emptypb.Empty{})
 		},
-		connect.WithInterceptors(g.Interceptor()),
-	)
+	})
 	mux := http.NewServeMux()
-	mux.Handle(streamProcedure, handler)
+	connecthttp.Mount(mux, rpc)
 	server := httptest.NewServer(mux)
 	t.Cleanup(server.Close)
 
-	client := connect.NewClient[emptypb.Empty, emptypb.Empty](server.Client(), server.URL+streamProcedure)
-	req := connect.NewRequest(&emptypb.Empty{})
+	client := connect.NewClient(connecthttp.NewTransport(server.Client(), server.URL))
+	ctx, info := connect.NewClientContext(t.Context())
 	for k, vs := range h {
-		for _, v := range vs {
-			req.Header().Add(k, v)
-		}
+		info.RequestHeader().SetValues(k, vs)
 	}
-	stream, err := client.CallServerStream(t.Context(), req)
+	if streamType == connect.StreamTypeUnary {
+		return reached, client.CallUnary(ctx, spec, &emptypb.Empty{}, &emptypb.Empty{})
+	}
+	stream, err := client.CallServerStream(ctx, spec, &emptypb.Empty{})
 	if err != nil {
 		return reached, err
 	}
 	defer func() { _ = stream.Close() }()
 	// Drain it; the stream error is what is asserted.
-	for stream.Receive() {
+	for {
+		if err := stream.Receive(&emptypb.Empty{}); err != nil {
+			if errors.Is(err, io.EOF) {
+				return reached, nil
+			}
+			return reached, err
+		}
 	}
-	return reached, stream.Err()
 }
 
 func TestInterceptorAdmitsALiveSessionOnAStream(t *testing.T) {

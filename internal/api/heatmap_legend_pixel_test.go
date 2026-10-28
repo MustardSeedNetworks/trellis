@@ -12,7 +12,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connecthttp"
 
 	"github.com/MustardSeedNetworks/trellis/core/survey"
 	"github.com/MustardSeedNetworks/trellis/core/wifi"
@@ -41,13 +42,14 @@ func TestLegendSwatchIsTheColourOnTheMap(t *testing.T) {
 	mgr := mustManager(t, t.TempDir(), nil, nil, nil, nil)
 	handler := api.NewSurveyServiceHandler(mgr)
 
+	rpc := connect.NewServer()
+	surveyv1connect.RegisterSurveyServiceHandler(rpc, handler)
 	mux := http.NewServeMux()
-	path, connectHandler := surveyv1connect.NewSurveyServiceHandler(handler)
-	mux.Handle(path, connectHandler)
+	connecthttp.Mount(mux, rpc)
 	srv := httptest.NewServer(mux)
 	t.Cleanup(srv.Close)
 
-	client := surveyv1connect.NewSurveyServiceClient(srv.Client(), srv.URL)
+	client := surveyv1connect.NewSurveyServiceClient(connect.NewClient(connecthttp.NewTransport(srv.Client(), srv.URL)))
 	ctx := context.Background()
 
 	svy, err := mgr.CreateSurvey("Uniform floor", "", "wlan0", survey.TypePassive)
@@ -72,25 +74,25 @@ func TestLegendSwatchIsTheColourOnTheMap(t *testing.T) {
 		}
 	}
 
-	resp, err := client.GetHeatmap(ctx, connect.NewRequest(&surveyv1.GetHeatmapRequest{
+	resp, err := client.GetHeatmap(ctx, &surveyv1.GetHeatmapRequest{
 		SurveyId: svy.ID,
 		Metric:   "rssi",
-	}))
+	})
 	if err != nil {
 		t.Fatalf("GetHeatmap: %v", err)
 	}
 
 	var swatch string
-	for _, stop := range resp.Msg.GetLegend() {
+	for _, stop := range resp.GetLegend() {
 		if stop.GetValue() == uniformRSSI {
 			swatch = stop.GetColor()
 		}
 	}
 	if swatch == "" {
-		t.Fatalf("legend has no stop at %d dBm: %v", uniformRSSI, resp.Msg.GetLegend())
+		t.Fatalf("legend has no stop at %d dBm: %v", uniformRSSI, resp.GetLegend())
 	}
 
-	decoded, err := png.Decode(bytes.NewReader(resp.Msg.GetPng()))
+	decoded, err := png.Decode(bytes.NewReader(resp.GetPng()))
 	if err != nil {
 		t.Fatalf("decode heatmap png: %v", err)
 	}
