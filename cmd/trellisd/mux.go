@@ -5,7 +5,8 @@ package main
 import (
 	"net/http"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connecthttp"
 	"github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1/surveyv1connect"
 	"github.com/MustardSeedNetworks/trellis/internal/api"
 	"github.com/MustardSeedNetworks/trellis/internal/auth"
@@ -32,8 +33,9 @@ type muxDeps struct {
 // any of that without starting the whole daemon, so nothing did (#520).
 func newMux(deps muxDeps) *http.ServeMux {
 	mux := http.NewServeMux()
-	path, handler := surveyv1connect.NewSurveyServiceHandler(deps.survey, handlerOptions(deps.gate)...)
-	mux.Handle(path, handler)
+	server := newRPCServer(deps.gate)
+	surveyv1connect.RegisterSurveyServiceHandler(server, deps.survey)
+	mountRPC(mux, server)
 	if deps.gate != nil {
 		deps.gate.RegisterRoutes(mux)
 	}
@@ -50,18 +52,22 @@ func newMux(deps muxDeps) *http.ServeMux {
 	return mux
 }
 
-// handlerOptions is every Connect handler option the daemon serves an RPC
-// with: the upload cap, and the gate's interceptor when there is a gate.
+// newRPCServer is the Connect server the daemon dispatches RPCs on, behind the
+// gate's interceptor when there is a gate; mountRPC serves it with the upload
+// cap.
 //
-// It is named rather than inline so that a test can register a test-only
-// procedure behind the same options production uses. That is deliberately the
-// only seam: a test still cannot supply an option set of its own (#520), and a
-// procedure registered through anything else would assert nothing about what
-// the daemon actually serves.
-func handlerOptions(gate *auth.Gate) []connect.HandlerOption {
-	options := []connect.HandlerOption{connect.WithReadMaxBytes(maxUploadBytes)}
-	if gate != nil {
-		options = append(options, connect.WithInterceptors(gate.Interceptor()))
+// They are named rather than inline so that a test can register a test-only
+// procedure on a server built and mounted the way production's is. That is
+// deliberately the only seam: a test still cannot supply interceptors or
+// options of its own (#520), and a procedure registered through anything else
+// would assert nothing about what the daemon actually serves.
+func newRPCServer(gate *auth.Gate) *connect.Server {
+	if gate == nil {
+		return connect.NewServer()
 	}
-	return options
+	return connect.NewServer(gate.Interceptor())
+}
+
+func mountRPC(mux *http.ServeMux, server *connect.Server) {
+	connecthttp.Mount(mux, server, connecthttp.WithReadMaxBytes(maxUploadBytes))
 }
