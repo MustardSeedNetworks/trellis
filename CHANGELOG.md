@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.17](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.16...v0.12.17) (2026-10-28)
+
+
+### Bug Fixes
+
+* **deps:** update go dependencies ([#919](https://github.com/MustardSeedNetworks/trellis/issues/919)) ([6400f25](https://github.com/MustardSeedNetworks/trellis/commit/6400f25977cde94686b1f1743be443bf9133253d))
+
 ## [0.12.16](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.15...v0.12.16) (2026-10-28)
 
 
