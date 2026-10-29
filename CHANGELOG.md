@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.12.19](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.18...v0.12.19) (2026-10-29)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/mustardseednetworks/foundation to v0.13.11 ([#931](https://github.com/MustardSeedNetworks/trellis/issues/931)) ([72f928a](https://github.com/MustardSeedNetworks/trellis/commit/72f928add69843eaf16a5654be7952c48c6d931c))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#932](https://github.com/MustardSeedNetworks/trellis/issues/932)) ([6e17124](https://github.com/MustardSeedNetworks/trellis/commit/6e17124199d346ddb7f224e0119a786749932e3b))
+* **deps:** update github/codeql-action action to v4.39.1 ([#930](https://github.com/MustardSeedNetworks/trellis/issues/930)) ([88b224e](https://github.com/MustardSeedNetworks/trellis/commit/88b224e1213f1de1d344d3982d900dd21c645ea2))
+
 ## [0.12.18](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.17...v0.12.18) (2026-10-28)
 
 
