@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.12.20](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.19...v0.12.20) (2026-10-29)
+
+
+### Bug Fixes
+
+* **deps:** update dependency i18next to v26.5.5 ([#936](https://github.com/MustardSeedNetworks/trellis/issues/936)) ([6fc3bde](https://github.com/MustardSeedNetworks/trellis/commit/6fc3bde31a14336b30c9a258e87ef3f2986c4c93))
+* **deps:** update dependency react-i18next to v17.1.1 ([#937](https://github.com/MustardSeedNetworks/trellis/issues/937)) ([c1c5177](https://github.com/MustardSeedNetworks/trellis/commit/c1c51778fba04b43591430b4ad4e2064fc882c44))
+
+
+### Miscellaneous
+
+* **deps:** update module github.com/bufbuild/buf/cmd/buf to v1.75.0 ([#934](https://github.com/MustardSeedNetworks/trellis/issues/934)) ([688580f](https://github.com/MustardSeedNetworks/trellis/commit/688580f391168d9ab17182eb9af2ab5b844d77bf))
+
 ## [0.12.19](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.18...v0.12.19) (2026-10-29)
 
 
