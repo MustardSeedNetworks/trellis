@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.23](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.22...v0.12.23) (2026-10-30)
+
+
+### Bug Fixes
+
+* **deps:** update dependency i18next-browser-languagedetector to v8.2.2 ([#946](https://github.com/MustardSeedNetworks/trellis/issues/946)) ([0d4f39e](https://github.com/MustardSeedNetworks/trellis/commit/0d4f39ea117fb99129526077d35cc8e39e19cd21))
+* **deps:** update dependency react-i18next to v17.1.5 ([#947](https://github.com/MustardSeedNetworks/trellis/issues/947)) ([8f61512](https://github.com/MustardSeedNetworks/trellis/commit/8f615127c1ac0abaead26de8d87b88f20e2ba099))
+
 ## [0.12.22](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.21...v0.12.22) (2026-10-30)
 
 
