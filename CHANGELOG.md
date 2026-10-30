@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.21](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.20...v0.12.21) (2026-10-30)
+
+
+### Bug Fixes
+
+* **deps:** update dependency i18next to v26.5.6 ([#939](https://github.com/MustardSeedNetworks/trellis/issues/939)) ([a67a672](https://github.com/MustardSeedNetworks/trellis/commit/a67a6721b767591ac41314a1350f5da7837f4c2b))
+* **deps:** update dependency react-i18next to v17.1.3 ([#940](https://github.com/MustardSeedNetworks/trellis/issues/940)) ([4c921f1](https://github.com/MustardSeedNetworks/trellis/commit/4c921f197c821788a2613f7b2f1ad44b2552b409))
+
 ## [0.12.20](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.19...v0.12.20) (2026-10-29)
 
 
