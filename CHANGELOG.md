@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.24](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.23...v0.12.24) (2026-10-31)
+
+
+### Bug Fixes
+
+* **deps:** update dependency i18next to v26.5.8 ([#953](https://github.com/MustardSeedNetworks/trellis/issues/953)) ([b048389](https://github.com/MustardSeedNetworks/trellis/commit/b048389624d6b7e87cd49b8326f8687761d3fcb6))
+* **deps:** update module github.com/mustardseednetworks/foundation to v0.13.16 ([#951](https://github.com/MustardSeedNetworks/trellis/issues/951)) ([e1c9517](https://github.com/MustardSeedNetworks/trellis/commit/e1c95170189bd42f85a39ae3651e7d2712327a36))
+
 ## [0.12.23](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.22...v0.12.23) (2026-10-30)
 
 
