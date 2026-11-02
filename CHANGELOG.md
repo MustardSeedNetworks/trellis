@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.28](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.27...v0.12.28) (2026-11-02)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @tanstack/react-query to v5.105.0 ([#967](https://github.com/MustardSeedNetworks/trellis/issues/967)) ([ed6df70](https://github.com/MustardSeedNetworks/trellis/commit/ed6df707d9cee7bb79bdeb675180eb172bf8513e))
+
+
+### Miscellaneous
+
+* **deps:** update storybook monorepo to v10.6.4 ([#966](https://github.com/MustardSeedNetworks/trellis/issues/966)) ([aca883a](https://github.com/MustardSeedNetworks/trellis/commit/aca883ac6075ba0898d38c33d8ea75aae3f2663a))
+
 ## [0.12.27](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.26...v0.12.27) (2026-11-01)
 
 
