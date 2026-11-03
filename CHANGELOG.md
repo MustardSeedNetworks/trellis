@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.29](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.28...v0.12.29) (2026-11-03)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.62.0 ([#971](https://github.com/MustardSeedNetworks/trellis/issues/971)) ([7666c5e](https://github.com/MustardSeedNetworks/trellis/commit/7666c5e26b9983b7c61b4fdd892f6d74f7ff99fb))
+
+
+### Miscellaneous
+
+* **deps:** update dependency postcss to v8.5.32 ([#969](https://github.com/MustardSeedNetworks/trellis/issues/969)) ([14efe1e](https://github.com/MustardSeedNetworks/trellis/commit/14efe1e0e69dcf7682a1a56d2df386f07905c7b1))
+
 ## [0.12.28](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.27...v0.12.28) (2026-11-02)
 
 
