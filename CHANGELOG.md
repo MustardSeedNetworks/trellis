@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.30](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.29...v0.12.30) (2026-11-04)
+
+
+### Miscellaneous
+
+* **deps:** update node.js to v26.13.0 ([#974](https://github.com/MustardSeedNetworks/trellis/issues/974)) ([da63eb6](https://github.com/MustardSeedNetworks/trellis/commit/da63eb6779cc0eb7af1208d064585228e093d305))
+* **deps:** update storybook monorepo to v10.6.5 ([#972](https://github.com/MustardSeedNetworks/trellis/issues/972)) ([0580007](https://github.com/MustardSeedNetworks/trellis/commit/058000707f9b1bf83f69c17070e941c2fd9cb570))
+
 ## [0.12.29](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.28...v0.12.29) (2026-11-03)
 
 
