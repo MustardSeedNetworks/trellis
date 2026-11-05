@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.12.32](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.31...v0.12.32) (2026-11-05)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.63.0 ([#982](https://github.com/MustardSeedNetworks/trellis/issues/982)) ([01a042c](https://github.com/MustardSeedNetworks/trellis/commit/01a042c36cd2a3a95b019cd1558b649cf488e617))
+* **deps:** update module github.com/mustardseednetworks/foundation to v0.14.3 ([#981](https://github.com/MustardSeedNetworks/trellis/issues/981)) ([fab626c](https://github.com/MustardSeedNetworks/trellis/commit/fab626c6b9d15efbef3fdb3e0d2277564413d31f))
+
+
+### Miscellaneous
+
+* **deps:** update dependency @biomejs/biome to v2.6.4 ([#984](https://github.com/MustardSeedNetworks/trellis/issues/984)) ([d8b2b5d](https://github.com/MustardSeedNetworks/trellis/commit/d8b2b5ddef3d03f91646a274281c59613d56a377))
+* **deps:** update dependency @types/node to v26.6.6 ([#980](https://github.com/MustardSeedNetworks/trellis/issues/980)) ([1746779](https://github.com/MustardSeedNetworks/trellis/commit/1746779731e985de5507d5497b75662b7ea18063))
+
 ## [0.12.31](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.30...v0.12.31) (2026-11-04)
 
 
