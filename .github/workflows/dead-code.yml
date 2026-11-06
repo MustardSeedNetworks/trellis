@@ -60,7 +60,9 @@ jobs:
       # identifiers inside a package being compiled, and a package nobody
       # imports still looks used from within its own tests.
       - name: Check package reachability
-        run: ./scripts/check-package-reachability.sh
+        uses: MustardSeedNetworks/.github/.github/actions/repo-checks@ac322c3ed131b623f15df0e1e939e5a093673e00 # .github#192, untagged
+        with:
+          checks: package-reachability
 
       - name: Run staticcheck for unused code
         run: |

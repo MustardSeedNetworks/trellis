@@ -120,7 +120,7 @@ vet:
 # binary stuck in a cgo call, so they accumulate silently and make every
 # subsequent timing meaningless — see the script for what that cost once.
 check-stale-tests:
-	@./scripts/check-stale-tests.sh
+	@./scripts/shared-check.sh stale-tests
 
 test: check-stale-tests
 	go test ./...
