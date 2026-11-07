@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.37](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.36...v0.12.37) (2026-11-07)
+
+
+### Bug Fixes
+
+* **deps:** update module modernc.org/sqlite to v1.61.1 ([#1000](https://github.com/MustardSeedNetworks/trellis/issues/1000)) ([7a7ab99](https://github.com/MustardSeedNetworks/trellis/commit/7a7ab9959e6efdeeee4b8d16522bef30b91e9614))
+
 ## [0.12.36](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.35...v0.12.36) (2026-11-07)
 
 
