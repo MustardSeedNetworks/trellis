@@ -13,7 +13,7 @@ require (
 	github.com/pressly/goose/v3 v3.29.0
 	golang.org/x/sys v0.49.0
 	google.golang.org/protobuf v1.36.12
-	modernc.org/sqlite v1.61.0
+	modernc.org/sqlite v1.61.1
 )
 
 require (
