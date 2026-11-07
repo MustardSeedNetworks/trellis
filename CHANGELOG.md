@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.35](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.34...v0.12.35) (2026-11-07)
+
+
+### Bug Fixes
+
+* **deps:** update dependency i18next-browser-languagedetector to v8.2.4 ([#992](https://github.com/MustardSeedNetworks/trellis/issues/992)) ([6eae7d3](https://github.com/MustardSeedNetworks/trellis/commit/6eae7d3bcefc44149d70776629033464273073ed))
+* **deps:** update module github.com/mustardseednetworks/foundation to v0.14.4 ([#993](https://github.com/MustardSeedNetworks/trellis/issues/993)) ([2f84a87](https://github.com/MustardSeedNetworks/trellis/commit/2f84a87ef40a3fd89022220e64b7113ff5db14d0))
+
 ## [0.12.34](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.33...v0.12.34) (2026-11-06)
 
 
