@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.36](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.35...v0.12.36) (2026-11-07)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.66.0 ([#998](https://github.com/MustardSeedNetworks/trellis/issues/998)) ([9b4674d](https://github.com/MustardSeedNetworks/trellis/commit/9b4674dbdf5a266be8473d782b33333b089702e0))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#996](https://github.com/MustardSeedNetworks/trellis/issues/996)) ([7175759](https://github.com/MustardSeedNetworks/trellis/commit/7175759991661bc97c623e47f6348c4c891ea859))
+
 ## [0.12.35](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.34...v0.12.35) (2026-11-07)
 
 
