@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.12.38](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.37...v0.12.38) (2026-11-08)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @tanstack/react-query to v5.105.1 ([#1005](https://github.com/MustardSeedNetworks/trellis/issues/1005)) ([df5a9e2](https://github.com/MustardSeedNetworks/trellis/commit/df5a9e2f8343732a5c1749ba44a857e88c4fd5a4))
+* **deps:** update dependency i18next to v26.6.0 ([#1003](https://github.com/MustardSeedNetworks/trellis/issues/1003)) ([9fea833](https://github.com/MustardSeedNetworks/trellis/commit/9fea833a1244f6746e35559ba265717fb20c888e))
+* **deps:** update dependency react-i18next to v17.1.10 ([#1006](https://github.com/MustardSeedNetworks/trellis/issues/1006)) ([c5e7abf](https://github.com/MustardSeedNetworks/trellis/commit/c5e7abfd483007e771965f51292e50cca1766add))
+
 ## [0.12.37](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.36...v0.12.37) (2026-11-07)
 
 
