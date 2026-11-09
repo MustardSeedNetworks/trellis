@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.39](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.38...v0.12.39) (2026-11-09)
+
+
+### Bug Fixes
+
+* **deps:** update dependency i18next to v26.7.1 ([#1010](https://github.com/MustardSeedNetworks/trellis/issues/1010)) ([464eb5b](https://github.com/MustardSeedNetworks/trellis/commit/464eb5b2f126bc4da3085f5225b08d6a59380d35))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#1007](https://github.com/MustardSeedNetworks/trellis/issues/1007)) ([98560ff](https://github.com/MustardSeedNetworks/trellis/commit/98560ff93eb95fb9a970a4709219faeaef44c27a))
+
 ## [0.12.38](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.37...v0.12.38) (2026-11-08)
 
 
