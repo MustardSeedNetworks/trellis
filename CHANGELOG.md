@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.41](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.40...v0.12.41) (2026-11-10)
+
+
+### Miscellaneous
+
+* **deps:** update dependency @tailwindcss/postcss to v4.3.4 ([#1013](https://github.com/MustardSeedNetworks/trellis/issues/1013)) ([7945fed](https://github.com/MustardSeedNetworks/trellis/commit/7945fedd8727bd4e8069e8b403430d2d1e461de2))
+* **deps:** update dependency @vitejs/plugin-react to v6.2.1 ([#1015](https://github.com/MustardSeedNetworks/trellis/issues/1015)) ([7116e85](https://github.com/MustardSeedNetworks/trellis/commit/7116e854d67cf615eff732e9ccc3c88b70f85642))
+
 ## [0.12.40](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.39...v0.12.40) (2026-11-09)
 
 
