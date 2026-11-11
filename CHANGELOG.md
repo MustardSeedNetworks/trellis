@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.43](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.42...v0.12.43) (2026-11-11)
+
+
+### Bug Fixes
+
+* **deps:** update dependency react-i18next to v17.1.12 ([#1024](https://github.com/MustardSeedNetworks/trellis/issues/1024)) ([686754d](https://github.com/MustardSeedNetworks/trellis/commit/686754df85f85d89d0abfbb46b15bee642fab40c))
+
+
+### Miscellaneous
+
+* **deps:** update github/codeql-action action to v4.39.2 ([#1022](https://github.com/MustardSeedNetworks/trellis/issues/1022)) ([c2c169d](https://github.com/MustardSeedNetworks/trellis/commit/c2c169d6865ac72dde0a1c2f47455be66ae8cb41))
+
 ## [0.12.42](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.41...v0.12.42) (2026-11-10)
 
 
