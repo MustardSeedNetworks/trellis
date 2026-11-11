@@ -114,23 +114,42 @@ class Gate:
         return cmds
 
 
+@dataclass(frozen=True)
+class SharedGate:
+    """A check from the fleet's shared copy in MustardSeedNetworks/.github,
+    run through scripts/shared-check.sh. Its own files here are the shim, the
+    ci.yml line that pins it, and this repo's policy file for it
+    (`scripts/<name>-*`)."""
+
+    name: str
+    inputs: tuple[str, ...]
+    only_on: str | None = None
+
+    def reads(self, path: str) -> bool:
+        own = ("scripts/shared-check.sh", ".github/workflows/ci.yml", f"scripts/{self.name}-*")
+        return matches_any(path, self.inputs + own)
+
+    def commands(self) -> list[list[str]]:
+        return [["./scripts/shared-check.sh", self.name]]
+
+
 GATES = (
-    Gate("scripts/check-banned-vocabulary.py", ("*",)),
     # Only a darwin cgo build contains the CoreWLAN files; elsewhere the
     # stdlib's own cgo (net's resolver) is all it finds. CI runs it on macOS.
     Gate("scripts/check-cgo-confinement.py", ("*.go", "go.mod"), only_on="darwin"),
-    Gate("scripts/check-component-variants.py", ("ui/src/*",)),
     Gate("scripts/check-file-size.sh", ("*.go", "ui/src/*")),
     Gate("scripts/check-layering.py", ("*.go",)),
-    Gate("scripts/check-package-reachability.sh", ("*.go", "go.mod")),
     Gate("scripts/check-theme-contract.py", ("ui/src/*",)),
     Gate("scripts/check-token-discipline.sh", ("ui/src/*",)),
-    Gate("scripts/check-tsconfig-flags.py", ("ui/tsconfig*.json",)),
 )
 
-# Gates with no file inputs to select on: check-stale-tests is a precondition
-# the make target runs first.
-NOT_INPUT_DRIVEN = {"scripts/check-stale-tests.sh"}
+# stale-tests is not here: it is a precondition the make target runs first.
+SHARED_GATES = (
+    SharedGate("banned-vocabulary", ("*",)),
+    SharedGate("component-variants", ("ui/src/*",)),
+    SharedGate("package-reachability", ("*.go", "go.mod")),
+    SharedGate("tsconfig-flags", ("ui/tsconfig*.json",)),
+)
 
 
 @dataclass(frozen=True)
@@ -329,7 +348,7 @@ def plan_docs(touched: list[str], plan: Plan, markdownlint: str) -> None:
 
 
 def plan_gates(touched: list[str], plan: Plan, host_goos: str) -> None:
-    for gate in GATES:
+    for gate in (*GATES, *SHARED_GATES):
         if not any(gate.reads(f) for f in touched):
             continue
         if gate.only_on and gate.only_on != host_goos:
