@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.44](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.43...v0.12.44) (2026-11-14)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/mustardseednetworks/foundation to v0.14.5 ([#1025](https://github.com/MustardSeedNetworks/trellis/issues/1025)) ([9a723f4](https://github.com/MustardSeedNetworks/trellis/commit/9a723f47c27ea20759a7422f62de0482fd8d9673))
+
 ## [0.12.43](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.42...v0.12.43) (2026-11-11)
 
 
