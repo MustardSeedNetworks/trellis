@@ -200,7 +200,7 @@ func installService(out io.Writer) error {
 		Description:      serviceDescription,
 		StartType:        mgr.StartManual,
 		ServiceStartName: serviceAccount,
-	}, string(actionRun))
+	}, "service", string(actionRun))
 	if err != nil {
 		return fmt.Errorf("create service: %w", err)
 	}
