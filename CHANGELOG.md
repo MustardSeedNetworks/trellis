@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.45](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.44...v0.12.45) (2026-11-21)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.73.0 ([#1027](https://github.com/MustardSeedNetworks/trellis/issues/1027)) ([c22c241](https://github.com/MustardSeedNetworks/trellis/commit/c22c2411ea480d601840c72e6c4d19d89bca658d))
+* **ui:** show product name on the login screen ([#1038](https://github.com/MustardSeedNetworks/trellis/issues/1038)) ([3af8f42](https://github.com/MustardSeedNetworks/trellis/commit/3af8f42ad0bfed034de3354a732e730a34704801)), closes [#1037](https://github.com/MustardSeedNetworks/trellis/issues/1037)
+
 ## [0.12.44](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.43...v0.12.44) (2026-11-20)
 
 
