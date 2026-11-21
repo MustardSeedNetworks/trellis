@@ -122,6 +122,7 @@ GATES = (
     Gate("scripts/check-component-variants.py", ("ui/src/*",)),
     Gate("scripts/check-file-size.sh", ("*.go", "ui/src/*")),
     Gate("scripts/check-layering.py", ("*.go",)),
+    Gate("scripts/check-output-escaping.sh", ("*.go", "ui/src/*")),
     Gate("scripts/check-package-reachability.sh", ("*.go", "go.mod")),
     Gate("scripts/check-theme-contract.py", ("ui/src/*",)),
     Gate("scripts/check-token-discipline.sh", ("ui/src/*",)),
@@ -129,8 +130,9 @@ GATES = (
 )
 
 # Gates with no file inputs to select on: check-stale-tests is a precondition
-# the make target runs first.
-NOT_INPUT_DRIVEN = {"scripts/check-stale-tests.sh"}
+# the make target runs first; check-release-notes judges tag and merge-queue
+# history, which no edited file selects, and runs in CI's release-notes job.
+NOT_INPUT_DRIVEN = {"scripts/check-stale-tests.sh", "scripts/check-release-notes.py"}
 
 
 @dataclass(frozen=True)

@@ -1,6 +1,7 @@
-.PHONY: generate generate-ts check-generated ui build build-e2e ui-build-hash lint lint-md golangci-lint buf vet test fmt-check check-stale-tests validate-touched packages
+.PHONY: generate generate-ts check-generated ui build build-e2e ui-build-hash lint lint-md golangci-lint buf vet test test-e2e fmt fmt-check security check-stale-tests validate-touched packages
 
 include mk/lint.mk
+include mk/deploy.mk
 
 # Universal Build Contract: every binary carries version, commit, build time
 # and the md5 of the embedded UI, injected into internal/version. The hash is
@@ -131,12 +132,26 @@ test: check-stale-tests
 validate-touched: check-stale-tests golangci-lint
 	@./scripts/validate-touched.py
 
+# The Playwright suite in ui/, against the daemon its webServer builds with
+# `make build-e2e` (E2E_BASE_URL points it at a live daemon instead).
+test-e2e:
+	cd ui && npm run test:e2e
+
+fmt:
+	gofmt -w .
+
 fmt-check:
 	@fmt_out="$$(gofmt -l .)"; \
 	if [ -n "$$fmt_out" ]; then \
 		echo "$$fmt_out"; \
 		exit 1; \
 	fi
+
+# Same invocation as the govulncheck job in .github/workflows/ci.yml, pin
+# included; keep the two in lockstep. A hard gate: a reachable CVE fails it.
+security:
+	go install golang.org/x/vuln/cmd/govulncheck@v1.7.0
+	"$$(go env GOPATH)/bin/govulncheck" ./...
 
 # Vite writes straight into internal/api/ui/, which Go embeds — no copy step
 # (Universal Build Contract). `packages` needs it because goreleaser's before

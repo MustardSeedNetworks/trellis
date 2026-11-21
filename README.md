@@ -98,3 +98,18 @@ deploy/          Packaging (macOS app bundle, etc.).
 `/engine` (C++/GPU RF engine) and `/reporter` (headless-Chromium reporter) from the
 target architecture are not started — the reporter that exists today is pure-Go
 (`core/survey/report.go`, fpdf).
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities privately, per
+[SECURITY.md](SECURITY.md).
+
+## License
+
+Trellis is source-available under the [Business Source License 1.1](LICENSE),
+not an OSI-approved license. The Additional Use Grant permits any use except
+offering the Licensed Work to third parties as a Wi-Fi Survey Service, as
+defined in the LICENSE file. The work converts to Apache-2.0 on the Change Date
+stated there (2030-08-01).
+
+For commercial licensing inquiries: `kris.armstrong@icloud.com`.
