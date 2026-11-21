@@ -134,6 +134,7 @@
     "weakSignalBody": "Signal this weak is where rates drop and roams start. This adapter reports no noise floor, so the margin is not known."
   },
   "login": {
+    "tagline": "Wi-Fi survey and planning",
     "title": "Sign in",
     "subtitle": "This daemon serves other devices, so it asks who you are.",
     "username": "Username",

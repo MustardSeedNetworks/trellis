@@ -15,6 +15,14 @@ describe('LoginPage', () => {
   beforeEach(() => resetCsrfToken());
   afterEach(() => vi.unstubAllGlobals());
 
+  it('names the product before it asks for credentials', () => {
+    render(<LoginPage onAuthenticated={vi.fn()} />);
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Trellis' })).toBeInTheDocument();
+    expect(screen.getByText('Wi-Fi survey and planning')).toBeInTheDocument();
+    expect(screen.getByTestId('login-form')).toHaveAccessibleName('Sign in');
+  });
+
   it('reports the operator in on a successful login', async () => {
     vi.stubGlobal(
       'fetch',

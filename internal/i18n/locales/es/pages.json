@@ -134,6 +134,7 @@
     "weakSignalBody": "Una señal tan débil es donde caen las tasas y empiezan los saltos. Este adaptador no informa del ruido de fondo, así que el margen no se conoce."
   },
   "login": {
+    "tagline": "Estudio y planificación de Wi-Fi",
     "title": "Iniciar sesión",
     "subtitle": "Este demonio sirve a otros dispositivos, por eso pregunta quién eres.",
     "username": "Usuario",
