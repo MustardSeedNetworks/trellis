@@ -918,8 +918,11 @@ jobs:
           Install-Module PSScriptAnalyzer -RequiredVersion 1.24.0 -Repository PSGallery -Scope CurrentUser -Force
           # Write-Host is the installer's console output; it is a script an
           # operator reads, not a pipeline component.
-          Invoke-ScriptAnalyzer -Path deploy/windows/install.ps1, scripts/test-windows-install.ps1 `
-            -Severity Warning, Error -ExcludeRule PSAvoidUsingWriteHost -EnableExit
+          $findings = foreach ($script in "deploy/windows/install.ps1", "scripts/test-windows-install.ps1") {
+            Invoke-ScriptAnalyzer -Path $script -Severity Warning, Error -ExcludeRule PSAvoidUsingWriteHost
+          }
+          $findings | Format-List RuleName, Severity, ScriptName, Line, Message
+          if ($findings) { exit 1 }
 
       - name: Build trellisd.exe and lay out the release zip
         shell: bash
