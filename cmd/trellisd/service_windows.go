@@ -74,12 +74,23 @@ func serviceCommand(args []string, stdout, stderr io.Writer) int {
 // serviceHandler adapts run to the Service Control Manager's protocol: report
 // Running once started, cancel the daemon's context on Stop or Shutdown, and
 // report StopPending while it drains.
+//
+// preflight runs before Running is reported, so a start the service refuses
+// fails the `service start` that asked for it instead of reporting success and
+// dying a moment later. It may be nil.
 type serviceHandler struct {
-	run func(context.Context) error
+	preflight func() error
+	run       func(context.Context) error
 }
 
 func (h serviceHandler) Execute(_ []string, requests <-chan svc.ChangeRequest, status chan<- svc.Status) (bool, uint32) {
 	status <- svc.Status{State: svc.StartPending}
+
+	if h.preflight != nil {
+		if err := h.preflight(); err != nil {
+			return exitOf(err)
+		}
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -132,13 +143,11 @@ func runService() error {
 	}
 	defer func() { _ = closeLog() }()
 
-	return svc.Run(serviceName, serviceHandler{run: runChecked})
+	return svc.Run(serviceName, serviceHandler{preflight: checkDataDir, run: run})
 }
 
-// runChecked refuses to start on a data directory the service cannot trust,
-// then runs the daemon. It runs inside the handler so the refusal is logged and
-// reported to the Service Control Manager as a failed start.
-func runChecked(ctx context.Context) error {
+// checkDataDir refuses to start on a data directory the service cannot trust.
+func checkDataDir() error {
 	dataDir := os.Getenv(envDataDir)
 	if dataDir == "" {
 		return errors.New(envDataDir + " is not set in the service environment; reinstall the service")
@@ -146,7 +155,7 @@ func runChecked(ctx context.Context) error {
 	if err := ensureDataDir(dataDir); err != nil {
 		return fmt.Errorf("data directory %s: %w", dataDir, err)
 	}
-	return run(ctx)
+	return nil
 }
 
 func connectManager() (*mgr.Mgr, error) {

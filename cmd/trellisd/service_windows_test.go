@@ -19,7 +19,7 @@ import (
 
 // drive runs Execute against a fake Service Control Manager: it feeds the
 // requests, collects every reported status, and returns Execute's result.
-func drive(t *testing.T, run func(context.Context) error, requests ...svc.Cmd) (states []svc.State, ssec bool, code uint32) {
+func drive(t *testing.T, h serviceHandler, requests ...svc.Cmd) (states []svc.State, ssec bool, code uint32) {
 	t.Helper()
 
 	reqCh := make(chan svc.ChangeRequest, len(requests))
@@ -34,7 +34,7 @@ func drive(t *testing.T, run func(context.Context) error, requests ...svc.Cmd) (
 	}
 	done := make(chan result, 1)
 	go func() {
-		ssec, code := serviceHandler{run: run}.Execute(nil, reqCh, statusCh)
+		ssec, code := h.Execute(nil, reqCh, statusCh)
 		done <- result{ssec, code}
 	}()
 
@@ -60,12 +60,13 @@ func TestServiceHandlerExecute(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		run      func(context.Context) error
-		requests []svc.Cmd
-		want     []svc.State
-		wantSpec bool
-		wantCode uint32
+		name      string
+		preflight func() error
+		run       func(context.Context) error
+		requests  []svc.Cmd
+		want      []svc.State
+		wantSpec  bool
+		wantCode  uint32
 	}{
 		{
 			name:     "stop cancels the daemon and exits cleanly",
@@ -93,6 +94,14 @@ func TestServiceHandlerExecute(t *testing.T) {
 			wantCode: 1,
 		},
 		{
+			name:      "a refused preflight fails the start before Running is reported",
+			preflight: func() error { return errors.New("data directory does not exist") },
+			run:       func(context.Context) error { t.Error("run must not start after a refused preflight"); return nil },
+			want:      []svc.State{svc.StartPending},
+			wantSpec:  true,
+			wantCode:  1,
+		},
+		{
 			name:     "a failure while stopping is still reported",
 			run:      func(ctx context.Context) error { <-ctx.Done(); return errors.New("store close failed") },
 			requests: []svc.Cmd{svc.Stop},
@@ -104,7 +113,7 @@ func TestServiceHandlerExecute(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			states, ssec, code := drive(t, tc.run, tc.requests...)
+			states, ssec, code := drive(t, serviceHandler{preflight: tc.preflight, run: tc.run}, tc.requests...)
 			if len(states) != len(tc.want) {
 				t.Fatalf("states = %v, want %v", states, tc.want)
 			}
