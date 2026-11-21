@@ -10,6 +10,7 @@ import type { SurveySummary } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
 import { bytesToDataUrl, reportFilename } from '@/lib/format';
 import { surveyStatusLabel } from '@/lib/surveyStatus';
+import { useToast } from '@/ui/toastContext';
 
 /**
  * SurveyDetail — what is stored about one survey, how to walk it, and what
@@ -29,6 +30,7 @@ interface SurveyDetailProps {
 
 export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
   const { t } = useTranslation(['common', 'pages']);
+  const { addToast } = useToast();
 
   // The floors are read here rather than passed down: the plan's dimensions and
   // scale live on the floor, and both the plan panel and the capture surface
@@ -72,6 +74,8 @@ export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
       link.download = reportFilename(survey.name);
       link.click();
     },
+    onError: (error) =>
+      addToast(t('pages:surveys.reportFailed', { error: String(error) }), 'error'),
   });
 
   const facts = [
@@ -151,12 +155,6 @@ export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
             : t('pages:surveys.downloadReport')}
         </button>
       </div>
-
-      {reportMutation.isError && (
-        <p className="mt-3 text-sm text-status-error">
-          {t('pages:surveys.reportFailed', { error: String(reportMutation.error) })}
-        </p>
-      )}
     </div>
   );
 }

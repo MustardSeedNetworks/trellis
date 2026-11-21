@@ -2,11 +2,16 @@
   "accessibility": {
     "breadcrumb": "Breadcrumb",
     "closeHelp": "Close help",
+    "closeMenu": "Close menu",
     "collapseSidebar": "Collapse sidebar",
+    "dismissNotification": "Dismiss notification",
     "expandSidebar": "Expand sidebar",
     "helpTitle": "Help: {{title}}",
+    "notifications": "Notifications",
     "openHelp": "Open help for {{title}}",
+    "openMenu": "Open menu",
     "sections": "Trellis sections",
+    "selectLanguage": "Language",
     "skipToContent": "Skip to content",
     "switchToDarkTheme": "Switch to dark theme",
     "switchToLightTheme": "Switch to light theme",
@@ -15,10 +20,33 @@
   "buttons": {
     "generating": "Generating…"
   },
+  "commandPalette": {
+    "actions": "Actions",
+    "closeAriaLabel": "Close command palette",
+    "dialogLabel": "Command palette",
+    "escKey": "Esc",
+    "inputPlaceholder": "Go to a page or run a command…",
+    "navigate": "Go to",
+    "noMatches": "No matches",
+    "switchLanguage": "Switch language to {{language}}"
+  },
+  "connection": {
+    "unreachableBody": "Retrying every few seconds. Check that trellisd is running and that this device can reach it.",
+    "unreachableTitle": "Can't reach the Trellis daemon"
+  },
   "emptyState": {
-    "notFoundBody": "There is no page at this address. It may be a mistyped URL or a link to a page that no longer exists.",
+    "notFoundBody": "Trellis has no page at this address. It may be a mistyped URL or a link to a page that no longer exists.",
     "notFoundHome": "Go to Surveys",
     "notFoundTitle": "Page not found"
+  },
+  "errorBoundary": {
+    "description": "Something in this screen failed to draw. Reload to start again, or go back to the home page. Surveys already captured are stored by the daemon and are not affected.",
+    "home": "Go to home",
+    "pageDescription": "The rest of Trellis is still working. Try this page again, or reload.",
+    "pageTitle": "This page failed to load",
+    "reload": "Reload",
+    "retry": "Try again",
+    "title": "Trellis hit an unexpected error"
   },
   "labels": {
     "accessPoint": "Access point",
@@ -30,6 +58,7 @@
     "floorPlan": "Floor plan",
     "floors": "Floors",
     "hiddenNetwork": "Hidden network",
+    "language": "Language",
     "metric": "Metric",
     "recommendations": "Recommendations",
     "samples": "Samples",

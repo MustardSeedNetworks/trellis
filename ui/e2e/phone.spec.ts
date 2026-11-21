@@ -91,7 +91,7 @@ async function overflowingElements(page: Page): Promise<string[]> {
 for (const route of ROUTES) {
   test(`every control on ${route.path} is inside a 390px screen`, async ({ page }) => {
     await page.goto(route.path);
-    await expect(page.getByTestId('sidebar')).toBeVisible();
+    await expect(page.getByTestId('mobile-menu-toggle')).toBeVisible();
     if (route.ready !== undefined) {
       await expect(page.getByTestId(route.ready).first()).toBeVisible();
     }
@@ -104,18 +104,30 @@ for (const route of ROUTES) {
   });
 }
 
-test('the rail is collapsed at phone width and cannot be expanded over the page', async ({
-  page,
-}) => {
+test('the rail gives way to a top bar and a drawer at phone width', async ({ page }) => {
   await page.goto('/');
 
-  const rail = page.getByTestId('sidebar');
-  const box = await rail.boundingBox();
-  expect(box?.width, 'the rail still takes most of a phone screen').toBeLessThanOrEqual(80);
-
-  // The collapse control is the way a phone layout gets broken again: expanding
-  // to 252px leaves 138px of content. It is not offered below the breakpoint.
+  // The rail used to be forced to 64px and still took a sixth of the screen;
+  // below lg it is not drawn at all, and the page keeps the full width.
+  await expect(page.getByTestId('sidebar')).toBeHidden();
   await expect(page.getByTestId('sidebar-collapse')).toBeHidden();
+  await expect(page.getByTestId('mobile-top-bar')).toBeVisible();
+
+  const toggle = page.getByTestId('mobile-menu-toggle');
+  await toggle.click();
+  const drawer = page.getByTestId('sidebar-mobile');
+  await expect(drawer).toBeVisible();
+  const box = await drawer.boundingBox();
+  expect(box?.x ?? -1, 'the drawer starts off-screen').toBeGreaterThanOrEqual(0);
+  expect((box?.x ?? 0) + (box?.width ?? 0), 'the drawer runs past the screen').toBeLessThanOrEqual(
+    PHONE.width,
+  );
+
+  // Choosing a destination navigates and closes the drawer over the new page.
+  await drawer.getByTestId('nav-reports').click();
+  await expect(page).toHaveURL(/\/reports$/);
+  await expect(drawer).toBeHidden();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 });
 
 test('the Create survey form is fully usable at phone width', async ({ page }) => {
@@ -181,8 +193,8 @@ test('a floor can be walked at phone width', async ({ page }) => {
 });
 
 /**
- * The desktop must not inherit the phone's forced collapse, and the operator's
- * own collapse choice must not be overwritten by a visit at phone width.
+ * The desktop keeps the rail, expanded, with its collapse control, and none of
+ * the phone's top bar.
  */
 test.describe('at desktop width', () => {
   test.use({ viewport: { width: 1440, height: 900 } });
@@ -193,5 +205,6 @@ test.describe('at desktop width', () => {
     const box = await page.getByTestId('sidebar').boundingBox();
     expect(box?.width).toBeGreaterThan(200);
     await expect(page.getByTestId('sidebar-collapse')).toBeVisible();
+    await expect(page.getByTestId('mobile-top-bar')).toBeHidden();
   });
 });

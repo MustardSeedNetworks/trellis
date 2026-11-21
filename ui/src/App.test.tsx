@@ -7,7 +7,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ToastProvider } from '@/ui/Toast';
 import { App } from './App';
 
 vi.mock('@/lib/client', () => ({
@@ -21,12 +22,16 @@ function renderAt(path: string) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={[path]}>
-        <App />
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter initialEntries={[path]}>
+          <App />
+        </MemoryRouter>
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }
+
+afterEach(() => vi.unstubAllGlobals());
 
 describe('App routing', () => {
   it('says a mistyped address is not a page, with a way back', async () => {
@@ -34,6 +39,8 @@ describe('App routing', () => {
 
     const panel = await screen.findByTestId('not-found');
     expect(panel).toHaveTextContent(/not found/i);
+    // A bare "Page not found" could be anyone's; this one says whose.
+    expect(panel).toHaveTextContent('Trellis');
     // The rail also links to Surveys, so the way back is looked for inside the
     // panel — the point is that the page itself offers one.
     expect(within(panel).getByRole('link', { name: /surveys/i })).toHaveAttribute('href', '/');
@@ -69,5 +76,43 @@ describe('App shell', () => {
     expect(await screen.findByTestId('page-header-title')).toHaveTextContent(/surveys/i);
     expect(screen.getByTestId('page-header-eyebrow')).toHaveTextContent(/capture/i);
     expect(await screen.findByRole('heading', { name: /surveys/i })).toBeInTheDocument();
+  });
+});
+
+describe('App daemon status', () => {
+  it("shows the running daemon's version in the rail, not the bundle's", async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            JSON.stringify({ version: '9.8.7', commit: 'c', buildTime: 't', uiBuildHash: 'h' }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } },
+          ),
+        ),
+    );
+    renderAt('/');
+
+    expect(await within(screen.getByTestId('sidebar')).findByText('9.8.7')).toBeInTheDocument();
+    expect(screen.queryByTestId('daemon-unreachable-banner')).not.toBeInTheDocument();
+  });
+
+  it('says so above the page when the daemon stops answering', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('network')));
+    renderAt('/');
+
+    expect(await screen.findByTestId('daemon-unreachable-banner')).toHaveTextContent(
+      "Can't reach the Trellis daemon",
+    );
+  });
+
+  it('draws the phone top bar and the language selector in the shell', async () => {
+    renderAt('/');
+
+    expect(await screen.findByTestId('mobile-menu-toggle')).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId('sidebar')).getByTestId('language-switcher'),
+    ).toBeInTheDocument();
   });
 });

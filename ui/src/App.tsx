@@ -2,8 +2,14 @@ import type { ReactNode } from 'react';
 import { Suspense, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Routes, useLocation } from 'react-router';
+import { PageErrorBoundary } from '@/components/ErrorBoundary';
+import { useBuildVersion } from '@/hooks/useBuildVersion';
+import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { type PageConfig, usePages } from '@/pageRegistry';
+import { CommandPalette } from '@/ui/CommandPalette';
+import { DaemonUnreachable } from '@/ui/DaemonUnreachable';
 import { HelpDrawer } from '@/ui/HelpDrawer';
+import { MobileNav } from '@/ui/MobileNav';
 import { PageHeader } from '@/ui/PageHeader';
 import { Sidebar } from '@/ui/Sidebar';
 
@@ -25,6 +31,8 @@ export function App() {
   const page = pages.find((entry) => entry.path === path);
   const [helpPath, setHelpPath] = useState<string | null>(null);
   const title = page?.title ?? t('emptyState.notFoundTitle');
+  const { version } = useBuildVersion();
+  const connection = useConnectionStatus();
 
   useEffect(() => {
     setHelpPath((openPath) => (openPath === path ? openPath : null));
@@ -35,7 +43,7 @@ export function App() {
   }, [title]);
 
   return (
-    <div className="flex h-screen bg-surface-base text-text-primary">
+    <div className="flex h-screen flex-col bg-surface-base text-text-primary lg:flex-row">
       <a
         href="#main-content"
         data-testid="skip-to-content"
@@ -43,8 +51,15 @@ export function App() {
       >
         {t('accessibility.skipToContent')}
       </a>
-      <Sidebar version={__APP_VERSION__} />
-      <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col overflow-hidden">
+      <MobileNav version={version} />
+      <Sidebar version={version} />
+      <CommandPalette />
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      >
+        {connection === 'disconnected' ? <DaemonUnreachable /> : null}
         <Routes>
           {pages.map((page) => (
             <Route
@@ -93,7 +108,12 @@ function PageWithHeader({
           onHelp={onHelp}
         />
       </div>
-      <Suspense fallback={<PageLoading />}>{children}</Suspense>
+      {/* Keyed by path so a page that threw does not stay broken after the
+          operator navigates somewhere else; the header above stays up either
+          way. */}
+      <PageErrorBoundary key={page.path}>
+        <Suspense fallback={<PageLoading />}>{children}</Suspense>
+      </PageErrorBoundary>
     </>
   );
 }

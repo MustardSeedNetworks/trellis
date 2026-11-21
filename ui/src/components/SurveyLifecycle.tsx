@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SurveySummary } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
+import { useToast } from '@/ui/toastContext';
 
 interface SurveyLifecycleProps {
   survey: SurveySummary;
@@ -32,21 +33,28 @@ const DANGER =
 export function SurveyLifecycle({ survey, onDeleted }: SurveyLifecycleProps) {
   const { t } = useTranslation(['common', 'pages']);
   const queryClient = useQueryClient();
+  const { addToast } = useToast();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['surveys'] });
 
+  const transitionFailed = (error: unknown) =>
+    addToast(t('pages:surveys.transitionFailed', { error: String(error) }), 'error');
+
   const startMutation = useMutation({
     mutationFn: () => surveyClient.startSurvey({ id: survey.id }),
     onSuccess: refresh,
+    onError: transitionFailed,
   });
   const pauseMutation = useMutation({
     mutationFn: () => surveyClient.pauseSurvey({ id: survey.id }),
     onSuccess: refresh,
+    onError: transitionFailed,
   });
   const completeMutation = useMutation({
     mutationFn: () => surveyClient.completeSurvey({ id: survey.id }),
     onSuccess: refresh,
+    onError: transitionFailed,
   });
   const deleteMutation = useMutation({
     mutationFn: () => surveyClient.deleteSurvey({ id: survey.id }),
@@ -54,6 +62,8 @@ export function SurveyLifecycle({ survey, onDeleted }: SurveyLifecycleProps) {
       await refresh();
       onDeleted();
     },
+    onError: (error) =>
+      addToast(t('pages:surveys.deleteFailed', { error: String(error) }), 'error'),
   });
 
   const busy =
@@ -61,9 +71,6 @@ export function SurveyLifecycle({ survey, onDeleted }: SurveyLifecycleProps) {
     pauseMutation.isPending ||
     completeMutation.isPending ||
     deleteMutation.isPending;
-
-  const transitionError =
-    startMutation.error ?? pauseMutation.error ?? completeMutation.error ?? undefined;
 
   const canStart = survey.status === 'created' || survey.status === 'paused';
   const canPause = survey.status === 'in_progress';
@@ -142,17 +149,6 @@ export function SurveyLifecycle({ survey, onDeleted }: SurveyLifecycleProps) {
           )}
         </span>
       </div>
-
-      {transitionError ? (
-        <p className="text-sm text-status-error" data-testid="lifecycle-error">
-          {t('pages:surveys.transitionFailed', { error: String(transitionError) })}
-        </p>
-      ) : null}
-      {deleteMutation.isError ? (
-        <p className="text-sm text-status-error" data-testid="lifecycle-error">
-          {t('pages:surveys.deleteFailed', { error: String(deleteMutation.error) })}
-        </p>
-      ) : null}
     </div>
   );
 }

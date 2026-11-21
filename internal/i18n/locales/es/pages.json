@@ -148,7 +148,8 @@
       "rateLimited": "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
       "unavailable": "No se pudo contactar con el demonio.",
       "empty": "Introduce un usuario y una contraseña."
-    }
+    },
+    "sessionExpired": "Tu sesión caducó. Inicia sesión de nuevo."
   },
   "reports": {
     "analysis": "Hallazgos",
