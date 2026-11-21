@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.47](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.46...v0.12.47) (2026-11-21)
+
+
+### Miscellaneous
+
+* **deps:** update markdownlint to v0.24.1 ([#1047](https://github.com/MustardSeedNetworks/trellis/issues/1047)) ([096d48b](https://github.com/MustardSeedNetworks/trellis/commit/096d48b0bac18cb9f800aa6e767529fab4b257d8))
+* **deps:** update node toolchain ([#1031](https://github.com/MustardSeedNetworks/trellis/issues/1031)) ([4b246ff](https://github.com/MustardSeedNetworks/trellis/commit/4b246ffbbff205eb293c3d9529c2533b7df0b7a1))
+
 ## [0.12.46](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.45...v0.12.46) (2026-11-21)
 
 
