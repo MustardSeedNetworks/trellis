@@ -24,11 +24,11 @@
 #
 # Deliberately NOT covered (unlike stem/seed/niac):
 #   - Native C dataplane — Trellis has no C dataplane.
-#   - The signed macOS .app — deploy/macos/build-app.sh builds and signs it.
-#     Only a signed, entitled bundle can read Wi-Fi network names; the archive
-#     below ships the bare daemon.
 #
 # Handled outside goreleaser:
+#   - The macOS .pkg — release.yml's macos-pkg job wraps the darwin archive's
+#     trellisd in the signed, entitled Trellis.app (deploy/macos/build-pkg.sh).
+#     pkgbuild and the Developer ID identities exist only on a macOS runner.
 #   - UI frontend build — runs in the build-ui job inside release.yml;
 #     Vite writes directly to internal/api/ui/ which Go embeds. The
 #     `before:` hook below just verifies the dist landed.
@@ -129,9 +129,9 @@ archives:
   - id: darwin-archive
     # A bare trellisd, not the signed Trellis.app. It serves imported surveys
     # and will scan, but macOS gives Wi-Fi network names only to a signed,
-    # entitled, LaunchServices-launched bundle — built by
-    # deploy/macos/build-app.sh, not by goreleaser, because it needs signing
-    # identities this pipeline does not carry.
+    # entitled, LaunchServices-launched bundle. The release's macos-pkg job
+    # builds that from this archive's binary; goreleaser cannot, because it
+    # needs signing identities that exist only on a macOS runner.
     ids: [trellis-darwin]
     name_template: "trellis-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     formats: [tar.gz]

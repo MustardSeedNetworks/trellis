@@ -60,8 +60,28 @@ systemctl --user enable --now trellisd
 Then open <http://127.0.0.1:8446>. Triggering a Wi-Fi scan on Linux needs one
 more opt-in step — see [docs/10-WIFI-CAPTURE.md](docs/10-WIFI-CAPTURE.md).
 
-macOS runs from the signed bundle built by `deploy/macos/build-app.sh`; only a
-signed, entitled bundle can read Wi-Fi network names.
+### macOS (Apple silicon only)
+
+Trellis for macOS runs on Apple silicon (arm64) only; there is no Intel build.
+Install the notarized package from the release page:
+
+```bash
+sudo installer -pkg trellis-<version>-darwin-arm64.pkg -target /     # or double-click it
+open -a Trellis
+```
+
+The package installs `/Applications/Trellis.app` and nothing else: no launchd
+job, no postinstall, no open port, mirroring the Linux contract above. Start it
+with `open -a Trellis` and open <http://127.0.0.1:8446>. To have it start at
+login, add Trellis under System Settings > General > Login Items. Always launch
+it as the app: macOS gives Wi-Fi network names only to the signed bundle, and
+only after you allow its Location Services prompt
+([docs/10-WIFI-CAPTURE.md](docs/10-WIFI-CAPTURE.md)). The bare `trellisd` in
+the `.tar.gz` serves imported surveys but cannot name the networks it scans.
+
+Uninstall with `sudo /Applications/Trellis.app/Contents/Resources/uninstall.sh`.
+Surveys in `~/Library/Application Support/Trellis` are never deleted; remove
+that folder yourself if you want them gone.
 
 ### Windows
 

@@ -17,6 +17,13 @@
 #   - Go toolchain, and a built UI in internal/api/ui (npm --prefix ui run build)
 #   - codesign, and a "Developer ID Application" identity in the keychain
 #
+# TRELLIS_PREBUILT_BINARY=<path> bundles an already-built arm64 trellisd (the
+# release pipeline's goreleaser output, which build-pkg.sh passes) instead of
+# compiling one, so the .pkg carries the same binary as the archive and needs
+# neither Go nor the UI here. TRELLIS_SIGN_IDENTITY=- signs ad hoc, which
+# proves the bundle's structure but can never hold a Location grant; the
+# release pipeline refuses it.
+#
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -42,39 +49,46 @@ NC='\033[0m'
 
 echo "Building Trellis.app $VERSION"
 
-# The UI is embedded by go:embed from internal/api/ui. Building without it
-# produces a bundle that signs and launches and then serves nothing, which is
-# the same class of silent failure as an unentitled scan.
-if [ ! -f "$REPO_ROOT/internal/api/ui/index.html" ]; then
-    echo -e "${RED}internal/api/ui/index.html is missing — the UI has not been built.${NC}"
-    echo "  npm --prefix ui ci && npm --prefix ui run build"
-    exit 1
+rm -rf "$BUNDLE"
+mkdir -p "$BUNDLE/Contents/MacOS" "$BUNDLE/Contents/Resources"
+
+if [ -n "${TRELLIS_PREBUILT_BINARY:-}" ]; then
+    install -m 0755 "$TRELLIS_PREBUILT_BINARY" "$BUNDLE/Contents/MacOS/$BINARY_NAME"
+else
+    # The UI is embedded by go:embed from internal/api/ui. Building without it
+    # produces a bundle that signs and launches and then serves nothing, which
+    # is the same class of silent failure as an unentitled scan.
+    if [ ! -f "$REPO_ROOT/internal/api/ui/index.html" ]; then
+        echo -e "${RED}internal/api/ui/index.html is missing — the UI has not been built.${NC}"
+        echo "  npm --prefix ui ci && npm --prefix ui run build"
+        exit 1
+    fi
+
+    UI_BUILD_HASH="$("$REPO_ROOT/scripts/ui-build-hash.sh" "$REPO_ROOT/internal/api/ui")"
+    COMMIT="$(git -C "$REPO_ROOT" rev-parse --short HEAD)"
+    BUILD_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+    # cgo is required: the capture backend links CoreWLAN. Apple Silicon only,
+    # matching the fleet's release targets.
+    CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build \
+        -trimpath \
+        -ldflags "-X $VERSION_PKG.Version=$VERSION \
+                  -X $VERSION_PKG.Commit=$COMMIT \
+                  -X $VERSION_PKG.BuildTime=$BUILD_TIME \
+                  -X $VERSION_PKG.UIBuildHash=$UI_BUILD_HASH" \
+        -o "$BUNDLE/Contents/MacOS/$BINARY_NAME" \
+        "$REPO_ROOT/cmd/trellisd"
 fi
 
-UI_BUILD_HASH="$("$REPO_ROOT/scripts/ui-build-hash.sh" "$REPO_ROOT/internal/api/ui")"
-COMMIT="$(git -C "$REPO_ROOT" rev-parse --short HEAD)"
-BUILD_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-
-rm -rf "$BUNDLE"
-mkdir -p "$BUNDLE/Contents/MacOS"
-
-# cgo is required: the capture backend links CoreWLAN. Apple Silicon only,
-# matching the fleet's release targets.
-CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build \
-    -trimpath \
-    -ldflags "-X $VERSION_PKG.Version=$VERSION \
-              -X $VERSION_PKG.Commit=$COMMIT \
-              -X $VERSION_PKG.BuildTime=$BUILD_TIME \
-              -X $VERSION_PKG.UIBuildHash=$UI_BUILD_HASH" \
-    -o "$BUNDLE/Contents/MacOS/$BINARY_NAME" \
-    "$REPO_ROOT/cmd/trellisd"
+# The installed copy is the only uninstaller a .pkg user has.
+install -m 0755 "$SCRIPT_DIR/uninstall.sh" "$BUNDLE/Contents/Resources/uninstall.sh"
 
 sed -e "s|<string>0\.0\.0</string>|<string>$VERSION</string>|g" \
     "$SCRIPT_DIR/app/Info.plist" > "$BUNDLE/Contents/Info.plist"
 
 plutil -lint "$BUNDLE/Contents/Info.plist" > /dev/null
 
-if ! security find-identity -v -p codesigning | grep -q "$SIGN_IDENTITY"; then
+if [ "$SIGN_IDENTITY" != "-" ] && ! security find-identity -v -p codesigning | grep -q "$SIGN_IDENTITY"; then
     echo -e "${RED}No '$SIGN_IDENTITY' identity found in the keychain.${NC}"
     echo "An unsigned bundle cannot hold Location Services authorization, so every"
     echo "scan would omit network names. Set TRELLIS_SIGN_IDENTITY to override."

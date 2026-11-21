@@ -80,7 +80,7 @@ untouched file.
 | `merge-queue-ejection.yml` | Stop a PR the merge queue keeps ejecting |
 | `pr-hygiene.yml` | PR and issue title lint, the PR body template, auto-labels (one job per rule) |
 | `release-please.yml` | Automated version management and release PRs |
-| `release.yml` | goreleaser release builds, signing, provenance |
+| `release.yml` | goreleaser release builds, macOS `.pkg` (signed, notarized), signing, provenance |
 | `scorecard.yml` | OpenSSF Scorecard |
 | `todo-tracker.yml` | Weekly TODO tracking |
 

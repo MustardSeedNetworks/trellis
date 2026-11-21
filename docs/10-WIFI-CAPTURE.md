@@ -116,7 +116,9 @@ Environment variables _do_ reach the app when it is launched with `open` from a
 shell (`TRELLIS_ADDR=… open -a Trellis.app` works), but not when it is started
 from the Finder or the Dock, which inherit launchd's environment instead.
 
-**Building and running it:**
+**Building and running it:** releases ship this bundle in the notarized
+`trellis-<version>-darwin-arm64.pkg` (`deploy/macos/build-pkg.sh`, run by
+`release.yml`); to build one yourself:
 
 ```bash
 npm --prefix ui ci && npm --prefix ui run build
