@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/binary"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -231,6 +232,62 @@ func TestCheckDataDirSecurity(t *testing.T) {
 			}
 			if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
 				t.Fatalf("checkDataDirSecurity() = %v, want one containing %q", err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestParseACE(t *testing.T) {
+	t.Parallel()
+
+	// header: type, flags, size(2), mask(4); then a minimal SID (S-1-5-18).
+	sid := []byte{1, 1, 0, 0, 0, 0, 0, 5, 18, 0, 0, 0}
+	mk := func(aceType byte, mask uint32, middle ...byte) []byte {
+		raw := binary.LittleEndian.AppendUint32([]byte{aceType, 0, 0, 0}, mask)
+		raw = append(raw, middle...)
+		return append(raw, sid...)
+	}
+	guid := make([]byte, guidLen)
+	flags := func(f byte) []byte { return []byte{f, 0, 0, 0} }
+
+	tests := []struct {
+		name    string
+		raw     []byte
+		want    aceInfo
+		wantErr string
+	}{
+		{name: "allowed", raw: mk(aceTypeAllowed, 2), want: aceInfo{true, 2, 8}},
+		{name: "allowed callback", raw: mk(aceTypeAllowedCallback, 4), want: aceInfo{true, 4, 8}},
+		{name: "denied is understood and not a grant", raw: mk(aceTypeDenied, 2), want: aceInfo{false, 2, 8}},
+		{name: "denied callback", raw: mk(aceTypeDeniedCallback, 2), want: aceInfo{false, 2, 8}},
+		{name: "allowed object, no GUIDs", raw: mk(aceTypeAllowedObject, 2, flags(0)...), want: aceInfo{true, 2, 12}},
+		{
+			name: "allowed object, object GUID", want: aceInfo{true, 2, 28},
+			raw: mk(aceTypeAllowedObject, 2, append(flags(aceObjectTypePresent), guid...)...),
+		},
+		{
+			name: "allowed callback object, both GUIDs", want: aceInfo{true, 2, 44},
+			raw: mk(aceTypeAllowedCallbackObject, 2, append(append(flags(3), guid...), guid...)...),
+		},
+		{name: "denied object", raw: mk(aceTypeDeniedObject, 2, flags(0)...), want: aceInfo{false, 2, 12}},
+		{name: "audit ACE is refused", raw: mk(2, 2), wantErr: "unrecognised ACE type 2"},
+		{name: "unknown type is refused", raw: mk(0x42, 2), wantErr: "unrecognised ACE type 66"},
+		{name: "truncated header", raw: []byte{0, 0, 0}, wantErr: "truncated ACE"},
+		{name: "no room for a SID", raw: []byte{0, 0, 0, 0, 2, 0, 0, 0, 1}, wantErr: "no room for a SID"},
+		{name: "object ACE cut inside its flags", raw: []byte{5, 0, 0, 0, 2, 0, 0, 0, 1}, wantErr: "truncated object ACE"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got, err := parseACE(tc.raw)
+			if tc.wantErr != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
+					t.Fatalf("parseACE() error = %v, want one containing %q", err, tc.wantErr)
+				}
+				return
+			}
+			if err != nil || got != tc.want {
+				t.Fatalf("parseACE() = %+v, %v; want %+v", got, err, tc.want)
 			}
 		})
 	}

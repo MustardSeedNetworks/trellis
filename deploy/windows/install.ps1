@@ -110,44 +110,79 @@ if ($null -eq (Get-Service -Name $ServiceName -ErrorAction SilentlyContinue)) {
 # the service does, so the directories are secured after it is registered and
 # before it can be started.
 #
-# Anyone may create a folder under %ProgramData% before this script does. A
-# directory they created and still own would let them rewrite what a machine
-# account reads, so on every run (not only on create) a reparse point anywhere
-# in the tree is refused, ownership of the whole tree goes to Administrators,
-# and the directory gets a protected ACL: SYSTEM, Administrators and the
-# service only. Children inherit it, so a file the squatter planted loses its
-# own ACL too. Surveys record which networks were in range, so ordinary users
-# get no access.
-New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
-New-Item -ItemType Directory -Force -Path (Join-Path $DataRoot "logs") | Out-Null
-foreach ($Dir in @($DataRoot, $DataDir) | Select-Object -Unique) {
-    $Item = Get-Item -LiteralPath $Dir -Force
-    $Nested = Get-ChildItem -LiteralPath $Dir -Recurse -Force -Attributes ReparsePoint -ErrorAction SilentlyContinue
-    if (($Item.Attributes -band [IO.FileAttributes]::ReparsePoint) -or $Nested) {
-        Write-Error "$Dir contains a junction or symbolic link. Remove it and run install.ps1 again."
+# Anyone may create a folder under %ProgramData% before this script does, so an
+# existing directory is trusted only if it already looks like ours, and is never
+# repaired in place:
+#   - missing: created with its complete security descriptor in one call, so it
+#     never exists with an inherited ACL;
+#   - present, owned by SYSTEM or Administrators, with nothing under it owned by
+#     anyone else and no reparse point anywhere: its DACL is replaced wholesale,
+#     not added to, and read back;
+#   - anything else: refused, with the path, for an administrator to inspect and
+#     remove. No recursive icacls over a tree someone else may have built.
+$SystemSid = New-Object Security.Principal.SecurityIdentifier("S-1-5-18")
+$AdminsSid = New-Object Security.Principal.SecurityIdentifier("S-1-5-32-544")
+$ServiceSid = (New-Object Security.Principal.NTAccount("NT SERVICE\$ServiceName")).Translate([Security.Principal.SecurityIdentifier])
+$Expected = @{}
+$Expected[$SystemSid.Value] = [Security.AccessControl.FileSystemRights]::FullControl
+$Expected[$AdminsSid.Value] = [Security.AccessControl.FileSystemRights]::FullControl
+$Expected[$ServiceSid.Value] = [Security.AccessControl.FileSystemRights]::Modify
+
+function Get-TrustedDescriptor {
+    $Security = New-Object Security.AccessControl.DirectorySecurity
+    $Security.SetAccessRuleProtection($true, $false)
+    $Security.SetOwner($AdminsSid)
+    foreach ($Sid in @($SystemSid, $AdminsSid, $ServiceSid)) {
+        $Rule = New-Object Security.AccessControl.FileSystemAccessRule($Sid, $Expected[$Sid.Value],
+            "ContainerInherit, ObjectInherit", "None", "Allow")
+        $Security.AddAccessRule($Rule)
+    }
+    return $Security
+}
+
+function Assert-TrustedDescriptor([string]$Path) {
+    $Acl = Get-Acl -LiteralPath $Path
+    $Rules = @($Acl.Access)
+    $Granted = @($Rules | Where-Object {
+        $Sid = $_.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value
+        $Expected.ContainsKey($Sid) -and $_.AccessControlType -eq "Allow" -and $_.FileSystemRights -eq $Expected[$Sid] -and -not $_.IsInherited
+    })
+    $Owner = $Acl.GetOwner([Security.Principal.SecurityIdentifier])
+    if (-not $Acl.AreAccessRulesProtected -or $Rules.Count -ne 3 -or $Granted.Count -ne 3 -or $Owner -ne $AdminsSid) {
+        Write-Error "$Path did not end with exactly SYSTEM, Administrators and the Trellis service. Inspect it and remove it, then run install.ps1 again."
         exit 1
     }
-    & icacls.exe $Dir /setowner "*S-1-5-32-544" /T /C /L | Out-Null
-    if ($LASTEXITCODE -ne 0) {
-        $ExitCode = $LASTEXITCODE
-        Write-Error "Could not take ownership of $Dir (icacls exit code $ExitCode)."
-        exit $ExitCode
-    }
-    & icacls.exe $Dir /inheritance:r /grant:r "*S-1-5-18:(OI)(CI)(F)" "*S-1-5-32-544:(OI)(CI)(F)" "NT SERVICE\${ServiceName}:(OI)(CI)(M)" | Out-Null
-    if ($LASTEXITCODE -ne 0) {
-        $ExitCode = $LASTEXITCODE
-        Write-Error "Could not restrict $Dir to SYSTEM, Administrators and the Trellis service (icacls exit code $ExitCode)."
-        exit $ExitCode
-    }
-    if (Get-ChildItem -LiteralPath $Dir -Force | Select-Object -First 1) {
-        & icacls.exe "$Dir\*" /reset /T /C /L | Out-Null
-        if ($LASTEXITCODE -ne 0) {
-            $ExitCode = $LASTEXITCODE
-            Write-Error "Could not reset the ACLs under $Dir (icacls exit code $ExitCode)."
-            exit $ExitCode
-        }
-    }
 }
+
+function Protect-Directory([string]$Path) {
+    if (Test-Path -LiteralPath $Path) {
+        $Item = Get-Item -LiteralPath $Path -Force
+        $Nested = @(Get-ChildItem -LiteralPath $Path -Recurse -Force -Attributes ReparsePoint)
+        if (-not $Item.PSIsContainer -or ($Item.Attributes -band [IO.FileAttributes]::ReparsePoint) -or $Nested.Count -gt 0) {
+            Write-Error "$Path is not a plain directory or contains a junction or symbolic link. Inspect it and remove it, then run install.ps1 again."
+            exit 1
+        }
+        $Trusted = @($SystemSid.Value, $AdminsSid.Value, $ServiceSid.Value)
+        $Owners = @(@($Item) + @(Get-ChildItem -LiteralPath $Path -Recurse -Force) | ForEach-Object {
+            (Get-Acl -LiteralPath $_.FullName).GetOwner([Security.Principal.SecurityIdentifier]).Value
+        })
+        $Untrusted = @($Owners | Where-Object { $Trusted -notcontains $_ })
+        if ($Untrusted.Count -gt 0) {
+            Write-Error "$Path, or something under it, is owned by $($Untrusted[0]), not SYSTEM, Administrators or the Trellis service. Inspect it and remove it, then run install.ps1 again."
+            exit 1
+        }
+        Set-Acl -LiteralPath $Path -AclObject (Get-TrustedDescriptor)
+    } else {
+        [void][IO.Directory]::CreateDirectory($Path, (Get-TrustedDescriptor))
+    }
+    Assert-TrustedDescriptor $Path
+}
+
+Protect-Directory $DataRoot
+if ($DataDir -ne $DataRoot) {
+    Protect-Directory $DataDir
+}
+New-Item -ItemType Directory -Force -Path (Join-Path $DataRoot "logs") | Out-Null
 
 if ($WasRunning) {
     # An upgrade keeps the service's configuration and environment as the

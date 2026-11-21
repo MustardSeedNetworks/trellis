@@ -3,6 +3,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -158,4 +159,67 @@ func checkDataDirSecurity(owner string, hasDACL bool, entries []aclEntry, self s
 		}
 	}
 	return nil
+}
+
+// ACE types that can appear in a DACL. Every allow variant is a grant; a deny
+// is understood but never subtracted, so a deny cannot hide a grant from the
+// check. Anything else is refused: a type this does not know could grant access
+// by a layout it cannot read.
+const (
+	aceTypeAllowed               = 0
+	aceTypeDenied                = 1
+	aceTypeAllowedObject         = 5
+	aceTypeDeniedObject          = 6
+	aceTypeAllowedCallback       = 9
+	aceTypeDeniedCallback        = 10
+	aceTypeAllowedCallbackObject = 11
+	aceTypeDeniedCallbackObject  = 12
+
+	aceObjectTypePresent          = 0x1
+	aceInheritedObjectTypePresent = 0x2
+	aceHeaderLen                  = 8 // type, flags, size, mask
+	guidLen                       = 16
+	minSIDLen                     = 8
+)
+
+// aceInfo is what parseACE reads out of one raw ACE.
+type aceInfo struct {
+	grant     bool
+	mask      uint32
+	sidOffset int
+}
+
+// parseACE locates the mask and the trustee SID in a raw ACE, whatever its
+// allow or deny variant, and refuses a type it does not understand or a
+// truncated entry.
+func parseACE(raw []byte) (aceInfo, error) {
+	if len(raw) < aceHeaderLen {
+		return aceInfo{}, fmt.Errorf("truncated ACE of %d bytes", len(raw))
+	}
+	info := aceInfo{mask: binary.LittleEndian.Uint32(raw[4:8]), sidOffset: aceHeaderLen}
+
+	switch raw[0] {
+	case aceTypeAllowed, aceTypeAllowedCallback:
+		info.grant = true
+	case aceTypeDenied, aceTypeDeniedCallback:
+	case aceTypeAllowedObject, aceTypeAllowedCallbackObject, aceTypeDeniedObject, aceTypeDeniedCallbackObject:
+		info.grant = raw[0] == aceTypeAllowedObject || raw[0] == aceTypeAllowedCallbackObject
+		if len(raw) < aceHeaderLen+4 {
+			return aceInfo{}, fmt.Errorf("truncated object ACE of %d bytes", len(raw))
+		}
+		flags := binary.LittleEndian.Uint32(raw[aceHeaderLen : aceHeaderLen+4])
+		info.sidOffset = aceHeaderLen + 4
+		if flags&aceObjectTypePresent != 0 {
+			info.sidOffset += guidLen
+		}
+		if flags&aceInheritedObjectTypePresent != 0 {
+			info.sidOffset += guidLen
+		}
+	default:
+		return aceInfo{}, fmt.Errorf("unrecognised ACE type %d", raw[0])
+	}
+	if info.sidOffset+minSIDLen > len(raw) {
+		return aceInfo{}, fmt.Errorf("ACE type %d has no room for a SID", raw[0])
+	}
+	return info, nil
 }

@@ -36,7 +36,18 @@ function Show-ServiceLog {
         Format-List TimeCreated, Message
 }
 
-# --- 1. A squatter created the data directory first -----------------------------------
+function Assert-ExactlyThreeAces([string]$Path) {
+    $Allowed = @("NT AUTHORITY\SYSTEM", "BUILTIN\Administrators", "NT SERVICE\Trellis")
+    $Acl = Get-Acl -LiteralPath $Path
+    Assert-That ($Acl.Owner -eq "BUILTIN\Administrators") "$Path is owned by Administrators (got $($Acl.Owner))"
+    Assert-That ($Acl.AreAccessRulesProtected) "$Path does not inherit from its parent"
+    $Identities = @($Acl.Access | ForEach-Object { $_.IdentityReference.Value })
+    Assert-That ($Identities.Count -eq 3) "$Path has exactly three ACEs (got $($Identities -join ', '))"
+    $Extra = @($Identities | Where-Object { $Allowed -notcontains $_ })
+    Assert-That ($Extra.Count -eq 0) "$Path grants only SYSTEM, Administrators and the service (extra: $($Extra -join ', '))"
+}
+
+# --- 1. A user-owned data directory is refused, not repaired --------------------------
 # The runner's admin token owns what it creates as Administrators, so make the
 # directory look the way a standard user's would: owned by a user, writable by
 # Users, holding a file they planted.
@@ -47,25 +58,28 @@ Set-Content -Path $Planted -Value "squatter"
 & icacls.exe $DataRoot /grant "*S-1-5-32-545:(OI)(CI)(M)" /T /C | Out-Null
 Assert-That ((Get-Acl $DataDir).Owner -notlike "*Administrators") "precondition: the data dir starts user-owned"
 
-Assert-That ((Invoke-Installer @()) -eq 0) "install.ps1 succeeds over a pre-created data dir"
+$Code = Invoke-Installer @()
+Assert-That ($Code -ne 0) "install.ps1 refuses a user-owned data dir (exit $Code)"
+Assert-That (Test-Path $Planted) "the refused tree was left untouched"
+Assert-That ((Get-Acl $DataDir).Owner -notlike "*Administrators") "the refused tree was not re-owned"
+Remove-Item -LiteralPath $DataRoot -Recurse -Force
 
-# --- 2. Service shape -----------------------------------------------------------------
+# --- 2. An admin-owned directory with an extra user ACE is replaced wholesale -----------
+New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
+& icacls.exe $DataRoot /grant "*S-1-5-32-545:(OI)(CI)(M)" | Out-Null
+& icacls.exe $DataDir /grant "*S-1-5-32-545:(OI)(CI)(M)" | Out-Null
+Assert-That ((Get-Acl $DataDir).Access.Count -gt 3) "precondition: the data dir carries an extra user ACE"
+
+Assert-That ((Invoke-Installer @()) -eq 0) "install.ps1 succeeds over an admin-owned data dir"
+Assert-ExactlyThreeAces $DataRoot
+Assert-ExactlyThreeAces $DataDir
+
+# --- 3. Service shape -----------------------------------------------------------------
 $Service = Get-CimInstance Win32_Service -Filter "Name='Trellis'"
 Assert-That ($null -ne $Service) "service Trellis exists"
 Assert-That ($Service.StartName -eq "NT SERVICE\Trellis") "service runs as NT SERVICE\Trellis (got $($Service.StartName))"
 Assert-That ($Service.StartMode -eq "Manual") "service is manual start (got $($Service.StartMode))"
 Assert-That ($Service.State -eq "Stopped") "service is not started by the install (got $($Service.State))"
-
-# --- 3. The squatted directory was re-owned and locked down ---------------------------
-$Allowed = @("NT AUTHORITY\SYSTEM", "BUILTIN\Administrators", "NT SERVICE\Trellis")
-foreach ($Path in @($DataRoot, $DataDir, $Planted)) {
-    $Acl = Get-Acl $Path
-    Assert-That ($Acl.Owner -eq "BUILTIN\Administrators") "$Path is owned by Administrators (got $($Acl.Owner))"
-    $Identities = @($Acl.Access | ForEach-Object { $_.IdentityReference.Value } | Select-Object -Unique)
-    $Extra = @($Identities | Where-Object { $Allowed -notcontains $_ })
-    Assert-That ($Extra.Count -eq 0) "$Path grants only SYSTEM, Administrators and the service (extra: $($Extra -join ', '))"
-}
-Assert-That ((Get-Acl $DataDir).AreAccessRulesProtected) "the data dir does not inherit from its parent"
 
 # --- 4. A junction makes the installer refuse -----------------------------------------
 $Target = Join-Path $env:RUNNER_TEMP "junction-target"
@@ -100,12 +114,20 @@ Assert-That ($Evil -eq "403") "Host: evil.example is refused with 403 (got $Evil
 $Rebound = & curl.exe -s -o NUL -w "%{http_code}" -H "Host: evil.example:8446" "$Url/__version"
 Assert-That ($Rebound -eq "403") "Host: evil.example:8446 is refused with 403 (got $Rebound)"
 
-# --- 6. Stop and uninstall ------------------------------------------------------------
+# --- 6. Stop; a missing data directory makes the service refuse to start --------------
 & $Daemon service stop
 if ($LASTEXITCODE -ne 0) { Show-ServiceLog; throw "trellisd service stop exited $LASTEXITCODE" }
 Assert-That ((Get-Service Trellis).Status -eq "Stopped") "service stopped"
 
+Remove-Item -LiteralPath $DataDir -Recurse -Force
+& $Daemon service start
+Assert-That ($LASTEXITCODE -ne 0) "service start fails when the data dir is missing (exit $LASTEXITCODE)"
+$Logged = (Test-Path $LogFile) -and ((Get-Content $LogFile -Raw) -match "does not exist")
+Assert-That $Logged "the service logged that the data dir does not exist"
+Assert-That (-not (Test-Path $DataDir)) "the service did not create the missing data dir"
+
+# --- 7. Uninstall ---------------------------------------------------------------------
 Assert-That ((Invoke-Installer @("-Uninstall")) -eq 0) "install.ps1 -Uninstall succeeds"
 Assert-That ($null -eq (Get-Service Trellis -ErrorAction SilentlyContinue)) "service removed"
 Assert-That (-not (Test-Path $InstallDir)) "program files removed"
-Assert-That (Test-Path $DataDir) "surveys directory kept"
+Assert-That (Test-Path $DataRoot) "the data root was kept"

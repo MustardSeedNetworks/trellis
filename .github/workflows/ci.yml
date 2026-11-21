@@ -116,7 +116,7 @@ jobs:
     name: Build UI (shared artifact)
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci_infra == 'true' || needs.changes.outputs.windows_service == 'true'
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci_infra == 'true' || fromJSON(needs.changes.outputs.filters).windows_service == 'true'
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -891,7 +891,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.build-ui.result == 'success' &&
-      needs.changes.outputs.windows_service == 'true'
+      fromJSON(needs.changes.outputs.filters).windows_service == 'true'
     runs-on: windows-latest
     timeout-minutes: 25
     steps:

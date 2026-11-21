@@ -162,7 +162,7 @@ func TestVerifyDataDir(t *testing.T) {
 		dir     string
 		wantErr string
 	}{
-		{name: "missing directory is created later", dir: filepath.Join(base, "missing")},
+		{name: "a missing directory is refused", dir: filepath.Join(base, "missing"), wantErr: "does not exist"},
 		{name: "a file is refused", dir: file, wantErr: "not a directory"},
 		{name: "a junction is refused", dir: junction, wantErr: "junction"},
 	}

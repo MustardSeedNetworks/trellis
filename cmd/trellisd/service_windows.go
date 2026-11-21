@@ -150,17 +150,34 @@ func runChecked(ctx context.Context) error {
 	return run(ctx)
 }
 
-// verifyDataDir applies checkDataDirSecurity to the directory on disk and
-// refuses a reparse point. A directory that does not exist yet is accepted:
-// the daemon creates it under the parent's protected ACL.
+// verifyDataDir fails closed on the data directory and its parent. The
+// installer creates the directory with a complete protected descriptor, so a
+// missing one means the install did not happen or was tampered with, and a
+// service must not create it under whatever the parent inherits. Both
+// directories must pass checkDataDirSecurity, which also covers who may delete
+// or replace the data directory by way of its parent.
 func verifyDataDir(dir string) error {
+	if err := verifyDirectory(dir); err != nil {
+		return err
+	}
+	parent := filepath.Dir(dir)
+	if parent == dir {
+		return nil
+	}
+	if err := verifyDirectory(parent); err != nil {
+		return fmt.Errorf("parent %s: %w", parent, err)
+	}
+	return nil
+}
+
+func verifyDirectory(dir string) error {
 	path, err := windows.UTF16PtrFromString(dir)
 	if err != nil {
 		return fmt.Errorf("path: %w", err)
 	}
 	attrs, err := windows.GetFileAttributes(path)
 	if errors.Is(err, windows.ERROR_FILE_NOT_FOUND) || errors.Is(err, windows.ERROR_PATH_NOT_FOUND) {
-		return nil
+		return errors.New("does not exist; run install.ps1")
 	}
 	if err != nil {
 		return fmt.Errorf("stat: %w", err)
@@ -197,12 +214,16 @@ func verifyDataDir(dir string) error {
 			if err := windows.GetAce(dacl, i, &ace); err != nil {
 				return fmt.Errorf("read DACL entry %d: %w", i, err)
 			}
-			if ace.Header.AceType != windows.ACCESS_ALLOWED_ACE_TYPE {
+			raw := unsafe.Slice((*byte)(unsafe.Pointer(ace)), ace.Header.AceSize)
+			info, err := parseACE(raw)
+			if err != nil {
+				return fmt.Errorf("DACL entry %d: %w", i, err)
+			}
+			if !info.grant {
 				continue
 			}
-			// The SID starts at SidStart and runs on past the struct.
-			sid := (*windows.SID)(unsafe.Pointer(&ace.SidStart))
-			entries = append(entries, aclEntry{sid: sid.String(), mask: uint32(ace.Mask)})
+			sid := (*windows.SID)(unsafe.Pointer(&raw[info.sidOffset]))
+			entries = append(entries, aclEntry{sid: sid.String(), mask: info.mask})
 		}
 	}
 	return checkDataDirSecurity(owner.String(), dacl != nil, entries, user.User.Sid.String())
