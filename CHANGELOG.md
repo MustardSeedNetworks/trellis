@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.46](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.45...v0.12.46) (2026-11-21)
+
+
+### Miscellaneous
+
+* **deps:** update dependency @tailwindcss/postcss to v4.3.5 ([#1044](https://github.com/MustardSeedNetworks/trellis/issues/1044)) ([25264e7](https://github.com/MustardSeedNetworks/trellis/commit/25264e79bbdffc06bbba00b5401e81b03bfaee7f))
+
 ## [0.12.45](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.44...v0.12.45) (2026-11-21)
 
 
