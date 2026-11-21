@@ -82,3 +82,30 @@ Concretely:
 - The macOS `.app` bundle (`deploy/macos/build-app.sh`) and the Windows archive
   are unchanged: both are already user-session shapes, and this ADR brings Linux
   into line with them rather than the other way round.
+
+## Amendment 2026-11-21 — Windows
+
+Windows follows the same contract: `install.ps1` installs `trellisd.exe` and
+registers a `Trellis` service that is manual-start and not started, with no
+firewall rule and no port. It runs as the virtual account `NT SERVICE\Trellis`,
+never LocalSystem: the daemon serves plain HTTP on loopback without a login, and
+a service changes who is on the other end of that port from the operator's own
+session to every local user, so whatever reaches it must not land in a machine
+account.
+
+The service cannot scan Wi-Fi, because Windows grants WLAN scanning to a user in
+an interactive session (#152), so it serves imported surveys and a live survey
+runs from the operator's own session.
+
+Its data and log sit under `%ProgramData%\Trellis`. Anyone can create that
+folder first, so the installer takes ownership of the tree for Administrators on
+every run, refuses reparse points, and applies a protected ACL (SYSTEM,
+Administrators, the service); the service refuses to start on a data directory
+whose owner or DACL does not match. No install or uninstall deletes surveys.
+
+The operator credential is refused at `service install` rather than copied: the
+service environment is readable by every local user, and without a credential a
+routable bind is refused at start (ADR-0010). Separately, the unprotected
+loopback listener, for the service and the user-session daemon alike, now
+rejects requests whose Host header is not its own loopback address and bound
+port, so DNS rebinding cannot reach it.

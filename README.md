@@ -61,8 +61,38 @@ Then open <http://127.0.0.1:8446>. Triggering a Wi-Fi scan on Linux needs one
 more opt-in step — see [docs/10-WIFI-CAPTURE.md](docs/10-WIFI-CAPTURE.md).
 
 macOS runs from the signed bundle built by `deploy/macos/build-app.sh`; only a
-signed, entitled bundle can read Wi-Fi network names. Windows ships as an
-archive.
+signed, entitled bundle can read Wi-Fi network names.
+
+### Windows
+
+Extract `trellis-<version>-windows-amd64.zip` (or `-arm64`) and run `install.ps1`
+from an elevated PowerShell. It installs `trellisd.exe` to
+`C:\Program Files\Trellis` and registers a Windows service named `Trellis`
+that runs as its own virtual account (`NT SERVICE\Trellis`, never LocalSystem),
+keeps surveys and its log under `%ProgramData%\Trellis` (owned by Administrators,
+writable only by SYSTEM, Administrators and the service), and is **neither
+started nor set to start at boot**, the counterpart of the disabled Linux user
+unit:
+
+```powershell
+.\install.ps1                  # install, or upgrade in place
+trellisd service start         # then open http://127.0.0.1:8446
+trellisd service status        # also: stop, uninstall
+sc config Trellis start= auto  # optional: start with Windows
+.\install.ps1 -Uninstall       # surveys under %ProgramData%\Trellis are kept
+```
+
+The service serves imported surveys and reports but **cannot scan Wi-Fi**:
+Windows gates WLAN scanning on a per-user Location grant in an interactive
+session, which a service never has (#152). To survey with a live adapter, run
+`trellisd.exe` from your own session. `TRELLIS_ADDR`, `TRELLIS_DATA_DIR`,
+`TRELLIS_CAPTURE_MODE` and `TRELLIS_TLS_*` set in the shell that runs
+`trellisd service install` are copied into the service. `TRELLIS_AUTH_*` is
+refused, not dropped: a service's environment is readable by every local user,
+so `service install` fails if a credential is set, and a routable
+`TRELLIS_ADDR` is refused with it. The service is therefore loopback-only
+without a login. It will not start if its data directory is not owned by
+SYSTEM or Administrators, grants write access to anyone else, or is a junction.
 
 ## Docs (read in order)
 

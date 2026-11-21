@@ -52,6 +52,9 @@ const (
 	// AirMapper upload can't exhaust memory. 64 MiB comfortably covers a
 	// floor-plan-bearing .amp while capping the blast radius.
 	maxUploadBytes = 64 << 20
+
+	envAddr    = "TRELLIS_ADDR"
+	envDataDir = "TRELLIS_DATA_DIR"
 )
 
 func main() {
@@ -66,14 +69,17 @@ func main() {
 	}
 	defer func() { _ = closeLog() }()
 
-	if err := run(); err != nil {
+	if err := run(context.Background()); err != nil {
 		slog.Error("trellisd exited with error", "error", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
-	dataDir := os.Getenv("TRELLIS_DATA_DIR")
+// run serves until ctx is cancelled or the process is signalled. The Windows
+// service passes a context its Stop request cancels; everything else passes
+// context.Background and stops on a signal.
+func run(parent context.Context) error {
+	dataDir := os.Getenv(envDataDir)
 	if dataDir == "" {
 		var err error
 		if dataDir, err = apppaths.DataDir(); err != nil {
@@ -81,7 +87,7 @@ func run() error {
 		}
 	}
 
-	addr := os.Getenv("TRELLIS_ADDR")
+	addr := os.Getenv(envAddr)
 	explicitAddr := addr != ""
 	if !explicitAddr {
 		addr = defaultAddr
@@ -107,7 +113,7 @@ func run() error {
 	}
 	defer func() { _ = lock.Release() }()
 
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(parent, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
 	// Capture is linked in rather than run as a helper process (ADR-0006), and
@@ -189,15 +195,21 @@ func run() error {
 	}
 	// Published now rather than at Acquire: the port is not known until the
 	// fallback has settled, and a second daemon can only name it once it is.
+	var handler http.Handler = mux
 	if tcp, ok := ln.Addr().(*net.TCPAddr); ok {
 		if err := lock.SetPort(tcp.Port); err != nil {
 			return err
+		}
+		// Unprotected, the API is bare plain HTTP on loopback, so a page that
+		// rebinds its DNS name to 127.0.0.1 could otherwise read it.
+		if gate == nil {
+			handler = loopbackHostGuard(mux, tcp.IP, tcp.Port)
 		}
 	}
 
 	srv := &http.Server{
 		Addr:              boundAddr,
-		Handler:           mux,
+		Handler:           handler,
 		Protocols:         &protocols,
 		ReadHeaderTimeout: readHeaderTimeout,
 		ReadTimeout:       readTimeout,
