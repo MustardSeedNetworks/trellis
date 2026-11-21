@@ -141,11 +141,13 @@ function Get-TrustedDescriptor {
 }
 
 function Assert-TrustedDescriptor([string]$Path) {
+    # Windows adds Synchronize to a Modify grant when it stores it.
+    $Synchronize = [Security.AccessControl.FileSystemRights]::Synchronize
     $Acl = Get-Acl -LiteralPath $Path
     $Rules = @($Acl.Access)
     $Granted = @($Rules | Where-Object {
         $Sid = $_.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value
-        $Expected.ContainsKey($Sid) -and $_.AccessControlType -eq "Allow" -and $_.FileSystemRights -eq $Expected[$Sid] -and -not $_.IsInherited
+        $Expected.ContainsKey($Sid) -and $_.AccessControlType -eq "Allow" -and ($_.FileSystemRights -bor $Synchronize) -eq ($Expected[$Sid] -bor $Synchronize) -and -not $_.IsInherited
     })
     $Owner = $Acl.GetOwner([Security.Principal.SecurityIdentifier])
     if (-not $Acl.AreAccessRulesProtected -or $Rules.Count -ne 3 -or $Granted.Count -ne 3 -or $Owner -ne $AdminsSid) {
