@@ -26,7 +26,7 @@ function Assert-That([bool]$Condition, [string]$Message) {
 
 # install.ps1 runs under Windows PowerShell 5.1, the shell an operator has.
 function Invoke-Installer([string[]]$Arguments) {
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Installer @Arguments
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Installer @Arguments | Out-Host
     return $LASTEXITCODE
 }
 
