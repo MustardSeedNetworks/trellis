@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.50](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.49...v0.12.50) (2026-11-21)
+
+
+### Bug Fixes
+
+* add ci safety gates, log rotation and repo hygiene ([#1041](https://github.com/MustardSeedNetworks/trellis/issues/1041)) ([62ede47](https://github.com/MustardSeedNetworks/trellis/commit/62ede47f8cb7decd99807ae77e1e7446185ef000)), closes [#1040](https://github.com/MustardSeedNetworks/trellis/issues/1040)
+* **ui:** bring trellis web UI to fleet parity ([#1043](https://github.com/MustardSeedNetworks/trellis/issues/1043)) ([35a24ff](https://github.com/MustardSeedNetworks/trellis/commit/35a24ff3acdec38aa353d3ada140a0b08184edfb))
+
 ## [0.12.49](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.48...v0.12.49) (2026-11-21)
 
 
