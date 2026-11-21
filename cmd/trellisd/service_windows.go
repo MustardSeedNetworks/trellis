@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"unsafe"
 
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
@@ -25,11 +26,13 @@ const (
 	serviceDisplayName = "Trellis Wi-Fi Survey Daemon"
 	serviceDescription = "Serves the Trellis survey API on loopback. Live Wi-Fi scanning needs an interactive user session; run trellisd in one for surveys."
 
-	// serviceAccount is the least-privileged built-in account that can listen
-	// on loopback and write the data directory install.ps1 grants it. Not
-	// LocalSystem: trellisd serves a browser and parses imported files, and
-	// nothing it does needs more.
-	serviceAccount = `NT AUTHORITY\LocalService`
+	// serviceAccount is the service's virtual account: a per-service identity
+	// with no password and no rights of its own, so the data directory can be
+	// granted to this service alone rather than to every LocalService process.
+	// Not LocalSystem: the daemon serves a browser on a plain-HTTP, credential-
+	// less loopback port (ADR-0007), and anything that reaches it through that
+	// port must not land in a machine account.
+	serviceAccount = `NT SERVICE\` + serviceName
 
 	// serviceRestartDelay matches RestartSec in the Linux user unit.
 	serviceRestartDelay = 5 * time.Second
@@ -130,7 +133,79 @@ func runService() error {
 	}
 	defer func() { _ = closeLog() }()
 
-	return svc.Run(serviceName, serviceHandler{run: run})
+	return svc.Run(serviceName, serviceHandler{run: runChecked})
+}
+
+// runChecked refuses to start on a data directory the service cannot trust,
+// then runs the daemon. It runs inside the handler so the refusal is logged and
+// reported to the Service Control Manager as a failed start.
+func runChecked(ctx context.Context) error {
+	dataDir := os.Getenv(envDataDir)
+	if dataDir == "" {
+		return errors.New(envDataDir + " is not set in the service environment; reinstall the service")
+	}
+	if err := verifyDataDir(dataDir); err != nil {
+		return fmt.Errorf("data directory %s: %w", dataDir, err)
+	}
+	return run(ctx)
+}
+
+// verifyDataDir applies checkDataDirSecurity to the directory on disk and
+// refuses a reparse point. A directory that does not exist yet is accepted:
+// the daemon creates it under the parent's protected ACL.
+func verifyDataDir(dir string) error {
+	path, err := windows.UTF16PtrFromString(dir)
+	if err != nil {
+		return fmt.Errorf("path: %w", err)
+	}
+	attrs, err := windows.GetFileAttributes(path)
+	if errors.Is(err, windows.ERROR_FILE_NOT_FOUND) || errors.Is(err, windows.ERROR_PATH_NOT_FOUND) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("stat: %w", err)
+	}
+	if attrs&windows.FILE_ATTRIBUTE_REPARSE_POINT != 0 {
+		return errors.New("is a junction or symbolic link")
+	}
+	if attrs&windows.FILE_ATTRIBUTE_DIRECTORY == 0 {
+		return errors.New("is not a directory")
+	}
+
+	sd, err := windows.GetNamedSecurityInfo(dir, windows.SE_FILE_OBJECT,
+		windows.OWNER_SECURITY_INFORMATION|windows.DACL_SECURITY_INFORMATION)
+	if err != nil {
+		return fmt.Errorf("read security descriptor: %w", err)
+	}
+	owner, _, err := sd.Owner()
+	if err != nil || owner == nil {
+		return fmt.Errorf("read owner: %w", err)
+	}
+	dacl, _, err := sd.DACL()
+	if err != nil && !errors.Is(err, windows.ERROR_OBJECT_NOT_FOUND) {
+		return fmt.Errorf("read DACL: %w", err)
+	}
+	user, err := windows.GetCurrentProcessToken().GetTokenUser()
+	if err != nil {
+		return fmt.Errorf("read process token user: %w", err)
+	}
+
+	var entries []aclEntry
+	if dacl != nil {
+		for i := range uint32(dacl.AceCount) {
+			var ace *windows.ACCESS_ALLOWED_ACE
+			if err := windows.GetAce(dacl, i, &ace); err != nil {
+				return fmt.Errorf("read DACL entry %d: %w", i, err)
+			}
+			if ace.Header.AceType != windows.ACCESS_ALLOWED_ACE_TYPE {
+				continue
+			}
+			// The SID starts at SidStart and runs on past the struct.
+			sid := (*windows.SID)(unsafe.Pointer(&ace.SidStart))
+			entries = append(entries, aclEntry{sid: sid.String(), mask: uint32(ace.Mask)})
+		}
+	}
+	return checkDataDirSecurity(owner.String(), dacl != nil, entries, user.User.Sid.String())
 }
 
 func connectManager() (*mgr.Mgr, error) {
@@ -160,6 +235,9 @@ func installService(out io.Writer) error {
 	programData, err := windows.KnownFolderPath(windows.FOLDERID_ProgramData, 0)
 	if err != nil {
 		return fmt.Errorf("resolve ProgramData: %w", err)
+	}
+	if err := validateServiceInstall(os.Getenv); err != nil {
+		return err
 	}
 
 	m, err := connectManager()
@@ -193,10 +271,7 @@ func installService(out io.Writer) error {
 		return err
 	}
 
-	_, _ = fmt.Fprintf(out, "Service %s installed (manual start, as LocalService).\n  data dir: %s\n", serviceName, env[0][len(envDataDir)+1:])
-	if credentialSet(os.Getenv) {
-		_, _ = fmt.Fprintln(out, "  note: TRELLIS_AUTH_USERNAME/PASSWORD were not copied; a service environment is readable by every local user.")
-	}
+	_, _ = fmt.Fprintf(out, "Service %s installed (manual start, as %s).\n  data dir: %s\n", serviceName, serviceAccount, env[0][len(envDataDir)+1:])
 	_, _ = fmt.Fprintln(out, "Start it with: trellisd service start")
 	return nil
 }

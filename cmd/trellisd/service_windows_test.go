@@ -7,6 +7,10 @@ package main
 import (
 	"context"
 	"errors"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -133,5 +137,48 @@ func TestStateName(t *testing.T) {
 		if got := stateName(tc.state); got != tc.want {
 			t.Errorf("stateName(%d) = %q, want %q", tc.state, got, tc.want)
 		}
+	}
+}
+
+func TestVerifyDataDir(t *testing.T) {
+	t.Parallel()
+
+	base := t.TempDir()
+	file := filepath.Join(base, "file")
+	if err := os.WriteFile(file, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	target := filepath.Join(base, "target")
+	if err := os.Mkdir(target, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	junction := filepath.Join(base, "junction")
+	if out, err := exec.CommandContext(t.Context(), "cmd", "/c", "mklink", "/J", junction, target).CombinedOutput(); err != nil {
+		t.Fatalf("mklink /J: %v: %s", err, out)
+	}
+
+	tests := []struct {
+		name    string
+		dir     string
+		wantErr string
+	}{
+		{name: "missing directory is created later", dir: filepath.Join(base, "missing")},
+		{name: "a file is refused", dir: file, wantErr: "not a directory"},
+		{name: "a junction is refused", dir: junction, wantErr: "junction"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			err := verifyDataDir(tc.dir)
+			if tc.wantErr == "" {
+				if err != nil {
+					t.Fatalf("verifyDataDir() = %v, want nil", err)
+				}
+				return
+			}
+			if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
+				t.Fatalf("verifyDataDir() = %v, want one containing %q", err, tc.wantErr)
+			}
+		})
 	}
 }

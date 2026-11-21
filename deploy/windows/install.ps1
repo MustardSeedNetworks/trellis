@@ -9,6 +9,12 @@
 # (`trellisd service start`), as the systemd user unit is on Linux (ADR-0007).
 # Surveys are never deleted; they live under %ProgramData%\Trellis\data.
 #
+# The service runs as the virtual account NT SERVICE\Trellis, never as
+# LocalSystem. It serves plain HTTP on loopback without a login, so anything
+# that reaches that port must not land in a machine account. The installer
+# refuses a TRELLIS_AUTH_* credential in the shell it runs from: a service's
+# environment is readable by every local user.
+#
 # The service cannot scan Wi-Fi. Windows gates WLAN scanning on a per-user
 # Location grant in an interactive session, which a service never has (#152).
 # It serves imported surveys and reports; run trellisd.exe from your own
@@ -84,21 +90,6 @@ $WasRunning = Stop-TrellisService
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 Copy-Item $SourceBinary $InstalledBinary -Force
 
-# The service runs as LocalService and writes its data and log here. Only
-# SYSTEM, Administrators and the service itself may touch it: surveys record
-# which networks were in range, so ordinary users get no access by inheritance.
-# A reinstall leaves existing contents and re-asserts the ACL.
-New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
-New-Item -ItemType Directory -Force -Path (Join-Path $DataRoot "logs") | Out-Null
-foreach ($Dir in @($DataRoot, $DataDir) | Select-Object -Unique) {
-    & icacls.exe $Dir /inheritance:r /grant:r "*S-1-5-18:(OI)(CI)(F)" "*S-1-5-32-544:(OI)(CI)(F)" "*S-1-5-19:(OI)(CI)(M)" | Out-Null
-    if ($LASTEXITCODE -ne 0) {
-        $ExitCode = $LASTEXITCODE
-        Write-Error "Could not restrict $Dir to SYSTEM, Administrators and LocalService (icacls exit code $ExitCode)."
-        exit $ExitCode
-    }
-}
-
 $MachinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
 if (@($MachinePath -split ";") -notcontains $InstallDir) {
     [Environment]::SetEnvironmentVariable("Path", "$MachinePath;$InstallDir", "Machine")
@@ -113,7 +104,52 @@ if ($null -eq (Get-Service -Name $ServiceName -ErrorAction SilentlyContinue)) {
         Write-Error "Trellis service installation failed with exit code $ExitCode."
         exit $ExitCode
     }
-} elseif ($WasRunning) {
+}
+
+# The service runs as the virtual account NT SERVICE\Trellis, which exists once
+# the service does, so the directories are secured after it is registered and
+# before it can be started.
+#
+# Anyone may create a folder under %ProgramData% before this script does. A
+# directory they created and still own would let them rewrite what a machine
+# account reads, so on every run (not only on create) a reparse point anywhere
+# in the tree is refused, ownership of the whole tree goes to Administrators,
+# and the directory gets a protected ACL: SYSTEM, Administrators and the
+# service only. Children inherit it, so a file the squatter planted loses its
+# own ACL too. Surveys record which networks were in range, so ordinary users
+# get no access.
+New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $DataRoot "logs") | Out-Null
+foreach ($Dir in @($DataRoot, $DataDir) | Select-Object -Unique) {
+    $Item = Get-Item -LiteralPath $Dir -Force
+    $Nested = Get-ChildItem -LiteralPath $Dir -Recurse -Force -Attributes ReparsePoint -ErrorAction SilentlyContinue
+    if (($Item.Attributes -band [IO.FileAttributes]::ReparsePoint) -or $Nested) {
+        Write-Error "$Dir contains a junction or symbolic link. Remove it and run install.ps1 again."
+        exit 1
+    }
+    & icacls.exe $Dir /setowner "*S-1-5-32-544" /T /C /L | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        $ExitCode = $LASTEXITCODE
+        Write-Error "Could not take ownership of $Dir (icacls exit code $ExitCode)."
+        exit $ExitCode
+    }
+    & icacls.exe $Dir /inheritance:r /grant:r "*S-1-5-18:(OI)(CI)(F)" "*S-1-5-32-544:(OI)(CI)(F)" "NT SERVICE\${ServiceName}:(OI)(CI)(M)" | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        $ExitCode = $LASTEXITCODE
+        Write-Error "Could not restrict $Dir to SYSTEM, Administrators and the Trellis service (icacls exit code $ExitCode)."
+        exit $ExitCode
+    }
+    if (Get-ChildItem -LiteralPath $Dir -Force | Select-Object -First 1) {
+        & icacls.exe "$Dir\*" /reset /T /C /L | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            $ExitCode = $LASTEXITCODE
+            Write-Error "Could not reset the ACLs under $Dir (icacls exit code $ExitCode)."
+            exit $ExitCode
+        }
+    }
+}
+
+if ($WasRunning) {
     # An upgrade keeps the service's configuration and environment as the
     # operator left them; only the program file changed.
     Write-Host "  Restarting Windows service..."

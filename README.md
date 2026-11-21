@@ -68,9 +68,11 @@ signed, entitled bundle can read Wi-Fi network names.
 Extract `trellis-<version>-windows-amd64.zip` (or `-arm64`) and run `install.ps1`
 from an elevated PowerShell. It installs `trellisd.exe` to
 `C:\Program Files\Trellis` and registers a Windows service named `Trellis`
-that runs as LocalService, keeps surveys and its log under
-`%ProgramData%\Trellis`, and is **neither started nor set to start at boot**,
-the counterpart of the disabled Linux user unit:
+that runs as its own virtual account (`NT SERVICE\Trellis`, never LocalSystem),
+keeps surveys and its log under `%ProgramData%\Trellis` (owned by Administrators,
+writable only by SYSTEM, Administrators and the service), and is **neither
+started nor set to start at boot**, the counterpart of the disabled Linux user
+unit:
 
 ```powershell
 .\install.ps1                  # install, or upgrade in place
@@ -85,9 +87,12 @@ Windows gates WLAN scanning on a per-user Location grant in an interactive
 session, which a service never has (#152). To survey with a live adapter, run
 `trellisd.exe` from your own session. `TRELLIS_ADDR`, `TRELLIS_DATA_DIR`,
 `TRELLIS_CAPTURE_MODE` and `TRELLIS_TLS_*` set in the shell that runs
-`trellisd service install` are copied into the service; `TRELLIS_AUTH_*` is
-not, because a service's environment is readable by every local user, so the
-service stays on loopback without a login.
+`trellisd service install` are copied into the service. `TRELLIS_AUTH_*` is
+refused, not dropped: a service's environment is readable by every local user,
+so `service install` fails if a credential is set, and a routable
+`TRELLIS_ADDR` is refused with it. The service is therefore loopback-only
+without a login. It will not start if its data directory is not owned by
+SYSTEM or Administrators, grants write access to anyone else, or is a junction.
 
 ## Docs (read in order)
 

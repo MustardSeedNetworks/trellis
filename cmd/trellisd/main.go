@@ -195,15 +195,21 @@ func run(parent context.Context) error {
 	}
 	// Published now rather than at Acquire: the port is not known until the
 	// fallback has settled, and a second daemon can only name it once it is.
+	var handler http.Handler = mux
 	if tcp, ok := ln.Addr().(*net.TCPAddr); ok {
 		if err := lock.SetPort(tcp.Port); err != nil {
 			return err
+		}
+		// Unprotected, the API is bare plain HTTP on loopback, so a page that
+		// rebinds its DNS name to 127.0.0.1 could otherwise read it.
+		if gate == nil {
+			handler = loopbackHostGuard(mux, tcp.IP, tcp.Port)
 		}
 	}
 
 	srv := &http.Server{
 		Addr:              boundAddr,
-		Handler:           mux,
+		Handler:           handler,
 		Protocols:         &protocols,
 		ReadHeaderTimeout: readHeaderTimeout,
 		ReadTimeout:       readTimeout,

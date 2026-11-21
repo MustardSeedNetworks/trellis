@@ -138,3 +138,100 @@ func TestHandleArgsServiceBadAction(t *testing.T) {
 		t.Fatalf("stderr = %q, want the unknown-action message", stderr.String())
 	}
 }
+
+func TestValidateServiceInstall(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		env     map[string]string
+		wantErr string
+	}{
+		{name: "empty environment installs"},
+		{name: "loopback address installs", env: map[string]string{envAddr: "127.0.0.1:9000"}},
+		{name: "username is refused", env: map[string]string{"TRELLIS_AUTH_USERNAME": "op"}, wantErr: "readable by every local user"},
+		{name: "password is refused", env: map[string]string{"TRELLIS_AUTH_PASSWORD": "x"}, wantErr: "readable by every local user"},
+		{name: "routable address is refused", env: map[string]string{envAddr: "0.0.0.0:8446"}, wantErr: "loopback only"},
+		{name: "all-interfaces shorthand is refused", env: map[string]string{envAddr: ":8446"}, wantErr: "loopback only"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			err := validateServiceInstall(func(k string) string { return tc.env[k] })
+			if tc.wantErr == "" {
+				if err != nil {
+					t.Fatalf("validateServiceInstall() = %v, want nil", err)
+				}
+				return
+			}
+			if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
+				t.Fatalf("validateServiceInstall() = %v, want one containing %q", err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestCheckDataDirSecurity(t *testing.T) {
+	t.Parallel()
+
+	const (
+		self     = "S-1-5-80-111"
+		users    = "S-1-5-32-545"
+		everyone = "S-1-1-0"
+		attacker = "S-1-5-21-1-2-3-1001"
+	)
+	trusted := []aclEntry{
+		{sidSystem, genericAll},
+		{sidAdministrators, genericAll},
+		{self, fileWriteData | fileAppendData},
+	}
+
+	tests := []struct {
+		name    string
+		owner   string
+		hasDACL bool
+		entries []aclEntry
+		wantErr string
+	}{
+		{name: "installer's layout", owner: sidAdministrators, hasDACL: true, entries: trusted},
+		{name: "owned by SYSTEM", owner: sidSystem, hasDACL: true, entries: trusted},
+		{
+			name: "read-only grant to Users is fine", owner: sidAdministrators, hasDACL: true,
+			entries: append([]aclEntry{{users, 0x001200a9}}, trusted...),
+		},
+		{name: "squatter owns it", owner: attacker, hasDACL: true, entries: trusted, wantErr: "owned by " + attacker},
+		{name: "users owner", owner: users, hasDACL: true, entries: trusted, wantErr: "owned by " + users},
+		{name: "null DACL", owner: sidAdministrators, hasDACL: false, wantErr: "no DACL"},
+		{
+			name: "Users may write", owner: sidAdministrators, hasDACL: true,
+			entries: append([]aclEntry{{users, fileWriteData}}, trusted...), wantErr: "write access",
+		},
+		{
+			name: "Everyone may append", owner: sidAdministrators, hasDACL: true,
+			entries: append([]aclEntry{{everyone, fileAppendData}}, trusted...), wantErr: "write access",
+		},
+		{
+			name: "a user may take ownership", owner: sidAdministrators, hasDACL: true,
+			entries: append([]aclEntry{{attacker, accessWriteOwner}}, trusted...), wantErr: "write access",
+		},
+		{
+			name: "generic all for a user", owner: sidAdministrators, hasDACL: true,
+			entries: append([]aclEntry{{attacker, genericAll}}, trusted...), wantErr: "write access",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			err := checkDataDirSecurity(tc.owner, tc.hasDACL, tc.entries, self)
+			if tc.wantErr == "" {
+				if err != nil {
+					t.Fatalf("checkDataDirSecurity() = %v, want nil", err)
+				}
+				return
+			}
+			if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
+				t.Fatalf("checkDataDirSecurity() = %v, want one containing %q", err, tc.wantErr)
+			}
+		})
+	}
+}
