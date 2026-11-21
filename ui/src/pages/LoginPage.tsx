@@ -37,7 +37,14 @@ function useErrorMessage(): (failure: Failure) => string {
  * is nothing behind it to look at, and a survey tool that appeared to be
  * loading data it cannot read would be worse than one that says what it wants.
  */
-export function LoginPage({ onAuthenticated }: { onAuthenticated: (username: string) => void }) {
+export function LoginPage({
+  onAuthenticated,
+  sessionExpired = false,
+}: {
+  onAuthenticated: (username: string) => void;
+  /** The daemon refused to renew a session that was live: say so before asking again. */
+  sessionExpired?: boolean;
+}) {
   const { t } = useTranslation('pages');
   const errorMessage = useErrorMessage();
   const usernameId = useId();
@@ -123,6 +130,16 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (username: str
           aria-invalid={invalid}
           aria-describedby={failure ? errorId : undefined}
         />
+
+        {sessionExpired && !failure ? (
+          <p
+            className="mt-4 text-sm text-status-warning-strong"
+            role="status"
+            data-testid="login-session-expired"
+          >
+            {t('login.sessionExpired')}
+          </p>
+        ) : null}
 
         {failure && (
           <p

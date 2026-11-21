@@ -2,11 +2,16 @@
   "accessibility": {
     "breadcrumb": "Ruta de navegación",
     "closeHelp": "Cerrar ayuda",
+    "closeMenu": "Cerrar el menú",
     "collapseSidebar": "Contraer la barra lateral",
+    "dismissNotification": "Descartar la notificación",
     "expandSidebar": "Expandir la barra lateral",
     "helpTitle": "Ayuda: {{title}}",
+    "notifications": "Notificaciones",
     "openHelp": "Abrir la ayuda de {{title}}",
+    "openMenu": "Abrir el menú",
     "sections": "Secciones de Trellis",
+    "selectLanguage": "Idioma",
     "skipToContent": "Saltar al contenido",
     "switchToDarkTheme": "Cambiar al tema oscuro",
     "switchToLightTheme": "Cambiar al tema claro",
@@ -15,10 +20,33 @@
   "buttons": {
     "generating": "Generando…"
   },
+  "commandPalette": {
+    "actions": "Acciones",
+    "closeAriaLabel": "Cerrar la paleta de comandos",
+    "dialogLabel": "Paleta de comandos",
+    "escKey": "Esc",
+    "inputPlaceholder": "Ir a una página o ejecutar un comando…",
+    "navigate": "Ir a",
+    "noMatches": "Sin coincidencias",
+    "switchLanguage": "Cambiar el idioma a {{language}}"
+  },
+  "connection": {
+    "unreachableBody": "Reintentando cada pocos segundos. Comprueba que trellisd esté en ejecución y que este dispositivo pueda alcanzarlo.",
+    "unreachableTitle": "No se puede contactar con el demonio de Trellis"
+  },
   "emptyState": {
-    "notFoundBody": "No hay ninguna página en esta dirección. Puede ser una URL mal escrita o un enlace a una página que ya no existe.",
+    "notFoundBody": "Trellis no tiene ninguna página en esta dirección. Puede ser una URL mal escrita o un enlace a una página que ya no existe.",
     "notFoundHome": "Ir a Estudios",
     "notFoundTitle": "Página no encontrada"
+  },
+  "errorBoundary": {
+    "description": "Algo de esta pantalla no se pudo dibujar. Recarga para empezar de nuevo o vuelve al inicio. Los estudios ya capturados los guarda el demonio y no se ven afectados.",
+    "home": "Ir al inicio",
+    "pageDescription": "El resto de Trellis sigue funcionando. Vuelve a intentar esta página o recarga.",
+    "pageTitle": "Esta página no se pudo cargar",
+    "reload": "Recargar",
+    "retry": "Reintentar",
+    "title": "Trellis encontró un error inesperado"
   },
   "labels": {
     "accessPoint": "Punto de acceso",
@@ -30,6 +58,7 @@
     "floorPlan": "Plano de planta",
     "floors": "Plantas",
     "hiddenNetwork": "Red oculta",
+    "language": "Idioma",
     "metric": "Métrica",
     "recommendations": "Recomendaciones",
     "samples": "Muestras",

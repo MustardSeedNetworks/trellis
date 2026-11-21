@@ -1,36 +1,33 @@
 /**
- * The rail's responsive behaviour (trellis#473).
+ * The rail and its drawer variant (trellis#473).
  *
- * The interesting part is not that a phone collapses the rail — the E2E proves
- * that against a real layout — but that the forced collapse must not be
- * MISTAKEN for the operator's own choice. `collapsed` was persisted on every
- * change, so a width-driven collapse would have written "true" and left the
- * rail collapsed on the desktop the survey is written up on.
+ * The rail is drawn from lg up; below it MobileNav opens the same contents as
+ * a drawer. What matters here is what the variants must not share: the
+ * operator's own collapse choice is remembered, and the drawer — always
+ * expanded, with no collapse control — never records one.
  */
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { setViewportNarrow } from '@/test/matchMedia';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { Sidebar } from './Sidebar';
 
 const STORAGE_KEY = 'trellis-sidebar-collapsed';
 
-function renderSidebar() {
+function renderSidebar(variant?: 'rail' | 'drawer') {
   return render(
     <MemoryRouter>
-      <Sidebar version="1.2.3" />
+      <Sidebar version="1.2.3" variant={variant} />
     </MemoryRouter>,
   );
 }
 
 beforeEach(() => localStorage.clear());
-afterEach(() => setViewportNarrow(false));
 
-describe('Sidebar at phone width', () => {
+describe('Sidebar rail', () => {
   it('names every collapsed link without relying on a native title tooltip', async () => {
     const user = userEvent.setup();
-    setViewportNarrow(true);
+    localStorage.setItem(STORAGE_KEY, 'true');
     renderSidebar();
     for (const name of ['Surveys', 'Import', 'Coverage', 'Live', 'Reports']) {
       const link = screen.getByRole('link', { name });
@@ -41,27 +38,13 @@ describe('Sidebar at phone width', () => {
     }
   });
 
-  it('collapses without recording a preference the operator never set', () => {
-    setViewportNarrow(true);
-
+  it('is hidden below lg and expanded on a desktop that has never been collapsed', () => {
     renderSidebar();
 
-    expect(screen.getByTestId('sidebar').className).toContain('w-16');
-    expect(localStorage.getItem(STORAGE_KEY)).toBe('false');
-  });
-
-  it('does not offer the collapse control, which would undo the layout', () => {
-    setViewportNarrow(true);
-
-    renderSidebar();
-
-    expect(screen.queryByTestId('sidebar-collapse')).not.toBeInTheDocument();
-  });
-
-  it('keeps an expanded rail on a desktop that has never been collapsed', () => {
-    renderSidebar();
-
-    expect(screen.getByTestId('sidebar').className).toContain('w-56');
+    const rail = screen.getByTestId('sidebar');
+    expect(rail.className).toContain('hidden');
+    expect(rail.className).toContain('lg:flex');
+    expect(rail.className).toContain('w-56');
     expect(screen.getByTestId('sidebar-collapse')).toBeInTheDocument();
   });
 
@@ -75,5 +58,26 @@ describe('Sidebar at phone width', () => {
     unmount();
     renderSidebar();
     expect(screen.getByTestId('sidebar').className).toContain('w-16');
+  });
+});
+
+describe('Sidebar drawer', () => {
+  it('is expanded and offers no collapse control', () => {
+    renderSidebar('drawer');
+
+    const drawer = screen.getByTestId('sidebar-mobile');
+    expect(drawer.className).toContain('w-72');
+    expect(drawer.className).not.toContain('hidden');
+    expect(screen.queryByTestId('sidebar-collapse')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Reports' })).toBeInTheDocument();
+  });
+
+  it('ignores the collapse the operator chose on the desktop rail', () => {
+    localStorage.setItem(STORAGE_KEY, 'true');
+
+    renderSidebar('drawer');
+
+    expect(screen.getByTestId('sidebar-mobile').className).toContain('w-72');
+    expect(localStorage.getItem(STORAGE_KEY)).toBe('true');
   });
 });

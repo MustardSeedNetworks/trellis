@@ -12,6 +12,7 @@ import {
   THRESHOLDS,
 } from '@/lib/coverageThreshold';
 import { bytesToDataUrl, reportFilename } from '@/lib/format';
+import { useToast } from '@/ui/toastContext';
 
 /**
  * Reports — Form + wizard, in its single-screen form.
@@ -51,6 +52,7 @@ const DEFAULT_SECTIONS: Record<SectionKey, boolean> = {
 
 export function ReportsPage() {
   const { t } = useTranslation(['common', 'pages']);
+  const { addToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
   /* Resolved here rather than in a module constant: a constant would freeze
@@ -113,6 +115,8 @@ export function ReportsPage() {
       link.download = reportFilename(selected?.name ?? 'survey');
       link.click();
     },
+    onError: (error) =>
+      addToast(t('pages:reports.generateFailed', { error: String(error) }), 'error'),
   });
 
   return (
@@ -225,7 +229,6 @@ export function ReportsPage() {
             type="button"
             onClick={() => generate.mutate()}
             disabled={surveyId === undefined || generate.isPending}
-            aria-describedby={generate.isError ? 'report-error' : undefined}
             className="rounded bg-brand-primary px-3 py-2 text-sm font-medium text-on-brand hover:bg-brand-accent disabled:opacity-50"
             data-testid="generate-report"
           >
@@ -235,12 +238,6 @@ export function ReportsPage() {
             <span className="text-sm text-text-muted">{t('pages:reports.noSurveys')}</span>
           ) : null}
         </div>
-
-        {generate.isError ? (
-          <p id="report-error" className="text-sm text-status-error" data-testid="report-error">
-            {t('pages:reports.generateFailed', { error: String(generate.error) })}
-          </p>
-        ) : null}
       </div>
     </div>
   );
