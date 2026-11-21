@@ -174,8 +174,8 @@ jobs:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           configuration-path: ".github/labeler.yml"
 
-  # Trellis has no issue form templates yet, so there is no component map
-  # (unlike seed/stem/niac); only the fleet-wide priority and severity
+  # Trellis's issue forms have an Area dropdown but no component map is kept
+  # here (unlike seed/stem/niac); only the fleet-wide priority and severity
   # vocabulary is matched.
   label-issue:
     name: Label Issue

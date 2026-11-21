@@ -1,0 +1,57 @@
+name: Task
+description: Track maintenance, refactoring, dependency, CI, or documentation work for Trellis
+title: "Chore: "
+labels: ["type: chore", "status: needs-triage"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What work needs to be done?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - api
+        - build
+        - ci
+        - docs
+        - frontend
+        - proto
+        - security
+        - survey
+        - tests
+        - wifi
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Critical
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Technical Notes
+  - type: textarea
+    id: related
+    attributes:
+      label: Related Issues or Pull Requests
