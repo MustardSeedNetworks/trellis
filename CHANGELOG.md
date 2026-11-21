@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.12.48](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.47...v0.12.48) (2026-11-21)
+
+
+### Bug Fixes
+
+* **deps:** update dependency i18next to v26.7.2 ([#1050](https://github.com/MustardSeedNetworks/trellis/issues/1050)) ([d250a8d](https://github.com/MustardSeedNetworks/trellis/commit/d250a8def67366839bed6e0fd37df5dcc0fbf50b))
+* **deps:** update dependency react-i18next to v17.1.13 ([#1051](https://github.com/MustardSeedNetworks/trellis/issues/1051)) ([a5eb043](https://github.com/MustardSeedNetworks/trellis/commit/a5eb04361483c002004db30a5927171ba94a7d51))
+
+
+### Miscellaneous
+
+* **deps:** update dependency @rolldown/plugin-babel to v0.3.1 ([#988](https://github.com/MustardSeedNetworks/trellis/issues/988)) ([3b7d1ff](https://github.com/MustardSeedNetworks/trellis/commit/3b7d1ff646b7631b3c5ce846010a6e059d3a26f4))
+
 ## [0.12.47](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.46...v0.12.47) (2026-11-21)
 
 
