@@ -149,7 +149,8 @@ function Assert-TrustedDescriptor([string]$Path) {
     })
     $Owner = $Acl.GetOwner([Security.Principal.SecurityIdentifier])
     if (-not $Acl.AreAccessRulesProtected -or $Rules.Count -ne 3 -or $Granted.Count -ne 3 -or $Owner -ne $AdminsSid) {
-        Write-Error "$Path did not end with exactly SYSTEM, Administrators and the Trellis service. Inspect it and remove it, then run install.ps1 again."
+        $Found = ($Rules | ForEach-Object { "$($_.IdentityReference) $($_.AccessControlType) $($_.FileSystemRights) inherited=$($_.IsInherited)" }) -join "; "
+        Write-Error "$Path did not end with exactly SYSTEM, Administrators and the Trellis service (owner $Owner, protected $($Acl.AreAccessRulesProtected); found: $Found). Inspect it and remove it, then run install.ps1 again."
         exit 1
     }
 }
