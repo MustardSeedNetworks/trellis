@@ -41,7 +41,7 @@ if (-not $Principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
     exit 1
 }
 
-function Stop-TrellisService {
+function Invoke-ServiceStop {
     $Service = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
     if ($null -ne $Service -and $Service.Status -ne "Stopped") {
         Write-Host "  Stopping Windows service..."
@@ -52,7 +52,7 @@ function Stop-TrellisService {
     return $false
 }
 
-function Remove-InstallDirFromPath {
+function Invoke-PathCleanup {
     $MachinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
     $Entries = @($MachinePath -split ";" | Where-Object { $_ -and ($_.TrimEnd("\") -ne $InstallDir) })
     [Environment]::SetEnvironmentVariable("Path", ($Entries -join ";"), "Machine")
@@ -61,7 +61,7 @@ function Remove-InstallDirFromPath {
 if ($Uninstall) {
     Write-Host "Uninstalling Trellis..." -ForegroundColor Green
     if ($null -ne (Get-Service -Name $ServiceName -ErrorAction SilentlyContinue)) {
-        [void](Stop-TrellisService)
+        [void](Invoke-ServiceStop)
         & $InstalledBinary service uninstall
         if ($LASTEXITCODE -ne 0) {
             $ExitCode = $LASTEXITCODE
@@ -69,7 +69,7 @@ if ($Uninstall) {
             exit $ExitCode
         }
     }
-    Remove-InstallDirFromPath
+    Invoke-PathCleanup
     if (Test-Path $InstallDir) {
         Remove-Item -Recurse -Force $InstallDir
     }
@@ -85,7 +85,7 @@ if (-not (Test-Path $SourceBinary)) {
 
 Write-Host "Installing Trellis..." -ForegroundColor Green
 
-$WasRunning = Stop-TrellisService
+$WasRunning = Invoke-ServiceStop
 
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 Copy-Item $SourceBinary $InstalledBinary -Force

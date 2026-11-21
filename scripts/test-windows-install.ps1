@@ -36,7 +36,7 @@ function Show-ServiceLog {
         Format-List TimeCreated, Message
 }
 
-function Assert-ExactlyThreeAces([string]$Path) {
+function Assert-ThreeAce([string]$Path) {
     $Allowed = @("NT AUTHORITY\SYSTEM", "BUILTIN\Administrators", "NT SERVICE\Trellis")
     $Acl = Get-Acl -LiteralPath $Path
     Assert-That ($Acl.Owner -eq "BUILTIN\Administrators") "$Path is owned by Administrators (got $($Acl.Owner))"
@@ -71,8 +71,8 @@ New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
 Assert-That ((Get-Acl $DataDir).Access.Count -gt 3) "precondition: the data dir carries an extra user ACE"
 
 Assert-That ((Invoke-Installer @()) -eq 0) "install.ps1 succeeds over an admin-owned data dir"
-Assert-ExactlyThreeAces $DataRoot
-Assert-ExactlyThreeAces $DataDir
+Assert-ThreeAce $DataRoot
+Assert-ThreeAce $DataDir
 
 # --- 3. Service shape -----------------------------------------------------------------
 $Service = Get-CimInstance Win32_Service -Filter "Name='Trellis'"
