@@ -5,9 +5,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 import { App } from '@/App';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { applyStoredTheme } from '@/hooks/useTheme';
 import { createQueryClient } from '@/lib/queryClient';
 import { AuthGate } from '@/ui/AuthGate';
+import { ToastProvider } from '@/ui/Toast';
 // Side-effect import: initialises i18next before any component renders.
 import '@/i18n';
 import './index.css';
@@ -25,12 +27,16 @@ if (!container) {
 
 createRoot(container).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthGate>
-          <App />
-        </AuthGate>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <ToastProvider>
+            <AuthGate>
+              <App />
+            </AuthGate>
+          </ToastProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   </StrictMode>,
 );

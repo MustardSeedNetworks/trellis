@@ -147,7 +147,8 @@
       "rateLimited": "Too many attempts. Wait a few minutes and try again.",
       "unavailable": "Could not reach the daemon.",
       "empty": "Enter a username and password."
-    }
+    },
+    "sessionExpired": "Your session expired. Sign in again."
   },
   "reports": {
     "analysis": "Findings",

@@ -52,9 +52,29 @@ async function readSession(response: Response): Promise<Session> {
   return { authenticated: body.authenticated ?? false, username: body.username };
 }
 
-/** fetchSession asks the daemon whether we are logged in, and whether it cares. */
+/**
+ * DaemonUnreachableError is a probe that never got an answer: the request
+ * itself failed. It is not an authentication answer, so callers must not treat
+ * it as one in either direction.
+ */
+export class DaemonUnreachableError extends Error {
+  constructor() {
+    super('daemon unreachable');
+    this.name = 'DaemonUnreachableError';
+  }
+}
+
+/**
+ * fetchSession asks the daemon whether we are logged in, and whether it cares.
+ * It rejects with DaemonUnreachableError when the daemon cannot be reached.
+ */
 export async function fetchSession(): Promise<Session> {
-  const response = await fetch(SESSION_URL, { credentials: 'same-origin' });
+  let response: Response;
+  try {
+    response = await fetch(SESSION_URL, { credentials: 'same-origin' });
+  } catch {
+    throw new DaemonUnreachableError();
+  }
   if (response.status === 404) {
     return { authenticated: true, authDisabled: true };
   }

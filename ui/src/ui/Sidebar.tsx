@@ -19,8 +19,8 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
 import { useAuth } from '@/ui/AuthGate';
+import { LanguageSwitcher } from '@/ui/LanguageSwitcher';
 import { iconSizes } from '../constants/sizes';
-import { useNarrowViewport } from '../hooks/useNarrowViewport';
 import { useTheme } from '../hooks/useTheme';
 import { useNavGroups } from '../navGroups';
 import { MsnMark } from './MsnMark';
@@ -30,31 +30,37 @@ const STORAGE_KEY = 'trellis-sidebar-collapsed';
 
 interface SidebarProps {
   version?: string;
+  /**
+   * The desktop rail, or the same contents as the slide-out drawer MobileNav
+   * opens below lg. The drawer is always expanded and has no collapse control:
+   * collapsing is a desktop preference, and a phone has no room for it.
+   */
+  variant?: 'rail' | 'drawer';
+  /** Called when a nav link is followed, so the drawer can close on a same-path tap. */
+  onNavigate?: () => void;
 }
 
-export function Sidebar({ version }: SidebarProps) {
+export function Sidebar({ version, variant = 'rail', onNavigate }: SidebarProps) {
   const { t } = useTranslation('common');
   const navGroups = useNavGroups();
-  const narrow = useNarrowViewport();
+  const drawer = variant === 'drawer';
   const [chosenCollapsed, setChosenCollapsed] = useState(
     () => localStorage.getItem(STORAGE_KEY) === 'true',
   );
 
-  // A phone forces the rail narrow; the operator's own choice is what is
-  // remembered. Storing the forced state instead would let one visit on a
-  // phone silently collapse the rail on the desktop the survey is written up
-  // on, which is a preference nobody set.
-  const collapsed = narrow || chosenCollapsed;
+  const collapsed = !drawer && chosenCollapsed;
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, String(chosenCollapsed));
-  }, [chosenCollapsed]);
+    if (!drawer) {
+      localStorage.setItem(STORAGE_KEY, String(chosenCollapsed));
+    }
+  }, [chosenCollapsed, drawer]);
 
   return (
     <aside
-      data-testid="sidebar"
-      className={`flex h-full flex-col border-r border-hairline bg-gradient-to-b from-rail-from to-rail-to transition-all duration-300 ease-in-out motion-reduce:transition-none ${
-        collapsed ? 'w-16 shrink-0' : 'w-56 shrink-0'
+      data-testid={drawer ? 'sidebar-mobile' : 'sidebar'}
+      className={`h-full flex-col border-r border-hairline bg-gradient-to-b from-rail-from to-rail-to transition-all duration-300 ease-in-out motion-reduce:transition-none ${
+        drawer ? 'flex w-72' : `hidden shrink-0 lg:flex ${collapsed ? 'w-16' : 'w-56'}`
       }`}
     >
       {/* Brand lockup. Two characters, never one: "T" for Stem and "R" for
@@ -85,6 +91,7 @@ export function Sidebar({ version }: SidebarProps) {
                       <NavLink
                         {...tooltip}
                         to={item.path}
+                        onClick={onNavigate}
                         end={item.path === '/'}
                         aria-label={item.label}
                         data-testid={`nav-${item.path === '/' ? 'surveys' : item.path.slice(1)}`}
@@ -140,11 +147,14 @@ export function Sidebar({ version }: SidebarProps) {
 
         <ThemeToggle collapsed={collapsed} />
 
+        <LanguageSwitcher compact={collapsed} />
+
         <SignOutButton collapsed={collapsed} />
 
-        {/* Not offered on a phone: expanding to 224px there leaves 166px of
-            page, which is the defect this rail was fixed for. */}
-        {!narrow ? (
+        {/* The rail is not drawn below lg, so a phone never sees this: expanding
+            a rail to 224px there left 166px of page, the defect that made the
+            drawer necessary. */}
+        {!drawer ? (
           <Tooltip
             content={
               collapsed ? t('accessibility.expandSidebar') : t('accessibility.collapseSidebar')

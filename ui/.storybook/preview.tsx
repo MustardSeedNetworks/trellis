@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nextProvider } from 'react-i18next';
 import { MemoryRouter } from 'react-router';
 import i18n from '../src/i18n';
+import { ToastProvider } from '../src/ui/Toast';
 import '../src/index.css';
 
 const preview: Preview = {
@@ -17,7 +18,8 @@ const preview: Preview = {
 
   decorators: [
     /* Every component reads translations, most read a query client, and the
-       survey detail renders router links. A story that throws still
+       survey detail renders router links, and the lifecycle
+       controls raise toasts. A story that throws still
        typechecks, lints and builds, so the providers are here rather than
        repeated per story where one would be forgotten. */
     (Story) => (
@@ -26,9 +28,11 @@ const preview: Preview = {
           client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
         >
           <MemoryRouter>
-            <div className="bg-surface-base p-6 text-text-primary">
-              <Story />
-            </div>
+            <ToastProvider>
+              <div className="bg-surface-base p-6 text-text-primary">
+                <Story />
+              </div>
+            </ToastProvider>
           </MemoryRouter>
         </QueryClientProvider>
       </I18nextProvider>

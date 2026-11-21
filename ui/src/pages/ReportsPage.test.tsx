@@ -9,6 +9,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ToastProvider } from '@/ui/Toast';
 import { ReportsPage } from './ReportsPage';
 
 const listSurveys = vi.fn();
@@ -43,7 +44,9 @@ function renderPage(initialPath = '/reports') {
   function wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={client}>
-        <MemoryRouter initialEntries={[initialPath]}>{children}</MemoryRouter>
+        <ToastProvider>
+          <MemoryRouter initialEntries={[initialPath]}>{children}</MemoryRouter>
+        </ToastProvider>
       </QueryClientProvider>
     );
   }
@@ -155,10 +158,7 @@ describe('ReportsPage', () => {
     renderPage();
     fireEvent.click(await readyButton());
 
-    await waitFor(() =>
-      expect(screen.getByTestId('report-error')).toHaveTextContent('no floor plan'),
-    );
-    expect(screen.getByTestId('generate-report')).toHaveAccessibleDescription(/no floor plan/);
+    expect(await screen.findByRole('alert')).toHaveTextContent('no floor plan');
   });
 
   it('reports on the survey the URL names', async () => {
