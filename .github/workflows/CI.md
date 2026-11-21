@@ -19,7 +19,8 @@ on the merged result, and release-please waits on that smoke succeeding.
 | `frontend` | React/TS checks | Shared `ci-frontend.yml`: Biome, Vitest coverage, `tsc --build`, token discipline, Vite build |
 | `e2e` | Browser tests | Shared `ci-e2e.yml`: Playwright chromium + webkit, sharded, against `trellisd-e2e` |
 | `i18n` | Internationalization | Fleet-shared i18n validator, local job |
-| `quality` | Code quality gates | banned vocabulary, file-size ratchet, theme contract |
+| `quality` | Code quality gates | banned vocabulary, file-size ratchet, output escaping, theme contract |
+| `release-notes` | Release PR gate | a release PR's changelog lists every commit it would tag (merge queue only) |
 | `workflow-lint` | Workflow lint | actionlint and zizmor, local |
 | `storybook` | Component interactions and a11y | Shared `ci-storybook.yml` |
 | `docs-quality` | Markdown gate | `markdownlint-cli2` over the **whole** tree |
