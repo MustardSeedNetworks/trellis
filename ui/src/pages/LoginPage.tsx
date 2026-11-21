@@ -1,6 +1,7 @@
 import { type FormEvent, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LoginError, type LoginFailure, login } from '@/lib/auth';
+import { ProductMark } from '@/ui/ProductMark';
 
 type Failure = LoginFailure | 'empty';
 
@@ -80,12 +81,21 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (username: str
         data-testid="login-form"
         aria-labelledby={`${usernameId}-heading`}
       >
-        <h1 id={`${usernameId}-heading`} className="text-lg font-semibold">
+        <div className="flex items-center gap-3">
+          <ProductMark />
+          <div className="min-w-0">
+            {/* allow-hardcoded: product name, not copy. */}
+            <h1 className="text-xl font-extrabold tracking-tight">Trellis</h1>
+            <p className="text-sm text-text-secondary">{t('login.tagline')}</p>
+          </div>
+        </div>
+
+        <h2 id={`${usernameId}-heading`} className="mt-6 text-lg font-semibold">
           {t('login.title')}
-        </h1>
+        </h2>
         <p className="mt-1 text-sm text-text-secondary">{t('login.subtitle')}</p>
 
-        <label htmlFor={usernameId} className="mt-6 block text-sm text-text-secondary">
+        <label htmlFor={usernameId} className="mt-4 block text-sm text-text-secondary">
           {t('login.username')}
         </label>
         <input

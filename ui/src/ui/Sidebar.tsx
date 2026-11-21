@@ -24,6 +24,7 @@ import { useNarrowViewport } from '../hooks/useNarrowViewport';
 import { useTheme } from '../hooks/useTheme';
 import { useNavGroups } from '../navGroups';
 import { MsnMark } from './MsnMark';
+import { ProductMark } from './ProductMark';
 import { Tooltip } from './Tooltip';
 
 const STORAGE_KEY = 'trellis-sidebar-collapsed';
@@ -57,16 +58,13 @@ export function Sidebar({ version }: SidebarProps) {
         collapsed ? 'w-16 shrink-0' : 'w-56 shrink-0'
       }`}
     >
-      {/* Brand lockup. Two characters, never one: "T" for Stem and "R" for
-          Trellis both read as typos next to the other products. */}
+      {/* Brand lockup. */}
       <div
         className={`flex items-center gap-2 border-b border-hairline px-3 py-4 ${
           collapsed ? 'justify-center' : ''
         }`}
       >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-brand-primary">
-          <span className="figure text-sm font-extrabold tracking-tight text-on-brand">TR</span>
-        </div>
+        <ProductMark />
         {/* allow-hardcoded: product name, not copy. */}
         {!collapsed ? (
           <span className="truncate font-extrabold tracking-tight text-text-primary">Trellis</span>
