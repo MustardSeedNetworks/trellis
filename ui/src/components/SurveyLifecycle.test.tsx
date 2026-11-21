@@ -9,6 +9,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SurveySummarySchema } from '@/gen/trellis/survey/v1/survey_pb';
+import { ToastProvider } from '@/ui/Toast';
 import { SurveyLifecycle } from './SurveyLifecycle';
 
 const startSurvey = vi.fn();
@@ -32,7 +33,11 @@ function survey(status: string) {
 function renderLifecycle(status: string, onDeleted = vi.fn()) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   function wrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    return (
+      <QueryClientProvider client={client}>
+        <ToastProvider>{children}</ToastProvider>
+      </QueryClientProvider>
+    );
   }
   render(<SurveyLifecycle survey={survey(status)} onDeleted={onDeleted} />, { wrapper });
   return onDeleted;
@@ -103,8 +108,6 @@ describe('SurveyLifecycle', () => {
 
     fireEvent.click(screen.getByTestId('survey-start'));
 
-    expect(await screen.findByTestId('lifecycle-error')).toHaveTextContent(
-      'survey already in progress',
-    );
+    expect(await screen.findByRole('alert')).toHaveTextContent('survey already in progress');
   });
 });

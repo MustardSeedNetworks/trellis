@@ -12,6 +12,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ToastProvider } from '@/ui/Toast';
 import { SurveysPage } from './SurveysPage';
 
 const listSurveys = vi.fn();
@@ -57,7 +58,9 @@ function renderPage() {
   function wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={client}>
-        <MemoryRouter initialEntries={['/surveys']}>{children}</MemoryRouter>
+        <ToastProvider>
+          <MemoryRouter initialEntries={['/surveys']}>{children}</MemoryRouter>
+        </ToastProvider>
       </QueryClientProvider>
     );
   }

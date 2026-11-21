@@ -19,6 +19,7 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import { useNavGroups } from '@/navGroups';
 import { usePages } from '@/pageRegistry';
+import { ToastProvider } from '@/ui/Toast';
 
 vi.mock('@/lib/client', () => ({
   surveyClient: {
@@ -135,11 +136,13 @@ describe('pageRegistry lazy component mapping', () => {
     for (const page of pages.current) {
       const { unmount, container } = render(
         <QueryClientProvider client={client}>
-          <MemoryRouter initialEntries={[page.path]}>
-            <Suspense fallback="pending">
-              <page.component />
-            </Suspense>
-          </MemoryRouter>
+          <ToastProvider>
+            <MemoryRouter initialEntries={[page.path]}>
+              <Suspense fallback="pending">
+                <page.component />
+              </Suspense>
+            </MemoryRouter>
+          </ToastProvider>
         </QueryClientProvider>,
       );
 
