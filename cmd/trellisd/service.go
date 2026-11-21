@@ -75,7 +75,9 @@ func validateServiceInstall(lookup func(string) string) error {
 // a service's Environment lives in the registry under HKLM, which every local
 // user can read. validateServiceInstall refuses an installing shell that sets
 // them rather than dropping them.
-var serviceEnvNames = []string{envAddr, captureModeEnv, envTLSCert, envTLSKey}
+// TRELLIS_CAPTURE_MODE is spelled out because scanner.go, which owns its constant,
+// is not part of the e2e build that also compiles this file.
+var serviceEnvNames = []string{envAddr, "TRELLIS_CAPTURE_MODE", envTLSCert, envTLSKey}
 
 // serviceEnvironment builds the service's environment block. The data
 // directory is always explicit: the service runs as a virtual account whose
