@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.49](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.48...v0.12.49) (2026-11-21)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @bufbuild/protobuf to v2.17.0 ([#1055](https://github.com/MustardSeedNetworks/trellis/issues/1055)) ([1e01d21](https://github.com/MustardSeedNetworks/trellis/commit/1e01d21747064de9d16ea1a4729c26ac86c615d6))
+
+
+### Miscellaneous
+
+* **deps:** update module golang.org/x/crypto to v0.59.0 [security] ([#1036](https://github.com/MustardSeedNetworks/trellis/issues/1036)) ([b157eb0](https://github.com/MustardSeedNetworks/trellis/commit/b157eb01a100c699d365fa6bf2f4b7691d2fc28a))
+
 ## [0.12.48](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.47...v0.12.48) (2026-11-21)
 
 
