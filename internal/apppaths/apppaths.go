@@ -63,11 +63,15 @@ func DataDir() (string, error) {
 // LogFile returns the file trellisd should write its log to, or "" when writing
 // to stdout is enough.
 //
-// Only a bundled macOS launch needs a file: LaunchServices gives the process
+// Only a bundled macOS launch and the Windows service need a file: LaunchServices gives the process
 // /dev/null for stdout and stderr, so a bundled daemon that logs to stdout is
 // silent — including the warning that says a survey will record no network
 // names. ~/Library/Logs is where the Console app looks.
 func LogFile() (string, error) {
+	if underService() {
+		return serviceLogFile()
+	}
+
 	exe, err := os.Executable()
 	if err != nil {
 		return "", fmt.Errorf("resolve executable path: %w", err)

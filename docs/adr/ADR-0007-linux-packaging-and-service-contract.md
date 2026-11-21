@@ -82,3 +82,16 @@ Concretely:
 - The macOS `.app` bundle (`deploy/macos/build-app.sh`) and the Windows archive
   are unchanged: both are already user-session shapes, and this ADR brings Linux
   into line with them rather than the other way round.
+
+## Amendment 2026-11-21 — Windows
+
+Windows follows the same contract: `install.ps1` installs `trellisd.exe` and
+registers a `Trellis` service that runs as LocalService, is manual-start and
+is not started, with no firewall rule and no port. The service cannot scan
+Wi-Fi, because Windows grants WLAN scanning to a user in an interactive
+session (#152), so it serves imported surveys and a live survey runs from the
+operator's own session. Its data and log sit under `%ProgramData%\Trellis`,
+ACL'd to SYSTEM, Administrators and LocalService, and no install or uninstall
+deletes them. The operator credential is not copied into the service
+environment, which every local user can read, so the service stays in
+ADR-0010's loopback mode until a credential has a safe place to be read from.

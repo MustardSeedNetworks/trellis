@@ -70,7 +70,7 @@ func TestRunRefusesNonLoopbackAddress(t *testing.T) {
 	t.Setenv("TRELLIS_ADDR", "0.0.0.0:0")
 	t.Setenv("TRELLIS_DATA_DIR", t.TempDir())
 
-	err := run()
+	err := run(t.Context())
 	if !errors.Is(err, errNotLoopback) {
 		t.Fatalf("run() = %v, want errNotLoopback", err)
 	}

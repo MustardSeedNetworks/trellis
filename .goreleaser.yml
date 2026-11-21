@@ -140,6 +140,12 @@ archives:
     ids: [trellis-windows]
     name_template: "trellis-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     formats: [zip]
+    # install.ps1 registers the Trellis Windows service (deploy/windows).
+    files:
+      - src: LICENSE
+        dst: LICENSE
+      - src: deploy/windows/install.ps1
+        dst: install.ps1
 
 checksum:
   name_template: "checksums.txt"

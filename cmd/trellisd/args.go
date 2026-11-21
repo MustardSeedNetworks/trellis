@@ -17,11 +17,12 @@ const (
 )
 
 const usageText = `Usage: trellisd [--version]
+       trellisd service install|start|stop|status|uninstall   (Windows only)
 
-Serves the Trellis survey API. trellisd takes no other arguments; it is
-configured through the environment: TRELLIS_ADDR, TRELLIS_DATA_DIR,
-TRELLIS_CAPTURE_MODE, TRELLIS_AUTH_USERNAME, TRELLIS_AUTH_PASSWORD,
-TRELLIS_TLS_CERT and TRELLIS_TLS_KEY.
+Serves the Trellis survey API. Apart from the service commands trellisd takes
+no arguments; it is configured through the environment: TRELLIS_ADDR,
+TRELLIS_DATA_DIR, TRELLIS_CAPTURE_MODE, TRELLIS_AUTH_USERNAME,
+TRELLIS_AUTH_PASSWORD, TRELLIS_TLS_CERT and TRELLIS_TLS_KEY.
 
 Flags:
 `
@@ -31,6 +32,10 @@ Flags:
 // --help answer and leave, and anything else is refused, because a mistyped
 // flag that started a second daemon would sit beside the running service.
 func handleArgs(args []string, stdout, stderr io.Writer) (code int, done bool) {
+	if len(args) > 0 && args[0] == "service" {
+		return serviceCommand(args[1:], stdout, stderr), true
+	}
+
 	fs := flag.NewFlagSet("trellisd", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	showVersion := fs.Bool("version", false, "print the version and exit")
