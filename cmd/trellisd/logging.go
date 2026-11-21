@@ -4,10 +4,11 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
+
+	"gopkg.in/natefinch/lumberjack.v2"
 
 	"github.com/MustardSeedNetworks/trellis/internal/apppaths"
 )
@@ -17,6 +18,15 @@ import (
 const (
 	logDirPerm  os.FileMode = 0o700
 	logFilePerm os.FileMode = 0o600
+)
+
+// Rotation bounds for the bundled daemon's log: it runs for as long as the
+// operator leaves the app open, so an unbounded file grows until the disk
+// fills. Ten 10 MB generations, compressed, for at most a month.
+const (
+	logMaxSizeMB  = 10
+	logMaxBackups = 10
+	logMaxAgeDays = 30
 )
 
 // installLogger points slog at stdout, or at a file when stdout would be
@@ -35,6 +45,20 @@ func installLogger() (func() error, error) {
 		return func() error { return nil }, nil
 	}
 
+	writer, err := openLogFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	slog.SetDefault(slog.New(slog.NewTextHandler(writer, nil)))
+	slog.Info("logging to file", "path", path)
+	return writer.Close, nil
+}
+
+// openLogFile creates the log directory and the file, owner-only, and returns
+// a writer that rotates it. The file is created here rather than on first
+// write so an unwritable location fails at startup, not on the first log line.
+func openLogFile(path string) (*lumberjack.Logger, error) {
 	if err := os.MkdirAll(filepath.Dir(path), logDirPerm); err != nil {
 		return nil, fmt.Errorf("create log directory: %w", err)
 	}
@@ -42,8 +66,15 @@ func installLogger() (func() error, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open log file: %w", err)
 	}
+	if err := file.Close(); err != nil {
+		return nil, fmt.Errorf("close log file: %w", err)
+	}
 
-	slog.SetDefault(slog.New(slog.NewTextHandler(io.Writer(file), nil)))
-	slog.Info("logging to file", "path", path)
-	return file.Close, nil
+	return &lumberjack.Logger{
+		Filename:   path,
+		MaxSize:    logMaxSizeMB,
+		MaxBackups: logMaxBackups,
+		MaxAge:     logMaxAgeDays,
+		Compress:   true,
+	}, nil
 }

@@ -353,6 +353,14 @@ jobs:
       - name: File-size gate (baseline-ratchet)
         run: ./scripts/check-file-size.sh
 
+      # HTTP responses go through the JSON encoder, never a raw format string,
+      # and the UI never injects raw HTML. Same gate as seed, stem and niac-go.
+      - name: Output-escaping gate
+        run: ./scripts/check-output-escaping.sh
+
+      - name: Deployment validation self-test
+        run: python3 scripts/test-deploy-validate.py
+
       # ADR-0006 linked capture into trellisd, so the process boundary that kept
       # the engine and capture code away from the daemon became a package one.
       # Read from source, so the darwin and windows capture files are checked
@@ -429,6 +437,43 @@ jobs:
             exit 1
           fi
           echo "No unsafe logging patterns found"
+
+  # ===========================================================================
+  # Release notes — a release PR must still describe the tree it will tag
+  # ===========================================================================
+  # A release PR in the merge queue has its branch locked, so release-please
+  # cannot regenerate it when a commit lands on main meanwhile; the queue then
+  # builds the release on top of that commit and the tag ships it with no
+  # changelog entry, permanently. This runs the comparison on the merge-queue
+  # tree, so such a release PR is ejected instead, and release-please
+  # regenerates it on its next tick.
+  #
+  # Not path-gated and not gated on `changes`: a release PR touches only
+  # CHANGELOG.md and the version files, and this is the one job that has to
+  # judge exactly that PR.
+  release-notes:
+    name: Release Notes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # The check compares against the previous tag, so it needs the tags
+          # and the commits between them.
+          fetch-depth: 0
+
+      - name: Gate self-test
+        run: python3 scripts/test-check-release-notes.py
+
+      # Only judge the tree that is about to land. On a push to main the
+      # release commit is already history, so failing there would wedge the
+      # tag rather than prevent a bad one. A pull_request run judges a merge
+      # ref that never lands, so it would fail on the release PR's own
+      # unsquashed commits and stay red after the release ships.
+      - name: An untagged release must list every commit it would ship
+        if: github.event_name == 'merge_group'
+        run: python3 scripts/check-release-notes.py --pending
 
   # ===========================================================================
   # Security Scanning
@@ -864,6 +909,7 @@ jobs:
       - backend
       - race
       - quality
+      - release-notes
       - workflow-lint
       - govulncheck
       - security

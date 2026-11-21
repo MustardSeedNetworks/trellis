@@ -226,6 +226,19 @@ func TestGatedMuxLeavesTheUnauthenticatedRoutesOpen(t *testing.T) {
 	}
 }
 
+// The version endpoint is read-only. A write to it is refused as the wrong
+// method, not as an unauthenticated one, so a deployment probe that sends the
+// wrong verb learns that rather than being sent to log in.
+func TestGatedMuxRefusesWritesToTheVersionEndpoint(t *testing.T) {
+	mux := gatedMux(t)
+
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/__version", nil))
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Errorf("anonymous POST /__version = %d, want 405", rec.Code)
+	}
+}
+
 // testStreamProcedure is a procedure no proto declares. survey.proto is unary
 // throughout, so the streaming half of the composition has nothing to assert
 // against until one exists — and adding a streaming RPC to the product proto
