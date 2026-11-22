@@ -17,8 +17,20 @@
 #
 # Mirrors seed/stem/niac's release.yml shape so all four projects converge
 # on the same release tooling. Unlike stem, there is no native C dataplane
-# to build and no nfpm .deb/.rpm block — Trellis ships archives only (see
-# .goreleaser.yml for the reasoning).
+# to build. The .deb/.rpm carry a systemd user unit and no system service
+# (ADR-0007, see .goreleaser.yml).
+#
+# macOS .pkg:
+#   pkgbuild and codesign exist only on macOS, so macos-pkg builds the
+#   installer on a macOS runner from the darwin archive goreleaser produced,
+#   wraps trellisd in the entitled Trellis.app, signs and notarizes it,
+#   finishes the checksum manifest, and feeds the provenance job. Only a
+#   Developer ID signed, entitled bundle can read Wi-Fi network names, so a
+#   real release without the signing secrets fails here rather than ship a
+#   package that cannot scan. Secrets: MACOS_SIGNING_P12_BASE64,
+#   MACOS_SIGNING_P12_PASSWORD (one .p12 holding the Developer ID Application
+#   and Developer ID Installer identities), APPLE_NOTARY_KEY_P8_BASE64,
+#   APPLE_NOTARY_KEY_ID, APPLE_NOTARY_ISSUER_ID.
 #
 # Inputs: only the typed `dry_run` boolean - no untrusted event fields
 # are interpolated into shell commands.
@@ -38,6 +50,10 @@ on:
         default: true
       provenance_only:
         description: "Backfill: skip build, recompute subjects from the existing release's checksums.txt, attest + upload bundle"
+        type: boolean
+        default: false
+      sign_macos:
+        description: "With dry_run: sign and notarize the macOS .pkg for real (needs the signing secrets) instead of ad hoc. Still publishes nothing."
         type: boolean
         default: false
       target_tag:
@@ -160,11 +176,6 @@ jobs:
       # Pinned for reproducibility; bump when newer revs land. Keep fresh so
       # the image's baked libs don't drift from upstream (seed#1577).
       image: goreleaser/goreleaser-cross:v1.27.1-2-v2.18.2@sha256:8def7638d4f31ce8b22034694875c41c0cccb8392c9d06258c7dca9383bf1948
-    outputs:
-      # base64-encoded SHA-256 hashes of all release artifacts, formatted
-      # for slsa-github-generator's base64-subjects input. Set only on a
-      # real (non-snapshot) release.
-      hashes: ${{ steps.hashes.outputs.hashes }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -237,22 +248,15 @@ jobs:
         # the same content via the dry-run snapshot.
         run: goreleaser release --clean --skip=validate
 
-      - name: Capture artifact hashes for SLSA provenance
-        if: ${{ !inputs.dry_run }}
-        id: hashes
-        shell: bash
-        run: |
-          # goreleaser drops artifacts.json describing every produced
-          # artifact. Filter to the user-facing ones (archive type) and
-          # base64-encode their SHA-256 list for the slsa-github-generator
-          # reusable workflow.
-          set -euo pipefail
-          hashes=$(jq -r '
-            map(select(.type == "Archive")) |
-            map("\(.extra.Checksum | sub("^sha256:"; ""))  \(.name)") |
-            join("\n")
-          ' dist/artifacts.json | base64 -w0)
-          echo "hashes=${hashes}" >> "$GITHUB_OUTPUT"
+      - name: Hand the darwin archive and checksums to macos-pkg
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: macos-pkg-inputs
+          path: |
+            dist/trellis-*-darwin-arm64.tar.gz
+            dist/checksums.txt
+          if-no-files-found: error
+          retention-days: 1
 
       - name: Upload dry-run artifact bundle for inspection
         if: inputs.dry_run
@@ -263,19 +267,251 @@ jobs:
           retention-days: 14
 
   # =========================================================================
+  # macOS .pkg — built from goreleaser's darwin archive, so the installer
+  # carries the same binary the archive does. On a real release it is signed,
+  # notarized, SBOM'd and cosign-signed like the other artifacts, appended to
+  # checksums.txt, and the final manifest is re-signed and becomes the
+  # provenance subject list. The release is still a draft here; provenance
+  # publishes it. A dry run builds the package ad hoc signed and uploads it
+  # for inspection.
+  # =========================================================================
+  macos-pkg:
+    name: macOS .pkg
+    if: ${{ !inputs.provenance_only }}
+    needs: [goreleaser]
+    runs-on: macos-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      id-token: write # cosign keyless OIDC
+    outputs:
+      # base64 of the final checksums.txt, the subject-checksums input of
+      # the provenance job. Set only on a real (non-snapshot) release.
+      hashes: ${{ steps.hashes.outputs.hashes }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download the darwin archive and checksums
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: macos-pkg-inputs
+          path: ${{ runner.temp }}/macos-pkg-inputs/
+
+      - name: Import signing identities
+        if: ${{ !inputs.dry_run || inputs.sign_macos }}
+        shell: bash
+        env:
+          P12_BASE64: ${{ secrets.MACOS_SIGNING_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.MACOS_SIGNING_P12_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${P12_BASE64}" ] || [ -z "${P12_PASSWORD}" ]; then
+            echo "::error::MACOS_SIGNING_P12_BASE64 / MACOS_SIGNING_P12_PASSWORD are not set. An unsigned Trellis.app cannot read Wi-Fi network names, so a release without them is refused."
+            exit 1
+          fi
+          keychain="${RUNNER_TEMP}/signing.keychain-db"
+          keychain_password="$(uuidgen)"
+          echo "${P12_BASE64}" | base64 --decode > "${RUNNER_TEMP}/signing.p12"
+          security create-keychain -p "${keychain_password}" "${keychain}"
+          security set-keychain-settings -lut 3600 "${keychain}"
+          security unlock-keychain -p "${keychain_password}" "${keychain}"
+          security import "${RUNNER_TEMP}/signing.p12" -k "${keychain}" -P "${P12_PASSWORD}" \
+            -T /usr/bin/codesign -T /usr/bin/productsign -T /usr/bin/pkgbuild
+          rm -f "${RUNNER_TEMP}/signing.p12"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "${keychain_password}" "${keychain}" > /dev/null
+          security list-keychains -d user -s "${keychain}" login.keychain-db
+          security find-identity -v "${keychain}" | grep -F "Developer ID Application"
+          security find-identity -v "${keychain}" | grep -F "Developer ID Installer"
+          echo "KEYCHAIN=${keychain}" >> "$GITHUB_ENV"
+
+      - name: Locate the darwin binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          archives=("${RUNNER_TEMP}"/macos-pkg-inputs/trellis-*-darwin-arm64.tar.gz)
+          if [ "${#archives[@]}" -ne 1 ]; then
+            echo "::error::expected one darwin archive, found ${#archives[@]}"
+            exit 1
+          fi
+          name="$(basename "${archives[0]}" .tar.gz)"
+          version="${name#trellis-}"
+          version="${version%-darwin-arm64}"
+          mkdir "${RUNNER_TEMP}/darwin"
+          tar -xzf "${archives[0]}" -C "${RUNNER_TEMP}/darwin" trellisd
+          {
+            echo "VERSION=${version}"
+            echo "PKG=trellis-${version}-darwin-arm64.pkg"
+          } >> "$GITHUB_ENV"
+
+      # The app is notarized and stapled on its own, before the package is
+      # built: an air-gapped site cannot reach Apple to check an unstapled app,
+      # and Gatekeeper there would block it. The package's own ticket does not
+      # cover the app once it is installed.
+      - name: Sign, notarize and staple Trellis.app
+        if: ${{ !inputs.dry_run || inputs.sign_macos }}
+        shell: bash
+        env:
+          NOTARY_KEY_BASE64: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
+          NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          signed="${RUNNER_TEMP}/signed-app"
+          TRELLIS_PREBUILT_BINARY="${RUNNER_TEMP}/darwin/trellisd" \
+            TRELLIS_SIGN_IDENTITY="Developer ID Application" \
+            deploy/macos/build-app.sh "${VERSION}" "${signed}" > /dev/null
+          ditto -c -k --keepParent "${signed}/Trellis.app" "${signed}/Trellis.zip"
+          deploy/macos/notarize-ci.sh "${signed}/Trellis.zip"
+          xcrun stapler staple "${signed}/Trellis.app"
+          xcrun stapler validate "${signed}/Trellis.app"
+          spctl --assess --type execute --verbose=2 "${signed}/Trellis.app"
+          echo "TRELLIS_PREBUILT_APP=${signed}/Trellis.app" >> "$GITHUB_ENV"
+
+      - name: Build the .pkg
+        shell: bash
+        env:
+          REAL_SIGN: ${{ !inputs.dry_run || inputs.sign_macos }}
+        run: |
+          set -euo pipefail
+          if [ "${REAL_SIGN}" = "true" ]; then
+            export TRELLIS_SIGN_IDENTITY="Developer ID Application"
+            export TRELLIS_INSTALLER_IDENTITY="Developer ID Installer"
+          else
+            export TRELLIS_SIGN_IDENTITY="-"
+          fi
+          deploy/macos/build-pkg.sh "${RUNNER_TEMP}/darwin/trellisd" "${VERSION}"
+
+      - name: Check the package contract
+        shell: bash
+        env:
+          REAL_SIGN: ${{ !inputs.dry_run || inputs.sign_macos }}
+        run: |
+          set -euo pipefail
+          expanded="${RUNNER_TEMP}/pkg-expanded"
+          pkgutil --expand-full "dist/${PKG}" "${expanded}"
+          app="$(find "${expanded}" -type d -name Trellis.app)"
+          test "$(echo "${app}" | wc -l)" -eq 1
+          # Installs to /Applications and nothing else, runs only the
+          # preinstall that stops a running daemon: no launchd job, no port.
+          test "$(pkgutil --payload-files "dist/${PKG}" | grep -c -E '^\./Applications/Trellis\.app$')" -eq 1
+          test -f "${expanded}/Scripts/preinstall"
+          test ! -e "${expanded}/Scripts/postinstall"
+          test "$(pkgutil --payload-files "dist/${PKG}" | grep -c -E '^\./Library/Launch')" -eq 0
+          codesign --verify --deep --strict "${app}"
+          codesign -d --entitlements - "${app}" 2>&1 | grep -F "com.apple.security.personal-information.location"
+          lipo -archs "${app}/Contents/MacOS/trellisd" | grep -Fx arm64
+          if [ "${REAL_SIGN}" = "true" ]; then
+            codesign -dvv "${app}" 2>&1 | grep -F "Authority=Developer ID Application"
+            xcrun stapler validate "${app}"
+            spctl --assess --type execute --verbose=2 "${app}"
+            pkgutil --check-signature "dist/${PKG}" | grep -F "Developer ID Installer"
+          fi
+
+      - name: Notarize and staple the .pkg
+        if: ${{ !inputs.dry_run || inputs.sign_macos }}
+        shell: bash
+        env:
+          NOTARY_KEY_BASE64: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
+          NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          deploy/macos/notarize-ci.sh "dist/${PKG}"
+          # Stapling rewrites the package, so it runs before the SBOM, the
+          # signatures and the checksum are taken.
+          xcrun stapler staple "dist/${PKG}"
+          xcrun stapler validate "dist/${PKG}"
+          spctl --assess --type install --verbose=2 "dist/${PKG}"
+
+      - name: Remove the signing keychain
+        if: ${{ always() && (!inputs.dry_run || inputs.sign_macos) }}
+        shell: bash
+        run: security delete-keychain "${KEYCHAIN:-${RUNNER_TEMP}/signing.keychain-db}" || true
+
+      - name: Upload dry-run .pkg for inspection
+        if: ${{ inputs.dry_run }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: macos-pkg-dryrun-${{ github.run_id }}
+          path: dist/${{ env.PKG }}
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Install Syft and Cosign
+        if: ${{ !inputs.dry_run }}
+        # Same versions as the goreleaser job, darwin arm64 builds, each
+        # checked against the upstream checksums file. Rotate together.
+        env:
+          SYFT_VERSION: "1.46.0"
+          SYFT_SHA256: "cd4e2c40e075684a5746d8959f76b6572bb2d2dda8cf6877dbfff1cc0baeea01"
+          COSIGN_VERSION: "v3.1.3"
+          COSIGN_SHA256: "5cf948c2f4dfe59687bdd0b8523709067383e03982cc543475c8a7dc70e92a76"
+        shell: bash
+        run: |
+          set -euo pipefail
+          bin="${RUNNER_TEMP}/bin"
+          mkdir -p "${bin}"
+          curl -sSfL -o "${RUNNER_TEMP}/syft.tar.gz" \
+            "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_darwin_arm64.tar.gz"
+          echo "${SYFT_SHA256}  ${RUNNER_TEMP}/syft.tar.gz" | shasum -a 256 -c -
+          tar -xzf "${RUNNER_TEMP}/syft.tar.gz" -C "${bin}" syft
+          curl -sSfL -o "${bin}/cosign" \
+            "https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-darwin-arm64"
+          echo "${COSIGN_SHA256}  ${bin}/cosign" | shasum -a 256 -c -
+          chmod 0755 "${bin}/syft" "${bin}/cosign"
+          echo "${bin}" >> "$GITHUB_PATH"
+
+      - name: SBOM, sign, and publish the .pkg
+        if: ${{ !inputs.dry_run }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          cd dist
+          cp "${RUNNER_TEMP}/macos-pkg-inputs/checksums.txt" checksums.txt
+          SYFT_FILE_METADATA_CATALOGER_ENABLED=true \
+            syft "${PKG}" --output "spdx-json=${PKG}.sbom.json"
+          cosign sign-blob --yes --bundle "${PKG}.cosign.bundle" "${PKG}"
+          cosign sign-blob --yes --bundle "${PKG}.sbom.json.cosign.bundle" "${PKG}.sbom.json"
+          shasum -a 256 "${PKG}" "${PKG}.sbom.json" >> checksums.txt
+          cosign sign-blob --yes --bundle checksums.txt.cosign.bundle checksums.txt
+          gh release upload "${REF_NAME}" --clobber --repo "${GITHUB_REPOSITORY}" \
+            checksums.txt checksums.txt.cosign.bundle \
+            "${PKG}" "${PKG}.sbom.json" "${PKG}.cosign.bundle" "${PKG}.sbom.json.cosign.bundle"
+          grep -Fq "  ${PKG}" checksums.txt
+          grep -Fq "  ${PKG}.sbom.json" checksums.txt
+          test -s "${PKG}.sbom.json"
+          test -s "${PKG}.cosign.bundle"
+          test -s "${PKG}.sbom.json.cosign.bundle"
+
+      - name: Capture artifact hashes for SLSA provenance
+        if: ${{ !inputs.dry_run }}
+        id: hashes
+        shell: bash
+        run: |
+          # checksums.txt is in "<sha256>  <filename>" form, the
+          # subject-checksums format, and now lists every release artifact.
+          set -euo pipefail
+          echo "hashes=$(base64 < dist/checksums.txt | tr -d '\n')" >> "$GITHUB_OUTPUT"
+
+  # =========================================================================
   # SLSA provenance backfill — recomputes the subject list from a tag's
   # already-published checksums.txt instead of running goreleaser. Used
   # to retroactively attest tags that shipped before the provenance job
   # existed. Only fires under workflow_dispatch with provenance_only=true;
-  # on a push or normal dispatch this job is skipped and the regular
-  # `goreleaser` job feeds the provenance job.
+  # on a push or normal dispatch this job is skipped and `macos-pkg`
+  # feeds the provenance job.
   # =========================================================================
   goreleaser-backfill-hashes:
     name: goreleaser (backfill subjects from existing release)
     if: ${{ inputs.provenance_only }}
     runs-on: ubuntu-latest
     outputs:
-      # Same base64-subjects contract as the goreleaser job's `hashes`
+      # Same base64-subjects contract as the macos-pkg job's `hashes`
       # output. Provenance job picks whichever upstream produced one.
       hashes: ${{ steps.hashes.outputs.hashes }}
     steps:
@@ -320,7 +556,7 @@ jobs:
   # Mirrors seed/stem/niac's provenance job.
   #
   # Two upstream paths feed this job (only one runs per invocation):
-  #   - normal release:  needs.goreleaser produces subjects from artifacts.json
+  #   - normal release:  needs.macos-pkg produces subjects from the final checksums.txt
   #   - provenance_only: needs.goreleaser-backfill-hashes produces subjects
   #                      from the existing release's checksums.txt
   # =========================================================================
@@ -329,8 +565,8 @@ jobs:
     # Skip on dry-run snapshots; require one of the two upstreams to have
     # succeeded. `!cancelled()` lets this job run even though one of the
     # two `needs` is intentionally skipped per dispatch path.
-    if: ${{ !inputs.dry_run && !cancelled() && (needs.goreleaser.result == 'success' || needs.goreleaser-backfill-hashes.result == 'success') }}
-    needs: [goreleaser, goreleaser-backfill-hashes]
+    if: ${{ !inputs.dry_run && !cancelled() && (needs.macos-pkg.result == 'success' || needs.goreleaser-backfill-hashes.result == 'success') }}
+    needs: [macos-pkg, goreleaser-backfill-hashes]
     runs-on: ubuntu-latest
     permissions:
       id-token: write       # Sigstore OIDC signing
@@ -343,7 +579,7 @@ jobs:
         run: |
           set -euo pipefail
           # Pick whichever upstream ran. The unused one is empty.
-          echo "${{ needs.goreleaser.outputs.hashes || needs.goreleaser-backfill-hashes.outputs.hashes }}" \
+          echo "${{ needs.macos-pkg.outputs.hashes || needs.goreleaser-backfill-hashes.outputs.hashes }}" \
             | base64 -d > subjects.txt
           echo "Subjects:"
           cat subjects.txt

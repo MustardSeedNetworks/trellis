@@ -6,6 +6,7 @@
 # PR that changes what .goreleaser.yml publishes.
 
 trellis-{version}-darwin-arm64.tar.gz
+trellis-{version}-darwin-arm64.pkg
 trellis-{version}-linux-amd64.tar.gz
 trellis-{version}-linux-arm64.tar.gz
 trellis-{version}-windows-amd64.zip

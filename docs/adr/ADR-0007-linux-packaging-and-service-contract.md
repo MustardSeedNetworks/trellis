@@ -82,6 +82,14 @@ Concretely:
 - The macOS `.app` bundle (`deploy/macos/build-app.sh`) and the Windows archive
   are unchanged: both are already user-session shapes, and this ADR brings Linux
   into line with them rather than the other way round.
+- The macOS `.pkg` (2026-11-21) follows the same contract with the bundle as
+  the user-session shape: it installs `/Applications/Trellis.app` and nothing
+  else, with no LaunchDaemon (it runs outside the login session, so it could
+  never hold the Location Services grant that names Wi-Fi networks, ADR-0006)
+  and no shipped LaunchAgent (an agent must start the bundle through
+  `open -a`, since executing the inner binary registers a different Location
+  client). Starting at login is the operator's opt-in through Login Items,
+  the counterpart of `systemctl --user enable`.
 
 ## Amendment 2026-11-21 — Windows
 
