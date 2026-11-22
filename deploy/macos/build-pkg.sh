@@ -56,6 +56,9 @@ ditto --norsrc --noextattr "$WORK/app/Trellis.app" "$WORK/root/Applications/Trel
 # "upgrades" that one and leaves /Applications untouched. The version check is
 # off too, so installing an older release over a newer one actually installs.
 pkgbuild --analyze --root "$WORK/root" "$WORK/component.plist" >/dev/null
+# Whether --analyze writes BundleIsRelocatable depends on the macOS release, so
+# remove any entry before adding ours.
+/usr/libexec/PlistBuddy -c "Delete :0:BundleIsRelocatable" "$WORK/component.plist" 2>/dev/null || true
 /usr/libexec/PlistBuddy \
     -c "Add :0:BundleIsRelocatable bool false" \
     -c "Set :0:BundleIsVersionChecked false" \
