@@ -146,16 +146,22 @@ func runService() error {
 	return svc.Run(serviceName, serviceHandler{preflight: checkDataDir, run: run})
 }
 
-// checkDataDir refuses to start on a data directory the service cannot trust.
+// checkDataDir refuses to start on a data directory the service cannot trust,
+// and pins the daemon to the canonical path it verified.
 func checkDataDir() error {
 	dataDir := os.Getenv(envDataDir)
 	if dataDir == "" {
 		return errors.New(envDataDir + " is not set in the service environment; reinstall the service")
 	}
-	if err := ensureDataDir(dataDir); err != nil {
+	trust, err := serviceTrust()
+	if err != nil {
+		return err
+	}
+	verified, err := verifyDataDir(dataDir, trust)
+	if err != nil {
 		return fmt.Errorf("data directory %s: %w", dataDir, err)
 	}
-	return nil
+	return os.Setenv(envDataDir, verified)
 }
 
 func connectManager() (*mgr.Mgr, error) {
