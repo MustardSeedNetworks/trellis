@@ -219,7 +219,7 @@ func TestVerifyDataDir(t *testing.T) {
 			dir:     func(*testing.T) string { return filepath.Join(base, "missing") },
 			wantErr: "does not exist",
 		},
-		{name: "a file is refused", dir: func(*testing.T) string { return file }, wantErr: "not a private directory"},
+		{name: "a file is refused", dir: func(*testing.T) string { return file }, wantIs: windows.ERROR_DIRECTORY},
 		{
 			name: "an extra user ACE is refused, not repaired",
 			dir: func(t *testing.T) string {
