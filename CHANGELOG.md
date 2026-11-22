@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.13.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.50...v0.13.0) (2026-11-22)
+
+
+### Features
+
+* add windows installer and service ([#1064](https://github.com/MustardSeedNetworks/trellis/issues/1064)) ([0e3ee13](https://github.com/MustardSeedNetworks/trellis/commit/0e3ee13db70e31b78edd047d91845a6b3f040c57))
+* **release:** ship a macos pkg from ci ([#1062](https://github.com/MustardSeedNetworks/trellis/issues/1062)) ([cfc207e](https://github.com/MustardSeedNetworks/trellis/commit/cfc207e5cea16cb3de2dc2bd598f584fd49ee4e5))
+
+
+### Bug Fixes
+
+* **windows:** adopt foundation securedir for the service data dir ([#1067](https://github.com/MustardSeedNetworks/trellis/issues/1067)) ([7fefaa8](https://github.com/MustardSeedNetworks/trellis/commit/7fefaa8d3ed1a33d366574aa76cfe6ee0b8eb3bb))
+
 ## [0.12.50](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.49...v0.12.50) (2026-11-21)
 
 
