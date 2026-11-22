@@ -52,6 +52,10 @@ on:
         description: "Backfill: skip build, recompute subjects from the existing release's checksums.txt, attest + upload bundle"
         type: boolean
         default: false
+      sign_macos:
+        description: "With dry_run: sign and notarize the macOS .pkg for real (needs the signing secrets) instead of ad hoc. Still publishes nothing."
+        type: boolean
+        default: false
       target_tag:
         description: "Backfill target tag (e.g. v0.1.0). Required when provenance_only=true — workflow_dispatch must be issued against main since older tags don't have these inputs."
         type: string
@@ -296,7 +300,7 @@ jobs:
           path: ${{ runner.temp }}/macos-pkg-inputs/
 
       - name: Import signing identities
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !inputs.dry_run || inputs.sign_macos }}
         shell: bash
         env:
           P12_BASE64: ${{ secrets.MACOS_SIGNING_P12_BASE64 }}
@@ -325,7 +329,7 @@ jobs:
       - name: Build the .pkg
         shell: bash
         env:
-          DRY_RUN: ${{ inputs.dry_run }}
+          REAL_SIGN: ${{ !inputs.dry_run || inputs.sign_macos }}
         run: |
           set -euo pipefail
           archives=("${RUNNER_TEMP}"/macos-pkg-inputs/trellis-*-darwin-arm64.tar.gz)
@@ -338,11 +342,11 @@ jobs:
           version="${version%-darwin-arm64}"
           mkdir "${RUNNER_TEMP}/darwin"
           tar -xzf "${archives[0]}" -C "${RUNNER_TEMP}/darwin" trellisd
-          if [ "${DRY_RUN}" = "true" ]; then
-            export TRELLIS_SIGN_IDENTITY="-"
-          else
+          if [ "${REAL_SIGN}" = "true" ]; then
             export TRELLIS_SIGN_IDENTITY="Developer ID Application"
             export TRELLIS_INSTALLER_IDENTITY="Developer ID Installer"
+          else
+            export TRELLIS_SIGN_IDENTITY="-"
           fi
           deploy/macos/build-pkg.sh "${RUNNER_TEMP}/darwin/trellisd" "${version}"
           echo "PKG=trellis-${version}-darwin-arm64.pkg" >> "$GITHUB_ENV"
@@ -350,7 +354,7 @@ jobs:
       - name: Check the package contract
         shell: bash
         env:
-          DRY_RUN: ${{ inputs.dry_run }}
+          REAL_SIGN: ${{ !inputs.dry_run || inputs.sign_macos }}
         run: |
           set -euo pipefail
           expanded="${RUNNER_TEMP}/pkg-expanded"
@@ -366,13 +370,13 @@ jobs:
           codesign --verify --deep --strict "${app}"
           codesign -d --entitlements - "${app}" 2>&1 | grep -F "com.apple.security.personal-information.location"
           lipo -archs "${app}/Contents/MacOS/trellisd" | grep -Fx arm64
-          if [ "${DRY_RUN}" != "true" ]; then
+          if [ "${REAL_SIGN}" = "true" ]; then
             codesign -dv "${app}" 2>&1 | grep -F "Authority=Developer ID Application"
             pkgutil --check-signature "dist/${PKG}" | grep -F "Developer ID Installer"
           fi
 
       - name: Notarize and staple the .pkg
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !inputs.dry_run || inputs.sign_macos }}
         shell: bash
         env:
           NOTARY_KEY_BASE64: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
@@ -399,7 +403,7 @@ jobs:
           spctl --assess --type install --verbose=2 "dist/${PKG}"
 
       - name: Remove the signing keychain
-        if: ${{ always() && !inputs.dry_run }}
+        if: ${{ always() && (!inputs.dry_run || inputs.sign_macos) }}
         shell: bash
         run: security delete-keychain "${KEYCHAIN:-${RUNNER_TEMP}/signing.keychain-db}" || true
 
