@@ -326,10 +326,8 @@ jobs:
           security find-identity -v "${keychain}" | grep -F "Developer ID Installer"
           echo "KEYCHAIN=${keychain}" >> "$GITHUB_ENV"
 
-      - name: Build the .pkg
+      - name: Locate the darwin binary
         shell: bash
-        env:
-          REAL_SIGN: ${{ !inputs.dry_run || inputs.sign_macos }}
         run: |
           set -euo pipefail
           archives=("${RUNNER_TEMP}"/macos-pkg-inputs/trellis-*-darwin-arm64.tar.gz)
@@ -342,14 +340,48 @@ jobs:
           version="${version%-darwin-arm64}"
           mkdir "${RUNNER_TEMP}/darwin"
           tar -xzf "${archives[0]}" -C "${RUNNER_TEMP}/darwin" trellisd
+          {
+            echo "VERSION=${version}"
+            echo "PKG=trellis-${version}-darwin-arm64.pkg"
+          } >> "$GITHUB_ENV"
+
+      # The app is notarized and stapled on its own, before the package is
+      # built: an air-gapped site cannot reach Apple to check an unstapled app,
+      # and Gatekeeper there would block it. The package's own ticket does not
+      # cover the app once it is installed.
+      - name: Sign, notarize and staple Trellis.app
+        if: ${{ !inputs.dry_run || inputs.sign_macos }}
+        shell: bash
+        env:
+          NOTARY_KEY_BASE64: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
+          NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          signed="${RUNNER_TEMP}/signed-app"
+          TRELLIS_PREBUILT_BINARY="${RUNNER_TEMP}/darwin/trellisd" \
+            TRELLIS_SIGN_IDENTITY="Developer ID Application" \
+            deploy/macos/build-app.sh "${VERSION}" "${signed}" > /dev/null
+          ditto -c -k --keepParent "${signed}/Trellis.app" "${signed}/Trellis.zip"
+          deploy/macos/notarize-ci.sh "${signed}/Trellis.zip"
+          xcrun stapler staple "${signed}/Trellis.app"
+          xcrun stapler validate "${signed}/Trellis.app"
+          spctl --assess --type execute --verbose=2 "${signed}/Trellis.app"
+          echo "TRELLIS_PREBUILT_APP=${signed}/Trellis.app" >> "$GITHUB_ENV"
+
+      - name: Build the .pkg
+        shell: bash
+        env:
+          REAL_SIGN: ${{ !inputs.dry_run || inputs.sign_macos }}
+        run: |
+          set -euo pipefail
           if [ "${REAL_SIGN}" = "true" ]; then
             export TRELLIS_SIGN_IDENTITY="Developer ID Application"
             export TRELLIS_INSTALLER_IDENTITY="Developer ID Installer"
           else
             export TRELLIS_SIGN_IDENTITY="-"
           fi
-          deploy/macos/build-pkg.sh "${RUNNER_TEMP}/darwin/trellisd" "${version}"
-          echo "PKG=trellis-${version}-darwin-arm64.pkg" >> "$GITHUB_ENV"
+          deploy/macos/build-pkg.sh "${RUNNER_TEMP}/darwin/trellisd" "${VERSION}"
 
       - name: Check the package contract
         shell: bash
@@ -372,6 +404,8 @@ jobs:
           lipo -archs "${app}/Contents/MacOS/trellisd" | grep -Fx arm64
           if [ "${REAL_SIGN}" = "true" ]; then
             codesign -dvv "${app}" 2>&1 | grep -F "Authority=Developer ID Application"
+            xcrun stapler validate "${app}"
+            spctl --assess --type execute --verbose=2 "${app}"
             pkgutil --check-signature "dist/${PKG}" | grep -F "Developer ID Installer"
           fi
 
@@ -384,18 +418,7 @@ jobs:
           NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
         run: |
           set -euo pipefail
-          if [ -z "${NOTARY_KEY_BASE64}" ] || [ -z "${NOTARY_KEY_ID}" ] || [ -z "${NOTARY_ISSUER_ID}" ]; then
-            echo "::error::APPLE_NOTARY_KEY_P8_BASE64 / APPLE_NOTARY_KEY_ID / APPLE_NOTARY_ISSUER_ID are not set; an un-notarized package is refused by Gatekeeper on every other Mac."
-            exit 1
-          fi
-          key="${RUNNER_TEMP}/notary.p8"
-          echo "${NOTARY_KEY_BASE64}" | base64 --decode > "${key}"
-          trap 'rm -f "${key}"' EXIT
-          # notarytool exits 0 for an Invalid submission, so read the verdict.
-          xcrun notarytool submit "dist/${PKG}" --key "${key}" --key-id "${NOTARY_KEY_ID}" \
-            --issuer "${NOTARY_ISSUER_ID}" --wait --output-format json > "${RUNNER_TEMP}/notary.json"
-          cat "${RUNNER_TEMP}/notary.json"
-          test "$(jq -r .status "${RUNNER_TEMP}/notary.json")" = "Accepted"
+          deploy/macos/notarize-ci.sh "dist/${PKG}"
           # Stapling rewrites the package, so it runs before the SBOM, the
           # signatures and the checksum are taken.
           xcrun stapler staple "dist/${PKG}"

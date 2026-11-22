@@ -18,6 +18,10 @@
 #
 # Environment:
 #   TRELLIS_SIGN_IDENTITY       codesign identity for the .app ("-" = ad hoc)
+#   TRELLIS_PREBUILT_APP        an already signed (and, in release, notarized and
+#                               stapled) Trellis.app to package instead of
+#                               building one; the stapled ticket must be in the
+#                               bundle before it is packaged
 #   TRELLIS_INSTALLER_IDENTITY  "Developer ID Installer" identity for the .pkg;
 #                               unset leaves the package unsigned (dry runs)
 #
@@ -46,10 +50,14 @@ fi
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
-TRELLIS_PREBUILT_BINARY="$BINARY" "$SCRIPT_DIR/build-app.sh" "$VERSION" "$WORK/app" >/dev/null
+APP="${TRELLIS_PREBUILT_APP:-}"
+if [ -z "$APP" ]; then
+    TRELLIS_PREBUILT_BINARY="$BINARY" "$SCRIPT_DIR/build-app.sh" "$VERSION" "$WORK/app" >/dev/null
+    APP="$WORK/app/Trellis.app"
+fi
 
 mkdir -p "$WORK/root/Applications" "$WORK/scripts" "$OUTPUT_DIR"
-ditto --norsrc --noextattr "$WORK/app/Trellis.app" "$WORK/root/Applications/Trellis.app"
+ditto --norsrc --noextattr "$APP" "$WORK/root/Applications/Trellis.app"
 
 # Without this Installer treats the bundle as relocatable and, finding another
 # copy of net.mustardseed.trellis on disk (a dist/ build, a Downloads copy),
