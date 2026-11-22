@@ -371,7 +371,7 @@ jobs:
           codesign -d --entitlements - "${app}" 2>&1 | grep -F "com.apple.security.personal-information.location"
           lipo -archs "${app}/Contents/MacOS/trellisd" | grep -Fx arm64
           if [ "${REAL_SIGN}" = "true" ]; then
-            codesign -dv "${app}" 2>&1 | grep -F "Authority=Developer ID Application"
+            codesign -dvv "${app}" 2>&1 | grep -F "Authority=Developer ID Application"
             pkgutil --check-signature "dist/${PKG}" | grep -F "Developer ID Installer"
           fi
 
