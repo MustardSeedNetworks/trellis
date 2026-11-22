@@ -10,6 +10,9 @@ import (
 )
 
 func TestOpenLogFileCreatesOwnerOnlyFileAndRotates(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the only Windows log is the service's; logfile_windows_test.go covers it")
+	}
 	path := filepath.Join(t.TempDir(), "logs", "trellisd.log")
 
 	writer, err := openLogFile(path)
@@ -32,9 +35,6 @@ func TestOpenLogFileCreatesOwnerOnlyFileAndRotates(t *testing.T) {
 	}
 	if string(got) != "hello\n" {
 		t.Errorf("log = %q, want %q", got, "hello\n")
-	}
-	if runtime.GOOS == "windows" {
-		return
 	}
 	for p, want := range map[string]os.FileMode{filepath.Dir(path): logDirPerm, path: logFilePerm} {
 		info, err := os.Stat(p)

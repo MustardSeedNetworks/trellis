@@ -3,10 +3,8 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
-	"path/filepath"
 
 	"gopkg.in/natefinch/lumberjack.v2"
 
@@ -55,19 +53,15 @@ func installLogger() (func() error, error) {
 	return writer.Close, nil
 }
 
-// openLogFile creates the log directory and the file, owner-only, and returns
-// a writer that rotates it. The file is created here rather than on first
-// write so an unwritable location fails at startup, not on the first log line.
+// osCreateAppend is how the log file is created at startup.
+const osCreateAppend = os.O_CREATE | os.O_WRONLY | os.O_APPEND
+
+// openLogFile creates the log file, owner-only, and returns a writer that
+// rotates it. The file is created here rather than on first write so an
+// unwritable location fails at startup, not on the first log line.
 func openLogFile(path string) (*lumberjack.Logger, error) {
-	if err := os.MkdirAll(filepath.Dir(path), logDirPerm); err != nil {
-		return nil, fmt.Errorf("create log directory: %w", err)
-	}
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, logFilePerm)
-	if err != nil {
-		return nil, fmt.Errorf("open log file: %w", err)
-	}
-	if err := file.Close(); err != nil {
-		return nil, fmt.Errorf("close log file: %w", err)
+	if err := createLogFile(path); err != nil {
+		return nil, err
 	}
 
 	return &lumberjack.Logger{
