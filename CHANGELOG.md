@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.13.0...v0.13.1) (2026-11-23)
+
+
+### Continuous Integration
+
+* run race and browser e2e in the merge queue only ([#1069](https://github.com/MustardSeedNetworks/trellis/issues/1069)) ([249b1f6](https://github.com/MustardSeedNetworks/trellis/commit/249b1f655ad4c1d670fef34bfddeb4948c3ad960)), closes [#1068](https://github.com/MustardSeedNetworks/trellis/issues/1068)
+
 ## [0.13.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.12.50...v0.13.0) (2026-11-22)
 
 
