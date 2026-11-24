@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.13.2](https://github.com/MustardSeedNetworks/trellis/compare/v0.13.1...v0.13.2) (2026-11-24)
+
+
+### Miscellaneous
+
+* **deps:** update dependency axe-core to v4.14.1 ([#1073](https://github.com/MustardSeedNetworks/trellis/issues/1073)) ([5179d94](https://github.com/MustardSeedNetworks/trellis/commit/5179d94b9dcb2a3163a0bb29e6193788b1e41553))
+* **deps:** update github actions ([#1030](https://github.com/MustardSeedNetworks/trellis/issues/1030)) ([83d443c](https://github.com/MustardSeedNetworks/trellis/commit/83d443cba05981e6f5f9abd177775906f402dc6a))
+
 ## [0.13.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.13.0...v0.13.1) (2026-11-23)
 
 
