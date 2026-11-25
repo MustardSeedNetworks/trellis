@@ -57,7 +57,7 @@ echo "  Go source: max ${MAX_GO_LINES}"
 echo "  Go tests:  max ${MAX_TEST_LINES}"
 echo "  TS/TSX:    max ${MAX_TS_LINES}"
 echo "  Baseline:  ${BASELINE_FILE} (shrink-only)"
-echo "  Skipped:   generated code (gen/, ui/src/gen/)"
+echo "  Skipped:   generated code (gen/, ui/src/gen/) and the canonical copies in ui/src/shared/"
 echo "==========================================================================="
 
 while IFS= read -r -d '' file; do
@@ -76,7 +76,10 @@ if [ -d "ui/src" ]; then
     while IFS= read -r -d '' file; do
         file=${file#./}
         check "$file" "$(wc -l < "$file" | tr -d ' ')" "$MAX_TS_LINES"
-    done < <(find ui/src -path "ui/src/gen" -prune -o \
+    # ui/src/shared/ is byte-identical to MustardSeedNetworks/.github and CI
+    # fails on any local edit, so a size limit here could only be met by editing
+    # a file this repo may not change; the limit belongs upstream.
+    done < <(find ui/src -path "ui/src/gen" -prune -o -path "ui/src/shared" -prune -o \
         \( -name "*.ts" -o -name "*.tsx" \) -print0 2>/dev/null || true)
 fi
 
