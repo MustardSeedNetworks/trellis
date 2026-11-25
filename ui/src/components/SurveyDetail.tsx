@@ -1,15 +1,18 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 import { CaptureSurface } from '@/components/CaptureSurface';
 import { FloorPlanPanel } from '@/components/FloorPlanPanel';
 import { FloorRail } from '@/components/FloorRail';
+import { LinkButton } from '@/components/LinkButton';
 import { SurveyLifecycle } from '@/components/SurveyLifecycle';
 import { ThroughputTarget } from '@/components/ThroughputTarget';
 import type { SurveySummary } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
 import { bytesToDataUrl, reportFilename } from '@/lib/format';
-import { surveyStatusLabel } from '@/lib/surveyStatus';
+import { surveyStatusLabel, surveyStatusTone } from '@/lib/surveyStatus';
+import { Button } from '@/shared/Button';
+import { Card } from '@/shared/Card';
+import { StatusPill } from '@/shared/StatusPill';
 import { useToast } from '@/ui/toastContext';
 
 /**
@@ -31,6 +34,10 @@ interface SurveyDetailProps {
 export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
   const { t } = useTranslation(['common', 'pages']);
   const { addToast } = useToast();
+  const coverageHref = {
+    pathname: '/coverage',
+    search: `?survey=${encodeURIComponent(survey.id)}`,
+  };
 
   // The floors are read here rather than passed down: the plan's dimensions and
   // scale live on the floor, and both the plan panel and the capture surface
@@ -79,7 +86,6 @@ export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
   });
 
   const facts = [
-    { label: t('common:labels.status'), value: surveyStatusLabel(t, survey.status) },
     { label: t('common:labels.floors'), value: String(survey.floorCount) },
     { label: t('common:labels.samples'), value: String(survey.sampleCount) },
     {
@@ -89,7 +95,17 @@ export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
   ];
 
   return (
-    <div className="panel flex-1 overflow-y-auto p-6" data-testid="survey-detail">
+    <Card data-testid="survey-detail" className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="min-w-0 truncate text-base font-semibold text-text-primary">
+          {survey.name}
+        </h2>
+        <StatusPill
+          tone={surveyStatusTone(survey.status)}
+          label={surveyStatusLabel(t, survey.status)}
+        />
+      </div>
+
       <dl className="flex flex-wrap gap-x-10 gap-y-4">
         {facts.map((fact) => (
           <div key={fact.label}>
@@ -101,16 +117,16 @@ export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
         ))}
       </dl>
 
-      <div className="mt-6 border-t border-hairline pt-6">
+      <div className="border-t border-hairline pt-6">
         <SurveyLifecycle survey={survey} onDeleted={onDeleted} />
       </div>
 
-      <div className="mt-6 border-t border-hairline pt-6">
+      <div className="border-t border-hairline pt-6">
         <FloorRail surveyId={survey.id} floors={floorsQuery.data?.floors ?? []} />
       </div>
 
-      <div className="mt-6 border-t border-hairline pt-6">
-        {activeFloor ? (
+      {activeFloor ? (
+        <div className="border-t border-hairline pt-6">
           <FloorPlanPanel
             surveyId={survey.id}
             floorId={activeFloor.id}
@@ -118,14 +134,14 @@ export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
             scaleM={activeFloor.scaleM}
             nextLevel={nextLevel}
           />
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
-      <div className="mt-6 border-t border-hairline pt-6">
+      <div className="border-t border-hairline pt-6">
         <ThroughputTarget surveyId={survey.id} server={survey.iperfServer} />
       </div>
 
-      <div className="mt-6 border-t border-hairline pt-6">
+      <div className="border-t border-hairline pt-6">
         <CaptureSurface
           surveyId={survey.id}
           surveyName={survey.name}
@@ -136,25 +152,16 @@ export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
         />
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-hairline pt-6">
-        <Link
-          to={{ pathname: '/coverage', search: `?survey=${encodeURIComponent(survey.id)}` }}
-          className="rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
-          data-testid="plot-coverage"
-        >
+      <div className="flex flex-wrap items-center gap-3 border-t border-hairline pt-6">
+        <LinkButton to={coverageHref} data-testid="plot-coverage">
           {t('pages:surveys.plotCoverage')}
-        </Link>
-        <button
-          type="button"
-          onClick={() => reportMutation.mutate()}
-          disabled={reportMutation.isPending}
-          className="rounded bg-brand-primary px-3 py-2 text-sm font-medium text-on-brand hover:bg-brand-accent disabled:opacity-50"
-        >
+        </LinkButton>
+        <Button onClick={() => reportMutation.mutate()} loading={reportMutation.isPending}>
           {reportMutation.isPending
             ? t('common:buttons.generating')
             : t('pages:surveys.downloadReport')}
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }

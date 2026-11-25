@@ -1,15 +1,16 @@
 import { useTranslation } from 'react-i18next';
-import type { RollupState } from '@/ui/StatusRollup';
+import { Verdict, type VerdictFigure } from '@/components/Verdict';
+import type { VerdictState } from '@/lib/verdictState';
 
 /**
  * CoverageFindings — the verdict column of the Canvas archetype.
  *
- * Canvas pages do not open with a StatusRollup band the way Surveys and Import
- * do. The archetype puts the verdict beside the surface rather than above it,
- * because the reading is *about a region of the image* — "two gaps on this
- * floor" only means something next to the floor it is about. The honesty rules
- * the band exists to enforce still apply here and are enforced the same way:
- * an unreadable analysis prints em dashes and says why, never zeros.
+ * Canvas pages do not open with a verdict band the way Live does. The
+ * archetype puts the verdict beside the surface rather than above it, because
+ * the reading is *about a region of the image*: "two gaps on this floor" only
+ * means something next to the floor it is about. The honesty rules still
+ * apply and are enforced by `Verdict`: an unreadable analysis prints em dashes
+ * and says why, never zeros.
  */
 interface CoverageFindingsProps {
   /**
@@ -18,20 +19,13 @@ interface CoverageFindingsProps {
    * so it says which one it means rather than letting the map imply it.
    */
   title: string;
-  state: RollupState;
+  state: VerdictState;
   headline: string;
   body?: string;
-  figures: { label: string; value: string }[];
+  figures: VerdictFigure[];
   /** Service-generated recommendations. Empty is a legitimate answer. */
   recommendations: string[];
 }
-
-const STATE_STYLES: Record<RollupState, { edge: string; kicker: string }> = {
-  ok: { edge: 'bg-status-success', kicker: 'text-status-success' },
-  warn: { edge: 'bg-status-warning', kicker: 'text-status-warning' },
-  crit: { edge: 'bg-status-error', kicker: 'text-status-error' },
-  unknown: { edge: 'bg-text-muted', kicker: 'text-text-muted' },
-};
 
 export function CoverageFindings({
   title,
@@ -43,54 +37,17 @@ export function CoverageFindings({
 }: CoverageFindingsProps) {
   const { t } = useTranslation('common');
 
-  /* Written out literally rather than as t(STATE_LABEL_KEYS[state]): a key
-     built from a variable is invisible to the key checker, which would report
-     all four as unused and need a dynamic-prefixes entry to silence. Four
-     literal calls cost nothing and keep the check honest. */
-  const stateLabels: Record<RollupState, string> = {
-    ok: t('status.ok'),
-    warn: t('status.warn'),
-    crit: t('status.crit'),
-    unknown: t('status.unknown'),
-  };
-
-  const styles = STATE_STYLES[state];
-
   return (
-    <section
-      data-state={state}
+    <Verdict
       data-testid="coverage-findings"
-      aria-live="polite"
-      className="panel relative flex flex-col gap-4 overflow-hidden p-5"
+      kicker={title}
+      state={state}
+      headline={headline}
+      {...(body === undefined ? {} : { body })}
+      figures={figures}
     >
-      <span aria-hidden="true" className={`absolute inset-y-0 left-0 w-[3px] ${styles.edge}`} />
-
-      <div>
-        <p className="kicker text-text-muted">{title}</p>
-        <p className={`kicker mt-1 ${styles.kicker}`}>{stateLabels[state]}</p>
-        <h2 className="mt-2 text-base font-extrabold tracking-[-0.02em] text-text-primary">
-          {headline}
-        </h2>
-        {body ? <p className="mt-2 text-sm text-text-secondary">{body}</p> : null}
-      </div>
-
-      {figures.length > 0 ? (
-        <dl className="flex flex-col gap-3 border-t border-hairline pt-4">
-          {figures.map((figure) => (
-            <div key={figure.label} className="flex items-baseline gap-3">
-              <dt className="flex-1 text-sm text-text-secondary">{figure.label}</dt>
-              {/* Unknown refuses to print figures for the same reason the
-                  rollup does: a number here reads as a measurement. */}
-              <dd className="figure text-sm font-bold text-text-primary">
-                {state === 'unknown' ? '—' : figure.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      ) : null}
-
       {recommendations.length > 0 ? (
-        <div className="flex flex-col gap-2 border-t border-hairline pt-4">
+        <div className="flex flex-col gap-2">
           <span className="kicker">{t('labels.recommendations')}</span>
           <ul className="flex list-inside list-disc flex-col gap-1 text-sm text-text-secondary">
             {recommendations.map((recommendation) => (
@@ -99,6 +56,6 @@ export function CoverageFindings({
           </ul>
         </div>
       ) : null}
-    </section>
+    </Verdict>
   );
 }

@@ -1,6 +1,7 @@
 import { ConnectError } from '@connectrpc/connect';
 import { useQuery } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
+import { Signal } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
@@ -8,6 +9,7 @@ import { AccessPointSelect } from '@/components/AccessPointSelect';
 import { CoverageFindings } from '@/components/CoverageFindings';
 import { HeatmapLegend } from '@/components/HeatmapLegend';
 import { HeatmapSurface } from '@/components/HeatmapSurface';
+import { LinkButton } from '@/components/LinkButton';
 import { PredictionView } from '@/components/PredictionView';
 import { surveyClient } from '@/lib/client';
 import {
@@ -27,6 +29,13 @@ import {
 import { describeCoverage, isUnmeasured, unmeasuredCopy } from '@/lib/coverageVerdict';
 import { formatSignal } from '@/lib/format';
 import { BANDS, type Band, isBand } from '@/lib/placement';
+import { Alert } from '@/shared/Alert';
+import { Card } from '@/shared/Card';
+import { EmptyState } from '@/shared/EmptyState';
+import { FormField } from '@/shared/FormField';
+import { Input } from '@/shared/Input';
+import { Select } from '@/shared/Select';
+import { Skeleton } from '@/shared/Skeleton';
 
 /**
  * Coverage — Canvas.
@@ -154,121 +163,130 @@ export function CoveragePage() {
     t,
   );
 
+  if (surveysQuery.isError) {
+    return (
+      <Alert tone="error" title={t('pages:surveys.notArriving')}>
+        {t('pages:coverage.surveyServiceSilent', { error: String(surveysQuery.error) })}
+      </Alert>
+    );
+  }
+  if (surveysQuery.isLoading) {
+    return (
+      <Card>
+        <div className="flex flex-col gap-3" data-testid="surface-message">
+          <Skeleton className="h-10 w-1/2" />
+          <Skeleton className="h-40" />
+          <p className="sr-only">{t('pages:coverage.loadingSurveys')}</p>
+        </div>
+      </Card>
+    );
+  }
+  /* No survey is not a layer with nothing drawn on it: there is nothing to
+     plot, so there is no toolbar, no empty canvas and no findings, only what
+     to do next. */
+  if (surveys.length === 0) {
+    return (
+      <Card>
+        <EmptyState
+          icon={<Signal className="h-6 w-6" />}
+          title={t('pages:coverage.noSurveysTitle')}
+          hint={t('pages:coverage.noSurveys')}
+          action={
+            <LinkButton to="/import" variant="primary">
+              {t('pages:coverage.importSurvey')}
+            </LinkButton>
+          }
+          className="py-10"
+        />
+      </Card>
+    );
+  }
+
   return (
-    /* Bounded where the findings sit BESIDE the map, scrolling everywhere else.
-       Bounded is what keeps the colour key on screen with the map it explains:
-       the surface grew to whatever the floor plan needed and pushed the legend
-       past the fold (trellis#476), and inside a bound the surface is the one
-       thing that gives way. The breakpoint is xl rather than md because below
-       it the findings panel stacks UNDER the map — bounding there only moves
-       the clipping from the legend onto the findings, which was measured at
-       1024x768: their panel ended 118 px past the fold with nothing to
-       scroll. */
-    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6 xl:min-h-0 xl:overflow-hidden">
-      {/* A row of controls on a laptop; a stack on a phone. Wrapping alone was
-          not enough: a <select> keeps a minimum width from its longest option,
-          so a survey with a long name pushed its own label past the panel. Each
-          control is a full-width block below md, where that width is definite. */}
-      <div className="panel flex flex-col items-stretch gap-4 p-4 md:flex-row md:flex-wrap md:items-center">
-        <label
-          className="flex min-w-0 flex-wrap items-center gap-2 text-sm"
-          htmlFor="coverage-survey"
-        >
-          <span className="kicker">{t('common:labels.survey')}</span>
-          <select
-            id="coverage-survey"
-            value={surveyId ?? ''}
-            disabled={surveys.length === 0}
-            onChange={(event) => setSearchParams({ survey: event.target.value })}
-            className="w-full min-w-0 rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary disabled:opacity-50 md:w-auto md:max-w-full"
-          >
-            {surveyId !== undefined && !listed ? (
-              <option value={surveyId}>{t('pages:coverage.notInList', { id: surveyId })}</option>
-            ) : null}
-            {surveys.map((survey) => (
-              <option key={survey.id} value={survey.id}>
-                {survey.name}
-              </option>
-            ))}
-          </select>
-        </label>
+    <div className="flex flex-col gap-4">
+      {/* A row of controls on a laptop; a stack on a phone. Each field is a
+          full-width block below sm, where that width is definite: a <select>
+          keeps a minimum width from its longest option, so a survey with a
+          long name pushed its own label past the panel. */}
+      <Card className="flex flex-wrap items-end gap-x-4 gap-y-3" data-testid="coverage-toolbar">
+        <FormField label={t('common:labels.survey')} className="sm:w-56">
+          {(control) => (
+            <Select
+              {...control}
+              value={surveyId ?? ''}
+              onValueChange={(value) => setSearchParams({ survey: value })}
+              options={[
+                ...(surveyId !== undefined && !listed
+                  ? [{ value: surveyId, label: t('pages:coverage.notInList', { id: surveyId }) }]
+                  : []),
+                ...surveys.map((survey) => ({ value: survey.id, label: survey.name })),
+              ]}
+              data-testid="coverage-survey"
+            />
+          )}
+        </FormField>
 
         {floors.length > 1 ? (
-          <label
-            className="flex min-w-0 flex-wrap items-center gap-2 text-sm"
-            htmlFor="coverage-floor"
-          >
-            <span className="kicker">{t('common:labels.floor')}</span>
-            <select
-              id="coverage-floor"
-              value={floorId}
-              onChange={(event) =>
-                setSearchParams(
-                  event.target.value === ''
-                    ? { survey: surveyId ?? '' }
-                    : { survey: surveyId ?? '', floor: event.target.value },
-                )
-              }
-              className="w-full min-w-0 rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary md:w-auto md:max-w-full"
-              data-testid="coverage-floor"
-            >
-              {/* The active floor by name rather than a blank row: "which floor
-                  is this" must be answerable without opening the list. */}
-              {floors.map((floor) => (
-                <option key={floor.id} value={floor.isActive ? '' : floor.id}>
-                  {floor.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <FormField label={t('common:labels.floor')} className="sm:w-44">
+            {(control) => (
+              <Select
+                {...control}
+                value={floorId}
+                onValueChange={(value) =>
+                  setSearchParams(
+                    value === ''
+                      ? { survey: surveyId ?? '' }
+                      : { survey: surveyId ?? '', floor: value },
+                  )
+                }
+                /* The active floor by name rather than a blank row: "which
+                   floor is this" must be answerable without opening the list. */
+                options={floors.map((floor) => ({
+                  value: floor.isActive ? '' : floor.id,
+                  label: floor.name,
+                }))}
+                data-testid="coverage-floor"
+              />
+            )}
+          </FormField>
         ) : null}
 
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className="kicker">{t('common:labels.metric')}</span>
-          <div className="flex flex-wrap gap-1">
-            {METRICS.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => setMetric(option.id)}
-                aria-pressed={metric === option.id}
-                data-testid={`coverage-metric-${option.id}`}
-                className={`rounded-[9px] px-3 py-2 text-sm font-bold ${
-                  metric === option.id
-                    ? 'bg-brand-primary text-on-brand'
-                    : 'text-text-secondary hover:bg-surface-hover'
-                }`}
-              >
-                {metricName(option.id, t)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {banded ? (
-          <label
-            className="flex min-w-0 flex-wrap items-center gap-2 text-sm"
-            htmlFor="coverage-band"
-          >
-            <span className="kicker">{t('pages:coverage.band')}</span>
-            <select
-              id="coverage-band"
-              value={band}
-              onChange={(event) => {
-                if (isBand(event.target.value)) {
-                  setBand(event.target.value);
+        <FormField label={t('common:labels.metric')} className="sm:w-48">
+          {(control) => (
+            <Select
+              {...control}
+              value={metric}
+              onValueChange={(value) => {
+                const chosen = METRICS.find((option) => option.id === value);
+                if (chosen) {
+                  setMetric(chosen.id);
                 }
               }}
-              className="w-full min-w-0 rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary md:w-auto"
-              data-testid="coverage-band"
-            >
-              {BANDS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
+              options={METRICS.map((option) => ({
+                value: option.id,
+                label: metricName(option.id, t),
+              }))}
+              data-testid="coverage-metric"
+            />
+          )}
+        </FormField>
+
+        {banded ? (
+          <FormField label={t('pages:coverage.band')} className="sm:w-32">
+            {(control) => (
+              <Select
+                {...control}
+                value={band}
+                onValueChange={(value) => {
+                  if (isBand(value)) {
+                    setBand(value);
+                  }
+                }}
+                options={BANDS.map((option) => ({ value: option, label: option }))}
+                data-testid="coverage-band"
+              />
+            )}
+          </FormField>
         ) : null}
 
         {analysable && accessPoints.length > 0 ? (
@@ -284,35 +302,35 @@ export function CoveragePage() {
             layer they would answer a question nobody asked, and a control that
             appears to do nothing is worse than one that is not there. */}
         {coverageMetric !== undefined ? (
-          <label
-            className="flex min-w-0 flex-wrap items-center gap-2 text-sm"
-            htmlFor="coverage-threshold"
-          >
-            <span className="kicker">{t('common:labels.deadZoneThreshold')}</span>
-            <input
-              id="coverage-threshold"
-              type="number"
-              value={threshold}
-              min={bounds.min}
-              max={bounds.max}
-              step={1}
-              onChange={(event) => {
-                const parsed = parseThreshold(coverageMetric, event.target.value);
-                if (parsed !== undefined) {
-                  setThresholds((current) => ({ ...current, [coverageMetric]: parsed }));
-                }
-              }}
-              className="figure w-24 rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
-              data-testid="coverage-threshold"
-            />
-            <span className="text-text-secondary" data-testid="coverage-threshold-unit">
-              {unit}
-            </span>
-          </label>
+          <FormField label={t('common:labels.deadZoneThreshold')} className="sm:w-40">
+            {(control) => (
+              <div className="flex items-center gap-2">
+                <Input
+                  {...control}
+                  type="number"
+                  value={threshold}
+                  min={bounds.min}
+                  max={bounds.max}
+                  step={1}
+                  onChange={(event) => {
+                    const parsed = parseThreshold(coverageMetric, event.target.value);
+                    if (parsed !== undefined) {
+                      setThresholds((current) => ({ ...current, [coverageMetric]: parsed }));
+                    }
+                  }}
+                  className="figure"
+                  data-testid="coverage-threshold"
+                />
+                <span className="text-sm text-text-secondary" data-testid="coverage-threshold-unit">
+                  {unit}
+                </span>
+              </div>
+            )}
+          </FormField>
         ) : null}
 
         {heatmap && !predicted ? (
-          <span className="figure ml-auto text-xs text-text-muted" data-testid="surface-meta">
+          <span className="figure text-xs text-text-muted sm:ml-auto" data-testid="surface-meta">
             {t('pages:coverage.surfaceMeta', {
               metric: heatmap.metric,
               count: heatmap.sampleCount,
@@ -321,9 +339,9 @@ export function CoveragePage() {
             })}
           </span>
         ) : null}
-      </div>
+      </Card>
 
-      <div className="grid flex-1 grid-cols-1 items-start gap-6 xl:min-h-0 xl:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[1fr_320px]">
         {predicted && surveyId !== undefined ? (
           <PredictionView
             surveyId={surveyId}
@@ -335,12 +353,9 @@ export function CoveragePage() {
           />
         ) : (
           <>
-            <section className="panel flex flex-col gap-4 p-5 xl:min-h-0 xl:self-stretch">
+            <Card className="flex min-w-0 flex-col gap-4">
               {renderSurface(
                 {
-                  hasSurveys: surveys.length > 0,
-                  surveysLoading: surveysQuery.isLoading,
-                  surveysError: surveysQuery.error,
                   heatmapLoading: heatmapQuery.isLoading,
                   heatmapError: heatmapQuery.error,
                   heatmap,
@@ -350,19 +365,17 @@ export function CoveragePage() {
                 },
                 t,
               )}
-              {/* Pinned to the foot of the surface panel. Bounding the layout keeps
-              the key beside the map at xl (trellis#476); below that breakpoint
-              the page scrolls and a tall floor plan still carried the key past
-              the fold, so the one thing that says what the colours mean was
-              off screen exactly while an operator was reading them (#484).
-              Sticky rather than fixed: it belongs to this panel, and on a short
-              plan it simply sits where it always did. */}
+              {/* Pinned to the foot of the surface card, so the one thing that
+                  says what the colours mean is on screen while an operator is
+                  reading them (#484). Sticky rather than fixed: it belongs to
+                  this card, and on a short plan it simply sits where it always
+                  did. */}
               {heatmap ? (
-                <div className="sticky bottom-0 -mx-5 -mb-5 mt-auto bg-surface-raised px-5 pb-5 pt-3">
+                <div className="sticky bottom-0 -mx-4 -mb-4 bg-surface-raised px-4 pb-4 pt-3 sm:-mx-5 sm:-mb-5 sm:px-5 sm:pb-5">
                   <HeatmapLegend stops={heatmap.legend} unit={unit} />
                 </div>
               ) : null}
-            </section>
+            </Card>
 
             {analysable ? (
               <CoverageFindings
@@ -386,9 +399,6 @@ export function CoveragePage() {
 }
 
 interface SurfaceState {
-  hasSurveys: boolean;
-  surveysLoading: boolean;
-  surveysError: unknown;
   heatmapLoading: boolean;
   heatmapError: unknown;
   heatmap:
@@ -412,40 +422,9 @@ interface SurfaceState {
  * read as "this floor has no coverage" in every one of them.
  */
 function renderSurface(
-  {
-    hasSurveys,
-    surveysLoading,
-    surveysError,
-    heatmapLoading,
-    heatmapError,
-    heatmap,
-    metric,
-    metricLabel,
-    unit,
-  }: SurfaceState,
+  { heatmapLoading, heatmapError, heatmap, metric, metricLabel, unit }: SurfaceState,
   t: TFunction<['common', 'pages']>,
 ) {
-  if (surveysError) {
-    return (
-      <p className="text-sm text-status-error" data-testid="surface-message">
-        {t('pages:coverage.surveyServiceSilent', { error: String(surveysError) })}
-      </p>
-    );
-  }
-  if (surveysLoading) {
-    return (
-      <p className="text-sm text-text-muted" data-testid="surface-message">
-        {t('pages:coverage.loadingSurveys')}
-      </p>
-    );
-  }
-  if (!hasSurveys) {
-    return (
-      <p className="text-sm text-text-muted" data-testid="surface-message">
-        {t('pages:coverage.noSurveys')}
-      </p>
-    );
-  }
   if (isUnmeasured(heatmapError)) {
     const copy = unmeasuredCopy(metric, metricLabel, t);
     /* A delta can be missing for several reasons — no scale, no BSSID placed,
@@ -453,9 +432,12 @@ function renderSurface(
     const body =
       metric === 'predicted_delta' ? ConnectError.from(heatmapError).rawMessage : copy.body;
     return (
-      <div className="flex flex-col gap-1 text-sm text-text-muted" data-testid="surface-message">
-        <p className="font-medium text-text-primary">{copy.headline}</p>
-        {body ? <p>{body}</p> : null}
+      <div data-testid="surface-message">
+        <EmptyState
+          icon={<Signal className="h-6 w-6" />}
+          title={copy.headline}
+          {...(body ? { hint: body } : {})}
+        />
       </div>
     );
   }
@@ -463,16 +445,19 @@ function renderSurface(
     /* A survey with no floor plan is the common case here, and the service
        says so in its message — worth quoting rather than replacing. */
     return (
-      <p className="text-sm text-status-error" data-testid="surface-message">
-        {t('pages:coverage.heatmapFailed', { error: String(heatmapError) })}
-      </p>
+      <div data-testid="surface-message">
+        <Alert tone="error">
+          {t('pages:coverage.heatmapFailed', { error: String(heatmapError) })}
+        </Alert>
+      </div>
     );
   }
   if (heatmapLoading || !heatmap) {
     return (
-      <p className="text-sm text-text-muted" data-testid="surface-message">
-        {t('pages:coverage.renderingHeatmap')}
-      </p>
+      <div className="flex flex-col gap-3" data-testid="surface-message">
+        <Skeleton className="h-48" />
+        <p className="text-sm text-text-muted">{t('pages:coverage.renderingHeatmap')}</p>
+      </div>
     );
   }
   return (

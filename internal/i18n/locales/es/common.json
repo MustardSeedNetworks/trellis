@@ -62,6 +62,7 @@
     "hiddenNetwork": "Red oculta",
     "language": "Idioma",
     "metric": "Métrica",
+    "name": "Nombre",
     "recommendations": "Recomendaciones",
     "samples": "Muestras",
     "scale": "Escala",
@@ -106,6 +107,16 @@
     "ok": "Todo correcto",
     "unknown": "Sin datos",
     "warn": "Degradado"
+  },
+  "table": {
+    "actions": "Acciones",
+    "loading": "Cargando",
+    "nextPage": "Página siguiente",
+    "pageStatus": "Página {{page}} de {{pageCount}} ({{total}} filas)",
+    "pagination": "Páginas de la tabla",
+    "previousPage": "Página anterior",
+    "selectAll": "Seleccionar todas las filas",
+    "selectRow": "Seleccionar fila"
   },
   "values": {
     "none": "Ninguno",

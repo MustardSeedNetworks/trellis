@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SurveySummary } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
+import { Button } from '@/shared/Button';
+import { ConfirmDialog } from '@/shared/ConfirmDialog';
 import { useToast } from '@/ui/toastContext';
 
 interface SurveyLifecycleProps {
@@ -11,13 +13,6 @@ interface SurveyLifecycleProps {
   onDeleted: () => void;
 }
 
-const BUTTON =
-  'rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-hover disabled:opacity-50';
-const PRIMARY =
-  'rounded bg-brand-primary px-3 py-2 text-sm font-medium text-on-brand hover:bg-brand-accent disabled:opacity-50';
-const DANGER =
-  'rounded border border-status-error px-3 py-2 text-sm text-status-error hover:bg-surface-hover disabled:opacity-50';
-
 /**
  * SurveyLifecycle moves a survey between the states the service defines.
  *
@@ -25,10 +20,9 @@ const DANGER =
  * refuses the others with a precondition error, but a button that exists and
  * then fails reads as a defect; a button that is absent reads as the state.
  *
- * Delete is two steps on the same buttons rather than a modal: both steps are
- * ordinary focusable buttons, so the confirmation is reachable from the
- * keyboard — a modal that only a mouse can dismiss has shipped in this family
- * before.
+ * Delete is the filled destructive button and goes through a ConfirmDialog,
+ * which takes focus on Cancel and closes on Escape, so it is as reachable from
+ * the keyboard as the buttons beside it.
  */
 export function SurveyLifecycle({ survey, onDeleted }: SurveyLifecycleProps) {
   const { t } = useTranslation(['common', 'pages']);
@@ -62,8 +56,10 @@ export function SurveyLifecycle({ survey, onDeleted }: SurveyLifecycleProps) {
       await refresh();
       onDeleted();
     },
-    onError: (error) =>
-      addToast(t('pages:surveys.deleteFailed', { error: String(error) }), 'error'),
+    onError: (error) => {
+      setConfirmingDelete(false);
+      addToast(t('pages:surveys.deleteFailed', { error: String(error) }), 'error');
+    },
   });
 
   const busy =
@@ -77,78 +73,53 @@ export function SurveyLifecycle({ survey, onDeleted }: SurveyLifecycleProps) {
   const canComplete = survey.status === 'in_progress' || survey.status === 'paused';
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-3">
-        {canStart ? (
-          <button
-            type="button"
-            onClick={() => startMutation.mutate()}
-            disabled={busy}
-            className={PRIMARY}
-            data-testid="survey-start"
-          >
-            {survey.status === 'paused' ? t('pages:surveys.resume') : t('pages:surveys.start')}
-          </button>
-        ) : null}
-        {canPause ? (
-          <button
-            type="button"
-            onClick={() => pauseMutation.mutate()}
-            disabled={busy}
-            className={BUTTON}
-            data-testid="survey-pause"
-          >
-            {t('pages:surveys.pause')}
-          </button>
-        ) : null}
-        {canComplete ? (
-          <button
-            type="button"
-            onClick={() => completeMutation.mutate()}
-            disabled={busy}
-            className={BUTTON}
-            data-testid="survey-complete"
-          >
-            {t('pages:surveys.complete')}
-          </button>
-        ) : null}
+    <div className="flex flex-wrap items-center gap-3">
+      {canStart ? (
+        <Button
+          variant="primary"
+          onClick={() => startMutation.mutate()}
+          disabled={busy}
+          data-testid="survey-start"
+        >
+          {survey.status === 'paused' ? t('pages:surveys.resume') : t('pages:surveys.start')}
+        </Button>
+      ) : null}
+      {canPause ? (
+        <Button onClick={() => pauseMutation.mutate()} disabled={busy} data-testid="survey-pause">
+          {t('pages:surveys.pause')}
+        </Button>
+      ) : null}
+      {canComplete ? (
+        <Button
+          onClick={() => completeMutation.mutate()}
+          disabled={busy}
+          data-testid="survey-complete"
+        >
+          {t('pages:surveys.complete')}
+        </Button>
+      ) : null}
 
-        <span className="ml-auto flex flex-wrap items-center gap-3">
-          {confirmingDelete ? (
-            <>
-              <span className="text-sm text-text-secondary">{t('pages:surveys.deletePrompt')}</span>
-              <button
-                type="button"
-                onClick={() => setConfirmingDelete(false)}
-                disabled={busy}
-                className={BUTTON}
-                data-testid="survey-delete-cancel"
-              >
-                {t('pages:surveys.keepIt')}
-              </button>
-              <button
-                type="button"
-                onClick={() => deleteMutation.mutate()}
-                disabled={busy}
-                className={DANGER}
-                data-testid="survey-delete-confirm"
-              >
-                {t('pages:surveys.confirmDelete', { name: survey.name })}
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setConfirmingDelete(true)}
-              disabled={busy}
-              className={DANGER}
-              data-testid="survey-delete"
-            >
-              {t('pages:surveys.delete')}
-            </button>
-          )}
-        </span>
-      </div>
+      <Button
+        variant="destructive"
+        onClick={() => setConfirmingDelete(true)}
+        disabled={busy}
+        className="sm:ml-auto"
+        data-testid="survey-delete"
+      >
+        {t('pages:surveys.delete')}
+      </Button>
+
+      <ConfirmDialog
+        open={confirmingDelete}
+        title={t('pages:surveys.delete')}
+        message={t('pages:surveys.deletePrompt')}
+        confirmLabel={t('pages:surveys.confirmDelete', { name: survey.name })}
+        cancelLabel={t('pages:surveys.keepIt')}
+        closeLabel={t('common:accessibility.close')}
+        onConfirm={() => deleteMutation.mutate()}
+        onCancel={() => setConfirmingDelete(false)}
+        confirming={deleteMutation.isPending}
+      />
     </div>
   );
 }

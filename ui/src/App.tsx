@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
 import { Suspense, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, Route, Routes, useLocation, useNavigate } from 'react-router';
+import { Link, Route, Routes, useLocation } from 'react-router';
 import { PageErrorBoundary } from '@/components/ErrorBoundary';
+import { LinkButton } from '@/components/LinkButton';
 import { useBuildVersion } from '@/hooks/useBuildVersion';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { type PageConfig, usePages } from '@/pageRegistry';
 import type { BreadcrumbItem, BreadcrumbLinkProps } from '@/shared/Breadcrumbs';
-import { Button } from '@/shared/Button';
 import { Card } from '@/shared/Card';
 import { EmptyState } from '@/shared/EmptyState';
 import { PageHeader } from '@/shared/PageHeader';
@@ -168,7 +168,6 @@ function PageLoading() {
  */
 function NotFound() {
   const { t } = useTranslation('common');
-  const navigate = useNavigate();
   const title = t('emptyState.notFoundTitle');
 
   return (
@@ -188,9 +187,9 @@ function NotFound() {
           title={title}
           hint={t('emptyState.notFoundBody')}
           action={
-            <Button variant="primary" onClick={() => navigate('/')}>
+            <LinkButton to="/" variant="primary">
               {t('emptyState.notFoundHome')}
-            </Button>
+            </LinkButton>
           }
         />
       </Card>

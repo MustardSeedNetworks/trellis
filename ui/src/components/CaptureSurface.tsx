@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import type { CaptureStatus, SurveySample } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
 import { formatSignal } from '@/lib/format';
+import { Button } from '@/shared/Button';
 
 interface CaptureSurfaceProps {
   surveyId: string;
@@ -285,31 +286,31 @@ export function CaptureSurface({
               fails is worse than an absent one, and the remedy — name a target
               — is not something a click can discover. */}
           {throughputTarget === '' ? null : (
-            <button
-              type="button"
-              disabled={!walking || capturing || throughputMutation.isPending}
+            <Button
+              size="sm"
+              disabled={!walking || capturing}
+              loading={throughputMutation.isPending}
               onClick={() => throughputMutation.mutate(clampTo(cursor, width, height))}
               data-testid="measure-throughput"
-              className="rounded border border-hairline px-3 py-1 text-sm text-text-primary hover:bg-surface-raised disabled:opacity-50"
             >
               {throughputMutation.isPending
                 ? t('pages:surveys.testing')
                 : t('pages:surveys.throughputTest')}
-            </button>
+            </Button>
           )}
-          <button
-            type="button"
-            disabled={!walking || walkMutation.isPending || stopMutation.isPending}
+          <Button
+            size="sm"
+            disabled={!walking}
+            loading={walkMutation.isPending || stopMutation.isPending}
             onClick={() =>
               capturing
                 ? stopMutation.mutate()
                 : walkMutation.mutate(clampTo(cursor, width, height))
             }
             data-testid="toggle-continuous"
-            className="rounded border border-hairline px-3 py-1 text-sm text-text-primary hover:bg-surface-raised disabled:opacity-50"
           >
             {capturing ? t('pages:surveys.stopWalking') : t('pages:surveys.startWalking')}
-          </button>
+          </Button>
         </div>
       </div>
       <p className="text-sm text-text-secondary">

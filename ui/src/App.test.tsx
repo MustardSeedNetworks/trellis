@@ -44,7 +44,7 @@ describe('App routing', () => {
     expect(panel).toHaveTextContent('Trellis');
     // The rail also links to Surveys, so the way back is looked for inside the
     // panel — the point is that the page itself offers one.
-    expect(within(panel).getByRole('button', { name: /surveys/i })).toBeInTheDocument();
+    expect(within(panel).getByRole('link', { name: /surveys/i })).toBeInTheDocument();
   });
 
   it('gives the 404 the same header as every page, neutral and with a trail', async () => {

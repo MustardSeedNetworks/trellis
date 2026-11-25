@@ -1,21 +1,21 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { StatusRollup } from './StatusRollup';
+import { Verdict } from './Verdict';
 
 /**
- * The one band that answers "is anything wrong", in each of its four states.
+ * A reading the product has taken, in each of its four states.
  * `unknown` is the one worth looking at: it must print em dashes for figures
  * it was given, never the numbers.
  */
 const meta = {
-  title: 'Shell/StatusRollup',
-  component: StatusRollup,
+  title: 'Components/Verdict',
+  component: Verdict,
   args: {
     figures: [
       { label: 'Surveys', value: '4' },
       { label: 'Samples', value: '312' },
     ],
   },
-} satisfies Meta<typeof StatusRollup>;
+} satisfies Meta<typeof Verdict>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

@@ -1,7 +1,7 @@
 {
   "capture": {
-    "unavailable": "Este equipo no puede medir el Wi-Fi",
-    "stillUsable": "Los estudios se abren, importan, analizan y se informan igual: solo un recorrido nuevo necesita una radio."
+    "stillUsable": "Los estudios se abren, importan, analizan y se informan igual: solo un recorrido nuevo necesita una radio.",
+    "unavailable": "Este equipo no puede medir el Wi-Fi"
   },
   "coverage": {
     "accessPointOption": "{{ssid}} · canal {{channel}} · {{bssid}}",
@@ -22,12 +22,15 @@
     "deadZones_one": "{{count}} zona muerta por debajo de {{threshold}} {{unit}}",
     "deadZones_other": "{{count}} zonas muertas por debajo de {{threshold}} {{unit}}",
     "deletePlacement": "Eliminar AP",
+    "deletePlacementPrompt": "{{name}} se quita de esta planta y la predicción se dibuja de nuevo sin él.",
     "description": "Señal medida en la planta estudiada, y dónde resulta insuficiente.",
     "everyBand": "Todas las bandas",
     "findingsTitleRssi": "Hallazgos de cobertura RSSI",
     "findingsTitleSnr": "Hallazgos de margen SNR",
     "heatmapAlt": "Mapa de calor de {{metric}} de la planta estudiada",
     "heatmapFailed": "El mapa de calor no se generó: {{error}}",
+    "importSurvey": "Importar un estudio",
+    "keepPlacement": "Conservarlo",
     "layerUnmeasured": "No se midió {{metric}} en esta planta",
     "legendUnavailable": "El servicio no describió la escala de color que utilizó.",
     "loadingPlan": "Cargando el plano…",
@@ -40,7 +43,8 @@
     "noPlanToPlace": "Esta planta no tiene plano. Suba uno en Estudios para colocar AP en él.",
     "noSurveySelected": "Ningún estudio seleccionado",
     "noSurveySelectedBody": "La cobertura se mide por estudio. Elija uno para analizarlo.",
-    "noSurveys": "Aún no se ha capturado ningún estudio. Importe una captura de AirMapper o AirMagnet para trazar la cobertura a partir de ella.",
+    "noSurveys": "Importe una captura de AirMapper o AirMagnet, o recorra una planta en Estudios, para representar la cobertura.",
+    "noSurveysTitle": "No hay estudios que representar",
     "notArriving": "El análisis de cobertura no está llegando",
     "notInList": "{{id}} · no está en la lista de estudios",
     "placeOnPlan": "Colocar un AP aquí",
@@ -80,6 +84,7 @@
     "failed": "La importación falló",
     "imported": "Se ha importado: {{name}}",
     "importedBody": "Almacenado como {{id}}. Ya aparece en Estudios.",
+    "importedFigures": "{{samples}} muestras en {{floors}} plantas.",
     "importing": "Importando…",
     "importingArchive": "Importando el archivo del estudio",
     "needsName": "El estudio necesita un nombre",
@@ -114,6 +119,7 @@
     "healthyUnmeasured": "Conectado a {{ssid}} con {{signal}} dBm",
     "healthyUnmeasuredBody_one": "Este adaptador no informa del ruido de fondo, así que el margen no se conoce. {{count}} BSS observado en este barrido.",
     "healthyUnmeasuredBody_other": "Este adaptador no informa del ruido de fondo, así que el margen no se conoce. {{count}} BSS observados en este barrido.",
+    "neighbourCaption": "Redes detectadas en el último barrido",
     "neighbours_one": "{{count}} BSS detectado",
     "neighbours_other": "{{count}} BSS detectados",
     "notAssociated": "Sin conexión a ninguna red",
@@ -121,6 +127,7 @@
     "notAssociatedBody_other": "La radio está explorando pero no está asociada, así que no hay enlace del que informar. Hay {{count}} BSS al alcance.",
     "notReported": "No informado",
     "nothingHeard": "El barrido no devolvió redes. El adaptador responde pero no escuchó nada, un resultado inusual donde hay alguien de pie.",
+    "nothingHeardTitle": "No se detectó ninguna red",
     "pause": "Pausar exploración",
     "pausedAge_one": "En pausa. Último barrido a las {{time}}, hace {{count}} segundo.",
     "pausedAge_other": "En pausa. Último barrido a las {{time}}, hace {{count}} segundos.",
@@ -134,22 +141,22 @@
     "weakSignalBody": "Una señal tan débil es donde caen las tasas y empiezan los saltos. Este adaptador no informa del ruido de fondo, así que el margen no se conoce."
   },
   "login": {
-    "tagline": "Estudio y planificación de Wi-Fi",
-    "title": "Iniciar sesión",
-    "subtitle": "Este demonio sirve a otros dispositivos, por eso pregunta quién eres.",
-    "username": "Usuario",
-    "password": "Contraseña",
-    "submit": "Iniciar sesión",
-    "submitting": "Iniciando sesión…",
-    "signOut": "Cerrar sesión",
     "checking": "Comprobando tu sesión…",
     "errors": {
+      "empty": "Introduce un usuario y una contraseña.",
       "invalid": "Ese usuario y contraseña no coinciden.",
       "rateLimited": "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
-      "unavailable": "No se pudo contactar con el demonio.",
-      "empty": "Introduce un usuario y una contraseña."
+      "unavailable": "No se pudo contactar con el demonio."
     },
-    "sessionExpired": "Tu sesión caducó. Inicia sesión de nuevo."
+    "password": "Contraseña",
+    "sessionExpired": "Tu sesión caducó. Inicia sesión de nuevo.",
+    "signOut": "Cerrar sesión",
+    "submit": "Iniciar sesión",
+    "submitting": "Iniciando sesión…",
+    "subtitle": "Este demonio sirve a otros dispositivos, por eso pregunta quién eres.",
+    "tagline": "Estudio y planificación de Wi-Fi",
+    "title": "Iniciar sesión",
+    "username": "Usuario"
   },
   "reports": {
     "analysis": "Hallazgos",
@@ -158,7 +165,9 @@
     "description": "Genere un PDF de un estudio, eligiendo qué contiene.",
     "generate": "Generar PDF",
     "generateFailed": "El informe no se generó: {{error}}",
-    "noSurveys": "Aún no se ha capturado ningún estudio — importe uno para informar sobre él.",
+    "importSurvey": "Importar un estudio",
+    "noSurveys": "Recorra una planta en Estudios o importe una captura y luego genere su informe.",
+    "noSurveysTitle": "No hay estudios sobre los que informar",
     "sectionExecutiveSummary": "Resumen ejecutivo",
     "sectionExecutiveSummaryHint": "Puntuación de cobertura, número de zonas muertas y los hallazgos principales.",
     "sectionHeatmaps": "Mapas de calor por planta",
@@ -217,6 +226,7 @@
     "interface": "Interfaz Wi-Fi",
     "interfaceHint": "Opcional. Tal como la nombra el equipo, por ejemplo en0 o wlan0. En blanco, se usa la radio del equipo.",
     "keepIt": "Conservarlo",
+    "listCaption": "Estudios",
     "listEmpty": "Aún no hay estudios. Cree uno para recorrer una planta, o importe una captura de AirMapper o AirMagnet.",
     "loading": "Cargando estudios",
     "measured": "Medido: {{download}} Mbps de bajada, {{upload}} Mbps de subida.",

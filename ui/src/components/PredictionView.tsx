@@ -14,6 +14,13 @@ import type {
 import { surveyClient } from '@/lib/client';
 import { bytesToDataUrl } from '@/lib/format';
 import { BANDS, type Band, type PlanPoint, placedOnBand, TX_POWER } from '@/lib/placement';
+import { Alert } from '@/shared/Alert';
+import { Button } from '@/shared/Button';
+import { Card } from '@/shared/Card';
+import { ConfirmDialog } from '@/shared/ConfirmDialog';
+import { FormField } from '@/shared/FormField';
+import { Input } from '@/shared/Input';
+import { Select } from '@/shared/Select';
 
 interface PredictionViewProps {
   surveyId: string;
@@ -124,24 +131,26 @@ export function PredictionView({
 
   return (
     <>
-      <section className="panel flex flex-col gap-4 p-5 xl:min-h-0 xl:self-stretch">
+      <Card className="flex min-w-0 flex-col gap-4">
         {renderPredictionSurface()}
         {heatmap && !heatmapError ? (
-          <div className="sticky bottom-0 -mx-5 -mb-5 mt-auto bg-surface-raised px-5 pb-5 pt-3">
+          <div className="sticky bottom-0 -mx-4 -mb-4 bg-surface-raised px-4 pb-4 pt-3 sm:-mx-5 sm:-mb-5 sm:px-5 sm:pb-5">
             <HeatmapLegend stops={heatmap.legend} unit="dBm" />
           </div>
         ) : null}
-      </section>
+      </Card>
 
-      <aside className="panel flex flex-col gap-4 p-5" data-testid="placement-panel">
+      <Card className="flex flex-col gap-4" data-testid="placement-panel">
         <div>
           <p className="kicker text-text-muted">{t('pages:coverage.plannedTitle')}</p>
           <p className="mt-2 text-sm text-text-secondary">{t('pages:coverage.plannedHint')}</p>
         </div>
         {failed ? (
-          <p role="alert" className="text-sm text-status-error" data-testid="placement-error">
-            {t('pages:coverage.placementFailed', { error: ConnectError.from(failed).rawMessage })}
-          </p>
+          <div data-testid="placement-error">
+            <Alert tone="error">
+              {t('pages:coverage.placementFailed', { error: ConnectError.from(failed).rawMessage })}
+            </Alert>
+          </div>
         ) : null}
         {placements.length > 0 ? (
           <ul className="flex flex-col gap-1" data-testid="placement-list">
@@ -175,7 +184,7 @@ export function PredictionView({
             onDelete={() => deleteMutation.mutate(selected.id)}
           />
         ) : null}
-      </aside>
+      </Card>
     </>
   );
 
@@ -256,12 +265,13 @@ function describeRadio(ap: APPlacement, t: TFunction<['common', 'pages']>) {
 
 function SurfaceMessage({ text, error = false }: { text: string; error?: boolean }) {
   return (
-    <p
-      className={`text-sm ${error ? 'text-status-error' : 'text-text-muted'}`}
-      data-testid="surface-message"
-    >
-      {text}
-    </p>
+    <div data-testid="surface-message">
+      {error ? (
+        <Alert tone="error">{text}</Alert>
+      ) : (
+        <p className="text-sm text-text-muted">{text}</p>
+      )}
+    </div>
   );
 }
 
@@ -317,68 +327,80 @@ function PlacementEditor({
     }
   }
 
+  const [confirming, setConfirming] = useState(false);
+
   return (
     <form
       onSubmit={submit}
       className="flex flex-col gap-3 border-t border-hairline pt-4"
       data-testid="placement-editor"
     >
-      <h2 className="text-base font-extrabold tracking-[-0.02em] text-text-primary">{name}</h2>
-      <label className="flex flex-col gap-1 text-sm" htmlFor="placement-band">
-        <span className="kicker">{t('pages:coverage.band')}</span>
-        <select
-          id="placement-band"
-          value={band}
-          onChange={(event) => setBand(event.target.value)}
-          className="rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
-          data-testid="placement-band"
-        >
-          <option value="">{t('pages:coverage.everyBand')}</option>
-          {BANDS.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex flex-col gap-1 text-sm" htmlFor="placement-power">
-        <span className="kicker">{t('pages:coverage.txPower')}</span>
-        <input
-          id="placement-power"
-          type="number"
-          min={TX_POWER.min}
-          max={TX_POWER.max}
-          step={1}
-          value={power}
-          placeholder={t('pages:coverage.txPowerAssumed', { power: TX_POWER.assumed })}
-          onChange={(event) => setPower(event.target.value)}
-          aria-invalid={!powerValid}
-          className="figure w-full rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
-          data-testid="placement-power"
-        />
-      </label>
+      <h3 className="text-base font-semibold text-text-primary">{name}</h3>
+      <FormField label={t('pages:coverage.band')}>
+        {(control) => (
+          <Select
+            {...control}
+            value={band}
+            onValueChange={setBand}
+            options={[
+              { value: '', label: t('pages:coverage.everyBand') },
+              ...BANDS.map((option) => ({ value: option, label: option })),
+            ]}
+            data-testid="placement-band"
+          />
+        )}
+      </FormField>
+      <FormField label={t('pages:coverage.txPower')}>
+        {(control) => (
+          <Input
+            {...control}
+            type="number"
+            min={TX_POWER.min}
+            max={TX_POWER.max}
+            step={1}
+            value={power}
+            placeholder={t('pages:coverage.txPowerAssumed', { power: TX_POWER.assumed })}
+            onChange={(event) => setPower(event.target.value)}
+            aria-invalid={!powerValid}
+            className="figure"
+            data-testid="placement-power"
+          />
+        )}
+      </FormField>
       <p className="text-sm text-text-secondary" data-testid="placement-calibration">
         {describeCalibration(calibration, t)}
       </p>
       <div className="flex flex-wrap gap-2">
-        <button
+        <Button
           type="submit"
+          variant="primary"
           disabled={pending || !powerValid}
-          className="rounded-[9px] bg-brand-primary px-3 py-2 text-sm font-bold text-on-brand disabled:opacity-50"
           data-testid="placement-apply"
         >
           {t('pages:coverage.applyPlacement')}
-        </button>
-        <button
-          type="button"
-          onClick={onDelete}
+        </Button>
+        <Button
+          variant="destructive"
+          onClick={() => setConfirming(true)}
           disabled={pending}
-          className="rounded-[9px] border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-hover disabled:opacity-50"
           data-testid="placement-delete"
         >
           {t('pages:coverage.deletePlacement')}
-        </button>
+        </Button>
       </div>
+      <ConfirmDialog
+        open={confirming}
+        title={t('pages:coverage.deletePlacement')}
+        message={t('pages:coverage.deletePlacementPrompt', { name })}
+        confirmLabel={t('pages:coverage.deletePlacement')}
+        cancelLabel={t('pages:coverage.keepPlacement')}
+        closeLabel={t('common:accessibility.close')}
+        onConfirm={() => {
+          setConfirming(false);
+          onDelete();
+        }}
+        onCancel={() => setConfirming(false)}
+      />
     </form>
   );
 }

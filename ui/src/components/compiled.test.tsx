@@ -13,18 +13,18 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { StatusRollup } from './StatusRollup';
+import { Verdict } from './Verdict';
 
 const { t } = vi.hoisted(() => ({ t: vi.fn((key: string) => key) }));
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t }) }));
 
 describe('components with a defaulted prop are compiled', () => {
-  it('StatusRollup does not re-translate its state labels', () => {
+  it('Verdict does not re-translate its state labels', () => {
     t.mockClear();
     const figures = [{ label: 'Frames', value: '1.2M' }];
-    const { rerender } = render(<StatusRollup state="ok" headline="Fine" figures={figures} />);
+    const { rerender } = render(<Verdict state="ok" headline="Fine" figures={figures} />);
     const first = t.mock.calls.length;
-    rerender(<StatusRollup state="ok" headline="Fine" figures={figures} />);
+    rerender(<Verdict state="ok" headline="Fine" figures={figures} />);
     expect(first).toBeGreaterThan(0);
     expect(t).toHaveBeenCalledTimes(first);
   });

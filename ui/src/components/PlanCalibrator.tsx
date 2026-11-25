@@ -1,5 +1,8 @@
 import { type KeyboardEvent, type MouseEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/shared/Button';
+import { FormField } from '@/shared/FormField';
+import { Input } from '@/shared/Input';
 
 interface Point {
   x: number;
@@ -164,22 +167,22 @@ export function PlanCalibrator({ plan, onApply, pending, errorId }: PlanCalibrat
       </p>
 
       <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-sm" htmlFor="calibration-metres">
-          <span className="kicker">{t('pages:surveys.calibrationDistance')}</span>
-          <input
-            id="calibration-metres"
-            type="number"
-            min={0.1}
-            step={0.1}
-            value={metres}
-            onChange={(event) => setMetres(event.target.value)}
-            aria-describedby={errorId}
-            className="figure w-28 rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
-            data-testid="calibration-metres"
-          />
-        </label>
-        <button
-          type="button"
+        <FormField label={t('pages:surveys.calibrationDistance')} className="sm:w-48">
+          {(control) => (
+            <Input
+              {...control}
+              type="number"
+              min={0.1}
+              step={0.1}
+              value={metres}
+              onChange={(event) => setMetres(event.target.value)}
+              aria-describedby={errorId}
+              className="figure"
+              data-testid="calibration-metres"
+            />
+          )}
+        </FormField>
+        <Button
           disabled={!ready}
           onClick={() => {
             if (from && to) {
@@ -187,10 +190,9 @@ export function PlanCalibrator({ plan, onApply, pending, errorId }: PlanCalibrat
             }
           }}
           data-testid="calibrate-floor-plan"
-          className="rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-raised disabled:opacity-50"
         >
           {t('pages:surveys.calibrate')}
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -1,9 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { TFunction } from 'i18next';
 import { type ChangeEvent, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { surveyClient } from '@/lib/client';
-import { type RollupState, StatusRollup } from '@/ui/StatusRollup';
+import { Alert } from '@/shared/Alert';
+import { Button } from '@/shared/Button';
+import { Card } from '@/shared/Card';
+import { FormField } from '@/shared/FormField';
+import { Input } from '@/shared/Input';
 
 /**
  * Import — AirMapper and AirMagnet ingest.
@@ -15,8 +18,9 @@ import { type RollupState, StatusRollup } from '@/ui/StatusRollup';
  * driven by a test. The page keeps the file and the name on screen together
  * until the operator commits.
  *
- * The rollup leads for the same reason it does on Surveys — an import that
- * fails silently and leaves a calm empty form reads as "nothing happened".
+ * A failed import is an `Alert` above the form, and a finished one says what
+ * the archive yielded — an import that fails silently and leaves a calm empty
+ * form reads as "nothing happened".
  *
  * The two formats share the page because they are the same act to the
  * operator: choose the file another tool wrote, name the survey, import. The
@@ -60,27 +64,33 @@ export function ImportPage() {
     importMutation.mutate({ surveyName: name.trim(), data: new Uint8Array(buffer) });
   }
 
-  const rollup = describeImport(
-    {
-      file,
-      name,
-      pending: importMutation.isPending,
-      error: importMutation.error,
-      imported: importMutation.data?.survey,
-    },
-    t,
-  );
+  const chosen = file ? `${file.name}, ${formatBytes(file.size)}` : undefined;
+  const imported = importMutation.data?.survey;
+  const nameMissing = file !== undefined && name.trim() === '';
 
   return (
-    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
-      <StatusRollup
-        state={rollup.state}
-        headline={rollup.headline}
-        body={rollup.body}
-        figures={rollup.figures}
-      />
+    <div className="flex flex-col gap-4">
+      {importMutation.error ? (
+        <Alert tone="error" title={t('pages:import.failed')}>
+          {importMutation.error instanceof Error
+            ? importMutation.error.message
+            : String(importMutation.error)}
+        </Alert>
+      ) : null}
 
-      <div className="panel flex max-w-xl flex-col gap-4 p-6">
+      {imported ? (
+        <div data-testid="import-result">
+          <Alert tone="success" title={t('pages:import.imported', { name: imported.name })}>
+            {t('pages:import.importedBody', { id: imported.id })}{' '}
+            {t('pages:import.importedFigures', {
+              samples: imported.sampleCount,
+              floors: imported.floorCount,
+            })}
+          </Alert>
+        </div>
+      ) : null}
+
+      <Card>
         <input
           ref={fileInputRef}
           type="file"
@@ -90,57 +100,50 @@ export function ImportPage() {
           data-testid="amp-file-input"
         />
 
-        <div className="flex flex-col gap-2">
-          <span className="kicker">{t('pages:import.archive')}</span>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="w-fit rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-raised"
+        <div className="flex flex-col gap-5">
+          <FormField
+            label={t('pages:import.archive')}
+            hint={chosen ?? t('pages:import.noFileChosenBody')}
           >
-            {file ? t('pages:import.chooseDifferentFile') : t('pages:import.chooseFile')}
-          </button>
+            {() => (
+              <div>
+                <Button onClick={() => fileInputRef.current?.click()}>
+                  {file ? t('pages:import.chooseDifferentFile') : t('pages:import.chooseFile')}
+                </Button>
+              </div>
+            )}
+          </FormField>
+
+          {isAirMagnet(file) ? <Alert tone="info">{t('pages:import.noPlanInExport')}</Alert> : null}
+
+          <FormField
+            label={t('pages:import.surveyName')}
+            {...(nameMissing ? { error: t('pages:import.needsName') } : {})}
+          >
+            {(control) => (
+              <Input
+                {...control}
+                value={name}
+                disabled={!file}
+                onChange={(event) => setName(event.target.value)}
+              />
+            )}
+          </FormField>
+
+          <div>
+            <Button
+              variant="primary"
+              onClick={() => void handleImport()}
+              loading={importMutation.isPending}
+              disabled={!file || name.trim() === ''}
+            >
+              {importMutation.isPending ? t('pages:import.importing') : t('pages:import.submit')}
+            </Button>
+          </div>
         </div>
-
-        <label className="flex flex-col gap-2 text-sm" htmlFor="survey-name">
-          <span className="kicker">{t('pages:import.surveyName')}</span>
-          <input
-            id="survey-name"
-            type="text"
-            value={name}
-            disabled={!file}
-            onChange={(event) => setName(event.target.value)}
-            className="rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary disabled:opacity-50"
-          />
-        </label>
-
-        <button
-          type="button"
-          onClick={() => void handleImport()}
-          disabled={!file || name.trim() === '' || importMutation.isPending}
-          className="w-fit rounded bg-brand-primary px-3 py-2 text-sm font-medium text-on-brand hover:bg-brand-accent disabled:opacity-50"
-        >
-          {importMutation.isPending ? t('pages:import.importing') : t('pages:import.submit')}
-        </button>
-      </div>
+      </Card>
     </div>
   );
-}
-
-interface ImportState {
-  file: File | undefined;
-  name: string;
-  pending: boolean;
-  error: unknown;
-  /** The stored survey the service created, once it has. */
-  imported: { id: string; name: string; sampleCount: number; floorCount: number } | undefined;
-}
-
-interface ImportRollup {
-  state: RollupState;
-  headline: string;
-  body?: string;
-  /** Only a completed import has anything measured to show. */
-  figures?: { label: string; value: string }[];
 }
 
 /**
@@ -154,69 +157,6 @@ function formatBytes(bytes: number): string {
     return `${mb.toFixed(1)} MB`;
   }
   return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-}
-
-/**
- * describeImport turns the form's state into the rollup's reading.
- *
- * Nothing chosen is `unknown` rather than `ok`: the page has no result to
- * report, and a calm green rollup over an untouched form would claim one.
- */
-function describeImport(
-  { file, name, pending, error, imported }: ImportState,
-  t: TFunction<['common', 'pages']>,
-): ImportRollup {
-  // The chosen file is named in the body rather than carried as a figure.
-  // StatusRollup withholds figures in the unknown state on purpose — a rollup
-  // that prints values when it has no reading claims one — and "ready to
-  // import" is genuinely unknown, since nothing has been measured yet. The
-  // filename is not a measurement, so it belongs in the sentence, where it is
-  // readable at exactly the moment the user is deciding whether to commit.
-  const chosen = file ? `${file.name}, ${formatBytes(file.size)}.` : '';
-
-  if (error) {
-    return {
-      state: 'crit',
-      headline: t('pages:import.failed'),
-      body: [chosen, error instanceof Error ? error.message : String(error)]
-        .filter(Boolean)
-        .join(' '),
-    };
-  }
-  if (pending) {
-    return { state: 'unknown', headline: t('pages:import.importingArchive'), body: chosen };
-  }
-  if (imported) {
-    // What the archive actually yielded is the useful readout — an import
-    // that stored zero samples "succeeded" and is still worth seeing.
-    return {
-      state: 'ok',
-      headline: t('pages:import.imported', { name: imported.name }),
-      body: t('pages:import.importedBody', { id: imported.id }),
-      figures: [
-        { label: t('common:labels.samples'), value: String(imported.sampleCount) },
-        { label: t('common:labels.floors'), value: String(imported.floorCount) },
-      ],
-    };
-  }
-  if (!file) {
-    return {
-      state: 'unknown',
-      headline: t('pages:import.noFileChosen'),
-      body: t('pages:import.noFileChosenBody'),
-    };
-  }
-  if (name.trim() === '') {
-    return {
-      state: 'warn',
-      headline: t('pages:import.needsName'),
-      body: t('pages:import.needsNameBody', { chosen }),
-    };
-  }
-  const ready = [chosen, isAirMagnet(file) ? t('pages:import.noPlanInExport') : '']
-    .filter(Boolean)
-    .join(' ');
-  return { state: 'unknown', headline: t('pages:import.ready'), body: ready };
 }
 
 /**

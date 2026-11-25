@@ -62,6 +62,7 @@
     "hiddenNetwork": "Hidden network",
     "language": "Language",
     "metric": "Metric",
+    "name": "Name",
     "recommendations": "Recommendations",
     "samples": "Samples",
     "scale": "Scale",
@@ -106,6 +107,16 @@
     "ok": "All clear",
     "unknown": "No data",
     "warn": "Degraded"
+  },
+  "table": {
+    "actions": "Actions",
+    "loading": "Loading",
+    "nextPage": "Next page",
+    "pageStatus": "Page {{page}} of {{pageCount}} ({{total}} rows)",
+    "pagination": "Table pages",
+    "previousPage": "Previous page",
+    "selectAll": "Select all rows",
+    "selectRow": "Select row"
   },
   "values": {
     "none": "None",

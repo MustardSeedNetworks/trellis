@@ -4,6 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { PlanCalibrator } from '@/components/PlanCalibrator';
 import { surveyClient } from '@/lib/client';
 import { bytesToDataUrl } from '@/lib/format';
+import { Button } from '@/shared/Button';
+import { FormField } from '@/shared/FormField';
+import { Input } from '@/shared/Input';
 
 /**
  * FloorPlanPanel — the plan a survey's points are drawn on, and what one of its
@@ -168,16 +171,14 @@ export function FloorPlanPanel({
         data-testid="floor-plan-input"
       />
       <div className="flex flex-wrap items-end gap-3">
-        <button
-          type="button"
+        <Button
           onClick={() => fileInputRef.current?.click()}
-          disabled={uploadMutation.isPending}
+          loading={uploadMutation.isPending}
           aria-describedby={describedByFailure(uploadMutation.error)}
           data-testid="upload-floor-plan"
-          className="rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-raised disabled:opacity-50"
         >
           {hasPlan ? t('pages:surveys.replacePlan') : t('pages:surveys.uploadPlan')}
-        </button>
+        </Button>
       </div>
 
       {/* Offered only once there is a plan: the two points a calibration is
@@ -199,7 +200,7 @@ export function FloorPlanPanel({
       <p
         id="floor-plan-status"
         aria-live="polite"
-        className={`text-sm ${error ? 'text-status-error' : 'text-text-secondary'}`}
+        className={`text-sm ${error ? 'text-status-error-strong' : 'text-text-secondary'}`}
         data-testid="floor-plan-status"
       >
         {error
@@ -226,27 +227,26 @@ export function FloorPlanPanel({
             {t('pages:surveys.planWouldStrandHint')}
           </p>
           <div className="flex flex-wrap items-end gap-3">
-            <label className="flex flex-col gap-1 text-sm text-text-secondary">
-              {t('pages:surveys.newFloorName')}
-              <input
-                value={newFloorName}
-                onChange={(event) => setNewFloorName(event.target.value)}
-                aria-describedby={describedByFailure(newFloorMutation.error)}
-                data-testid="strand-new-floor-name"
-                className="rounded border border-hairline bg-surface-raised px-3 py-2 text-sm text-text-primary"
-              />
-            </label>
-            <button
-              type="button"
+            <FormField label={t('pages:surveys.newFloorName')} className="sm:w-56">
+              {(control) => (
+                <Input
+                  {...control}
+                  value={newFloorName}
+                  onChange={(event) => setNewFloorName(event.target.value)}
+                  aria-describedby={describedByFailure(newFloorMutation.error)}
+                  data-testid="strand-new-floor-name"
+                />
+              )}
+            </FormField>
+            <Button
               onClick={() =>
                 newFloorName.trim() !== '' && newFloorMutation.mutate(newFloorName.trim())
               }
-              disabled={newFloorMutation.isPending}
+              loading={newFloorMutation.isPending}
               data-testid="strand-new-floor"
-              className="rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-raised disabled:opacity-50"
             >
               {t('pages:surveys.planAsNewFloor', { level: nextLevel })}
-            </button>
+            </Button>
           </div>
         </>
       ) : null}

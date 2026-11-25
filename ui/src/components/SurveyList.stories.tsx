@@ -32,13 +32,6 @@ const meta = {
   title: 'Surveys/SurveyList',
   component: SurveyList,
   args: { surveys, selectedId: 'svy-2', onSelect: fn() },
-  decorators: [
-    (Story) => (
-      <aside className="panel w-72">
-        <Story />
-      </aside>
-    ),
-  ],
 } satisfies Meta<typeof SurveyList>;
 
 export default meta;

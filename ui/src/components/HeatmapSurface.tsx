@@ -1,6 +1,8 @@
+import { Minus, Plus } from 'lucide-react';
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { bytesToDataUrl, formatSignal } from '@/lib/format';
+import { Button } from '@/shared/Button';
 
 /** Zoom bounds and step. 1 is fit-to-panel; 4 is where a 10 px cell is a
  *  readable block on a laptop panel. */
@@ -163,36 +165,36 @@ export function HeatmapSurface({
       <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-hairline bg-surface-raised px-3 py-2">
         <span className="kicker">{t('pages:coverage.zoom')}</span>
         <div className="flex gap-1">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            icon={<Minus className="h-4 w-4" />}
             onClick={() => changeZoom(-ZOOM_STEP)}
             disabled={zoom <= MIN_ZOOM}
             aria-label={t('pages:coverage.zoomOut')}
-            className="rounded-[9px] px-3 py-2 text-sm font-bold text-text-secondary hover:bg-surface-hover disabled:opacity-50"
             data-testid="zoom-out"
-          >
-            −
-          </button>
-          <button
-            type="button"
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            icon={<Plus className="h-4 w-4" />}
             onClick={() => changeZoom(ZOOM_STEP)}
             disabled={zoom >= MAX_ZOOM}
             aria-label={t('pages:coverage.zoomIn')}
-            className="rounded-[9px] px-3 py-2 text-sm font-bold text-text-secondary hover:bg-surface-hover disabled:opacity-50"
             data-testid="zoom-in"
-          >
-            +
-          </button>
-          <button
-            type="button"
+          />
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setZoom(MIN_ZOOM)}
             disabled={zoom === MIN_ZOOM}
             aria-label={t('pages:coverage.zoomReset')}
-            className="rounded-[9px] px-3 py-2 text-sm text-text-secondary hover:bg-surface-hover disabled:opacity-50"
             data-testid="zoom-reset"
           >
             {t('pages:coverage.zoomFit')}
-          </button>
+          </Button>
         </div>
         <span className="figure text-xs text-text-muted" data-testid="zoom-level">
           {`${Math.round(zoom * 100)}%`}

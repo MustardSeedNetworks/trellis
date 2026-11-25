@@ -3,6 +3,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Floor } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
+import { Alert } from '@/shared/Alert';
+import { Button } from '@/shared/Button';
+import { ConfirmDialog } from '@/shared/ConfirmDialog';
+import { FormField } from '@/shared/FormField';
+import { Input } from '@/shared/Input';
+import { StatusPill } from '@/shared/StatusPill';
 
 /**
  * FloorRail — the storeys of a survey, and which one the walk is on.
@@ -17,7 +23,7 @@ import { surveyClient } from '@/lib/client';
  * building are entered together and walked one at a time; moving the walk on
  * every add would take it off the floor being measured.
  *
- * Deleting one is two clicks, like deleting a survey: a floor holds the
+ * Deleting one asks first, like deleting a survey: a floor holds the
  * measurements walked on it and they go with it.
  */
 export function FloorRail({ surveyId, floors }: { surveyId: string; floors: Floor[] }) {
@@ -89,193 +95,176 @@ export function FloorRail({ surveyId, floors }: { surveyId: string; floors: Floo
   const createFailed = error !== null && error === createMutation.error;
   const renameFailed = error !== null && error === renameMutation.error;
 
+  const deleting = floors.find((floor) => floor.id === confirmingDelete);
+
   return (
     <section className="flex flex-col gap-3" aria-labelledby="floor-rail-title">
       <h3 id="floor-rail-title" className="kicker">
         {t('pages:surveys.floorsTitle')}
       </h3>
 
-      <ul className="flex flex-col gap-2" data-testid="floor-rail">
+      <ul className="flex flex-col divide-y divide-hairline" data-testid="floor-rail">
         {floors.map((floor) => (
           <li
             key={floor.id}
             data-testid={`floor-row-${floor.id}`}
-            className="flex flex-wrap items-center gap-3 rounded border border-hairline px-3 py-2"
+            className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2"
           >
-            <span className="text-sm text-text-primary">{floor.name}</span>
+            <span className="text-sm font-medium text-text-primary">{floor.name}</span>
             <span className="text-sm text-text-secondary">
               {t('pages:surveys.floorLevel', { level: floor.level })}
             </span>
             <span className="text-sm text-text-secondary">
               {t('pages:surveys.floorSamples', { count: floor.sampleCount })}
             </span>
-            {editing === floor.id ? (
-              <>
-                <label className="sr-only" htmlFor={`floor-rename-${floor.id}`}>
-                  {t('pages:surveys.floorName')}
-                </label>
-                <input
-                  id={`floor-rename-${floor.id}`}
-                  value={editName}
-                  onChange={(event) => setEditName(event.target.value)}
-                  aria-describedby={renameFailed ? 'floor-rail-error' : undefined}
-                  data-testid={`floor-rename-input-${floor.id}`}
-                  className="rounded border border-hairline bg-surface-raised px-2 py-1 text-sm text-text-primary"
-                />
-                <label className="sr-only" htmlFor={`floor-relevel-${floor.id}`}>
-                  {t('pages:surveys.floorLevelField')}
-                </label>
-                <input
-                  id={`floor-relevel-${floor.id}`}
-                  type="number"
-                  value={editLevel}
-                  onChange={(event) => setEditLevel(event.target.value)}
-                  aria-describedby={renameFailed ? 'floor-rail-error' : undefined}
-                  data-testid={`floor-relevel-input-${floor.id}`}
-                  className="w-20 rounded border border-hairline bg-surface-raised px-2 py-1 text-sm text-text-primary"
-                />
-                <button
-                  type="button"
-                  onClick={() => setEditing(null)}
-                  className="rounded border border-hairline px-3 py-1 text-sm text-text-primary hover:bg-surface-raised"
-                  data-testid={`floor-rename-cancel-${floor.id}`}
-                >
-                  {t('pages:surveys.cancelRename')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    editName.trim() !== '' &&
-                    renameMutation.mutate({
-                      floorId: floor.id,
-                      name: editName.trim(),
-                      level: Number.parseInt(editLevel, 10) || 0,
-                    })
-                  }
-                  disabled={renameMutation.isPending}
-                  data-testid={`floor-rename-save-${floor.id}`}
-                  className="rounded bg-brand-primary px-3 py-1 text-sm font-medium text-on-brand hover:bg-brand-accent disabled:opacity-50"
-                >
-                  {t('pages:surveys.saveRename')}
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditing(floor.id);
-                  setEditName(floor.name);
-                  setEditLevel(String(floor.level));
-                }}
-                data-testid={`rename-floor-${floor.id}`}
-                className="rounded border border-hairline px-3 py-1 text-sm text-text-primary hover:bg-surface-raised"
-              >
-                {t('pages:surveys.renameFloor')}
-              </button>
-            )}
-
-            {deletable ? (
-              confirmingDelete === floor.id ? (
-                <>
-                  <span className="text-sm text-text-secondary">
-                    {t('pages:surveys.deleteFloorPrompt', { count: floor.sampleCount })}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmingDelete(null)}
-                    data-testid={`delete-floor-cancel-${floor.id}`}
-                    className="rounded border border-hairline px-3 py-1 text-sm text-text-primary hover:bg-surface-raised"
-                  >
-                    {t('pages:surveys.keepIt')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => deleteMutation.mutate(floor.id)}
-                    disabled={deleteMutation.isPending}
-                    data-testid={`delete-floor-confirm-${floor.id}`}
-                    className="rounded border border-status-error px-3 py-1 text-sm text-status-error hover:bg-surface-raised disabled:opacity-50"
-                  >
-                    {t('pages:surveys.confirmDeleteFloor', { name: floor.name })}
-                  </button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setConfirmingDelete(floor.id)}
-                  data-testid={`delete-floor-${floor.id}`}
-                  className="rounded border border-status-error px-3 py-1 text-sm text-status-error hover:bg-surface-raised"
-                >
-                  {t('pages:surveys.deleteFloor')}
-                </button>
-              )
+            {floor.isActive ? (
+              <StatusPill tone="info" label={t('pages:surveys.floorWalking')} />
             ) : null}
 
-            {floor.isActive ? (
-              <span className="kicker" data-testid={`floor-walking-${floor.id}`}>
-                {t('pages:surveys.floorWalking')}
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={() => activateMutation.mutate(floor.id)}
-                disabled={activateMutation.isPending}
-                data-testid={`walk-floor-${floor.id}`}
-                className="rounded border border-hairline px-3 py-1 text-sm text-text-primary hover:bg-surface-raised disabled:opacity-50"
-              >
-                {t('pages:surveys.walkThisFloor')}
-              </button>
-            )}
+            <span className="flex flex-wrap items-center gap-2 sm:ml-auto">
+              {editing === floor.id ? (
+                <>
+                  <label className="sr-only" htmlFor={`floor-rename-${floor.id}`}>
+                    {t('pages:surveys.floorName')}
+                  </label>
+                  <Input
+                    id={`floor-rename-${floor.id}`}
+                    value={editName}
+                    onChange={(event) => setEditName(event.target.value)}
+                    aria-describedby={renameFailed ? 'floor-rail-error' : undefined}
+                    data-testid={`floor-rename-input-${floor.id}`}
+                    className="min-h-8 w-40 py-1"
+                  />
+                  <label className="sr-only" htmlFor={`floor-relevel-${floor.id}`}>
+                    {t('pages:surveys.floorLevelField')}
+                  </label>
+                  <Input
+                    id={`floor-relevel-${floor.id}`}
+                    type="number"
+                    value={editLevel}
+                    onChange={(event) => setEditLevel(event.target.value)}
+                    aria-describedby={renameFailed ? 'floor-rail-error' : undefined}
+                    data-testid={`floor-relevel-input-${floor.id}`}
+                    className="min-h-8 w-20 py-1"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => setEditing(null)}
+                    data-testid={`floor-rename-cancel-${floor.id}`}
+                  >
+                    {t('pages:surveys.cancelRename')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      editName.trim() !== '' &&
+                      renameMutation.mutate({
+                        floorId: floor.id,
+                        name: editName.trim(),
+                        level: Number.parseInt(editLevel, 10) || 0,
+                      })
+                    }
+                    loading={renameMutation.isPending}
+                    data-testid={`floor-rename-save-${floor.id}`}
+                  >
+                    {t('pages:surveys.saveRename')}
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setEditing(floor.id);
+                    setEditName(floor.name);
+                    setEditLevel(String(floor.level));
+                  }}
+                  data-testid={`rename-floor-${floor.id}`}
+                >
+                  {t('pages:surveys.renameFloor')}
+                </Button>
+              )}
+
+              {floor.isActive ? null : (
+                <Button
+                  size="sm"
+                  onClick={() => activateMutation.mutate(floor.id)}
+                  disabled={activateMutation.isPending}
+                  data-testid={`walk-floor-${floor.id}`}
+                >
+                  {t('pages:surveys.walkThisFloor')}
+                </Button>
+              )}
+
+              {deletable ? (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => setConfirmingDelete(floor.id)}
+                  data-testid={`delete-floor-${floor.id}`}
+                >
+                  {t('pages:surveys.deleteFloor')}
+                </Button>
+              ) : null}
+            </span>
           </li>
         ))}
       </ul>
 
       <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-sm text-text-secondary">
-          {t('pages:surveys.floorName')}
-          <input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            aria-describedby={createFailed ? 'floor-rail-error' : undefined}
-            data-testid="floor-name-input"
-            className="rounded border border-hairline bg-surface-raised px-3 py-2 text-sm text-text-primary"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-text-secondary">
-          {t('pages:surveys.floorLevelField')}
-          <input
-            type="number"
-            value={level}
-            onChange={(event) => setLevel(event.target.value)}
-            aria-describedby={createFailed ? 'floor-rail-error' : undefined}
-            data-testid="floor-level-input"
-            className="w-24 rounded border border-hairline bg-surface-raised px-3 py-2 text-sm text-text-primary"
-          />
-        </label>
-        <button
-          type="button"
+        <FormField label={t('pages:surveys.floorName')} className="sm:w-56">
+          {(control) => (
+            <Input
+              {...control}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              aria-describedby={createFailed ? 'floor-rail-error' : undefined}
+              data-testid="floor-name-input"
+            />
+          )}
+        </FormField>
+        <FormField label={t('pages:surveys.floorLevelField')} className="sm:w-28">
+          {(control) => (
+            <Input
+              {...control}
+              type="number"
+              value={level}
+              onChange={(event) => setLevel(event.target.value)}
+              aria-describedby={createFailed ? 'floor-rail-error' : undefined}
+              data-testid="floor-level-input"
+            />
+          )}
+        </FormField>
+        <Button
           // An unnamed floor is refused by the handler too; stopping here makes
           // the refusal immediate instead of a round trip that says the same.
           onClick={() =>
             trimmed !== '' &&
             createMutation.mutate({ name: trimmed, level: Number.parseInt(level, 10) || 0 })
           }
-          disabled={createMutation.isPending}
+          loading={createMutation.isPending}
           data-testid="create-floor"
-          className="rounded bg-brand-primary px-3 py-2 text-sm font-medium text-on-brand hover:bg-brand-accent disabled:opacity-50"
         >
           {t('pages:surveys.addFloor')}
-        </button>
+        </Button>
       </div>
 
       {error ? (
-        <p
-          id="floor-rail-error"
-          className="text-sm text-status-error"
-          data-testid="floor-rail-error"
-        >
-          {String(error)}
-        </p>
+        <div id="floor-rail-error" data-testid="floor-rail-error">
+          <Alert tone="error">{String(error)}</Alert>
+        </div>
       ) : null}
+
+      <ConfirmDialog
+        open={deleting !== undefined}
+        title={t('pages:surveys.deleteFloor')}
+        message={t('pages:surveys.deleteFloorPrompt', { count: deleting?.sampleCount ?? 0 })}
+        confirmLabel={t('pages:surveys.confirmDeleteFloor', { name: deleting?.name ?? '' })}
+        cancelLabel={t('pages:surveys.keepIt')}
+        closeLabel={t('common:accessibility.close')}
+        onConfirm={() => deleting && deleteMutation.mutate(deleting.id)}
+        onCancel={() => setConfirmingDelete(null)}
+        confirming={deleteMutation.isPending}
+      />
     </section>
   );
 }
