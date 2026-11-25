@@ -77,6 +77,9 @@ export async function uploadScaledPlan(page: Page) {
 export async function surveyRow(page: Page, name: string) {
   const row = page.getByTestId('survey-row').filter({ hasText: name });
   const next = page.getByRole('button', { name: 'Next page' });
+  // The table shows skeleton rows until the list arrives; paging before then
+  // finds no pager and gives up on the first page.
+  await page.getByTestId('survey-row').first().waitFor();
   while ((await row.count()) === 0 && (await next.count()) > 0 && (await next.isEnabled())) {
     await next.click();
   }

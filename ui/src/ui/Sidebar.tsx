@@ -199,7 +199,12 @@ function SettingsButton({ collapsed, onClick }: { collapsed: boolean; onClick: (
   const button = (
     <button
       type="button"
-      onClick={onClick}
+      // Safari does not focus a clicked button; focusing it is what lets the
+      // drawer give focus back here when it closes.
+      onClick={(event) => {
+        event.currentTarget.focus();
+        onClick();
+      }}
       data-testid="open-settings"
       aria-label={t('settings.title')}
       className={RAIL_BUTTON}

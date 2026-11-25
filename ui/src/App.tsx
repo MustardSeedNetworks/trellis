@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Routes, useLocation } from 'react-router';
 import { PageErrorBoundary } from '@/components/ErrorBoundary';
@@ -113,18 +113,29 @@ function PageFrame({
   onHelp: () => void;
 }) {
   const { t } = useTranslation('common');
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  // Safari does not focus a button when it is clicked, so the drawer would have
+  // nothing to hand focus back to when it closes. Focusing the help button
+  // first is what the old help button did for itself.
+  const openHelp = () => {
+    headerRef.current?.querySelector<HTMLElement>('button[aria-haspopup="dialog"]')?.focus();
+    onHelp();
+  };
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 sm:p-6">
-      <PageHeader
-        kicker={page.kicker}
-        title={page.title}
-        subtitle={page.description}
-        breadcrumbs={trail(page.title)}
-        breadcrumbsLabel={t('accessibility.breadcrumb')}
-        renderBreadcrumbLink={renderBreadcrumbLink}
-        help={{ label: t('accessibility.openHelp', { title: page.title }), onClick: onHelp }}
-      />
+      <div ref={headerRef}>
+        <PageHeader
+          kicker={page.kicker}
+          title={page.title}
+          subtitle={page.description}
+          breadcrumbs={trail(page.title)}
+          breadcrumbsLabel={t('accessibility.breadcrumb')}
+          renderBreadcrumbLink={renderBreadcrumbLink}
+          help={{ label: t('accessibility.openHelp', { title: page.title }), onClick: openHelp }}
+        />
+      </div>
       {/* Keyed by path so a page that threw does not stay broken after the
           operator navigates somewhere else; the header above stays up either
           way. */}
