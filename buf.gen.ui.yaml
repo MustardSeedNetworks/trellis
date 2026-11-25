@@ -20,7 +20,7 @@ plugins:
   - local:
       - npx
       - --yes
-      - "--package=@bufbuild/protoc-gen-es@2.16.0"
+      - "--package=@bufbuild/protoc-gen-es@2.17.0"
       - protoc-gen-es
     out: ui/src/gen
     opt:
