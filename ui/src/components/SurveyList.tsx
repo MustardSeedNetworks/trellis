@@ -70,7 +70,6 @@ export function SurveyList({ surveys, loading = false, selectedId, onSelect }: S
       caption={t('pages:surveys.listCaption')}
       labels={labels}
       loading={loading}
-      pageSize={10}
       onRowClick={(survey) => onSelect(survey.id)}
       {...(selectedId === undefined ? {} : { selectedRowKey: selectedId })}
       empty={

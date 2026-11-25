@@ -1,6 +1,10 @@
 import { type FormEvent, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LoginError, type LoginFailure, login } from '@/lib/auth';
+import { Alert } from '@/shared/Alert';
+import { Button } from '@/shared/Button';
+import { FormField } from '@/shared/FormField';
+import { Input } from '@/shared/Input';
 import { ProductMark } from '@/ui/ProductMark';
 
 type Failure = LoginFailure | 'empty';
@@ -47,8 +51,7 @@ export function LoginPage({
 }) {
   const { t } = useTranslation('pages');
   const errorMessage = useErrorMessage();
-  const usernameId = useId();
-  const passwordId = useId();
+  const headingId = useId();
   const errorId = useId();
 
   const [username, setUsername] = useState('');
@@ -86,7 +89,7 @@ export function LoginPage({
         onSubmit={handleSubmit}
         className="panel w-full max-w-sm p-6"
         data-testid="login-form"
-        aria-labelledby={`${usernameId}-heading`}
+        aria-labelledby={headingId}
       >
         <div className="flex items-center gap-3">
           <ProductMark />
@@ -97,69 +100,63 @@ export function LoginPage({
           </div>
         </div>
 
-        <h2 id={`${usernameId}-heading`} className="mt-6 text-lg font-semibold">
+        <h2 id={headingId} className="mt-6 text-lg font-semibold">
           {t('login.title')}
         </h2>
         <p className="mt-1 text-sm text-text-secondary">{t('login.subtitle')}</p>
 
-        <label htmlFor={usernameId} className="mt-4 block text-sm text-text-secondary">
-          {t('login.username')}
-        </label>
-        <input
-          id={usernameId}
-          data-testid="login-username"
-          className="mt-1 w-full rounded border border-hairline bg-surface-raised px-3 py-2 text-sm"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          autoComplete="username"
-          aria-invalid={invalid}
-          aria-describedby={failure ? errorId : undefined}
-        />
+        <div className="mt-4 flex flex-col gap-4">
+          <FormField label={t('login.username')}>
+            {(control) => (
+              <Input
+                {...control}
+                data-testid="login-username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
+                aria-invalid={invalid}
+                aria-describedby={failure ? errorId : undefined}
+              />
+            )}
+          </FormField>
 
-        <label htmlFor={passwordId} className="mt-4 block text-sm text-text-secondary">
-          {t('login.password')}
-        </label>
-        <input
-          id={passwordId}
-          data-testid="login-password"
-          type="password"
-          className="mt-1 w-full rounded border border-hairline bg-surface-raised px-3 py-2 text-sm"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-          aria-invalid={invalid}
-          aria-describedby={failure ? errorId : undefined}
-        />
+          <FormField label={t('login.password')}>
+            {(control) => (
+              <Input
+                {...control}
+                data-testid="login-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                aria-invalid={invalid}
+                aria-describedby={failure ? errorId : undefined}
+              />
+            )}
+          </FormField>
+        </div>
 
         {sessionExpired && !failure ? (
-          <p
-            className="mt-4 text-sm text-status-warning-strong"
-            role="status"
-            data-testid="login-session-expired"
-          >
-            {t('login.sessionExpired')}
-          </p>
+          <div className="mt-4" data-testid="login-session-expired">
+            <Alert tone="warning">{t('login.sessionExpired')}</Alert>
+          </div>
         ) : null}
 
         {failure && (
-          <p
-            id={errorId}
-            className="mt-4 text-sm text-status-error"
-            role="alert"
-            data-testid="login-error"
-          >
-            {errorMessage(failure)}
-          </p>
+          <div id={errorId} className="mt-4" data-testid="login-error">
+            <Alert tone="error">{errorMessage(failure)}</Alert>
+          </div>
         )}
 
-        <button
+        <Button
           type="submit"
-          disabled={submitting}
+          variant="primary"
+          loading={submitting}
           data-testid="login-submit"
-          className="mt-6 w-full rounded border border-hairline px-3 py-2 text-sm hover:bg-surface-raised disabled:opacity-60"
+          className="mt-6 w-full"
         >
           {submitting ? t('login.submitting') : t('login.submit')}
-        </button>
+        </Button>
       </form>
     </div>
   );

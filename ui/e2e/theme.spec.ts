@@ -95,4 +95,31 @@ test.describe('with a light desktop', () => {
     expect(await rootIsDark(page)).toBe(false);
     expect(await surfaceColour(page)).toBe('#fbfaf5');
   });
+
+  test('Settings holds the three-way control on the same store as the rail toggle', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.getByTestId('open-settings').click();
+    const drawer = page.getByTestId('settings-drawer');
+    await expect(drawer).toBeVisible();
+
+    // The OS is light and nothing is stored, so the choice reads System.
+    await expect(drawer.getByRole('radio', { name: 'System' })).toBeChecked();
+    await drawer.getByRole('radio', { name: 'Dark' }).check({ force: true });
+    expect(await rootIsDark(page)).toBe(true);
+    await expect(page.getByTestId('theme-toggle')).toHaveAccessibleName('Theme: Dark');
+
+    // The rail toggle flips the same store, and the control follows it.
+    await page.keyboard.press('Escape');
+    await page.getByTestId('theme-toggle').click();
+    expect(await rootIsDark(page)).toBe(false);
+    await page.getByTestId('open-settings').click();
+    await expect(drawer.getByRole('radio', { name: 'Light' })).toBeChecked();
+
+    // And it survives a reload, which an in-memory choice would not.
+    await drawer.getByRole('radio', { name: 'Dark' }).check({ force: true });
+    await page.reload();
+    expect(await rootIsDark(page)).toBe(true);
+  });
 });

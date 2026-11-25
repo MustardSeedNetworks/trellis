@@ -12,11 +12,9 @@
     "openHelp": "Abrir la ayuda de {{title}}",
     "openMenu": "Abrir el menú",
     "sections": "Secciones de Trellis",
-    "selectLanguage": "Idioma",
     "skipToContent": "Saltar al contenido",
     "switchToDarkTheme": "Cambiar al tema oscuro",
-    "switchToLightTheme": "Cambiar al tema claro",
-    "whatIs": "¿Qué es {{title}}?"
+    "switchToLightTheme": "Cambiar al tema claro"
   },
   "buttons": {
     "generating": "Generando…"

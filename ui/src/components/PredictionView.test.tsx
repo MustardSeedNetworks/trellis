@@ -209,6 +209,7 @@ describe('PredictionView', () => {
 
     await waitFor(() => expect(screen.getByTestId('placement-delete')).toBeEnabled());
     fireEvent.click(screen.getByTestId('placement-delete'));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete AP' }));
     await waitFor(() =>
       expect(deleteAPPlacement).toHaveBeenCalledWith({
         surveyId: 'svy-1',

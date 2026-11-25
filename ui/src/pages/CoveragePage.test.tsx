@@ -8,7 +8,7 @@
  */
 import { Code, ConnectError } from '@connectrpc/connect';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -31,6 +31,13 @@ vi.mock('@/lib/client', () => ({
     listAPPlacements: (req: unknown) => listAPPlacements(req),
   },
 }));
+
+/** The layer is a select, so a layer is chosen by the name an operator reads. */
+function chooseMetric(name: string) {
+  const select = screen.getByTestId('coverage-metric');
+  const option = within(select).getByRole('option', { name });
+  fireEvent.change(select, { target: { value: (option as HTMLOptionElement).value } });
+}
 
 function renderPage(initialPath = '/coverage') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -136,9 +143,16 @@ describe('CoveragePage', () => {
 
     renderPage();
 
-    await waitFor(() =>
-      expect(screen.getByTestId('surface-message')).toHaveTextContent('No surveys captured'),
+    // Nothing to plot is an empty state with one way forward, not a toolbar
+    // over a blank canvas and a findings card that says "no data".
+    expect(await screen.findByTestId('empty-state')).toHaveTextContent('No surveys to plot');
+    expect(screen.getByRole('link', { name: 'Import a survey' })).toHaveAttribute(
+      'href',
+      '/import',
     );
+    expect(screen.queryByTestId('coverage-toolbar')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('coverage-findings')).not.toBeInTheDocument();
+    expect(screen.queryByText(/all clear/i)).not.toBeInTheDocument();
     expect(getHeatmap).not.toHaveBeenCalled();
   });
 
@@ -163,7 +177,7 @@ describe('CoveragePage', () => {
     expect(screen.getByTestId('coverage-threshold-unit')).toHaveTextContent('dBm');
     expect(screen.getByTestId('coverage-threshold')).toHaveValue(-75);
 
-    fireEvent.click(screen.getByRole('button', { name: 'SNR' }));
+    chooseMetric('SNR');
 
     await waitFor(() =>
       expect(getCoverage).toHaveBeenCalledWith({
@@ -180,7 +194,7 @@ describe('CoveragePage', () => {
 
     // A threshold set under SNR stays under SNR: the dBm box is still -75.
     fireEvent.change(screen.getByTestId('coverage-threshold'), { target: { value: '25' } });
-    fireEvent.click(screen.getByRole('button', { name: 'RSSI' }));
+    chooseMetric('RSSI');
     await waitFor(() => expect(screen.getByTestId('coverage-threshold')).toHaveValue(-75));
     expect(screen.getByTestId('coverage-threshold-unit')).toHaveTextContent('dBm');
     for (const call of getCoverage.mock.calls) {
@@ -208,7 +222,7 @@ describe('CoveragePage', () => {
     getHeatmap.mockRejectedValue(unmeasured);
     getCoverage.mockRejectedValue(unmeasured);
 
-    fireEvent.click(screen.getByRole('button', { name: 'SNR' }));
+    chooseMetric('SNR');
 
     const findings = screen.getByTestId('coverage-findings');
     await waitFor(() => expect(findings).toHaveTextContent('No SNR measured on this floor'));
@@ -227,19 +241,19 @@ describe('CoveragePage', () => {
     await screen.findByTestId('coverage-findings');
     getHeatmap.mockRejectedValue(new ConnectError('boom', Code.Internal));
 
-    fireEvent.click(screen.getByRole('button', { name: 'SNR' }));
+    chooseMetric('SNR');
 
     await waitFor(() =>
       expect(screen.getByTestId('surface-message')).toHaveTextContent('The heatmap did not render'),
     );
-    expect(screen.getByTestId('surface-message')).toHaveClass('text-status-error');
+    expect(within(screen.getByTestId('surface-message')).getByRole('alert')).toBeInTheDocument();
   });
 
   it('drops the threshold and the findings on a layer the analysis cannot speak about', async () => {
     renderPage();
     await screen.findByTestId('coverage-findings');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Download speed' }));
+    chooseMetric('Download speed');
 
     await waitFor(() =>
       expect(getHeatmap).toHaveBeenCalledWith(expect.objectContaining({ metric: 'download' })),
@@ -400,7 +414,7 @@ describe('CoveragePage', () => {
       getHeatmap.mockClear();
       getCoverage.mockClear();
       fireEvent.change(select, { target: { value: '' } });
-      fireEvent.click(screen.getByRole('button', { name: 'SNR' }));
+      chooseMetric('SNR');
       await waitFor(() => expect(lastRequest(getHeatmap)).toMatchObject({ metric: 'snr' }));
       expect(lastRequest(getHeatmap)).not.toHaveProperty('bssid');
       await waitFor(() => expect(lastRequest(getCoverage)).toMatchObject({ metric: 'snr' }));
@@ -415,7 +429,8 @@ describe('CoveragePage', () => {
       );
       renderPage();
 
-      fireEvent.click(await screen.findByRole('button', { name: 'SNR' }));
+      await screen.findByTestId('coverage-metric');
+      chooseMetric('SNR');
       fireEvent.change(await screen.findByTestId('coverage-access-point'), {
         target: { value: '02:00:00:00:00:03' },
       });
@@ -434,7 +449,7 @@ describe('CoveragePage', () => {
 
       const select = await screen.findByTestId('coverage-access-point');
       fireEvent.change(select, { target: { value: '02:00:00:00:00:01' } });
-      fireEvent.click(screen.getByRole('button', { name: 'Download speed' }));
+      chooseMetric('Download speed');
 
       await waitFor(() => expect(lastRequest(getHeatmap)).toMatchObject({ metric: 'download' }));
       expect(lastRequest(getHeatmap)).not.toHaveProperty('bssid');
@@ -446,7 +461,8 @@ describe('CoveragePage', () => {
     it('asks for the chosen band, and only the predicted layer carries one', async () => {
       renderPage();
 
-      fireEvent.click(await screen.findByRole('button', { name: 'Predicted signal' }));
+      await screen.findByTestId('coverage-metric');
+      chooseMetric('Predicted signal');
       await waitFor(() =>
         expect(getHeatmap).toHaveBeenCalledWith(
           expect.objectContaining({ metric: 'predicted_rssi', band: '5 GHz' }),
@@ -462,14 +478,15 @@ describe('CoveragePage', () => {
         expect(request.band === undefined).toBe(request.metric !== 'predicted_rssi');
       }
 
-      fireEvent.click(screen.getByRole('button', { name: 'RSSI' }));
+      chooseMetric('RSSI');
       expect(screen.queryByTestId('coverage-band')).not.toBeInTheDocument();
     });
 
     it('swaps the findings for the planned APs, with no dead-zone analysis', async () => {
       renderPage();
 
-      fireEvent.click(await screen.findByRole('button', { name: 'Predicted signal' }));
+      await screen.findByTestId('coverage-metric');
+      chooseMetric('Predicted signal');
       expect(await screen.findByTestId('placement-panel')).toBeInTheDocument();
       expect(screen.queryByTestId('coverage-findings')).not.toBeInTheDocument();
       expect(screen.queryByTestId('coverage-threshold')).not.toBeInTheDocument();
@@ -483,7 +500,8 @@ describe('CoveragePage', () => {
     it('is offered, and drawn as a map for the chosen band with no findings', async () => {
       renderPage();
 
-      fireEvent.click(await screen.findByRole('button', { name: 'Prediction error' }));
+      await screen.findByTestId('coverage-metric');
+      chooseMetric('Prediction error');
       await waitFor(() =>
         expect(getHeatmap).toHaveBeenCalledWith(
           expect.objectContaining({ metric: 'predicted_delta', band: '5 GHz' }),
@@ -513,7 +531,7 @@ describe('CoveragePage', () => {
         ),
       );
 
-      fireEvent.click(screen.getByRole('button', { name: 'Prediction error' }));
+      chooseMetric('Prediction error');
 
       const surface = await screen.findByText("no walked point heard a placed AP's BSSID on 5 GHz");
       expect(surface.parentElement).not.toHaveClass('text-status-error');

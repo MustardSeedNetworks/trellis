@@ -12,11 +12,9 @@
     "openHelp": "Open help for {{title}}",
     "openMenu": "Open menu",
     "sections": "Trellis sections",
-    "selectLanguage": "Language",
     "skipToContent": "Skip to content",
     "switchToDarkTheme": "Switch to dark theme",
-    "switchToLightTheme": "Switch to light theme",
-    "whatIs": "What is {{title}}?"
+    "switchToLightTheme": "Switch to light theme"
   },
   "buttons": {
     "generating": "Generating…"

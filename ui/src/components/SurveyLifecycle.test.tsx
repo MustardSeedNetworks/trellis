@@ -5,7 +5,7 @@
  */
 import { create } from '@bufbuild/protobuf';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SurveySummarySchema } from '@/gen/trellis/survey/v1/survey_pb';
@@ -93,11 +93,14 @@ describe('SurveyLifecycle', () => {
 
     fireEvent.click(screen.getByTestId('survey-delete'));
     expect(deleteSurvey).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByTestId('survey-delete-cancel'));
-    expect(screen.queryByTestId('survey-delete-confirm')).not.toBeInTheDocument();
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Keep it' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(deleteSurvey).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByTestId('survey-delete'));
-    fireEvent.click(screen.getByTestId('survey-delete-confirm'));
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: /^Yes, delete/ }),
+    );
     await waitFor(() => expect(deleteSurvey).toHaveBeenCalledWith({ id: 'svy-1' }));
     await waitFor(() => expect(onDeleted).toHaveBeenCalledTimes(1));
   });

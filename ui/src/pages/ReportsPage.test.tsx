@@ -85,7 +85,7 @@ describe('ReportsPage', () => {
     renderPage();
     const button = await readyButton();
 
-    fireEvent.click(screen.getByTestId('report-metric-snr'));
+    fireEvent.click(screen.getByRole('radio', { name: 'SNR' }));
     /* SNR reads its own default, not the dBm one carried across. */
     expect(screen.getByTestId('report-threshold')).toHaveValue(20);
     expect(screen.getByTestId('report-threshold-unit')).toHaveTextContent('dB');
@@ -104,10 +104,10 @@ describe('ReportsPage', () => {
     const button = await readyButton();
 
     fireEvent.change(screen.getByTestId('report-threshold'), { target: { value: '-60' } });
-    fireEvent.click(screen.getByTestId('report-metric-snr'));
-    fireEvent.click(screen.getByTestId('report-metric-rssi'));
+    fireEvent.click(screen.getByRole('radio', { name: 'SNR' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'RSSI' }));
     expect(screen.getByTestId('report-threshold')).toHaveValue(-60);
-    expect(screen.getByTestId('report-metric-rssi')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('radio', { name: 'RSSI' })).toBeChecked();
     fireEvent.click(button);
 
     await waitFor(() => expect(generateReport).toHaveBeenCalled());

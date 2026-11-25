@@ -18,7 +18,7 @@ import { ChevronsLeft, ChevronsRight, LogOut, Moon, Settings, Sun } from 'lucide
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
-import { Tooltip } from '@/shared/Tooltip';
+import { Tooltip, type TooltipProps } from '@/shared/Tooltip';
 import { useAuth } from '@/ui/AuthGate';
 import { iconSizes } from '../constants/sizes';
 import { useTheme } from '../hooks/useTheme';
@@ -153,7 +153,7 @@ export function Sidebar({ version, variant = 'rail', onNavigate, onOpenSettings 
             a rail to 224px there left 166px of page, the defect that made the
             drawer necessary. */}
         {!drawer ? (
-          <Tooltip
+          <RailTip
             text={collapsed ? t('accessibility.expandSidebar') : t('accessibility.collapseSidebar')}
           >
             <button
@@ -171,7 +171,7 @@ export function Sidebar({ version, variant = 'rail', onNavigate, onOpenSettings 
                 <ChevronsLeft className={iconSizes.md} />
               )}
             </button>
-          </Tooltip>
+          </RailTip>
         ) : null}
       </div>
     </aside>
@@ -180,6 +180,18 @@ export function Sidebar({ version, variant = 'rail', onNavigate, onOpenSettings 
 
 const RAIL_BUTTON =
   'mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary';
+
+/**
+ * The shared Tooltip wraps its trigger in an inline-flex span, which would
+ * shrink a full-width rail button to its content; this stretches that span back.
+ */
+function RailTip({ text, children }: { text: string; children: TooltipProps['children'] }) {
+  return (
+    <div className="[&>span]:w-full">
+      <Tooltip text={text}>{children}</Tooltip>
+    </div>
+  );
+}
 
 /** Opens the Settings drawer, where the theme, the language and the build details live. */
 function SettingsButton({ collapsed, onClick }: { collapsed: boolean; onClick: () => void }) {
@@ -196,7 +208,7 @@ function SettingsButton({ collapsed, onClick }: { collapsed: boolean; onClick: (
       {!collapsed ? <span className="text-xs">{t('settings.title')}</span> : null}
     </button>
   );
-  return collapsed ? <Tooltip text={t('settings.title')}>{button}</Tooltip> : button;
+  return collapsed ? <RailTip text={t('settings.title')}>{button}</RailTip> : button;
 }
 
 /**
@@ -219,7 +231,7 @@ function ThemeToggle({ collapsed }: { collapsed: boolean }) {
     : t('accessibility.switchToDarkTheme');
 
   return (
-    <Tooltip text={destination}>
+    <RailTip text={destination}>
       <button
         type="button"
         onClick={toggleTheme}
@@ -230,7 +242,7 @@ function ThemeToggle({ collapsed }: { collapsed: boolean }) {
         {isDark ? <Sun className={iconSizes.md} /> : <Moon className={iconSizes.md} />}
         {!collapsed ? <span className="text-xs">{label}</span> : null}
       </button>
-    </Tooltip>
+    </RailTip>
   );
 }
 
@@ -247,7 +259,7 @@ function SignOutButton({ collapsed }: { collapsed: boolean }) {
     return null;
   }
   return (
-    <Tooltip text={t('login.signOut')}>
+    <RailTip text={t('login.signOut')}>
       <button
         type="button"
         onClick={signOut}
@@ -261,6 +273,6 @@ function SignOutButton({ collapsed }: { collapsed: boolean }) {
           <span className="text-xs">{t('login.signOut')}</span>
         )}
       </button>
-    </Tooltip>
+    </RailTip>
   );
 }

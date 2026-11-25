@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { uniqueName } from './helpers';
+import { surveyRow, uniqueName } from './helpers';
 
 /**
  * A survey with no measured noise floor has signal and no SNR (#600) — the
@@ -15,12 +15,12 @@ test('an unmeasured SNR layer reads as a fact about the survey', async ({ page }
   const name = uniqueName('No noise floor');
   await page.goto('/import');
   await page.getByTestId('amp-file-input').setInputFiles('e2e/fixtures/no-noise-floor.svd');
-  await page.locator('#survey-name').fill(name);
+  await page.getByLabel('Survey name').fill(name);
   await page.getByRole('button', { name: 'Import survey' }).click();
-  await expect(page.getByTestId('status-rollup')).toContainText(`Imported ${name}`);
+  await expect(page.getByTestId('import-result')).toContainText(`Imported ${name}`);
 
   await page.goto('/');
-  await page.getByTestId('survey-row').filter({ hasText: name }).click();
+  await (await surveyRow(page, name)).click();
   await page.getByTestId('plot-coverage').click();
 
   // Signal was measured, so the RSSI layer draws as it always did.
@@ -28,7 +28,7 @@ test('an unmeasured SNR layer reads as a fact about the survey', async ({ page }
   const findings = page.getByTestId('coverage-findings');
   await expect(findings).toHaveAttribute('data-state', 'ok');
 
-  await page.getByRole('button', { name: 'SNR' }).click();
+  await page.getByTestId('coverage-metric').selectOption({ label: 'SNR' });
 
   await expect(findings).toContainText('No SNR measured on this floor');
   await expect(findings).toContainText('reports no noise floor');

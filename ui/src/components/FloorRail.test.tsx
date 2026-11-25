@@ -5,7 +5,7 @@
  */
 import { create } from '@bufbuild/protobuf';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FloorSchema } from '@/gen/trellis/survey/v1/survey_pb';
@@ -132,9 +132,11 @@ describe('FloorRail', () => {
     fireEvent.click(screen.getByTestId('delete-floor-flr-2'));
     expect(deleteFloor).not.toHaveBeenCalled();
 
-    // A floor holds measurements, so the destructive click is the second one —
-    // the same two-step the survey delete uses.
-    fireEvent.click(screen.getByTestId('delete-floor-confirm-flr-2'));
+    // A floor holds measurements, so the destructive click is the one in the
+    // confirmation dialog — the same step the survey delete uses.
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: /^Yes, delete/ }),
+    );
     await waitFor(() => expect(deleteFloor).toHaveBeenCalled());
     expect(deleteFloor.mock.calls[0]?.[0]).toMatchObject({
       surveyId: 'svy-9',
@@ -142,15 +144,20 @@ describe('FloorRail', () => {
     });
   });
 
-  it('confirms one floor at a time', () => {
+  it('confirms one floor at a time, and can be talked out of it', () => {
     renderRail();
 
     fireEvent.click(screen.getByTestId('delete-floor-flr-2'));
 
-    // Arming the basement must not arm the ground floor as well: a shared
-    // boolean would offer to delete every row at once.
-    expect(screen.queryByTestId('delete-floor-confirm-flr-1')).not.toBeInTheDocument();
-    expect(screen.getByTestId('delete-floor-confirm-flr-2')).toBeInTheDocument();
+    // The dialog names the floor it is about, so arming the basement cannot
+    // be read as an offer to delete the ground floor.
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByRole('button', { name: /^Yes, delete/ })).toHaveTextContent(
+      'Basement',
+    );
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Keep it' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(deleteFloor).not.toHaveBeenCalled();
   });
 
   it('links a failed add to the fields that made it', async () => {

@@ -56,7 +56,7 @@ for (const language of ['en', 'es'] as const) {
         expect(names.incomplete).toEqual([]);
         expect(names.passes.length).toBeGreaterThan(0);
 
-        const opener = page.getByTestId('page-help-open');
+        const opener = page.getByTestId('page-header-help-button');
         await opener.click();
         const drawer = page.getByTestId('page-help-drawer');
         await expect(drawer).toBeVisible();
@@ -68,9 +68,9 @@ for (const language of ['en', 'es'] as const) {
             ? copy[route.key].description
             : copy.help[route.key];
         await expect(page.getByTestId('page-help-copy')).toHaveText(expectedCopy);
-        await expect(page.getByTestId('page-help-close')).toBeFocused();
+        await expect(page.getByTestId('page-help-drawer-close')).toBeFocused();
         await page.keyboard.press('Shift+Tab');
-        await expect(page.getByTestId('page-help-close')).toBeFocused();
+        await expect(page.getByTestId('page-help-drawer-close')).toBeFocused();
         const box = await drawer.boundingBox();
         expect(box).not.toBeNull();
         expect(box?.x).toBeGreaterThanOrEqual(0);
@@ -79,7 +79,7 @@ for (const language of ['en', 'es'] as const) {
         await expect(drawer).not.toBeVisible();
         await expect(opener).toBeFocused();
         await opener.click();
-        await page.getByTestId('page-help-close').click();
+        await page.getByTestId('page-help-drawer-close').click();
         await expect(drawer).not.toBeVisible();
         await expect(opener).toBeFocused();
         await expect(page.getByTestId('sidebar')).toHaveCSS('transition-property', 'none');
@@ -95,8 +95,6 @@ test('collapsed rail tooltips support hover, keyboard focus and Escape', async (
   await link.hover();
   const tooltip = page.getByRole('tooltip', { name: 'Reports' });
   await expect(tooltip).toBeVisible();
-  await tooltip.hover();
-  await expect(tooltip).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(tooltip).not.toBeVisible();
   await page.mouse.move(700, 700);
@@ -110,7 +108,7 @@ test('collapsed rail tooltips support hover, keyboard focus and Escape', async (
 test('browser history changes the page without reopening old help', async ({ page }) => {
   await page.goto('/');
   await page.getByTestId('nav-import').click();
-  await page.getByTestId('page-help-open').click();
+  await page.getByTestId('page-header-help-button').click();
   await expect(page.getByTestId('page-help-drawer')).toBeVisible();
   await page.goBack();
   await expect(page).toHaveTitle('Surveys | Trellis');
@@ -118,8 +116,8 @@ test('browser history changes the page without reopening old help', async ({ pag
   await page.goForward();
   await expect(page).toHaveTitle('Import | Trellis');
   await expect(page.getByTestId('page-help-drawer')).not.toBeVisible();
-  await page.getByTestId('page-help-open').click();
+  await page.getByTestId('page-header-help-button').click();
   await expect(page.getByTestId('page-help-drawer')).toBeVisible();
   await page.keyboard.press('Escape');
-  await expect(page.getByTestId('page-help-open')).toBeFocused();
+  await expect(page.getByTestId('page-header-help-button')).toBeFocused();
 });

@@ -94,10 +94,11 @@ test('renames a floor, then deletes it with its measurements', async ({ page }) 
   // A rename is metadata: the reading walked on the floor is still there.
   await expect(mezzanineRow).toContainText('1 sample');
 
-  // One click arms, the second deletes.
+  // One click asks, the dialog's confirmation deletes.
   await page.getByTestId(`delete-floor-${floorId}`).click();
-  await expect(page.getByTestId(`delete-floor-confirm-${floorId}`)).toBeVisible();
-  await page.getByTestId(`delete-floor-confirm-${floorId}`).click();
+  const confirm = page.getByTestId('confirm-dialog');
+  await expect(confirm).toBeVisible();
+  await confirm.getByRole('button', { name: /^Yes, delete/ }).click();
 
   await expect(rows).toHaveCount(1);
   // And the walk came back to the survivor, which now holds every measurement

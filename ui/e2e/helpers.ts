@@ -68,3 +68,17 @@ export async function uploadScaledPlan(page: Page) {
   await page.getByTestId('calibrate-floor-plan').click();
   await expect(page.getByTestId('floor-plan-status')).toContainText('0.025 m per pixel');
 }
+
+/**
+ * The survey's row in the list, paging forward until it is on screen. The list
+ * is a paged table and the store is shared, so a survey made a moment ago is
+ * not necessarily on the first page.
+ */
+export async function surveyRow(page: Page, name: string) {
+  const row = page.getByTestId('survey-row').filter({ hasText: name });
+  const next = page.getByRole('button', { name: 'Next page' });
+  while ((await row.count()) === 0 && (await next.count()) > 0 && (await next.isEnabled())) {
+    await next.click();
+  }
+  return row;
+}
