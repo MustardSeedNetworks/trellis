@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.13.6](https://github.com/MustardSeedNetworks/trellis/compare/v0.13.5...v0.13.6) (2026-11-25)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#1020](https://github.com/MustardSeedNetworks/trellis/issues/1020)) ([9a1b68a](https://github.com/MustardSeedNetworks/trellis/commit/9a1b68a75510cb91f443977d32605d82792bf227))
+* **deps:** update dependency @babel/core to v7.29.13 ([#1028](https://github.com/MustardSeedNetworks/trellis/issues/1028)) ([2802522](https://github.com/MustardSeedNetworks/trellis/commit/280252287904fa2794297d22565f73ff60ad81d6))
+* **deps:** update dependency @vitejs/plugin-react to v6.3.0 ([#1054](https://github.com/MustardSeedNetworks/trellis/issues/1054)) ([1b5c22a](https://github.com/MustardSeedNetworks/trellis/commit/1b5c22a945c90dd813ec8226aed4c1e8c9f6d29f))
+
 ## [0.13.5](https://github.com/MustardSeedNetworks/trellis/compare/v0.13.4...v0.13.5) (2026-11-25)
 
 
