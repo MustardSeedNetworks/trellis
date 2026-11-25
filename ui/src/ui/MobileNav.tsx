@@ -11,7 +11,13 @@ import { Sidebar } from './Sidebar';
  * the rail's contents as a slide-out drawer, so a phone keeps the whole width
  * for the page. It closes on any navigation.
  */
-export function MobileNav({ version }: { version?: string }) {
+export function MobileNav({
+  version,
+  onOpenSettings,
+}: {
+  version?: string;
+  onOpenSettings: () => void;
+}) {
   const { t } = useTranslation('common');
   const { pathname } = useLocation();
   // The drawer is open for the path it was opened on, so any navigation —
@@ -78,7 +84,17 @@ export function MobileNav({ version }: { version?: string }) {
           open ? 'translate-x-0' : 'invisible -translate-x-full'
         }`}
       >
-        {open ? <Sidebar variant="drawer" version={version} onNavigate={close} /> : null}
+        {open ? (
+          <Sidebar
+            variant="drawer"
+            version={version}
+            onNavigate={close}
+            onOpenSettings={() => {
+              close();
+              onOpenSettings();
+            }}
+          />
+        ) : null}
       </div>
     </div>
   );

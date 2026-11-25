@@ -1,16 +1,21 @@
 import type { ReactNode } from 'react';
 import { Suspense, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, Route, Routes, useLocation } from 'react-router';
+import { Link, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { PageErrorBoundary } from '@/components/ErrorBoundary';
 import { useBuildVersion } from '@/hooks/useBuildVersion';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { type PageConfig, usePages } from '@/pageRegistry';
+import type { BreadcrumbItem, BreadcrumbLinkProps } from '@/shared/Breadcrumbs';
+import { Button } from '@/shared/Button';
+import { Card } from '@/shared/Card';
+import { EmptyState } from '@/shared/EmptyState';
+import { PageHeader } from '@/shared/PageHeader';
+import { RightDrawer } from '@/shared/RightDrawer';
 import { CommandPalette } from '@/ui/CommandPalette';
 import { DaemonUnreachable } from '@/ui/DaemonUnreachable';
-import { HelpDrawer } from '@/ui/HelpDrawer';
 import { MobileNav } from '@/ui/MobileNav';
-import { PageHeader } from '@/ui/PageHeader';
+import { SettingsDrawer } from '@/ui/SettingsDrawer';
 import { Sidebar } from '@/ui/Sidebar';
 
 /**
@@ -31,7 +36,9 @@ export function App() {
   const page = pages.find((entry) => entry.path === path);
   const [helpPath, setHelpPath] = useState<string | null>(null);
   const title = page?.title ?? t('emptyState.notFoundTitle');
-  const { version } = useBuildVersion();
+  const build = useBuildVersion();
+  const { version } = build;
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const connection = useConnectionStatus();
 
   useEffect(() => {
@@ -51,8 +58,8 @@ export function App() {
       >
         {t('accessibility.skipToContent')}
       </a>
-      <MobileNav version={version} />
-      <Sidebar version={version} />
+      <MobileNav version={version} onOpenSettings={() => setSettingsOpen(true)} />
+      <Sidebar version={version} onOpenSettings={() => setSettingsOpen(true)} />
       <CommandPalette />
       <main
         id="main-content"
@@ -66,29 +73,37 @@ export function App() {
               key={page.path}
               path={page.path}
               element={
-                <PageWithHeader page={page} onHelp={() => setHelpPath(page.path)}>
+                <PageFrame page={page} onHelp={() => setHelpPath(page.path)}>
                   <page.component />
-                </PageWithHeader>
+                </PageFrame>
               }
             />
           ))}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      {page && helpPath === path ? (
-        <HelpDrawer title={page.title} content={page.help} onClose={() => setHelpPath(null)} />
-      ) : null}
+      <RightDrawer
+        open={page !== undefined && helpPath === path}
+        onClose={() => setHelpPath(null)}
+        title={t('accessibility.helpTitle', { title })}
+        closeLabel={t('accessibility.closeHelp')}
+        data-testid="page-help-drawer"
+      >
+        <p className="text-sm leading-relaxed text-text-secondary" data-testid="page-help-copy">
+          {page?.help}
+        </p>
+      </RightDrawer>
+      <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} build={build} />
     </div>
   );
 }
 
 /**
- * PageWithHeader renders the header strip every routed page shares, from
- * the registry entry rather than from the page body. The strip is its own
- * band above the scrolling content, which is why trellis wraps the header
- * rather than stacking it with the page like the siblings do.
+ * PageFrame holds what every routed page shares: the one `PageHeader`, built
+ * from the registry entry rather than the page body, then the page. The frame
+ * scrolls; a page that must stay inside the viewport (Coverage) bounds itself.
  */
-function PageWithHeader({
+function PageFrame({
   page,
   children,
   onHelp,
@@ -97,24 +112,39 @@ function PageWithHeader({
   children: ReactNode;
   onHelp: () => void;
 }) {
+  const { t } = useTranslation('common');
+
   return (
-    <>
-      <div className="border-b border-hairline px-6 pt-6">
-        <PageHeader
-          icon={page.icon}
-          eyebrow={page.eyebrow}
-          title={page.title}
-          description={page.description}
-          onHelp={onHelp}
-        />
-      </div>
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 sm:p-6">
+      <PageHeader
+        kicker={page.kicker}
+        title={page.title}
+        subtitle={page.description}
+        breadcrumbs={trail(page.title)}
+        breadcrumbsLabel={t('accessibility.breadcrumb')}
+        renderBreadcrumbLink={renderBreadcrumbLink}
+        help={{ label: t('accessibility.openHelp', { title: page.title }), onClick: onHelp }}
+      />
       {/* Keyed by path so a page that threw does not stay broken after the
           operator navigates somewhere else; the header above stays up either
           way. */}
       <PageErrorBoundary key={page.path}>
         <Suspense fallback={<PageLoading />}>{children}</Suspense>
       </PageErrorBoundary>
-    </>
+    </div>
+  );
+}
+
+/** Trellis, then this page: the trail every page carries, ending on itself. */
+function trail(title: string): BreadcrumbItem[] {
+  return [{ label: 'Trellis', href: '/' }, { label: title }];
+}
+
+function renderBreadcrumbLink({ href, className, children }: BreadcrumbLinkProps) {
+  return (
+    <Link to={href} className={className}>
+      {children}
+    </Link>
   );
 }
 
@@ -132,24 +162,38 @@ function PageLoading() {
 }
 
 /**
- * Says what it is rather than pretending. A blank pane reads as a failure; this
- * reads as a plan.
+ * Says what it is rather than pretending: this address is not a page. It wears
+ * the same header as every other page, so it reads as Trellis answering rather
+ * than as a blank pane.
  */
 function NotFound() {
   const { t } = useTranslation('common');
+  const navigate = useNavigate();
+  const title = t('emptyState.notFoundTitle');
 
   return (
-    <div className="flex flex-1 items-center justify-center p-8">
-      <div className="panel max-w-md p-6 text-center" data-testid="not-found">
-        <p className="kicker">{t('emptyState.notFoundTitle')}</p>
-        <p className="mt-2 text-sm text-text-secondary">{t('emptyState.notFoundBody')}</p>
-        <Link
-          to="/"
-          className="mt-4 inline-block rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-raised"
-        >
-          {t('emptyState.notFoundHome')}
-        </Link>
-      </div>
+    <div
+      className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 sm:p-6"
+      data-testid="not-found"
+    >
+      <PageHeader
+        kicker={t('emptyState.notFoundKicker')}
+        title={title}
+        breadcrumbs={trail(title)}
+        breadcrumbsLabel={t('accessibility.breadcrumb')}
+        renderBreadcrumbLink={renderBreadcrumbLink}
+      />
+      <Card>
+        <EmptyState
+          title={title}
+          hint={t('emptyState.notFoundBody')}
+          action={
+            <Button variant="primary" onClick={() => navigate('/')}>
+              {t('emptyState.notFoundHome')}
+            </Button>
+          }
+        />
+      </Card>
     </div>
   );
 }

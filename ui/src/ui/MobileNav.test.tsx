@@ -20,7 +20,7 @@ function GoBack() {
 function renderNav() {
   return render(
     <MemoryRouter initialEntries={['/', '/coverage']} initialIndex={1}>
-      <MobileNav version="1.2.3" />
+      <MobileNav version="1.2.3" onOpenSettings={() => undefined} />
       <GoBack />
       <Routes>
         <Route path="*" element={<div data-testid="page" />} />

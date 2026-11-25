@@ -13,7 +13,6 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { PageHeader } from './PageHeader';
 import { StatusRollup } from './StatusRollup';
 
 const { t } = vi.hoisted(() => ({ t: vi.fn((key: string) => key) }));
@@ -26,16 +25,6 @@ describe('components with a defaulted prop are compiled', () => {
     const { rerender } = render(<StatusRollup state="ok" headline="Fine" figures={figures} />);
     const first = t.mock.calls.length;
     rerender(<StatusRollup state="ok" headline="Fine" figures={figures} />);
-    expect(first).toBeGreaterThan(0);
-    expect(t).toHaveBeenCalledTimes(first);
-  });
-
-  it('PageHeader does not re-translate its help labels', () => {
-    t.mockClear();
-    const onHelp = vi.fn();
-    const { rerender } = render(<PageHeader title="Surveys" onHelp={onHelp} />);
-    const first = t.mock.calls.length;
-    rerender(<PageHeader title="Surveys" onHelp={onHelp} />);
     expect(first).toBeGreaterThan(0);
     expect(t).toHaveBeenCalledTimes(first);
   });

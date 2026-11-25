@@ -14,18 +14,17 @@
  * four unused surfaces, and the rule this family keeps is that the shell is
  * shared while each product's own contents are not.
  */
-import { ChevronsLeft, ChevronsRight, LogOut, Moon, Sun } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, LogOut, Moon, Settings, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
+import { Tooltip } from '@/shared/Tooltip';
 import { useAuth } from '@/ui/AuthGate';
-import { LanguageSwitcher } from '@/ui/LanguageSwitcher';
 import { iconSizes } from '../constants/sizes';
 import { useTheme } from '../hooks/useTheme';
-import { useNavGroups } from '../navGroups';
+import { type TrellisNavItem, useNavGroups } from '../navGroups';
 import { MsnMark } from './MsnMark';
 import { ProductMark } from './ProductMark';
-import { Tooltip } from './Tooltip';
 
 const STORAGE_KEY = 'trellis-sidebar-collapsed';
 
@@ -39,9 +38,11 @@ interface SidebarProps {
   variant?: 'rail' | 'drawer';
   /** Called when a nav link is followed, so the drawer can close on a same-path tap. */
   onNavigate?: () => void;
+  /** Opens the Settings drawer. The rail only asks; the shell owns the drawer. */
+  onOpenSettings: () => void;
 }
 
-export function Sidebar({ version, variant = 'rail', onNavigate }: SidebarProps) {
+export function Sidebar({ version, variant = 'rail', onNavigate, onOpenSettings }: SidebarProps) {
   const { t } = useTranslation('common');
   const navGroups = useNavGroups();
   const drawer = variant === 'drawer';
@@ -56,6 +57,40 @@ export function Sidebar({ version, variant = 'rail', onNavigate }: SidebarProps)
       localStorage.setItem(STORAGE_KEY, String(chosenCollapsed));
     }
   }, [chosenCollapsed, drawer]);
+
+  const link = (item: TrellisNavItem) => (
+    <NavLink
+      to={item.path}
+      onClick={onNavigate}
+      end={item.path === '/'}
+      aria-label={item.label}
+      data-testid={`nav-${item.path === '/' ? 'surveys' : item.path.slice(1)}`}
+      className={({ isActive }) =>
+        `group relative flex min-h-11 w-full items-center gap-3 rounded-[11px] px-3 py-2.5 text-sm font-medium transition-all duration-200 motion-reduce:transition-none ${
+          isActive
+            ? 'bg-[color-mix(in_oklab,var(--color-brand-primary)_16%,transparent)] text-text-primary'
+            : 'text-text-muted hover:bg-surface-hover hover:text-text-primary'
+        }`
+      }
+    >
+      {({ isActive }) => (
+        <>
+          {isActive ? (
+            <span
+              aria-hidden="true"
+              className="absolute inset-y-1 left-0 w-[3px] rounded-full bg-brand-primary"
+            />
+          ) : null}
+          <item.icon
+            className={`${iconSizes.lg} shrink-0 ${
+              isActive ? 'text-brand-primary' : 'text-text-muted'
+            }`}
+          />
+          {!collapsed ? <span className="truncate">{item.label}</span> : null}
+        </>
+      )}
+    </NavLink>
+  );
 
   return (
     <aside
@@ -84,42 +119,7 @@ export function Sidebar({ version, variant = 'rail', onNavigate }: SidebarProps)
             <ul className="space-y-1">
               {group.items.map((item) => (
                 <li key={item.path}>
-                  <Tooltip content={item.label} enabled={collapsed}>
-                    {(tooltip) => (
-                      <NavLink
-                        {...tooltip}
-                        to={item.path}
-                        onClick={onNavigate}
-                        end={item.path === '/'}
-                        aria-label={item.label}
-                        data-testid={`nav-${item.path === '/' ? 'surveys' : item.path.slice(1)}`}
-                        className={({ isActive }) =>
-                          `group relative flex min-h-11 w-full items-center gap-3 rounded-[11px] px-3 py-2.5 text-sm font-medium transition-all duration-200 motion-reduce:transition-none ${
-                            isActive
-                              ? 'bg-[color-mix(in_oklab,var(--color-brand-primary)_16%,transparent)] text-text-primary'
-                              : 'text-text-muted hover:bg-surface-hover hover:text-text-primary'
-                          }`
-                        }
-                      >
-                        {({ isActive }) => (
-                          <>
-                            {isActive ? (
-                              <span
-                                aria-hidden="true"
-                                className="absolute inset-y-1 left-0 w-[3px] rounded-full bg-brand-primary"
-                              />
-                            ) : null}
-                            <item.icon
-                              className={`${iconSizes.lg} shrink-0 ${
-                                isActive ? 'text-brand-primary' : 'text-text-muted'
-                              }`}
-                            />
-                            {!collapsed ? <span className="truncate">{item.label}</span> : null}
-                          </>
-                        )}
-                      </NavLink>
-                    )}
-                  </Tooltip>
+                  {collapsed ? <Tooltip text={item.label}>{link(item)}</Tooltip> : link(item)}
                 </li>
               ))}
             </ul>
@@ -143,9 +143,9 @@ export function Sidebar({ version, variant = 'rail', onNavigate }: SidebarProps)
             mark at the top of the rail is the one that has to be recognised. */}
         <MsnMark collapsed={collapsed} className="mt-3" />
 
-        <ThemeToggle collapsed={collapsed} />
+        <SettingsButton collapsed={collapsed} onClick={onOpenSettings} />
 
-        <LanguageSwitcher compact={collapsed} />
+        <ThemeToggle collapsed={collapsed} />
 
         <SignOutButton collapsed={collapsed} />
 
@@ -154,28 +154,23 @@ export function Sidebar({ version, variant = 'rail', onNavigate }: SidebarProps)
             drawer necessary. */}
         {!drawer ? (
           <Tooltip
-            content={
-              collapsed ? t('accessibility.expandSidebar') : t('accessibility.collapseSidebar')
-            }
+            text={collapsed ? t('accessibility.expandSidebar') : t('accessibility.collapseSidebar')}
           >
-            {(tooltip) => (
-              <button
-                {...tooltip}
-                type="button"
-                onClick={() => setChosenCollapsed((value) => !value)}
-                data-testid="sidebar-collapse"
-                aria-label={
-                  collapsed ? t('accessibility.expandSidebar') : t('accessibility.collapseSidebar')
-                }
-                className="mt-3 flex min-h-11 w-full items-center justify-center rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary"
-              >
-                {collapsed ? (
-                  <ChevronsRight className={iconSizes.md} />
-                ) : (
-                  <ChevronsLeft className={iconSizes.md} />
-                )}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setChosenCollapsed((value) => !value)}
+              data-testid="sidebar-collapse"
+              aria-label={
+                collapsed ? t('accessibility.expandSidebar') : t('accessibility.collapseSidebar')
+              }
+              className="mt-3 flex min-h-11 w-full items-center justify-center rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary"
+            >
+              {collapsed ? (
+                <ChevronsRight className={iconSizes.md} />
+              ) : (
+                <ChevronsLeft className={iconSizes.md} />
+              )}
+            </button>
           </Tooltip>
         ) : null}
       </div>
@@ -183,35 +178,58 @@ export function Sidebar({ version, variant = 'rail', onNavigate }: SidebarProps)
   );
 }
 
+const RAIL_BUTTON =
+  'mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary';
+
+/** Opens the Settings drawer, where the theme, the language and the build details live. */
+function SettingsButton({ collapsed, onClick }: { collapsed: boolean; onClick: () => void }) {
+  const { t } = useTranslation('common');
+  const button = (
+    <button
+      type="button"
+      onClick={onClick}
+      data-testid="open-settings"
+      aria-label={t('settings.title')}
+      className={RAIL_BUTTON}
+    >
+      <Settings className={iconSizes.md} />
+      {!collapsed ? <span className="text-xs">{t('settings.title')}</span> : null}
+    </button>
+  );
+  return collapsed ? <Tooltip text={t('settings.title')}>{button}</Tooltip> : button;
+}
+
 /**
- * Light / dark switch.
- *
- * It lives beside the collapse control because both change how the shell looks
- * rather than what it shows. niac carries the same control in its header
- * bar; the icon and the label-follows-the-destination wording match it.
+ * The quick theme toggle: light and dark, one click. It is on the same store
+ * as the Settings control (System / Light / Dark), so choosing in either shows
+ * in both. Its label names the current choice in the Settings control's words;
+ * the tooltip says where one click goes.
  */
 function ThemeToggle({ collapsed }: { collapsed: boolean }) {
   const { t } = useTranslation('common');
-  const { isDark, toggleTheme } = useTheme();
-  const label = isDark
+  const { theme, isDark, toggleTheme } = useTheme();
+  const choice = {
+    system: t('settings.themeSystem'),
+    light: t('settings.themeLight'),
+    dark: t('settings.themeDark'),
+  }[theme];
+  const label = t('settings.themeQuick', { theme: choice });
+  const destination = isDark
     ? t('accessibility.switchToLightTheme')
     : t('accessibility.switchToDarkTheme');
 
   return (
-    <Tooltip content={label}>
-      {(tooltip) => (
-        <button
-          {...tooltip}
-          type="button"
-          onClick={toggleTheme}
-          data-testid="theme-toggle"
-          aria-label={label}
-          className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary"
-        >
-          {isDark ? <Sun className={iconSizes.md} /> : <Moon className={iconSizes.md} />}
-          {!collapsed ? <span className="text-xs">{label}</span> : null}
-        </button>
-      )}
+    <Tooltip text={destination}>
+      <button
+        type="button"
+        onClick={toggleTheme}
+        data-testid="theme-toggle"
+        aria-label={label}
+        className={RAIL_BUTTON}
+      >
+        {isDark ? <Sun className={iconSizes.md} /> : <Moon className={iconSizes.md} />}
+        {!collapsed ? <span className="text-xs">{label}</span> : null}
+      </button>
     </Tooltip>
   );
 }
@@ -229,23 +247,20 @@ function SignOutButton({ collapsed }: { collapsed: boolean }) {
     return null;
   }
   return (
-    <Tooltip content={t('login.signOut')}>
-      {(tooltip) => (
-        <button
-          {...tooltip}
-          type="button"
-          onClick={signOut}
-          data-testid="sign-out"
-          aria-label={t('login.signOut')}
-          className="mt-3 flex min-h-11 w-full items-center justify-center rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary"
-        >
-          {collapsed ? (
-            <LogOut className={iconSizes.md} />
-          ) : (
-            <span className="text-xs">{t('login.signOut')}</span>
-          )}
-        </button>
-      )}
+    <Tooltip text={t('login.signOut')}>
+      <button
+        type="button"
+        onClick={signOut}
+        data-testid="sign-out"
+        aria-label={t('login.signOut')}
+        className={RAIL_BUTTON}
+      >
+        {collapsed ? (
+          <LogOut className={iconSizes.md} />
+        ) : (
+          <span className="text-xs">{t('login.signOut')}</span>
+        )}
+      </button>
     </Tooltip>
   );
 }

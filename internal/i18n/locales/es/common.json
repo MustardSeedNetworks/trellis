@@ -1,6 +1,7 @@
 {
   "accessibility": {
     "breadcrumb": "Ruta de navegación",
+    "close": "Cerrar",
     "closeHelp": "Cerrar ayuda",
     "closeMenu": "Cerrar el menú",
     "collapseSidebar": "Contraer la barra lateral",
@@ -37,6 +38,7 @@
   "emptyState": {
     "notFoundBody": "Trellis no tiene ninguna página en esta dirección. Puede ser una URL mal escrita o un enlace a una página que ya no existe.",
     "notFoundHome": "Ir a Estudios",
+    "notFoundKicker": "Trellis",
     "notFoundTitle": "Página no encontrada"
   },
   "errorBoundary": {
@@ -80,6 +82,24 @@
     "live": "En vivo",
     "reports": "Informes",
     "surveys": "Estudios"
+  },
+  "settings": {
+    "about": "Acerca de",
+    "aboutHint": "Lo que este daemon informa de sí mismo. Solo lectura.",
+    "appearance": "Apariencia",
+    "built": "Compilado",
+    "close": "Cerrar los ajustes",
+    "commit": "Commit",
+    "languageHint": "Se guarda en este navegador.",
+    "tabs": "Secciones de ajustes",
+    "theme": "Tema",
+    "themeDark": "Oscuro",
+    "themeHint": "Sistema sigue el ajuste claro u oscuro de este dispositivo.",
+    "themeLight": "Claro",
+    "themeQuick": "Tema: {{theme}}",
+    "themeSystem": "Sistema",
+    "title": "Ajustes",
+    "uiBuild": "Compilación de la interfaz"
   },
   "status": {
     "crit": "Crítico",

@@ -1,6 +1,7 @@
 {
   "accessibility": {
     "breadcrumb": "Breadcrumb",
+    "close": "Close",
     "closeHelp": "Close help",
     "closeMenu": "Close menu",
     "collapseSidebar": "Collapse sidebar",
@@ -37,6 +38,7 @@
   "emptyState": {
     "notFoundBody": "Trellis has no page at this address. It may be a mistyped URL or a link to a page that no longer exists.",
     "notFoundHome": "Go to Surveys",
+    "notFoundKicker": "Trellis",
     "notFoundTitle": "Page not found"
   },
   "errorBoundary": {
@@ -80,6 +82,24 @@
     "live": "Live",
     "reports": "Reports",
     "surveys": "Surveys"
+  },
+  "settings": {
+    "about": "About",
+    "aboutHint": "What this daemon reports about itself. Read only.",
+    "appearance": "Appearance",
+    "built": "Built",
+    "close": "Close settings",
+    "commit": "Commit",
+    "languageHint": "Saved in this browser.",
+    "tabs": "Settings sections",
+    "theme": "Theme",
+    "themeDark": "Dark",
+    "themeHint": "System follows this device’s light or dark setting.",
+    "themeLight": "Light",
+    "themeQuick": "Theme: {{theme}}",
+    "themeSystem": "System",
+    "title": "Settings",
+    "uiBuild": "UI build"
   },
   "status": {
     "crit": "Critical",

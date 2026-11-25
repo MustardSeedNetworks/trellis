@@ -9,15 +9,15 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Sidebar } from './Sidebar';
 
 const STORAGE_KEY = 'trellis-sidebar-collapsed';
 
-function renderSidebar(variant?: 'rail' | 'drawer') {
+function renderSidebar(variant?: 'rail' | 'drawer', onOpenSettings: () => void = () => undefined) {
   return render(
     <MemoryRouter>
-      <Sidebar version="1.2.3" variant={variant} />
+      <Sidebar version="1.2.3" variant={variant} onOpenSettings={onOpenSettings} />
     </MemoryRouter>,
   );
 }
@@ -25,16 +25,16 @@ function renderSidebar(variant?: 'rail' | 'drawer') {
 beforeEach(() => localStorage.clear());
 
 describe('Sidebar rail', () => {
-  it('names every collapsed link without relying on a native title tooltip', async () => {
-    const user = userEvent.setup();
+  it('names every collapsed link without relying on a native title tooltip', () => {
     localStorage.setItem(STORAGE_KEY, 'true');
     renderSidebar();
     for (const name of ['Surveys', 'Import', 'Coverage', 'Live', 'Reports']) {
       const link = screen.getByRole('link', { name });
       expect(link).not.toHaveAttribute('title');
-      await user.hover(link);
-      expect(screen.getByRole('tooltip')).toHaveTextContent(name);
-      await user.unhover(link);
+      // The bubble is always in the DOM (portalled, hidden until hover), so
+      // the link's own description is the one to read.
+      const bubble = document.getElementById(link.getAttribute('aria-describedby') ?? '');
+      expect(bubble).toHaveTextContent(name);
     }
   });
 
@@ -79,5 +79,36 @@ describe('Sidebar drawer', () => {
 
     expect(screen.getByTestId('sidebar-mobile').className).toContain('w-72');
     expect(localStorage.getItem(STORAGE_KEY)).toBe('true');
+  });
+});
+
+describe('Sidebar footer', () => {
+  it('asks the shell to open Settings', async () => {
+    const user = userEvent.setup();
+    const onOpenSettings = vi.fn();
+    renderSidebar('rail', onOpenSettings);
+
+    await user.click(screen.getByTestId('open-settings'));
+
+    expect(onOpenSettings).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the language selector out of the rail: it lives in Settings', () => {
+    renderSidebar();
+
+    expect(screen.queryByTestId('language-switcher')).not.toBeInTheDocument();
+  });
+
+  it('names the quick theme toggle for the current choice and flips light and dark', async () => {
+    const user = userEvent.setup();
+    localStorage.setItem('trellis-theme', 'light');
+    renderSidebar();
+
+    const toggle = screen.getByTestId('theme-toggle');
+    expect(toggle).toHaveAccessibleName('Theme: Light');
+    await user.click(toggle);
+
+    expect(toggle).toHaveAccessibleName('Theme: Dark');
+    expect(localStorage.getItem('trellis-theme')).toBe('dark');
   });
 });

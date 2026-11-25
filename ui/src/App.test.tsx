@@ -6,6 +6,7 @@
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '@/ui/Toast';
@@ -43,14 +44,24 @@ describe('App routing', () => {
     expect(panel).toHaveTextContent('Trellis');
     // The rail also links to Surveys, so the way back is looked for inside the
     // panel — the point is that the page itself offers one.
-    expect(within(panel).getByRole('link', { name: /surveys/i })).toHaveAttribute('href', '/');
+    expect(within(panel).getByRole('button', { name: /surveys/i })).toBeInTheDocument();
+  });
+
+  it('gives the 404 the same header as every page, neutral and with a trail', async () => {
+    renderAt('/interferance');
+
+    const panel = await screen.findByTestId('not-found');
+    expect(within(panel).getByTestId('page-header-eyebrow')).toHaveTextContent('Trellis');
+    expect(within(panel).getByTestId('page-header-title')).toHaveTextContent('Page not found');
+    expect(within(panel).getByTestId('breadcrumbs')).toHaveTextContent('Trellis');
+    expect(document.title).toBe('Page not found | Trellis');
   });
 });
 
 describe('App shell', () => {
   it('resolves a trailing-slash route to its page title', async () => {
     renderAt('/import/');
-    expect(await screen.findByTestId('page-help-open')).toHaveAccessibleName(
+    expect(await screen.findByTestId('page-header-help-button')).toHaveAccessibleName(
       'Open help for Import',
     );
     expect(document.title).toBe('Import | Trellis');
@@ -58,7 +69,7 @@ describe('App shell', () => {
 
   it('offers page help, sets the document title, and places skip navigation first', async () => {
     const { container } = renderAt('/');
-    expect(await screen.findByTestId('page-help-open')).toHaveAccessibleName(
+    expect(await screen.findByTestId('page-header-help-button')).toHaveAccessibleName(
       'Open help for Surveys',
     );
     expect(document.title).toBe('Surveys | Trellis');
@@ -75,6 +86,10 @@ describe('App shell', () => {
     // by the page, so a page that never rendered its own title still gets one.
     expect(await screen.findByTestId('page-header-title')).toHaveTextContent(/surveys/i);
     expect(screen.getByTestId('page-header-eyebrow')).toHaveTextContent(/capture/i);
+    // Every page carries a trail that ends on itself, as plain text.
+    const trail = screen.getByTestId('breadcrumbs');
+    expect(within(trail).getByRole('link', { name: 'Trellis' })).toHaveAttribute('href', '/');
+    expect(within(trail).getByText('Surveys')).toHaveAttribute('aria-current', 'page');
     expect(await screen.findByRole('heading', { name: /surveys/i })).toBeInTheDocument();
   });
 });
@@ -107,12 +122,33 @@ describe('App daemon status', () => {
     );
   });
 
-  it('draws the phone top bar and the language selector in the shell', async () => {
+  it('draws the phone top bar and opens Settings from the rail', async () => {
     renderAt('/');
 
     expect(await screen.findByTestId('mobile-menu-toggle')).toBeInTheDocument();
-    expect(
-      within(screen.getByTestId('sidebar')).getByTestId('language-switcher'),
-    ).toBeInTheDocument();
+    await userEvent.click(within(screen.getByTestId('sidebar')).getByTestId('open-settings'));
+
+    const drawer = screen.getByTestId('settings-drawer');
+    expect(within(drawer).getByRole('tab', { name: 'Appearance' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(within(drawer).getByTestId('language-switcher')).toBeInTheDocument();
+    expect(within(drawer).getByRole('radio', { name: 'System' })).toBeChecked();
+
+    await userEvent.click(within(drawer).getByRole('tab', { name: 'About' }));
+    expect(within(screen.getByTestId('settings-about')).getByText('Version')).toBeInTheDocument();
+  });
+
+  it('opens page help in the shared right drawer and closes it with Escape', async () => {
+    renderAt('/');
+
+    await userEvent.click(await screen.findByTestId('page-header-help-button'));
+    const drawer = screen.getByTestId('page-help-drawer');
+    expect(drawer).toHaveAccessibleName('Help: Surveys');
+    expect(within(drawer).getByTestId('page-help-copy')).not.toBeEmptyDOMElement();
+
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByTestId('page-help-drawer')).not.toBeInTheDocument();
   });
 });
