@@ -4,12 +4,11 @@ import type { TFunction } from 'i18next';
 import { Signal } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { AccessPointSelect } from '@/components/AccessPointSelect';
 import { CoverageFindings } from '@/components/CoverageFindings';
 import { HeatmapLegend } from '@/components/HeatmapLegend';
 import { HeatmapSurface } from '@/components/HeatmapSurface';
-import { LinkButton } from '@/components/LinkButton';
 import { PredictionView } from '@/components/PredictionView';
 import { surveyClient } from '@/lib/client';
 import {
@@ -30,6 +29,7 @@ import { describeCoverage, isUnmeasured, unmeasuredCopy } from '@/lib/coverageVe
 import { formatSignal } from '@/lib/format';
 import { BANDS, type Band, isBand } from '@/lib/placement';
 import { Alert } from '@/shared/Alert';
+import { ButtonLink } from '@/shared/Button';
 import { Card } from '@/shared/Card';
 import { EmptyState } from '@/shared/EmptyState';
 import { FormField } from '@/shared/FormField';
@@ -192,9 +192,9 @@ export function CoveragePage() {
           title={t('pages:coverage.noSurveysTitle')}
           hint={t('pages:coverage.noSurveys')}
           action={
-            <LinkButton to="/import" variant="primary">
+            <ButtonLink variant="primary" renderLink={(link) => <Link to="/import" {...link} />}>
               {t('pages:coverage.importSurvey')}
-            </LinkButton>
+            </ButtonLink>
           }
           className="py-10"
         />

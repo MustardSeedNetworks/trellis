@@ -54,7 +54,7 @@ describe('App routing', () => {
     expect(within(panel).getByTestId('page-header-eyebrow')).toHaveTextContent('Trellis');
     expect(within(panel).getByTestId('page-header-title')).toHaveTextContent('Page not found');
     expect(within(panel).getByTestId('breadcrumbs')).toHaveTextContent('Trellis');
-    expect(document.title).toBe('Page not found | Trellis');
+    expect(document.title).toBe('Page not found \u00b7 Trellis');
   });
 });
 
@@ -64,7 +64,7 @@ describe('App shell', () => {
     expect(await screen.findByTestId('page-header-help-button')).toHaveAccessibleName(
       'Open help for Import',
     );
-    expect(document.title).toBe('Import | Trellis');
+    expect(document.title).toBe('Import \u00b7 Trellis');
   });
 
   it('offers page help, sets the document title, and places skip navigation first', async () => {
@@ -72,7 +72,7 @@ describe('App shell', () => {
     expect(await screen.findByTestId('page-header-help-button')).toHaveAccessibleName(
       'Open help for Surveys',
     );
-    expect(document.title).toBe('Surveys | Trellis');
+    expect(document.title).toBe('Surveys \u00b7 Trellis');
     const skip = screen.getByTestId('skip-to-content');
     expect(container.querySelector('a,button,input,select,textarea')).toBe(skip);
     expect(skip).toHaveAttribute('href', '#main-content');

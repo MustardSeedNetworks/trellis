@@ -86,10 +86,9 @@ async function overflowingElements(page: Page): Promise<string[]> {
       .filter((element) => element.scrollWidth > element.clientWidth + 1 && element.clientWidth > 0)
       .filter((element) => element.tagName !== 'SELECT' && element.querySelector('select') === null)
       .filter((element) => !/^(auto|scroll)$/.test(getComputedStyle(element).overflowX))
-      // An element that clips nothing (the shared help button's hit area is a
-      // ::after wider than the button) cannot hide a defect of its own: what
-      // spills from it reaches a clipping ancestor, which is measured here.
-      .filter((element) => getComputedStyle(element).overflowX !== 'visible')
+      // The shared help button's hit area is a ::after wider than the button;
+      // it says so with this attribute.
+      .filter((element) => element.closest('[data-touch-target-overflow]') === null)
       // A visually hidden element is clipped to a 1px box on purpose.
       .filter((element) => element.clientWidth > 2)
       .map(

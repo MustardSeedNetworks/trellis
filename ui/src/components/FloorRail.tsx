@@ -3,9 +3,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Floor } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
+import { useTableLabels } from '@/lib/useTableLabels';
 import { Alert } from '@/shared/Alert';
 import { Button } from '@/shared/Button';
 import { ConfirmDialog } from '@/shared/ConfirmDialog';
+import { DataTable, type DataTableColumn } from '@/shared/DataTable';
 import { FormField } from '@/shared/FormField';
 import { Input } from '@/shared/Input';
 import { StatusPill } from '@/shared/StatusPill';
@@ -96,6 +98,57 @@ export function FloorRail({ surveyId, floors }: { surveyId: string; floors: Floo
   const renameFailed = error !== null && error === renameMutation.error;
 
   const deleting = floors.find((floor) => floor.id === confirmingDelete);
+  const tableLabels = useTableLabels<Floor>();
+
+  // A row being renamed swaps its name and level cells for fields, so the
+  // rename happens where the floor is listed rather than in a second form.
+  const columns: DataTableColumn<Floor>[] = [
+    {
+      key: 'name',
+      header: t('pages:surveys.floorName'),
+      cell: (floor) =>
+        editing === floor.id ? (
+          <Input
+            value={editName}
+            onChange={(event) => setEditName(event.target.value)}
+            aria-label={t('pages:surveys.floorName')}
+            aria-describedby={renameFailed ? 'floor-rail-error' : undefined}
+            data-testid={`floor-rename-input-${floor.id}`}
+            className="min-h-8 w-40 py-1"
+          />
+        ) : (
+          <span className="inline-flex flex-wrap items-center gap-2">
+            <span className="font-medium text-text-primary">{floor.name}</span>
+            {floor.isActive ? (
+              <StatusPill tone="info" label={t('pages:surveys.floorWalking')} />
+            ) : null}
+          </span>
+        ),
+    },
+    {
+      key: 'level',
+      header: t('pages:surveys.floorLevelField'),
+      cell: (floor) =>
+        editing === floor.id ? (
+          <Input
+            type="number"
+            value={editLevel}
+            onChange={(event) => setEditLevel(event.target.value)}
+            aria-label={t('pages:surveys.floorLevelField')}
+            aria-describedby={renameFailed ? 'floor-rail-error' : undefined}
+            data-testid={`floor-relevel-input-${floor.id}`}
+            className="min-h-8 w-20 py-1"
+          />
+        ) : (
+          t('pages:surveys.floorLevel', { level: floor.level })
+        ),
+    },
+    {
+      key: 'samples',
+      header: t('common:labels.samples'),
+      cell: (floor) => t('pages:surveys.floorSamples', { count: floor.sampleCount }),
+    },
+  ];
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="floor-rail-title">
@@ -103,87 +156,54 @@ export function FloorRail({ surveyId, floors }: { surveyId: string; floors: Floo
         {t('pages:surveys.floorsTitle')}
       </h3>
 
-      <ul className="flex flex-col divide-y divide-hairline" data-testid="floor-rail">
-        {floors.map((floor) => (
-          <li
-            key={floor.id}
-            data-testid={`floor-row-${floor.id}`}
-            className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2"
-          >
-            <span className="text-sm font-medium text-text-primary">{floor.name}</span>
-            <span className="text-sm text-text-secondary">
-              {t('pages:surveys.floorLevel', { level: floor.level })}
-            </span>
-            <span className="text-sm text-text-secondary">
-              {t('pages:surveys.floorSamples', { count: floor.sampleCount })}
-            </span>
-            {floor.isActive ? (
-              <StatusPill tone="info" label={t('pages:surveys.floorWalking')} />
-            ) : null}
-
-            <span className="flex flex-wrap items-center gap-2 sm:ml-auto">
-              {editing === floor.id ? (
-                <>
-                  <label className="sr-only" htmlFor={`floor-rename-${floor.id}`}>
-                    {t('pages:surveys.floorName')}
-                  </label>
-                  <Input
-                    id={`floor-rename-${floor.id}`}
-                    value={editName}
-                    onChange={(event) => setEditName(event.target.value)}
-                    aria-describedby={renameFailed ? 'floor-rail-error' : undefined}
-                    data-testid={`floor-rename-input-${floor.id}`}
-                    className="min-h-8 w-40 py-1"
-                  />
-                  <label className="sr-only" htmlFor={`floor-relevel-${floor.id}`}>
-                    {t('pages:surveys.floorLevelField')}
-                  </label>
-                  <Input
-                    id={`floor-relevel-${floor.id}`}
-                    type="number"
-                    value={editLevel}
-                    onChange={(event) => setEditLevel(event.target.value)}
-                    aria-describedby={renameFailed ? 'floor-rail-error' : undefined}
-                    data-testid={`floor-relevel-input-${floor.id}`}
-                    className="min-h-8 w-20 py-1"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => setEditing(null)}
-                    data-testid={`floor-rename-cancel-${floor.id}`}
-                  >
-                    {t('pages:surveys.cancelRename')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      editName.trim() !== '' &&
-                      renameMutation.mutate({
-                        floorId: floor.id,
-                        name: editName.trim(),
-                        level: Number.parseInt(editLevel, 10) || 0,
-                      })
-                    }
-                    loading={renameMutation.isPending}
-                    data-testid={`floor-rename-save-${floor.id}`}
-                  >
-                    {t('pages:surveys.saveRename')}
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setEditing(floor.id);
-                    setEditName(floor.name);
-                    setEditLevel(String(floor.level));
-                  }}
-                  data-testid={`rename-floor-${floor.id}`}
-                >
-                  {t('pages:surveys.renameFloor')}
-                </Button>
-              )}
-
+      <DataTable
+        data-testid="floor-rail"
+        rows={floors}
+        columns={columns}
+        getRowKey={(floor) => floor.id}
+        getRowProps={(floor) => ({ 'data-testid': `floor-row-${floor.id}` })}
+        caption={t('pages:surveys.floorsTitle')}
+        labels={tableLabels}
+        empty={null}
+        rowActions={(floor) =>
+          editing === floor.id ? (
+            <>
+              <Button
+                size="sm"
+                onClick={() => setEditing(null)}
+                data-testid={`floor-rename-cancel-${floor.id}`}
+              >
+                {t('pages:surveys.cancelRename')}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() =>
+                  editName.trim() !== '' &&
+                  renameMutation.mutate({
+                    floorId: floor.id,
+                    name: editName.trim(),
+                    level: Number.parseInt(editLevel, 10) || 0,
+                  })
+                }
+                loading={renameMutation.isPending}
+                data-testid={`floor-rename-save-${floor.id}`}
+              >
+                {t('pages:surveys.saveRename')}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setEditing(floor.id);
+                  setEditName(floor.name);
+                  setEditLevel(String(floor.level));
+                }}
+                data-testid={`rename-floor-${floor.id}`}
+              >
+                {t('pages:surveys.renameFloor')}
+              </Button>
               {floor.isActive ? null : (
                 <Button
                   size="sm"
@@ -194,7 +214,6 @@ export function FloorRail({ surveyId, floors }: { surveyId: string; floors: Floo
                   {t('pages:surveys.walkThisFloor')}
                 </Button>
               )}
-
               {deletable ? (
                 <Button
                   size="sm"
@@ -205,10 +224,10 @@ export function FloorRail({ surveyId, floors }: { surveyId: string; floors: Floo
                   {t('pages:surveys.deleteFloor')}
                 </Button>
               ) : null}
-            </span>
-          </li>
-        ))}
-      </ul>
+            </>
+          )
+        }
+      />
 
       <div className="flex flex-wrap items-end gap-3">
         <FormField label={t('pages:surveys.floorName')} className="sm:w-56">

@@ -49,6 +49,8 @@
     "notInList": "{{id}} · not in the survey list",
     "placeOnPlan": "Place an AP here",
     "placementFailed": "The change was not saved: {{error}}",
+    "placementName": "AP",
+    "placementRadio": "Radio",
     "planAlt": "Floor plan",
     "plannedHint": "Click the plan to place an AP. Drag one to move it.",
     "plannedTitle": "Planned APs",

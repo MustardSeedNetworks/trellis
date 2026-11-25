@@ -89,12 +89,9 @@ async function findHorizontalOverflow(page: Page): Promise<Overflow[]> {
       const style = getComputedStyle(el);
       if (style.textOverflow === 'ellipsis') continue;
 
-      // An element that clips nothing cannot hide a defect of its own: what
-      // spills out of it reaches the clipping ancestor, which is measured. The
-      // shared help button is the case in point: its hit area is an absolutely
-      // positioned ::after wider than the 28 px button, so its own scrollWidth
-      // reads 36 and nothing is wrong with it.
-      if (style.overflowX === 'visible') continue;
+      // The shared help button's hit area is an absolutely positioned ::after
+      // wider than the button; it declares that with this attribute.
+      if (el.closest('[data-touch-target-overflow]')) continue;
 
       if (el.scrollWidth > el.clientWidth + TOLERANCE_PX) {
         found.push({

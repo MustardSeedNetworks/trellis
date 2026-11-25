@@ -49,6 +49,8 @@
     "notInList": "{{id}} · no está en la lista de estudios",
     "placeOnPlan": "Colocar un AP aquí",
     "placementFailed": "El cambio no se guardó: {{error}}",
+    "placementName": "AP",
+    "placementRadio": "Radio",
     "planAlt": "Plano de la planta",
     "plannedHint": "Haga clic en el plano para colocar un AP. Arrástrelo para moverlo.",
     "plannedTitle": "AP planificados",

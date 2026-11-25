@@ -1,16 +1,16 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import { CaptureSurface } from '@/components/CaptureSurface';
 import { FloorPlanPanel } from '@/components/FloorPlanPanel';
 import { FloorRail } from '@/components/FloorRail';
-import { LinkButton } from '@/components/LinkButton';
 import { SurveyLifecycle } from '@/components/SurveyLifecycle';
 import { ThroughputTarget } from '@/components/ThroughputTarget';
 import type { SurveySummary } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
 import { bytesToDataUrl, reportFilename } from '@/lib/format';
 import { surveyStatusLabel, surveyStatusTone } from '@/lib/surveyStatus';
-import { Button } from '@/shared/Button';
+import { Button, ButtonLink } from '@/shared/Button';
 import { Card } from '@/shared/Card';
 import { StatusPill } from '@/shared/StatusPill';
 import { useToast } from '@/ui/toastContext';
@@ -153,9 +153,11 @@ export function SurveyDetail({ survey, onDeleted }: SurveyDetailProps) {
       </div>
 
       <div className="flex flex-wrap items-center gap-3 border-t border-hairline pt-6">
-        <LinkButton to={coverageHref} data-testid="plot-coverage">
+        <ButtonLink
+          renderLink={(link) => <Link to={coverageHref} data-testid="plot-coverage" {...link} />}
+        >
           {t('pages:surveys.plotCoverage')}
-        </LinkButton>
+        </ButtonLink>
         <Button onClick={() => reportMutation.mutate()} loading={reportMutation.isPending}>
           {reportMutation.isPending
             ? t('common:buttons.generating')

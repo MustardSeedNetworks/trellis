@@ -159,7 +159,9 @@ describe('PredictionView', () => {
       }),
     });
 
-    fireEvent.click(within(await screen.findByTestId('placement-list')).getByRole('button'));
+    fireEvent.click(
+      within(await screen.findByTestId('placement-list')).getAllByRole('row')[1] as HTMLElement,
+    );
     expect(screen.getByTestId('placement-calibration')).toHaveTextContent(want);
   });
 
@@ -167,7 +169,9 @@ describe('PredictionView', () => {
     listAPPlacements.mockResolvedValue({ placements: [{ ...placed, txPowerDbm: 17 }] });
     renderView({ heatmapError: noPlacements });
 
-    fireEvent.click(within(await screen.findByTestId('placement-list')).getByRole('button'));
+    fireEvent.click(
+      within(await screen.findByTestId('placement-list')).getAllByRole('row')[1] as HTMLElement,
+    );
     const power = screen.getByTestId('placement-power');
     expect(power).toHaveValue(17);
 
@@ -199,7 +203,9 @@ describe('PredictionView', () => {
     listAPPlacements.mockResolvedValue({ placements: [placed] });
     renderView({ heatmapError: noPlacements });
 
-    fireEvent.click(within(await screen.findByTestId('placement-list')).getByRole('button'));
+    fireEvent.click(
+      within(await screen.findByTestId('placement-list')).getAllByRole('row')[1] as HTMLElement,
+    );
     fireEvent.change(screen.getByTestId('placement-band'), { target: { value: '2.4 GHz' } });
     fireEvent.click(screen.getByTestId('placement-apply'));
     await waitFor(() => expect(updateAPPlacement).toHaveBeenCalled());

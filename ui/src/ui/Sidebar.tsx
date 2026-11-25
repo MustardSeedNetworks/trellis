@@ -18,7 +18,7 @@ import { ChevronsLeft, ChevronsRight, LogOut, Moon, Settings, Sun } from 'lucide
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
-import { Tooltip, type TooltipProps } from '@/shared/Tooltip';
+import { Tooltip } from '@/shared/Tooltip';
 import { useAuth } from '@/ui/AuthGate';
 import { iconSizes } from '../constants/sizes';
 import { useTheme } from '../hooks/useTheme';
@@ -153,7 +153,7 @@ export function Sidebar({ version, variant = 'rail', onNavigate, onOpenSettings 
             a rail to 224px there left 166px of page, the defect that made the
             drawer necessary. */}
         {!drawer ? (
-          <RailTip
+          <Tooltip
             text={collapsed ? t('accessibility.expandSidebar') : t('accessibility.collapseSidebar')}
           >
             <button
@@ -171,7 +171,7 @@ export function Sidebar({ version, variant = 'rail', onNavigate, onOpenSettings 
                 <ChevronsLeft className={iconSizes.md} />
               )}
             </button>
-          </RailTip>
+          </Tooltip>
         ) : null}
       </div>
     </aside>
@@ -181,30 +181,13 @@ export function Sidebar({ version, variant = 'rail', onNavigate, onOpenSettings 
 const RAIL_BUTTON =
   'mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary';
 
-/**
- * The shared Tooltip wraps its trigger in an inline-flex span, which would
- * shrink a full-width rail button to its content; this stretches that span back.
- */
-function RailTip({ text, children }: { text: string; children: TooltipProps['children'] }) {
-  return (
-    <div className="[&>span]:w-full">
-      <Tooltip text={text}>{children}</Tooltip>
-    </div>
-  );
-}
-
 /** Opens the Settings drawer, where the theme, the language and the build details live. */
 function SettingsButton({ collapsed, onClick }: { collapsed: boolean; onClick: () => void }) {
   const { t } = useTranslation('common');
   const button = (
     <button
       type="button"
-      // Safari does not focus a clicked button; focusing it is what lets the
-      // drawer give focus back here when it closes.
-      onClick={(event) => {
-        event.currentTarget.focus();
-        onClick();
-      }}
+      onClick={onClick}
       data-testid="open-settings"
       aria-label={t('settings.title')}
       className={RAIL_BUTTON}
@@ -213,7 +196,7 @@ function SettingsButton({ collapsed, onClick }: { collapsed: boolean; onClick: (
       {!collapsed ? <span className="text-xs">{t('settings.title')}</span> : null}
     </button>
   );
-  return collapsed ? <RailTip text={t('settings.title')}>{button}</RailTip> : button;
+  return collapsed ? <Tooltip text={t('settings.title')}>{button}</Tooltip> : button;
 }
 
 /**
@@ -236,7 +219,7 @@ function ThemeToggle({ collapsed }: { collapsed: boolean }) {
     : t('accessibility.switchToDarkTheme');
 
   return (
-    <RailTip text={destination}>
+    <Tooltip text={destination}>
       <button
         type="button"
         onClick={toggleTheme}
@@ -247,7 +230,7 @@ function ThemeToggle({ collapsed }: { collapsed: boolean }) {
         {isDark ? <Sun className={iconSizes.md} /> : <Moon className={iconSizes.md} />}
         {!collapsed ? <span className="text-xs">{label}</span> : null}
       </button>
-    </RailTip>
+    </Tooltip>
   );
 }
 
@@ -264,7 +247,7 @@ function SignOutButton({ collapsed }: { collapsed: boolean }) {
     return null;
   }
   return (
-    <RailTip text={t('login.signOut')}>
+    <Tooltip text={t('login.signOut')}>
       <button
         type="button"
         onClick={signOut}
@@ -278,6 +261,6 @@ function SignOutButton({ collapsed }: { collapsed: boolean }) {
           <span className="text-xs">{t('login.signOut')}</span>
         )}
       </button>
-    </RailTip>
+    </Tooltip>
   );
 }

@@ -2,8 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { FileText } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router';
-import { LinkButton } from '@/components/LinkButton';
+import { Link, useSearchParams } from 'react-router';
 import { surveyClient } from '@/lib/client';
 import {
   COVERAGE_METRIC_COPY,
@@ -15,7 +14,7 @@ import {
   THRESHOLDS,
 } from '@/lib/coverageThreshold';
 import { bytesToDataUrl, reportFilename } from '@/lib/format';
-import { Button } from '@/shared/Button';
+import { Button, ButtonLink } from '@/shared/Button';
 import { Card } from '@/shared/Card';
 import { Checkbox } from '@/shared/Checkbox';
 import { EmptyState } from '@/shared/EmptyState';
@@ -137,7 +136,11 @@ export function ReportsPage() {
           icon={<FileText className="h-6 w-6" />}
           title={t('pages:reports.noSurveysTitle')}
           hint={t('pages:reports.noSurveys')}
-          action={<LinkButton to="/import">{t('pages:reports.importSurvey')}</LinkButton>}
+          action={
+            <ButtonLink renderLink={(link) => <Link to="/import" {...link} />}>
+              {t('pages:reports.importSurvey')}
+            </ButtonLink>
+          }
         />
       </Card>
     );

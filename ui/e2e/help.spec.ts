@@ -33,7 +33,7 @@ for (const language of ['en', 'es'] as const) {
           await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches),
         ).toBe(true);
         await expect(page.getByTestId('page-header-title')).toHaveText(copy[route.key].title);
-        await expect(page).toHaveTitle(`${copy[route.key].title} | Trellis`);
+        await expect(page).toHaveTitle(`${copy[route.key].title} \u00b7 Trellis`);
         const tabKey =
           browserName === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab';
         await page.keyboard.press(tabKey);
@@ -95,6 +95,9 @@ test('collapsed rail tooltips support hover, keyboard focus and Escape', async (
   await link.hover();
   const tooltip = page.getByRole('tooltip', { name: 'Reports' });
   await expect(tooltip).toBeVisible();
+  // The bubble is hoverable: moving onto it keeps it open (WCAG 1.4.13).
+  await tooltip.hover();
+  await expect(tooltip).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(tooltip).not.toBeVisible();
   await page.mouse.move(700, 700);
@@ -111,10 +114,10 @@ test('browser history changes the page without reopening old help', async ({ pag
   await page.getByTestId('page-header-help-button').click();
   await expect(page.getByTestId('page-help-drawer')).toBeVisible();
   await page.goBack();
-  await expect(page).toHaveTitle('Surveys | Trellis');
+  await expect(page).toHaveTitle('Surveys \u00b7 Trellis');
   await expect(page.getByTestId('page-help-drawer')).not.toBeVisible();
   await page.goForward();
-  await expect(page).toHaveTitle('Import | Trellis');
+  await expect(page).toHaveTitle('Import \u00b7 Trellis');
   await expect(page.getByTestId('page-help-drawer')).not.toBeVisible();
   await page.getByTestId('page-header-help-button').click();
   await expect(page.getByTestId('page-help-drawer')).toBeVisible();

@@ -14,10 +14,12 @@ import type {
 import { surveyClient } from '@/lib/client';
 import { bytesToDataUrl } from '@/lib/format';
 import { BANDS, type Band, type PlanPoint, placedOnBand, TX_POWER } from '@/lib/placement';
+import { useTableLabels } from '@/lib/useTableLabels';
 import { Alert } from '@/shared/Alert';
 import { Button } from '@/shared/Button';
 import { Card } from '@/shared/Card';
 import { ConfirmDialog } from '@/shared/ConfirmDialog';
+import { DataTable, type DataTableColumn } from '@/shared/DataTable';
 import { FormField } from '@/shared/FormField';
 import { Input } from '@/shared/Input';
 import { Select } from '@/shared/Select';
@@ -125,6 +127,23 @@ export function PredictionView({
       />
     ) : null;
 
+  const tableLabels = useTableLabels<APPlacement>();
+  const placementColumns: DataTableColumn<APPlacement>[] = [
+    {
+      key: 'name',
+      header: t('pages:coverage.placementName'),
+      cell: (ap) => (
+        <span className="font-semibold text-text-primary">
+          {apLabel(ap, placements.indexOf(ap), t)}
+        </span>
+      ),
+    },
+    {
+      key: 'radio',
+      header: t('pages:coverage.placementRadio'),
+      cell: (ap) => <span className="figure text-xs">{describeRadio(ap, t)}</span>,
+    },
+  ];
   const selectedIndex = placements.findIndex((ap) => ap.id === selectedId);
   const selected = placements[selectedIndex];
   const calibrations = heatmapError ? [] : (heatmap?.calibrations ?? []);
@@ -153,25 +172,17 @@ export function PredictionView({
           </div>
         ) : null}
         {placements.length > 0 ? (
-          <ul className="flex flex-col gap-1" data-testid="placement-list">
-            {placements.map((ap, index) => (
-              <li key={ap.id}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedId(ap.id)}
-                  aria-pressed={ap.id === selectedId}
-                  className={`flex w-full flex-wrap justify-between gap-2 rounded-[9px] px-3 py-2 text-left text-sm ${
-                    ap.id === selectedId
-                      ? 'bg-surface-hover text-text-primary'
-                      : 'text-text-secondary hover:bg-surface-hover'
-                  }`}
-                >
-                  <span className="font-bold">{apLabel(ap, index, t)}</span>
-                  <span className="figure text-xs">{describeRadio(ap, t)}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          <DataTable
+            data-testid="placement-list"
+            rows={placements}
+            columns={placementColumns}
+            getRowKey={(ap) => ap.id}
+            caption={t('pages:coverage.plannedTitle')}
+            labels={tableLabels}
+            empty={null}
+            onRowClick={(ap) => setSelectedId(ap.id)}
+            {...(selectedId === undefined ? {} : { selectedRowKey: selectedId })}
+          />
         ) : null}
         {selected ? (
           <PlacementEditor
