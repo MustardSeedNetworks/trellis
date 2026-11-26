@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.14.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.13.8...v0.14.0) (2026-11-26)
+
+
+### Features
+
+* **ui:** adopt the shared page components (UI-TRL-19) ([#1083](https://github.com/MustardSeedNetworks/trellis/issues/1083)) ([d4ebab3](https://github.com/MustardSeedNetworks/trellis/commit/d4ebab30d4b3a656d05e4be92532d7ce0ea143a1))
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.76.0 ([#1093](https://github.com/MustardSeedNetworks/trellis/issues/1093)) ([c2cabe3](https://github.com/MustardSeedNetworks/trellis/commit/c2cabe3579366e8019f71b85d99e5efd512bb023))
+
 ## [0.13.8](https://github.com/MustardSeedNetworks/trellis/compare/v0.13.7...v0.13.8) (2026-11-26)
 
 
