@@ -28,7 +28,9 @@ test('walks a survey and plots coverage from its stored points', async ({ page }
   await expect(page.getByTestId('capture-count')).toHaveText('3 samples on this floor');
 
   await page.getByTestId('survey-complete').click();
-  const tableRow = row.locator('xpath=ancestor::tr');
+  await expect(page.getByTestId('survey-detail')).toContainText('Completed');
+  // Completing can move the survey to another page of the list.
+  const tableRow = (await surveyRow(page, name)).locator('xpath=ancestor::tr');
   await expect(tableRow).toContainText('Completed');
   await expect(tableRow.locator('td').nth(2)).toHaveText('1');
   await expect(tableRow.locator('td').nth(3)).toHaveText('3');
