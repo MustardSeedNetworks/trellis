@@ -7,9 +7,13 @@ import '@/i18n';
 import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
 import { installMatchMediaStub } from '@/test/matchMedia';
+import { installResizeObserverStub } from '@/test/resizeObserver';
 
 // jsdom has no matchMedia; useTheme asks it for the OS colour scheme on mount.
 installMatchMediaStub();
+
+// Nor a ResizeObserver, which the shared tables, the modal body and cmdk construct.
+installResizeObserverStub();
 
 // This project runs vitest with globals: false, so testing-library's automatic
 // cleanup never registers itself — it hooks a global afterEach that does not
