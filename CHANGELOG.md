@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.14.0...v0.14.1) (2026-11-26)
+
+
+### Bug Fixes
+
+* **ui:** re-copy shared set and type the resize observer stub ([#1096](https://github.com/MustardSeedNetworks/trellis/issues/1096)) ([f977c89](https://github.com/MustardSeedNetworks/trellis/commit/f977c89ede3a4c844deeab45dd5abdd923453083))
+
 ## [0.14.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.13.8...v0.14.0) (2026-11-26)
 
 
