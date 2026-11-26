@@ -1,6 +1,7 @@
 {
   "accessibility": {
     "breadcrumb": "Breadcrumb",
+    "close": "Close",
     "closeHelp": "Close help",
     "closeMenu": "Close menu",
     "collapseSidebar": "Collapse sidebar",
@@ -11,11 +12,9 @@
     "openHelp": "Open help for {{title}}",
     "openMenu": "Open menu",
     "sections": "Trellis sections",
-    "selectLanguage": "Language",
     "skipToContent": "Skip to content",
     "switchToDarkTheme": "Switch to dark theme",
-    "switchToLightTheme": "Switch to light theme",
-    "whatIs": "What is {{title}}?"
+    "switchToLightTheme": "Switch to light theme"
   },
   "buttons": {
     "generating": "Generating…"
@@ -37,6 +36,7 @@
   "emptyState": {
     "notFoundBody": "Trellis has no page at this address. It may be a mistyped URL or a link to a page that no longer exists.",
     "notFoundHome": "Go to Surveys",
+    "notFoundKicker": "Trellis",
     "notFoundTitle": "Page not found"
   },
   "errorBoundary": {
@@ -60,6 +60,7 @@
     "hiddenNetwork": "Hidden network",
     "language": "Language",
     "metric": "Metric",
+    "name": "Name",
     "recommendations": "Recommendations",
     "samples": "Samples",
     "scale": "Scale",
@@ -81,11 +82,47 @@
     "reports": "Reports",
     "surveys": "Surveys"
   },
+  "rail": {
+    "company": "Mustard Seed Networks",
+    "help": "Help",
+    "status": {
+      "checking": "Checking",
+      "connected": "Daemon connected",
+      "disconnected": "Daemon unreachable"
+    }
+  },
+  "settings": {
+    "about": "About",
+    "aboutHint": "What this daemon reports about itself. Read only.",
+    "appearance": "Appearance",
+    "built": "Built",
+    "close": "Close settings",
+    "commit": "Commit",
+    "languageHint": "Saved in this browser.",
+    "tabs": "Settings sections",
+    "theme": "Theme",
+    "themeDark": "Dark",
+    "themeHint": "System follows this device’s light or dark setting.",
+    "themeLight": "Light",
+    "themeSystem": "System",
+    "title": "Settings",
+    "uiBuild": "UI build"
+  },
   "status": {
     "crit": "Critical",
     "ok": "All clear",
     "unknown": "No data",
     "warn": "Degraded"
+  },
+  "table": {
+    "actions": "Actions",
+    "loading": "Loading",
+    "nextPage": "Next page",
+    "pageStatus": "Page {{page}} of {{pageCount}} ({{total}} rows)",
+    "pagination": "Table pages",
+    "previousPage": "Previous page",
+    "selectAll": "Select all rows",
+    "selectRow": "Select row"
   },
   "values": {
     "none": "None",

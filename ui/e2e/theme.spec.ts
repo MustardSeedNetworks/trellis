@@ -79,7 +79,7 @@ test.describe('with a light desktop', () => {
     await page.goto('/');
     expect(await surfaceColour(page)).toBe('#fbfaf5');
 
-    await page.getByTestId('theme-toggle').click();
+    await page.getByTestId('rail-theme').click();
     expect(await rootIsDark(page)).toBe(true);
     expect(await surfaceColour(page)).toBe('#181611');
     expect(await rootColorScheme(page)).toBe('dark');
@@ -90,9 +90,36 @@ test.describe('with a light desktop', () => {
     expect(await surfaceColour(page)).toBe('#181611');
 
     // And back, so the control is not one-way.
-    await page.getByTestId('theme-toggle').click();
+    await page.getByTestId('rail-theme').click();
     await page.reload();
     expect(await rootIsDark(page)).toBe(false);
     expect(await surfaceColour(page)).toBe('#fbfaf5');
+  });
+
+  test('Settings holds the three-way control on the same store as the rail toggle', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.getByTestId('rail-settings').click();
+    const drawer = page.getByTestId('settings-drawer');
+    await expect(drawer).toBeVisible();
+
+    // The OS is light and nothing is stored, so the choice reads System.
+    await expect(drawer.getByRole('radio', { name: 'System' })).toBeChecked();
+    await drawer.getByRole('radio', { name: 'Dark' }).check({ force: true });
+    expect(await rootIsDark(page)).toBe(true);
+    await expect(page.getByTestId('rail-theme')).toHaveAccessibleName('Switch to light theme');
+
+    // The rail toggle flips the same store, and the control follows it.
+    await page.keyboard.press('Escape');
+    await page.getByTestId('rail-theme').click();
+    expect(await rootIsDark(page)).toBe(false);
+    await page.getByTestId('rail-settings').click();
+    await expect(drawer.getByRole('radio', { name: 'Light' })).toBeChecked();
+
+    // And it survives a reload, which an in-memory choice would not.
+    await drawer.getByRole('radio', { name: 'Dark' }).check({ force: true });
+    await page.reload();
+    expect(await rootIsDark(page)).toBe(true);
   });
 });

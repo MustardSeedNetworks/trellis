@@ -10,7 +10,7 @@ import { createSurvey, uniqueName, uploadScaledPlan } from './helpers';
 
 /** Opens Coverage on the predicted layer for the survey the page has selected. */
 async function openPrediction(page: Page) {
-  await page.getByTestId('coverage-metric-predicted_rssi').click();
+  await page.getByTestId('coverage-metric').selectOption({ label: 'Predicted signal' });
   await expect(page.getByTestId('placement-panel')).toBeVisible();
 }
 
@@ -75,6 +75,7 @@ test('places, moves and deletes an AP and the predicted map follows', async ({ p
   // Deleting the only AP leaves nothing to predict from, and the page says so.
   await marker.click();
   await page.getByTestId('placement-delete').click();
+  await page.getByTestId('confirm-dialog').getByRole('button', { name: 'Delete AP' }).click();
   await expect(marker).toHaveCount(0);
   await expect(page.getByTestId('surface-message')).toHaveText(
     'No AP placed on 5 GHz. Click the plan to place one.',

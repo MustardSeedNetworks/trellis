@@ -360,6 +360,14 @@ jobs:
         with:
           persist-credentials: false
 
+      # ui/src/shared/ is the canonical page-component set copied from
+      # MustardSeedNetworks/.github (UI-FLEET-10). A product-local edit fails
+      # here by hash, like the theme file, so the four UIs cannot drift. To move
+      # the pin, re-copy with `python3 scripts/ui_shared.py
+      # copy .` from a .github checkout at the new pin.
+      - name: Shared UI copies match the canonical set
+        uses: MustardSeedNetworks/.github/.github/actions/ui-shared-verify@bb87ab62381ec4f5e5bf4037d261ad305e6af4d0 # .github#298
+
       - name: Enforce customer-facing vocabulary policy
         run: python3 scripts/check-banned-vocabulary.py
 
@@ -874,7 +882,7 @@ jobs:
   # of .github@main (a canonical change there reaches this repo only when this
   # pin moves).
   ci-conformance:
-    uses: MustardSeedNetworks/.github/.github/workflows/ci-conformance.yml@76eb579ee0cbdef0a2aef9d9df1ae9ca38cad6bd # v1.14.0
+    uses: MustardSeedNetworks/.github/.github/workflows/ci-conformance.yml@bb87ab62381ec4f5e5bf4037d261ad305e6af4d0 # .github#298
     permissions:
       contents: read
       id-token: write

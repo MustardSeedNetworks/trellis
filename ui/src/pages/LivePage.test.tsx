@@ -68,7 +68,7 @@ describe('LivePage', () => {
     expect(await screen.findByText(/Connected to Trellis Lab with 42 dB/)).toBeInTheDocument();
     // The reading is the connection's, not the strongest neighbour's or an
     // average — a page that summed the airspace would still print a number.
-    const rollup = screen.getByTestId('status-rollup');
+    const rollup = screen.getByTestId('verdict');
     expect(rollup).toHaveTextContent('42.0 dB');
     expect(rollup).toHaveTextContent('12%');
   });
@@ -102,7 +102,7 @@ describe('LivePage', () => {
     expect(await screen.findByText('Connected to Trellis Lab at -68 dBm')).toBeInTheDocument();
     expect(screen.queryByText(/dB of margin/)).not.toBeInTheDocument();
     expect(screen.getByText(/reports no noise floor/)).toBeInTheDocument();
-    const rollup = screen.getByTestId('status-rollup');
+    const rollup = screen.getByTestId('verdict');
     // Green on signal alone: -68 dBm clears the -75 dBm coverage line. The
     // headline and body carry the missing margin, not the colour.
     expect(rollup).toHaveAttribute('data-state', 'ok');
@@ -119,7 +119,7 @@ describe('LivePage', () => {
     renderPage();
 
     expect(await screen.findByText('Trellis Lab is only -80 dBm')).toBeInTheDocument();
-    expect(screen.getByTestId('status-rollup')).toHaveAttribute('data-state', 'warn');
+    expect(screen.getByTestId('verdict')).toHaveAttribute('data-state', 'warn');
   });
 
   it('flags a congested channel on an otherwise strong link', async () => {
@@ -135,7 +135,7 @@ describe('LivePage', () => {
     renderPage();
 
     expect(await screen.findByText('Not joined to a network')).toBeInTheDocument();
-    // StatusRollup prints em dashes for figures in the unknown state; the point
+    // Verdict prints em dashes for figures in the unknown state; the point
     // is that nothing here claims a link that does not exist.
     expect(screen.queryByText(/Connected to/)).not.toBeInTheDocument();
   });
@@ -150,8 +150,8 @@ describe('LivePage', () => {
     renderPage();
 
     const rows = await screen.findAllByTestId('neighbour-row');
-    expect(rows[0]).toHaveTextContent('0%');
-    expect(rows[1]).toHaveTextContent('Not reported');
+    expect(rows[0]?.closest('tr')).toHaveTextContent('0%');
+    expect(rows[1]?.closest('tr')).toHaveTextContent('Not reported');
   });
 
   it('names a hidden network instead of leaving the cell blank', async () => {

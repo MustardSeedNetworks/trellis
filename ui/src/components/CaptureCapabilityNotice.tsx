@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { surveyClient } from '@/lib/client';
+import { Alert } from '@/shared/Alert';
 
 /**
  * CaptureCapabilityNotice — what this host can measure, said before an operator
@@ -13,7 +14,7 @@ import { surveyClient } from '@/lib/client';
  * it. This reads the capability once and says it in the pages where a walk
  * starts.
  *
- * It is deliberately not an error state. A host with no radio browses surveys,
+ * It is a warning, not an error. A host with no radio browses surveys,
  * imports other tools' captures, analyses them and produces reports; saying
  * "unavailable" without saying that would read as "this machine cannot use
  * Trellis", which is false.
@@ -38,15 +39,12 @@ export function CaptureCapabilityNotice() {
   }
 
   return (
-    <section
-      className="rounded border border-hairline bg-surface-raised p-4 text-sm text-text-primary"
-      aria-live="polite"
-      data-testid="capture-unavailable"
-    >
-      <p className="font-medium">{t('pages:capture.unavailable')}</p>
-      <p className="mt-1 text-text-muted">{data.reason}</p>
-      {data.remedy ? <p className="mt-1 text-text-muted">{data.remedy}</p> : null}
-      <p className="mt-2 text-text-muted">{t('pages:capture.stillUsable')}</p>
-    </section>
+    <div data-testid="capture-unavailable">
+      <Alert tone="warning" title={t('pages:capture.unavailable')}>
+        <p>{data.reason}</p>
+        {data.remedy ? <p className="mt-1">{data.remedy}</p> : null}
+        <p className="mt-1">{t('pages:capture.stillUsable')}</p>
+      </Alert>
+    </div>
   );
 }

@@ -33,16 +33,15 @@ const ROUTES: readonly { path: string; ready?: string }[] = [
 ];
 
 /**
- * Ceiling measured at 1440×900 after the UI-TRL-13 density pass, chosen so the
- * tree before it fails. Measured on `origin/main` at 2171545, then on this
- * branch: every route's page header went 83 px -> 76 px.
- *
- * stem (UI-STEM-18) and NIAC (UI-NIAC-19) landed on exactly 83 -> 76 from the
- * same change, which is the point: one page-title scale and one header
- * footprint across the fleet. A ratchet — tightening further is welcome,
- * loosening needs a reason.
+ * Ceiling measured at 1440×900. The UI-TRL-13 density pass took every route's
+ * page header from 83 px to 76 px, the fleet's kicker + 24 px title + one-line
+ * subtitle. The shared `PageHeader` (UI-TRL-19) adds the breadcrumb row the
+ * owner asked for on every page (msn-owner-decisions §25), which is one 20 px
+ * line and 4 px beneath it: 76 + 24 + 4 = 104 px, and that is what every route
+ * measures. A ratchet at the shared header's own footprint — tightening is
+ * welcome, loosening needs a reason.
  */
-const MAX_PAGE_HEADER_FOOTPRINT_PX = 80;
+const MAX_PAGE_HEADER_FOOTPRINT_PX = 104;
 
 interface Overflow {
   selector: string;
@@ -87,7 +86,12 @@ async function findHorizontalOverflow(page: Page): Promise<Overflow[]> {
 
       // Truncation is the prescribed fit for a cell too long for its column,
       // and a truncated cell overflows its box by construction.
-      if (getComputedStyle(el).textOverflow === 'ellipsis') continue;
+      const style = getComputedStyle(el);
+      if (style.textOverflow === 'ellipsis') continue;
+
+      // The shared help button's hit area is an absolutely positioned ::after
+      // wider than the button; it declares that with this attribute.
+      if (el.closest('[data-touch-target-overflow]')) continue;
 
       if (el.scrollWidth > el.clientWidth + TOLERANCE_PX) {
         found.push({

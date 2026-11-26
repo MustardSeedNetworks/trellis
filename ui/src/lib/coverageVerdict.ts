@@ -2,7 +2,7 @@ import { Code, ConnectError } from '@connectrpc/connect';
 import type { TFunction } from 'i18next';
 import type { Metric } from '@/lib/coverageLayers';
 import { formatCoverageScore } from '@/lib/format';
-import type { RollupState } from '@/ui/StatusRollup';
+import type { VerdictState } from '@/lib/verdictState';
 
 /**
  * FailedPrecondition on a layer is the service saying the walk never measured
@@ -39,7 +39,7 @@ interface CoverageState {
 }
 
 interface CoverageVerdict {
-  state: RollupState;
+  state: VerdictState;
   headline: string;
   body?: string;
   figures: { label: string; value: string }[];

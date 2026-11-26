@@ -1,5 +1,3 @@
-import type { LucideIcon } from 'lucide-react';
-import { FileText, Radar, Signal, Upload, Waypoints } from 'lucide-react';
 import { type ComponentType, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -37,15 +35,14 @@ const LivePage = lazy(() => import('@/pages/LivePage').then((m) => ({ default: m
  */
 export interface PageConfig {
   path: string;
-  /** Kicker above the title naming the product domain. */
-  eyebrow?: string;
+  /** Kicker above the title naming the product domain. Every page has one. */
+  kicker: string;
   title: string;
   /** Subtitle under the title. Required: Surveys was the one page without one
    *  and wore a shorter header than the rest of the product (trellis#476), and
    *  a type that permits the gap is what let it happen. */
   description: string;
   help: string;
-  icon: LucideIcon;
   component: ComponentType;
 }
 
@@ -55,47 +52,42 @@ export function usePages(): PageConfig[] {
   return [
     {
       path: '/',
-      eyebrow: t('common:nav.capture'),
+      kicker: t('common:nav.capture'),
       title: t('pages:surveys.title'),
       description: t('pages:surveys.description'),
       help: t('pages:help.surveys'),
-      icon: Waypoints,
       component: SurveysPage,
     },
     {
       path: '/import',
-      eyebrow: t('common:nav.capture'),
+      kicker: t('common:nav.capture'),
       title: t('pages:import.title'),
       description: t('pages:import.description'),
       help: t('pages:help.import'),
-      icon: Upload,
       component: ImportPage,
     },
     {
       path: '/coverage',
-      eyebrow: t('common:nav.analysis'),
+      kicker: t('common:nav.analysis'),
       title: t('pages:coverage.title'),
       description: t('pages:coverage.description'),
       help: t('pages:help.coverage'),
-      icon: Signal,
       component: CoveragePage,
     },
     {
       path: '/live',
-      eyebrow: t('common:nav.analysis'),
+      kicker: t('common:nav.analysis'),
       title: t('pages:live.title'),
       description: t('pages:live.description'),
       help: t('pages:live.description'),
-      icon: Radar,
       component: LivePage,
     },
     {
       path: '/reports',
-      eyebrow: t('common:nav.deliver'),
+      kicker: t('common:nav.deliver'),
       title: t('pages:reports.title'),
       description: t('pages:reports.description'),
       help: t('pages:reports.description'),
-      icon: FileText,
       component: ReportsPage,
     },
   ];

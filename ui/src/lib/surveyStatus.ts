@@ -1,4 +1,5 @@
 import type { TFunction } from 'i18next';
+import type { StatusTone } from '@/shared/StatusPill';
 
 /**
  * surveyStatusLabel names a survey's lifecycle state in the operator's
@@ -19,5 +20,24 @@ export function surveyStatusLabel(t: TFunction<['common', 'pages']>, status: str
       return t('pages:surveys.status.completed');
     default:
       return status;
+  }
+}
+
+/**
+ * surveyStatusTone is the pill colour for a lifecycle state: a walk in progress
+ * is live news, a paused one is waiting on the operator, a finished one is
+ * done, and one not yet started (or a state this build does not know) says
+ * nothing either way.
+ */
+export function surveyStatusTone(status: string): StatusTone {
+  switch (status) {
+    case 'in_progress':
+      return 'info';
+    case 'paused':
+      return 'warning';
+    case 'completed':
+      return 'success';
+    default:
+      return 'unknown';
   }
 }

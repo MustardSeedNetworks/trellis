@@ -68,3 +68,26 @@ export async function uploadScaledPlan(page: Page) {
   await page.getByTestId('calibrate-floor-plan').click();
   await expect(page.getByTestId('floor-plan-status')).toContainText('0.025 m per pixel');
 }
+
+/**
+ * The survey's row in the list, searched from the first page forward. The list
+ * is a paged table over a shared store and the server does not promise an
+ * order, so a survey made a moment ago is not necessarily on the first page,
+ * and one whose state just changed can move to another. Call this again after
+ * anything that changes the survey rather than reusing an earlier locator.
+ */
+export async function surveyRow(page: Page, name: string) {
+  const row = page.getByTestId('survey-row').filter({ hasText: name });
+  const previous = page.getByRole('button', { name: 'Previous page' });
+  const next = page.getByRole('button', { name: 'Next page' });
+  // The table shows skeleton rows until the list arrives; paging before then
+  // finds no pager and gives up on the first page.
+  await page.getByTestId('survey-row').first().waitFor();
+  while ((await previous.count()) > 0 && (await previous.isEnabled())) {
+    await previous.click();
+  }
+  while ((await row.count()) === 0 && (await next.count()) > 0 && (await next.isEnabled())) {
+    await next.click();
+  }
+  return row;
+}

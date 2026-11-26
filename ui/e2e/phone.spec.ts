@@ -46,6 +46,12 @@ async function widestControlEdge(page: Page): Promise<{ right: number; label: st
     let worst = { right: 0, label: 'nothing rendered' };
     const controls = document.querySelectorAll('input, button, select, textarea, a, h1, h2');
     for (const element of controls) {
+      // A control inside a region that scrolls sideways by design (a table's
+      // frame) is reached by scrolling it; the frame itself is measured.
+      const scroller = element.closest('[data-phone-width-exempt]');
+      if (scroller !== null && scroller !== element) {
+        continue;
+      }
       const box = element.getBoundingClientRect();
       if (box.width === 0 && box.height === 0) {
         continue;
@@ -80,6 +86,11 @@ async function overflowingElements(page: Page): Promise<string[]> {
       .filter((element) => element.scrollWidth > element.clientWidth + 1 && element.clientWidth > 0)
       .filter((element) => element.tagName !== 'SELECT' && element.querySelector('select') === null)
       .filter((element) => !/^(auto|scroll)$/.test(getComputedStyle(element).overflowX))
+      // The shared help button's hit area is a ::after wider than the button;
+      // it says so with this attribute.
+      .filter((element) => element.closest('[data-touch-target-overflow]') === null)
+      // A visually hidden element is clipped to a 1px box on purpose.
+      .filter((element) => element.clientWidth > 2)
       .map(
         (element) =>
           `${element.tagName.toLowerCase()}.${element.className.toString().slice(0, 60)} ` +
@@ -104,13 +115,47 @@ for (const route of ROUTES) {
   });
 }
 
+test('every page opens with a trail, a kicker, and help on the title line', async ({ page }) => {
+  for (const route of ROUTES) {
+    await page.goto(route.path);
+    const header = page.getByTestId('page-header');
+    await expect(header.getByTestId('breadcrumbs')).toBeVisible();
+    await expect(header.getByTestId('page-header-eyebrow')).toBeVisible();
+
+    const title = await page.getByTestId('page-header-title').boundingBox();
+    const help = await page.getByTestId('page-header-help-button').boundingBox();
+    expect(title, `${route.path} title has no box`).not.toBeNull();
+    expect(help, `${route.path} help has no box`).not.toBeNull();
+    // On the title's line: the button's middle sits within the title's height.
+    const middle = (help?.y ?? 0) + (help?.height ?? 0) / 2;
+    expect(middle).toBeGreaterThanOrEqual(title?.y ?? 0);
+    expect(middle).toBeLessThanOrEqual((title?.y ?? 0) + (title?.height ?? 0));
+    expect((help?.x ?? 0) + (help?.width ?? 0)).toBeLessThanOrEqual(PHONE.width);
+  }
+});
+
+test('Settings fills the phone screen and holds both tabs', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('mobile-menu-toggle').click();
+  await page.getByTestId('sidebar-mobile').getByTestId('rail-settings').click();
+
+  const drawer = page.getByTestId('settings-drawer');
+  await expect(drawer).toBeVisible();
+  const box = await drawer.boundingBox();
+  expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
+  expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(PHONE.width);
+  await expect(drawer.getByRole('tab', { name: 'Appearance' })).toBeVisible();
+  await drawer.getByRole('tab', { name: 'About' }).click();
+  await expect(drawer.getByTestId('settings-about')).toContainText('Version');
+});
+
 test('the rail gives way to a top bar and a drawer at phone width', async ({ page }) => {
   await page.goto('/');
 
   // The rail used to be forced to 64px and still took a sixth of the screen;
   // below lg it is not drawn at all, and the page keeps the full width.
   await expect(page.getByTestId('sidebar')).toBeHidden();
-  await expect(page.getByTestId('sidebar-collapse')).toBeHidden();
+  await expect(page.getByTestId('rail-collapse')).toBeHidden();
   await expect(page.getByTestId('mobile-top-bar')).toBeVisible();
 
   const toggle = page.getByTestId('mobile-menu-toggle');
@@ -204,7 +249,7 @@ test.describe('at desktop width', () => {
 
     const box = await page.getByTestId('sidebar').boundingBox();
     expect(box?.width).toBeGreaterThan(200);
-    await expect(page.getByTestId('sidebar-collapse')).toBeVisible();
+    await expect(page.getByTestId('rail-collapse')).toBeVisible();
     await expect(page.getByTestId('mobile-top-bar')).toBeHidden();
   });
 });

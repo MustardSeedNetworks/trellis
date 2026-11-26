@@ -1,6 +1,7 @@
 {
   "accessibility": {
     "breadcrumb": "Ruta de navegación",
+    "close": "Cerrar",
     "closeHelp": "Cerrar ayuda",
     "closeMenu": "Cerrar el menú",
     "collapseSidebar": "Contraer la barra lateral",
@@ -11,11 +12,9 @@
     "openHelp": "Abrir la ayuda de {{title}}",
     "openMenu": "Abrir el menú",
     "sections": "Secciones de Trellis",
-    "selectLanguage": "Idioma",
     "skipToContent": "Saltar al contenido",
     "switchToDarkTheme": "Cambiar al tema oscuro",
-    "switchToLightTheme": "Cambiar al tema claro",
-    "whatIs": "¿Qué es {{title}}?"
+    "switchToLightTheme": "Cambiar al tema claro"
   },
   "buttons": {
     "generating": "Generando…"
@@ -37,6 +36,7 @@
   "emptyState": {
     "notFoundBody": "Trellis no tiene ninguna página en esta dirección. Puede ser una URL mal escrita o un enlace a una página que ya no existe.",
     "notFoundHome": "Ir a Estudios",
+    "notFoundKicker": "Trellis",
     "notFoundTitle": "Página no encontrada"
   },
   "errorBoundary": {
@@ -60,6 +60,7 @@
     "hiddenNetwork": "Red oculta",
     "language": "Idioma",
     "metric": "Métrica",
+    "name": "Nombre",
     "recommendations": "Recomendaciones",
     "samples": "Muestras",
     "scale": "Escala",
@@ -81,11 +82,47 @@
     "reports": "Informes",
     "surveys": "Estudios"
   },
+  "rail": {
+    "company": "Mustard Seed Networks",
+    "help": "Ayuda",
+    "status": {
+      "checking": "Comprobando",
+      "connected": "Daemon conectado",
+      "disconnected": "Daemon inaccesible"
+    }
+  },
+  "settings": {
+    "about": "Acerca de",
+    "aboutHint": "Lo que este daemon informa de sí mismo. Solo lectura.",
+    "appearance": "Apariencia",
+    "built": "Compilado",
+    "close": "Cerrar los ajustes",
+    "commit": "Commit",
+    "languageHint": "Se guarda en este navegador.",
+    "tabs": "Secciones de ajustes",
+    "theme": "Tema",
+    "themeDark": "Oscuro",
+    "themeHint": "Sistema sigue el ajuste claro u oscuro de este dispositivo.",
+    "themeLight": "Claro",
+    "themeSystem": "Sistema",
+    "title": "Ajustes",
+    "uiBuild": "Compilación de la interfaz"
+  },
   "status": {
     "crit": "Crítico",
     "ok": "Todo correcto",
     "unknown": "Sin datos",
     "warn": "Degradado"
+  },
+  "table": {
+    "actions": "Acciones",
+    "loading": "Cargando",
+    "nextPage": "Página siguiente",
+    "pageStatus": "Página {{page}} de {{pageCount}} ({{total}} filas)",
+    "pagination": "Páginas de la tabla",
+    "previousPage": "Página anterior",
+    "selectAll": "Seleccionar todas las filas",
+    "selectRow": "Seleccionar fila"
   },
   "values": {
     "none": "Ninguno",

@@ -67,6 +67,11 @@ function renderPage() {
   return render(<SurveysPage />, { wrapper });
 }
 
+/** A survey opens by clicking its row, as a pointer or a keyboard would. */
+function openSurvey(name: RegExp) {
+  fireEvent.click(screen.getByRole('row', { name }));
+}
+
 beforeEach(() => {
   listSurveys.mockReset();
   generateReport.mockReset();
@@ -84,31 +89,17 @@ describe('SurveysPage', () => {
 
     expect(await screen.findByText('Everett HQ')).toBeInTheDocument();
     expect(screen.getByText('MGM Temp Location')).toBeInTheDocument();
-    expect(screen.getByText('2 surveys available')).toBeInTheDocument();
 
-    // Pluralisation is per-value, so both branches are asserted: one floor and
-    // one sample must not read "1 floors". A lifecycle state is named in the
-    // operator's language; a state the service invents is shown as sent.
-    expect(screen.getByText('Completed · 2 floors · 87 samples')).toBeInTheDocument();
-    expect(screen.getByText('importing · 1 floor · 5 samples')).toBeInTheDocument();
-  });
-
-  /* trellis#476: the band said "2 surveys available" and carried a "2 SURVEYS"
-     figure beside it — the same number twice, which reads as two quantities
-     that happen to agree. The headline keeps it; the figure is gone. */
-  it('states the survey count once in the status band', async () => {
-    listSurveys.mockResolvedValue({ surveys: [everett, vegas] });
-    renderPage();
-
-    // The headline, not the band: the band renders immediately in its loading
-    // state and would be asserted against "Loading surveys".
-    await screen.findByText('2 surveys available');
-    const band = screen.getByTestId('status-rollup');
-    expect(within(band).queryAllByRole('definition')).toHaveLength(0);
-    // Every number the band prints, not just the one in the headline: the
-    // defect was a second "2" in a figure face, so counting digit runs is what
-    // distinguishes one count from the same count twice.
-    expect(band.textContent?.match(/\d+/g) ?? []).toEqual(['2']);
+    // One row per survey, each carrying its own counts. A lifecycle state is
+    // named in the operator's language; a state the service invents is shown
+    // as sent.
+    const everettRow = screen.getByRole('row', { name: /Everett HQ/ });
+    expect(within(everettRow).getByText('Completed')).toBeInTheDocument();
+    expect(within(everettRow).getByText('2')).toBeInTheDocument();
+    expect(within(everettRow).getByText('87')).toBeInTheDocument();
+    const vegasRow = screen.getByRole('row', { name: /MGM Temp Location/ });
+    expect(within(vegasRow).getByText('importing')).toBeInTheDocument();
+    expect(within(vegasRow).getByText('5')).toBeInTheDocument();
   });
 
   it('distinguishes an empty list from a failed load', async () => {
@@ -121,6 +112,11 @@ describe('SurveysPage', () => {
         'Create a survey to walk a floor, or import an AirMapper or AirMagnet capture to analyse one.',
       ),
     ).toBeInTheDocument();
+    // No data is not a verdict: the empty list is a neutral empty state, never
+    // the green "All clear" the status band used to print over it.
+    expect(screen.getByTestId('empty-state')).toBeInTheDocument();
+    expect(screen.queryByText(/all clear/i)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('verdict')).not.toBeInTheDocument();
     expect(screen.queryByText('Survey data is not arriving')).not.toBeInTheDocument();
     unmount();
 
@@ -133,28 +129,22 @@ describe('SurveysPage', () => {
     expect(screen.queryByText('No surveys captured yet')).not.toBeInTheDocument();
   });
 
-  it('shows the selection prompt until a survey is chosen, then its facts', async () => {
+  it('opens no detail until a survey is chosen, then shows its facts', async () => {
     listSurveys.mockResolvedValue({ surveys: [everett] });
     renderPage();
 
-    // Wait for the list, not the prompt: the prompt renders before the query
-    // resolves, so clicking on it alone races the survey button into existence.
     await screen.findByText('Everett HQ');
-    expect(
-      screen.getByText('Select a survey to see what it stores and what it can produce'),
-    ).toBeInTheDocument();
+    expect(screen.queryByTestId('survey-detail')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Everett HQ/ }));
+    openSurvey(/Everett HQ/);
 
-    // The detail pane's facts come from the selected survey, so they are
-    // asserted by value -- a pane that rendered the wrong survey's numbers
-    // would still be "a pane that rendered".
-    expect(screen.getByText('87')).toBeInTheDocument();
-    expect(screen.getByText('Completed')).toBeInTheDocument();
-    expect(screen.getByText('Present')).toBeInTheDocument();
-    expect(
-      screen.queryByText('Select a survey to see what it stores and what it can produce'),
-    ).not.toBeInTheDocument();
+    // The detail's facts come from the selected survey, so they are asserted
+    // by value -- a card that rendered the wrong survey's numbers would still
+    // be "a card that rendered".
+    const detail = screen.getByTestId('survey-detail');
+    expect(within(detail).getByText('87')).toBeInTheDocument();
+    expect(within(detail).getByText('Completed')).toBeInTheDocument();
+    expect(within(detail).getByText('Present')).toBeInTheDocument();
   });
 
   it('renders the facts of the survey that was clicked, not the first one', async () => {
@@ -162,12 +152,13 @@ describe('SurveysPage', () => {
     renderPage();
 
     await screen.findByText('MGM Temp Location');
-    fireEvent.click(screen.getByRole('button', { name: /MGM Temp Location/ }));
+    openSurvey(/MGM Temp Location/);
 
-    expect(screen.getByText('5')).toBeInTheDocument();
-    expect(screen.getByText('importing')).toBeInTheDocument();
-    expect(screen.getByText('None')).toBeInTheDocument();
-    expect(screen.queryByText('87')).not.toBeInTheDocument();
+    const detail = screen.getByTestId('survey-detail');
+    expect(within(detail).getByText('5')).toBeInTheDocument();
+    expect(within(detail).getByText('importing')).toBeInTheDocument();
+    expect(within(detail).getByText('None')).toBeInTheDocument();
+    expect(within(detail).queryByText('87')).not.toBeInTheDocument();
   });
 
   it('offers a coverage link for the selected survey', async () => {
@@ -175,7 +166,7 @@ describe('SurveysPage', () => {
     renderPage();
 
     await screen.findByText('Everett HQ');
-    fireEvent.click(screen.getByRole('button', { name: /Everett HQ/ }));
+    openSurvey(/Everett HQ/);
 
     // The link names the survey. A bare /coverage falls back to whichever
     // survey the list happens to put first, which is not the one just chosen.
@@ -204,7 +195,7 @@ describe('SurveysPage report download', () => {
     try {
       renderPage();
       await screen.findByText('MGM Temp Location');
-      fireEvent.click(screen.getByRole('button', { name: /MGM Temp Location/ }));
+      openSurvey(/MGM Temp Location/);
       fireEvent.click(screen.getByRole('button', { name: 'Download PDF report' }));
 
       await waitFor(() => expect(clicks).toHaveLength(1));
@@ -226,7 +217,7 @@ describe('SurveysPage report download', () => {
     try {
       renderPage();
       await screen.findByText('Everett HQ');
-      fireEvent.click(screen.getByRole('button', { name: /Everett HQ/ }));
+      openSurvey(/Everett HQ/);
       fireEvent.click(screen.getByRole('button', { name: 'Download PDF report' }));
 
       expect(await screen.findByText(/renderer out of memory/)).toBeInTheDocument();
@@ -242,11 +233,8 @@ describe('SurveyList empty state', () => {
     listSurveys.mockResolvedValue({ surveys: [] });
     renderPage();
 
-    expect(
-      await screen.findByText(
-        'No surveys yet. Create one to walk a floor, or import an AirMapper or AirMagnet capture.',
-      ),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('No surveys captured yet')).toBeInTheDocument();
+    expect(screen.getByTestId('empty-state')).toBeInTheDocument();
   });
 });
 
@@ -277,7 +265,7 @@ describe('SurveysPage walk', () => {
     );
     // Selected: the detail pane shows the new survey's state, and offers Start.
     expect(await screen.findByTestId('survey-start')).toBeInTheDocument();
-    expect(screen.getByText('Created')).toBeInTheDocument();
+    expect(within(screen.getByTestId('survey-detail')).getByText('Created')).toBeInTheDocument();
   });
 
   // trellis#739: a create that lands while the first list is still in flight.
@@ -308,12 +296,12 @@ describe('SurveysPage walk', () => {
     renderPage();
 
     await screen.findByText('Everett HQ');
-    fireEvent.click(screen.getByRole('button', { name: /Everett HQ/ }));
+    openSurvey(/Everett HQ/);
     // A completed survey still shows its stored points, as a picture.
     expect(screen.getByTestId('capture-surface')).toBeDisabled();
 
-    fireEvent.click(screen.getByRole('button', { name: /Lab walk/ }));
+    openSurvey(/Lab walk/);
     expect(screen.getByTestId('capture-surface')).toBeEnabled();
-    expect(screen.getByText('Walking')).toBeInTheDocument();
+    expect(within(screen.getByTestId('survey-detail')).getByText('Walking')).toBeInTheDocument();
   });
 });

@@ -1,17 +1,27 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { FileText } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { surveyClient } from '@/lib/client';
 import {
   COVERAGE_METRIC_COPY,
   COVERAGE_METRICS,
   type CoverageMetric,
   DEFAULT_THRESHOLDS,
+  isCoverageMetric,
   parseThreshold,
   THRESHOLDS,
 } from '@/lib/coverageThreshold';
 import { bytesToDataUrl, reportFilename } from '@/lib/format';
+import { Button, ButtonLink } from '@/shared/Button';
+import { Card } from '@/shared/Card';
+import { Checkbox } from '@/shared/Checkbox';
+import { EmptyState } from '@/shared/EmptyState';
+import { FormField } from '@/shared/FormField';
+import { Input } from '@/shared/Input';
+import { SegmentedControl } from '@/shared/SegmentedControl';
+import { Select } from '@/shared/Select';
 import { useToast } from '@/ui/toastContext';
 
 /**
@@ -119,126 +129,123 @@ export function ReportsPage() {
       addToast(t('pages:reports.generateFailed', { error: String(error) }), 'error'),
   });
 
+  if (surveys.length === 0 && !surveysQuery.isLoading) {
+    return (
+      <Card>
+        <EmptyState
+          icon={<FileText className="h-6 w-6" />}
+          title={t('pages:reports.noSurveysTitle')}
+          hint={t('pages:reports.noSurveys')}
+          action={
+            <ButtonLink renderLink={(link) => <Link to="/import" {...link} />}>
+              {t('pages:reports.importSurvey')}
+            </ButtonLink>
+          }
+        />
+      </Card>
+    );
+  }
+
   return (
-    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
-      <div className="panel flex max-w-2xl flex-col gap-6 p-6">
-        <label className="flex flex-col gap-2 text-sm" htmlFor="report-survey">
-          <span className="kicker">{t('common:labels.survey')}</span>
-          <select
-            id="report-survey"
+    <Card className="flex max-w-2xl flex-col gap-6">
+      <FormField label={t('common:labels.survey')}>
+        {(control) => (
+          <Select
+            {...control}
             value={surveyId ?? ''}
             disabled={surveys.length === 0}
-            onChange={(event) => setSearchParams({ survey: event.target.value })}
-            className="w-fit rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary disabled:opacity-50"
-          >
-            {surveys.map((survey) => (
-              <option key={survey.id} value={survey.id}>
-                {survey.name}
-              </option>
-            ))}
-          </select>
-        </label>
+            onValueChange={(value) => setSearchParams({ survey: value })}
+            options={surveys.map((survey) => ({ value: survey.id, label: survey.name }))}
+          />
+        )}
+      </FormField>
 
-        <fieldset className="flex flex-col gap-3 border-t border-hairline pt-6">
-          <legend className="kicker">{t('common:labels.sections')}</legend>
-          {SECTION_KEYS.map((sectionKey) => (
-            <label key={sectionKey} className="flex items-start gap-3 text-sm">
-              <input
-                type="checkbox"
-                checked={sections[sectionKey]}
-                onChange={(event) =>
-                  setSections((current) => ({ ...current, [sectionKey]: event.target.checked }))
-                }
-                className="mt-1"
-              />
-              <span className="flex flex-col">
-                <span className="text-text-primary">{sectionCopy[sectionKey].label}</span>
-                <span className="text-xs text-text-muted">{sectionCopy[sectionKey].hint}</span>
-              </span>
-            </label>
-          ))}
-        </fieldset>
+      <fieldset className="flex flex-col gap-3 border-t border-hairline pt-6">
+        <legend className="kicker">{t('common:labels.sections')}</legend>
+        {SECTION_KEYS.map((sectionKey) => (
+          <Checkbox
+            key={sectionKey}
+            checked={sections[sectionKey]}
+            onChange={(checked) =>
+              setSections((current) => ({ ...current, [sectionKey]: checked }))
+            }
+            label={sectionCopy[sectionKey].label}
+            description={sectionCopy[sectionKey].hint}
+          />
+        ))}
+      </fieldset>
 
-        <fieldset className="flex flex-col gap-3 border-t border-hairline pt-6">
-          <legend className="kicker">{t('pages:reports.analysis')}</legend>
-          <p className="text-xs text-text-muted">{t('pages:reports.analysisHint')}</p>
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-            <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm">
-              <span className="text-text-secondary">{t('common:labels.metric')}</span>
-              <div className="flex flex-wrap gap-1">
-                {COVERAGE_METRICS.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => setMetric(option)}
-                    aria-pressed={metric === option}
-                    className={`rounded-[9px] px-3 py-2 text-sm font-bold ${
-                      metric === option
-                        ? 'bg-brand-primary text-on-brand'
-                        : 'text-text-secondary hover:bg-surface-hover'
-                    }`}
-                    data-testid={`report-metric-${option}`}
-                  >
-                    {COVERAGE_METRIC_COPY[option].glossary}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <label
-              className="flex min-w-0 flex-wrap items-center gap-2 text-sm"
-              htmlFor="report-threshold"
-            >
-              <span className="text-text-secondary">{t('common:labels.deadZoneThreshold')}</span>
-              <input
-                id="report-threshold"
-                type="number"
-                value={thresholds[metric]}
-                min={bounds.min}
-                max={bounds.max}
-                step={1}
-                onChange={(event) => {
-                  const parsed = parseThreshold(metric, event.target.value);
-                  if (parsed !== undefined) {
-                    setThresholds((current) => ({ ...current, [metric]: parsed }));
+      <fieldset className="flex flex-col gap-3 border-t border-hairline pt-6">
+        <legend className="kicker">{t('pages:reports.analysis')}</legend>
+        <p className="text-xs text-text-muted">{t('pages:reports.analysisHint')}</p>
+        <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+          <FormField label={t('common:labels.metric')} className="w-auto">
+            {() => (
+              <SegmentedControl
+                label={t('common:labels.metric')}
+                value={metric}
+                onChange={(value) => {
+                  if (isCoverageMetric(value)) {
+                    setMetric(value);
                   }
                 }}
-                className="figure w-24 rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
-                data-testid="report-threshold"
+                options={COVERAGE_METRICS.map((option) => ({
+                  value: option,
+                  label: COVERAGE_METRIC_COPY[option].glossary,
+                }))}
               />
-              <span className="text-text-secondary" data-testid="report-threshold-unit">
-                {COVERAGE_METRIC_COPY[metric].unit}
-              </span>
-            </label>
-          </div>
-        </fieldset>
+            )}
+          </FormField>
+          <FormField label={t('common:labels.deadZoneThreshold')} className="sm:w-40">
+            {(control) => (
+              <div className="flex items-center gap-2">
+                <Input
+                  {...control}
+                  type="number"
+                  value={thresholds[metric]}
+                  min={bounds.min}
+                  max={bounds.max}
+                  step={1}
+                  onChange={(event) => {
+                    const parsed = parseThreshold(metric, event.target.value);
+                    if (parsed !== undefined) {
+                      setThresholds((current) => ({ ...current, [metric]: parsed }));
+                    }
+                  }}
+                  className="figure"
+                  data-testid="report-threshold"
+                />
+                <span className="text-sm text-text-secondary" data-testid="report-threshold-unit">
+                  {COVERAGE_METRIC_COPY[metric].unit}
+                </span>
+              </div>
+            )}
+          </FormField>
+        </div>
+      </fieldset>
 
-        <label className="flex flex-col gap-2 text-sm" htmlFor="report-company">
-          <span className="kicker">{t('common:labels.companyName')}</span>
-          <input
-            id="report-company"
-            type="text"
+      <FormField label={t('common:labels.companyName')}>
+        {(control) => (
+          <Input
+            {...control}
             value={companyName}
             onChange={(event) => setCompanyName(event.target.value)}
             placeholder={t('pages:reports.companyPlaceholder')}
-            className="rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
           />
-        </label>
+        )}
+      </FormField>
 
-        <div className="flex items-center gap-3 border-t border-hairline pt-6">
-          <button
-            type="button"
-            onClick={() => generate.mutate()}
-            disabled={surveyId === undefined || generate.isPending}
-            className="rounded bg-brand-primary px-3 py-2 text-sm font-medium text-on-brand hover:bg-brand-accent disabled:opacity-50"
-            data-testid="generate-report"
-          >
-            {generate.isPending ? t('common:buttons.generating') : t('pages:reports.generate')}
-          </button>
-          {surveys.length === 0 && !surveysQuery.isLoading ? (
-            <span className="text-sm text-text-muted">{t('pages:reports.noSurveys')}</span>
-          ) : null}
-        </div>
+      <div className="border-t border-hairline pt-6">
+        <Button
+          variant="primary"
+          onClick={() => generate.mutate()}
+          loading={generate.isPending}
+          disabled={surveyId === undefined}
+          data-testid="generate-report"
+        >
+          {generate.isPending ? t('common:buttons.generating') : t('pages:reports.generate')}
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }

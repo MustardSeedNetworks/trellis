@@ -1,11 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { surveyClient } from '@/lib/client';
+import { Alert } from '@/shared/Alert';
+import { Button } from '@/shared/Button';
+import { FormField } from '@/shared/FormField';
+import { Input } from '@/shared/Input';
 
 interface SurveyCreateFormProps {
   /** Called with the new survey's ID so the page can select it. */
   onCreated: (id: string) => void;
+  /**
+   * Whether Create is the page's one primary button. It is until a survey is
+   * open: that survey's Start is then the action an operator is after.
+   */
+  primary?: boolean;
 }
 
 /**
@@ -16,11 +25,12 @@ interface SurveyCreateFormProps {
  * interface is optional because two of the three capture backends resolve the
  * adapter themselves and only Linux reads the name.
  */
-export function SurveyCreateForm({ onCreated }: SurveyCreateFormProps) {
+export function SurveyCreateForm({ onCreated, primary = true }: SurveyCreateFormProps) {
   const { t } = useTranslation(['common', 'pages']);
   const queryClient = useQueryClient();
   const [name, setName] = useState('');
   const [iface, setIface] = useState('');
+  const errorId = useId();
 
   const createMutation = useMutation({
     mutationFn: (input: { name: string; interface: string }) => surveyClient.createSurvey(input),
@@ -47,60 +57,55 @@ export function SurveyCreateForm({ onCreated }: SurveyCreateFormProps) {
     createMutation.mutate({ name: trimmed, interface: iface.trim() });
   }
 
+  // The failure belongs to the whole form, so both fields point at it: the hint
+  // still reads first (what the field is for), the error second (what went wrong).
+  const describedBy = (own: string | undefined) =>
+    [own, createMutation.isError ? errorId : undefined].filter(Boolean).join(' ') || undefined;
+
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3 border-b border-hairline p-4">
-      <span className="kicker">{t('pages:surveys.newSurvey')}</span>
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-start gap-4">
+      <FormField label={t('pages:surveys.newSurveyName')}>
+        {(control) => (
+          <Input
+            {...control}
+            aria-describedby={describedBy(control['aria-describedby'])}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            data-testid="new-survey-name"
+          />
+        )}
+      </FormField>
 
-      <label className="flex flex-col gap-1 text-sm" htmlFor="new-survey-name">
-        <span className="text-text-secondary">{t('pages:surveys.newSurveyName')}</span>
-        <input
-          id="new-survey-name"
-          type="text"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          aria-describedby={createMutation.isError ? 'new-survey-error' : undefined}
-          className="rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
-          data-testid="new-survey-name"
-        />
-      </label>
+      <FormField label={t('pages:surveys.interface')} hint={t('pages:surveys.interfaceHint')}>
+        {(control) => (
+          <Input
+            {...control}
+            aria-describedby={describedBy(control['aria-describedby'])}
+            value={iface}
+            onChange={(event) => setIface(event.target.value)}
+            className="figure"
+            data-testid="new-survey-interface"
+          />
+        )}
+      </FormField>
 
-      <label className="flex flex-col gap-1 text-sm" htmlFor="new-survey-interface">
-        <span className="text-text-secondary">{t('pages:surveys.interface')}</span>
-        <input
-          id="new-survey-interface"
-          type="text"
-          value={iface}
-          onChange={(event) => setIface(event.target.value)}
-          aria-describedby={
-            createMutation.isError
-              ? 'new-survey-interface-hint new-survey-error'
-              : 'new-survey-interface-hint'
-          }
-          className="figure rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
-          data-testid="new-survey-interface"
-        />
-        <span id="new-survey-interface-hint" className="text-xs text-text-muted">
-          {t('pages:surveys.interfaceHint')}
-        </span>
-      </label>
-
-      <button
+      <Button
         type="submit"
-        disabled={name.trim() === '' || createMutation.isPending}
-        className="w-fit rounded bg-brand-primary px-3 py-2 text-sm font-medium text-on-brand hover:bg-brand-accent disabled:opacity-50"
+        variant={primary ? 'primary' : 'secondary'}
+        loading={createMutation.isPending}
+        disabled={name.trim() === ''}
+        className="sm:mt-[1.625rem]"
         data-testid="create-survey"
       >
         {createMutation.isPending ? t('pages:surveys.creating') : t('pages:surveys.create')}
-      </button>
+      </Button>
 
       {createMutation.isError ? (
-        <p
-          id="new-survey-error"
-          className="text-sm text-status-error"
-          data-testid="create-survey-error"
-        >
-          {t('pages:surveys.createFailed', { error: String(createMutation.error) })}
-        </p>
+        <div id={errorId} className="w-full" data-testid="create-survey-error">
+          <Alert tone="error">
+            {t('pages:surveys.createFailed', { error: String(createMutation.error) })}
+          </Alert>
+        </div>
       ) : null}
     </form>
   );

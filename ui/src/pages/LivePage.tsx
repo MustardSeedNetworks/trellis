@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CaptureCapabilityNotice } from '@/components/CaptureCapabilityNotice';
 import { NeighbourTable } from '@/components/NeighbourTable';
+import { Verdict } from '@/components/Verdict';
 import type { ScannedNetwork } from '@/gen/trellis/survey/v1/survey_pb';
 import { surveyClient } from '@/lib/client';
 import { bandLabel, formatSignal } from '@/lib/format';
 import { scanAge } from '@/lib/scanAge';
-import { type RollupState, StatusRollup } from '@/ui/StatusRollup';
+import type { VerdictState } from '@/lib/verdictState';
+import { Button } from '@/shared/Button';
 
 /**
  * Live — what this host's radio can hear right now.
@@ -81,27 +83,23 @@ export function LivePage() {
   );
 
   return (
-    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
-      <StatusRollup
+    <div className="flex flex-col gap-4">
+      <Verdict
+        wide
         state={rollup.state}
         headline={rollup.headline}
-        body={rollup.body}
-        figures={rollup.figures}
+        {...(rollup.body === undefined ? {} : { body: rollup.body })}
+        {...(rollup.figures === undefined ? {} : { figures: rollup.figures })}
         actions={
-          <button
-            type="button"
-            onClick={() => setPolling((on) => !on)}
-            data-testid="toggle-polling"
-            className="rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-raised"
-          >
+          <Button onClick={() => setPolling((on) => !on)} data-testid="toggle-polling">
             {polling ? t('pages:live.pause') : t('pages:live.resume')}
-          </button>
+          </Button>
         }
       />
 
       {age ? (
         <p
-          className={`text-sm ${age.stale ? 'text-status-warning' : 'text-text-secondary'}`}
+          className={`text-sm ${age.stale ? 'text-status-warning-strong' : 'text-text-secondary'}`}
           data-testid="scan-age"
           data-stale={age.stale}
         >
@@ -124,7 +122,7 @@ interface AirspaceState {
 }
 
 interface AirspaceRollup {
-  state: RollupState;
+  state: VerdictState;
   headline: string;
   body?: string;
   figures?: { label: string; value: string }[];

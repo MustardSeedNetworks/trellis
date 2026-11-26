@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
-import { createSurvey, uniqueName, walkThreePoints } from './helpers';
+import { expect, type Page, test } from '@playwright/test';
+import { createSurvey, surveyRow, uniqueName, walkThreePoints } from './helpers';
 
 /**
  * The three journeys that are not the walk: bring a capture in, tune the
@@ -8,6 +8,11 @@ import { createSurvey, uniqueName, walkThreePoints } from './helpers';
  * rather than that a control rendered.
  */
 
+/** The layer is a select: pick it by the name the operator reads. */
+async function chooseLayer(page: Page, name: string) {
+  await page.getByTestId('coverage-metric').selectOption({ label: name });
+}
+
 test('imports an AirMapper archive as a survey with its floor plan', async ({ page }) => {
   const name = uniqueName('Imported');
   await page.goto('/import');
@@ -15,21 +20,23 @@ test('imports an AirMapper archive as a survey with its floor plan', async ({ pa
   // The input is hidden behind a button; setInputFiles drives it directly.
   await page.getByTestId('amp-file-input').setInputFiles('e2e/fixtures/plan-only.amp');
   // The filename is proposed as the name; the operator renames before committing.
-  await expect(page.locator('#survey-name')).toHaveValue('plan-only');
-  await page.locator('#survey-name').fill(name);
+  await expect(page.getByLabel('Survey name')).toHaveValue('plan-only');
+  await page.getByLabel('Survey name').fill(name);
   await page.getByRole('button', { name: 'Import survey' }).click();
 
-  const rollup = page.getByTestId('status-rollup');
-  await expect(rollup).toContainText(`Imported ${name}`);
-  await expect(rollup).toHaveAttribute('data-state', 'ok');
+  const result = page.getByTestId('import-result');
+  await expect(result).toContainText(`Imported ${name}`);
   // Plan-only fixture: zero samples, one floor recovered from the PNG. The
-  // figures are asserted by value; a rollup that printed the wrong survey's
-  // numbers would still be "a rollup that rendered".
-  await expect(rollup.locator('dd')).toHaveText(['0', '1']);
+  // counts are asserted by value; a result that printed the wrong survey's
+  // numbers would still be "a result that rendered".
+  await expect(result).toContainText('0 samples across 1 floors');
 
   await page.goto('/');
-  const row = page.getByTestId('survey-row').filter({ hasText: name });
-  await expect(row).toContainText('1 floor · 0 samples');
+  const row = await surveyRow(page, name);
+  // The row is the table's: its counts are the survey's own.
+  const tableRow = row.locator('xpath=ancestor::tr');
+  await expect(tableRow.locator('td').nth(2)).toHaveText('1');
+  await expect(tableRow.locator('td').nth(3)).toHaveText('0');
   await row.click();
   await expect(page.getByTestId('survey-detail')).toContainText('Present');
 });
@@ -47,7 +54,7 @@ test('changing the dead-zone threshold changes the verdict', async ({ page }) =>
   await expect(findings).toHaveAttribute('data-state', 'ok');
 
   // Raise the floor above every measured point: every point is now a gap.
-  await page.locator('#coverage-threshold').fill('-40');
+  await page.getByTestId('coverage-threshold').fill('-40');
   await expect(findings).toContainText('below -40 dBm');
   await expect(findings).toHaveAttribute('data-state', 'warn');
 });
@@ -60,11 +67,11 @@ test('analyses the SNR layer in dB, on its own threshold', async ({ page }) => {
   const findings = page.getByTestId('coverage-findings');
   await expect(findings).toContainText('No dead zones below -75 dBm');
 
-  await page.getByRole('button', { name: 'SNR' }).click();
+  await chooseLayer(page, 'SNR');
 
   // The threshold does not follow the operator across: -75 dB of margin is not
   // a number, and the control has to be reading the SNR default instead.
-  await expect(page.locator('#coverage-threshold')).toHaveValue('20');
+  await expect(page.getByTestId('coverage-threshold')).toHaveValue('20');
   await expect(page.getByTestId('coverage-threshold-unit')).toHaveText('dB');
   await expect(findings).toContainText('SNR margin findings');
   // The scripted radio's strongest AP fades from 39 dB of margin to 21 dB, so
@@ -74,15 +81,15 @@ test('analyses the SNR layer in dB, on its own threshold', async ({ page }) => {
 
   // Demand more margin than the walk ever had: now they are findings, and they
   // are about noise rather than about adding access points.
-  await page.locator('#coverage-threshold').fill('40');
+  await page.getByTestId('coverage-threshold').fill('40');
   await expect(findings).toContainText('below 40 dB');
   await expect(findings).not.toContainText('No dead zones');
   await expect(findings).toHaveAttribute('data-state', 'warn');
   await expect(findings).toContainText(/noise|interference|channel/i);
 
   // Back to RSSI: the dBm threshold is the one it was left at.
-  await page.getByRole('button', { name: 'RSSI' }).click();
-  await expect(page.locator('#coverage-threshold')).toHaveValue('-75');
+  await chooseLayer(page, 'RSSI');
+  await expect(page.getByTestId('coverage-threshold')).toHaveValue('-75');
   await expect(page.getByTestId('coverage-threshold-unit')).toHaveText('dBm');
 });
 
@@ -93,8 +100,8 @@ test('generates a PDF report for a walked survey', async ({ page }) => {
   await page.getByTestId('survey-complete').click();
 
   await page.goto('/reports');
-  await page.locator('#report-survey').selectOption({ label: name });
-  await page.locator('#report-company').fill('Mustard Seed Networks');
+  await page.getByLabel('Survey', { exact: true }).selectOption({ label: name });
+  await page.getByLabel('Company name').fill('Mustard Seed Networks');
 
   const downloadPromise = page.waitForEvent('download');
   await page.getByTestId('generate-report').click();
@@ -120,8 +127,8 @@ test('judges the report by the metric and threshold chosen on Reports', async ({
   await page.getByTestId('survey-complete').click();
 
   await page.goto('/reports');
-  await page.locator('#report-survey').selectOption({ label: name });
-  await page.getByTestId('report-metric-snr').click();
+  await page.getByLabel('Survey', { exact: true }).selectOption({ label: name });
+  await page.getByRole('radio', { name: 'SNR' }).check({ force: true });
   await expect(page.getByTestId('report-threshold')).toHaveValue('20');
   await expect(page.getByTestId('report-threshold-unit')).toHaveText('dB');
   await page.getByTestId('report-threshold').fill('25');
@@ -212,7 +219,7 @@ test('reads a measured value off the heatmap and zooms it', async ({ page }) => 
 test('reads the live airspace and stops taking the radio when paused', async ({ page }) => {
   await page.goto('/live');
 
-  const rollup = page.getByTestId('status-rollup');
+  const rollup = page.getByTestId('verdict');
   // The scripted radio is joined to Trellis Lab, whose SNR fades 39 → 21 dB
   // across the cycle and stays above the 20 dB the page calls weak.
   await expect(rollup).toContainText('Connected to Trellis Lab');
@@ -228,29 +235,30 @@ test('reads the live airspace and stops taking the radio when paused', async ({ 
   const associated = page.locator('[data-testid="neighbour-row"][data-associated="true"]');
   await expect(associated).toHaveCount(1);
   await expect(associated).toContainText('Trellis Lab');
-  await expect(associated).toContainText('18%');
+  await expect(associated.locator('xpath=ancestor::tr')).toContainText('18%');
 
   // Strongest first, read off the rendered values rather than assumed from the
   // fixture — the ordering is the server's and this is what checks it.
-  const dbm = await rows.evaluateAll((tr) =>
+  const tableRows = page.locator('[data-testid="neighbour-table"] tbody tr');
+  const dbm = await tableRows.evaluateAll((tr) =>
     tr.map((row) => Number.parseFloat(row.querySelectorAll('td')[3]?.textContent ?? '')),
   );
   expect(dbm).toEqual([...dbm].sort((a, b) => b - a));
 
   // The weakest BSS broadcasts no SSID and sits on a DFS channel. It is last
   // under every fade step, since it never moves.
-  await expect(rows.last()).toContainText('Hidden network');
-  await expect(rows.last()).toContainText('(DFS)');
+  await expect(tableRows.last()).toContainText('Hidden network');
+  await expect(tableRows.last()).toContainText('(DFS)');
   // An AP that sent no BSS Load element must not read as an idle channel, and
   // one heard without a noise figure must not read as a measured margin.
-  const lastCells = rows.last().locator('td');
+  const lastCells = tableRows.last().locator('td');
   await expect(lastCells.nth(6)).toHaveText('Not reported');
   await expect(lastCells.nth(4)).toHaveText('Not reported');
 
   // Pausing has to stop the polling, not just relabel the button: the same
   // adapter is what a walk captures with. The joined AP is the one that fades,
   // so its reading is what would move if a poll got through.
-  const signal = associated.locator('td').nth(3);
+  const signal = associated.locator('xpath=ancestor::tr').locator('td').nth(3);
   const held = await signal.textContent();
   await page.getByTestId('toggle-polling').click();
   await expect(page.getByTestId('toggle-polling')).toHaveText('Resume scanning');
@@ -293,13 +301,13 @@ test('measures throughput at a point and maps it as its own layer', async ({ pag
   // The download layer holds the one measured point, not both: a passive scan
   // measured no throughput, and rendering its signal on this layer would put
   // dBm on a map of Mbps.
-  await page.getByRole('button', { name: 'Download speed' }).click();
+  await chooseLayer(page, 'Download speed');
   await expect(page.getByTestId('surface-meta')).toContainText('download');
   await expect(page.getByTestId('surface-meta')).toContainText('1 sample');
 
   // The dead-zone threshold and its findings speak about dBm. Over a
   // throughput layer they would answer a question nobody asked.
-  await expect(page.locator('#coverage-threshold')).toHaveCount(0);
+  await expect(page.getByTestId('coverage-threshold')).toHaveCount(0);
   await expect(page.getByTestId('coverage-findings')).toHaveCount(0);
 });
 
@@ -339,7 +347,7 @@ test('keeps a failed measurement on the map as an attempt', async ({ page }) => 
   await page.getByTestId('survey-complete').click();
   await page.getByTestId('plot-coverage').click();
   await expect(page.getByTestId('heatmap-image')).toBeVisible();
-  await page.getByRole('button', { name: 'Download speed' }).click();
+  await chooseLayer(page, 'Download speed');
   await expect(page.getByTestId('surface-message')).toContainText(
     'No Download speed measured on this floor',
   );

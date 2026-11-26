@@ -96,4 +96,23 @@ describe('useTheme', () => {
     expect(result.current.isDark).toBe(false);
     expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
+
+  it('keeps two readers on one store, so the rail toggle and Settings cannot drift', () => {
+    const rail = renderHook(() => useTheme());
+    const settings = renderHook(() => useTheme());
+
+    act(() => {
+      settings.result.current.setTheme('dark');
+    });
+
+    expect(rail.result.current.theme).toBe('dark');
+    expect(rail.result.current.isDark).toBe(true);
+
+    act(() => {
+      rail.result.current.toggleTheme();
+    });
+
+    expect(settings.result.current.theme).toBe('light');
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+  });
 });

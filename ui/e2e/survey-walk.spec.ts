@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createSurvey, uniqueName, walkThreePoints } from './helpers';
+import { createSurvey, surveyRow, uniqueName, walkThreePoints } from './helpers';
 
 /**
  * The measured walk, end to end through the daemon.
@@ -22,13 +22,18 @@ test('walks a survey and plots coverage from its stored points', async ({ page }
   // The pins are the stored points, so they survive leaving and coming back.
   // A reload is the harshest version of that: nothing client-side survives it.
   await page.reload();
-  const row = page.getByTestId('survey-row').filter({ hasText: name });
+  const row = await surveyRow(page, name);
   await row.click();
   await expect(page.getByTestId('capture-pin')).toHaveCount(3);
   await expect(page.getByTestId('capture-count')).toHaveText('3 samples on this floor');
 
   await page.getByTestId('survey-complete').click();
-  await expect(row).toContainText('Completed · 1 floor · 3 samples');
+  await expect(page.getByTestId('survey-detail')).toContainText('Completed');
+  // Completing can move the survey to another page of the list.
+  const tableRow = (await surveyRow(page, name)).locator('xpath=ancestor::tr');
+  await expect(tableRow).toContainText('Completed');
+  await expect(tableRow.locator('td').nth(2)).toHaveText('1');
+  await expect(tableRow.locator('td').nth(3)).toHaveText('3');
   // Completed: the walk is still drawn, but no longer accepts a point.
   await expect(page.getByTestId('capture-pin')).toHaveCount(3);
   await expect(page.getByTestId('capture-surface')).toBeDisabled();
@@ -45,15 +50,18 @@ test('walks a survey and plots coverage from its stored points', async ({ page }
 test('deletes a survey only after confirmation', async ({ page }) => {
   const name = uniqueName('Discard');
   await createSurvey(page, name);
-  const row = page.getByTestId('survey-row').filter({ hasText: name });
+  const row = await surveyRow(page, name);
   await expect(row).toHaveCount(1);
 
   await page.getByTestId('survey-delete').click();
-  await page.getByTestId('survey-delete-cancel').click();
+  await page.getByTestId('confirm-dialog').getByRole('button', { name: 'Keep it' }).click();
   await expect(row).toHaveCount(1);
 
   await page.getByTestId('survey-delete').click();
-  await page.getByTestId('survey-delete-confirm').click();
+  await page
+    .getByTestId('confirm-dialog')
+    .getByRole('button', { name: /^Yes, delete/ })
+    .click();
   await expect(row).toHaveCount(0);
   await expect(page.getByTestId('survey-detail')).toHaveCount(0);
 });

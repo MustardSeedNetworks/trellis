@@ -16,9 +16,8 @@ const ITEM =
 /**
  * Keyboard-first palette: Cmd+K on macOS, Ctrl+K elsewhere. It lists every
  * route the rail offers and the actions that change how the tool looks rather
- * than what it holds. The theme switch is not here on purpose: useTheme keeps
- * its state per call site, so a second switch would leave the rail's showing
- * the wrong destination.
+ * than what it holds. The theme switch is not here on purpose: the rail's quick
+ * toggle and Settings both own it, and a third place to change it is not a need.
  */
 export function CommandPalette() {
   const { t, i18n } = useTranslation('common');

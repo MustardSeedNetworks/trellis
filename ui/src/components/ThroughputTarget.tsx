@@ -2,6 +2,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { surveyClient } from '@/lib/client';
+import { Alert } from '@/shared/Alert';
+import { Button } from '@/shared/Button';
+import { FormField } from '@/shared/FormField';
+import { Input } from '@/shared/Input';
 
 /**
  * ThroughputTarget names the iperf3 server a survey's active measurements run
@@ -28,36 +32,30 @@ export function ThroughputTarget({ surveyId, server }: { surveyId: string; serve
 
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <label className="flex flex-col gap-1 text-sm" htmlFor="throughput-target">
-        <span className="kicker">{t('pages:surveys.throughputTarget')}</span>
-        <input
-          id="throughput-target"
-          type="text"
-          value={draft}
-          placeholder={t('pages:surveys.throughputTargetPlaceholder')}
-          onChange={(event) => setDraft(event.target.value)}
-          aria-describedby={saveMutation.isError ? 'throughput-target-error' : undefined}
-          className="rounded border border-hairline bg-surface-base px-3 py-2 text-sm text-text-primary"
-          data-testid="throughput-target"
-        />
-      </label>
-      <button
-        type="button"
+      <FormField label={t('pages:surveys.throughputTarget')} className="sm:w-72">
+        {(control) => (
+          <Input
+            {...control}
+            value={draft}
+            placeholder={t('pages:surveys.throughputTargetPlaceholder')}
+            onChange={(event) => setDraft(event.target.value)}
+            aria-describedby={saveMutation.isError ? 'throughput-target-error' : undefined}
+            data-testid="throughput-target"
+          />
+        )}
+      </FormField>
+      <Button
         onClick={() => saveMutation.mutate(draft.trim())}
-        disabled={saveMutation.isPending || draft.trim() === server}
+        loading={saveMutation.isPending}
+        disabled={draft.trim() === server}
         data-testid="save-throughput-target"
-        className="rounded border border-hairline px-3 py-2 text-sm text-text-primary hover:bg-surface-raised disabled:opacity-50"
       >
         {t('pages:surveys.saveTarget')}
-      </button>
+      </Button>
       {saveMutation.isError ? (
-        <p
-          id="throughput-target-error"
-          className="text-sm text-status-error"
-          data-testid="throughput-target-error"
-        >
-          {String(saveMutation.error)}
-        </p>
+        <div id="throughput-target-error" className="w-full" data-testid="throughput-target-error">
+          <Alert tone="error">{String(saveMutation.error)}</Alert>
+        </div>
       ) : null}
     </div>
   );

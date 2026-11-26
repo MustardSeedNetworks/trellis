@@ -32,19 +32,6 @@ function renderPage() {
   return render(<ImportPage />, { wrapper });
 }
 
-/**
- * The rollup is the shared StatusRollup, which carries no test id — it is the
- * page's live region, so the test finds it the way a screen reader would
- * rather than by adding a hook to a component four products share.
- */
-function rollup(): HTMLElement {
-  const el = document.querySelector<HTMLElement>('section[aria-live="polite"][data-state]');
-  if (el === null) {
-    throw new Error('status rollup not rendered');
-  }
-  return el;
-}
-
 /** A survey file the browser will hand to the input. */
 function ampFile(name = 'office-3f.amp') {
   return new File([new Uint8Array([1, 2, 3])], name, { type: 'application/octet-stream' });
@@ -80,7 +67,7 @@ describe('ImportPage', () => {
   it('says nothing has been chosen before a file is picked', () => {
     renderPage();
 
-    expect(rollup()).toHaveTextContent(/no survey file chosen/i);
+    expect(screen.getByText(/choose an airmapper \.amp archive/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /import survey/i })).toBeDisabled();
   });
 
@@ -102,7 +89,8 @@ describe('ImportPage', () => {
     setName('');
 
     expect(screen.getByRole('button', { name: /import survey/i })).toBeDisabled();
-    expect(rollup()).toHaveTextContent(/office-3f\.amp/);
+    expect(screen.getByRole('alert')).toHaveTextContent(/needs a name/i);
+    expect(screen.getByText(/office-3f\.amp/)).toBeInTheDocument();
     expect(importAirMapper).not.toHaveBeenCalled();
   });
 
@@ -127,10 +115,11 @@ describe('ImportPage', () => {
     await screen.findByLabelText(/survey name/i);
     clickImport();
 
-    await waitFor(() => expect(rollup()).toHaveTextContent(/svy-1/));
+    const result = await screen.findByTestId('import-result');
+    expect(result).toHaveTextContent(/svy-1/);
     // An import that stored nothing still "succeeds"; the counts are what say
     // whether it was worth anything.
-    expect(rollup()).toHaveTextContent('412');
+    expect(result).toHaveTextContent('412');
   });
 
   // The two formats are one act to the operator, so the extension — which they
@@ -157,11 +146,11 @@ describe('ImportPage', () => {
 
     choose('vofi-walk.svd');
 
-    await waitFor(() => expect(rollup()).toHaveTextContent(/carries no floor plan/i));
+    expect(await screen.findByText(/carries no floor plan/i)).toBeInTheDocument();
   });
 
   // A failed import that renders as a calm empty form reads as "nothing
-  // happened", which is the one thing the rollup exists to prevent.
+  // happened", which is the one thing the alert exists to prevent.
   it('says the import failed, with the reason the service gave', async () => {
     importAirMapper.mockRejectedValue(new Error('archive is not an AirMapper export'));
     renderPage();
@@ -170,7 +159,8 @@ describe('ImportPage', () => {
     await screen.findByLabelText(/survey name/i);
     clickImport();
 
-    await waitFor(() => expect(rollup()).toHaveTextContent(/archive is not an AirMapper export/i));
-    expect(rollup()).toHaveAttribute('data-state', 'crit');
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(/archive is not an AirMapper export/i);
+    expect(alert).toHaveAttribute('data-tone', 'error');
   });
 });

@@ -15,13 +15,13 @@ test('adds a floor, walks it, and lists both floors on Coverage', async ({ page 
   await createSurvey(page, name);
 
   // The survey opens with one floor, being walked.
-  await expect(page.getByTestId('floor-rail').getByRole('listitem')).toHaveCount(1);
+  await expect(page.getByTestId('floor-rail').locator('tbody tr')).toHaveCount(1);
 
   await page.getByTestId('floor-name-input').fill('Mezzanine');
   await page.getByTestId('floor-level-input').fill('2');
   await page.getByTestId('create-floor').click();
 
-  const rows = page.getByTestId('floor-rail').getByRole('listitem');
+  const rows = page.getByTestId('floor-rail').locator('tbody tr');
   await expect(rows).toHaveCount(2);
   await expect(rows.nth(1)).toContainText('Mezzanine');
   // Adding a floor does not move the walk onto it.
@@ -63,7 +63,7 @@ test('renames a floor, then deletes it with its measurements', async ({ page }) 
   await page.getByTestId('floor-level-input').fill('2');
   await page.getByTestId('create-floor').click();
 
-  const rows = page.getByTestId('floor-rail').getByRole('listitem');
+  const rows = page.getByTestId('floor-rail').locator('tbody tr');
   await expect(rows).toHaveCount(2);
 
   // Walk the new floor so the delete has something to take with it.
@@ -80,7 +80,7 @@ test('renames a floor, then deletes it with its measurements', async ({ page }) 
   await expect(page.getByTestId('capture-pin')).toHaveCount(1);
   await expect(rows.nth(1)).toContainText('1 sample');
 
-  const mezzanineRow = page.getByTestId('floor-rail').getByRole('listitem').nth(1);
+  const mezzanineRow = page.getByTestId('floor-rail').locator('tbody tr').nth(1);
   const floorId = (await mezzanineRow.getAttribute('data-testid'))?.replace('floor-row-', '');
   if (!floorId) {
     throw new Error('the mezzanine row carries no floor id');
@@ -94,10 +94,11 @@ test('renames a floor, then deletes it with its measurements', async ({ page }) 
   // A rename is metadata: the reading walked on the floor is still there.
   await expect(mezzanineRow).toContainText('1 sample');
 
-  // One click arms, the second deletes.
+  // One click asks, the dialog's confirmation deletes.
   await page.getByTestId(`delete-floor-${floorId}`).click();
-  await expect(page.getByTestId(`delete-floor-confirm-${floorId}`)).toBeVisible();
-  await page.getByTestId(`delete-floor-confirm-${floorId}`).click();
+  const confirm = page.getByTestId('confirm-dialog');
+  await expect(confirm).toBeVisible();
+  await confirm.getByRole('button', { name: /^Yes, delete/ }).click();
 
   await expect(rows).toHaveCount(1);
   // And the walk came back to the survivor, which now holds every measurement
@@ -143,7 +144,7 @@ test('puts a plan that would strand the measurements on a floor of its own', asy
   await page.getByTestId('strand-new-floor-name').fill('Tenth');
   await page.getByTestId('strand-new-floor').click();
 
-  const rows = page.getByTestId('floor-rail').getByRole('listitem');
+  const rows = page.getByTestId('floor-rail').locator('tbody tr');
   await expect(rows).toHaveCount(2);
   await expect(rows.nth(1)).toContainText('Tenth');
   // The refusal is gone and the offer with it: the plan found a home, and the
