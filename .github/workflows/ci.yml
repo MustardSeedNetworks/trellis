@@ -366,7 +366,7 @@ jobs:
       # the pin, re-copy with `python3 scripts/ui_shared.py
       # copy .` from a .github checkout at the new pin.
       - name: Shared UI copies match the canonical set
-        uses: MustardSeedNetworks/.github/.github/actions/ui-shared-verify@986e485c5e832d29b52b100d77658e22b7764523 # .github#290
+        uses: MustardSeedNetworks/.github/.github/actions/ui-shared-verify@5f4dd116160b42a4df77f2989797ea40d3c83966 # .github#292
 
       - name: Enforce customer-facing vocabulary policy
         run: python3 scripts/check-banned-vocabulary.py
@@ -882,7 +882,7 @@ jobs:
   # of .github@main (a canonical change there reaches this repo only when this
   # pin moves).
   ci-conformance:
-    uses: MustardSeedNetworks/.github/.github/workflows/ci-conformance.yml@986e485c5e832d29b52b100d77658e22b7764523 # .github#290
+    uses: MustardSeedNetworks/.github/.github/workflows/ci-conformance.yml@5f4dd116160b42a4df77f2989797ea40d3c83966 # .github#292
     permissions:
       contents: read
       id-token: write

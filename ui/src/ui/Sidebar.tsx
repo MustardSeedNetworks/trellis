@@ -14,16 +14,18 @@
  * four unused surfaces, and the rule this family keeps is that the shell is
  * shared while each product's own contents are not.
  */
-import { ChevronsLeft, ChevronsRight, LogOut, Moon, Settings, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
+import { RailFooter } from '@/shared/RailFooter';
+import type { StatusTone } from '@/shared/StatusPill';
 import { Tooltip } from '@/shared/Tooltip';
 import { useAuth } from '@/ui/AuthGate';
+import msnLogo from '../assets/msn-logo.svg';
 import { iconSizes } from '../constants/sizes';
+import type { ConnectionState } from '../hooks/useConnectionStatus';
 import { useTheme } from '../hooks/useTheme';
 import { type TrellisNavItem, useNavGroups } from '../navGroups';
-import { MsnMark } from './MsnMark';
 import { ProductMark } from './ProductMark';
 
 const STORAGE_KEY = 'trellis-sidebar-collapsed';
@@ -38,14 +40,34 @@ interface SidebarProps {
   variant?: 'rail' | 'drawer';
   /** Called when a nav link is followed, so the drawer can close on a same-path tap. */
   onNavigate?: () => void;
+  /** Whether the daemon answers, from the shell's one probe. */
+  connection: ConnectionState;
+  /** Opens the current page's help. The rail only asks; the shell owns the drawer. */
+  onOpenHelp: () => void;
   /** Opens the Settings drawer. The rail only asks; the shell owns the drawer. */
   onOpenSettings: () => void;
 }
 
-export function Sidebar({ version, variant = 'rail', onNavigate, onOpenSettings }: SidebarProps) {
+const CONNECTION_TONES: Record<ConnectionState, StatusTone> = {
+  checking: 'unknown',
+  connected: 'success',
+  disconnected: 'error',
+};
+
+export function Sidebar({
+  version,
+  variant = 'rail',
+  onNavigate,
+  connection,
+  onOpenHelp,
+  onOpenSettings,
+}: SidebarProps) {
   const { t } = useTranslation('common');
   const navGroups = useNavGroups();
   const drawer = variant === 'drawer';
+  const { t: tPages } = useTranslation('pages');
+  const { required, signOut } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const [chosenCollapsed, setChosenCollapsed] = useState(
     () => localStorage.getItem(STORAGE_KEY) === 'true',
   );
@@ -57,6 +79,12 @@ export function Sidebar({ version, variant = 'rail', onNavigate, onOpenSettings 
       localStorage.setItem(STORAGE_KEY, String(chosenCollapsed));
     }
   }, [chosenCollapsed, drawer]);
+
+  const statusLabels: Record<ConnectionState, string> = {
+    checking: t('rail.status.checking'),
+    connected: t('rail.status.connected'),
+    disconnected: t('rail.status.disconnected'),
+  };
 
   const link = (item: TrellisNavItem) => (
     <NavLink
@@ -127,140 +155,28 @@ export function Sidebar({ version, variant = 'rail', onNavigate, onOpenSettings 
         ))}
       </nav>
 
-      {/* The collapsed rail keeps a narrower gutter than the expanded one: at
-          px-3 the version number is 43px of text in a 39px box and clips. */}
-      <div className={`border-t border-hairline py-4 ${collapsed ? 'px-1 text-center' : 'px-3'}`}>
-        {version ? (
-          <div
-            className={`figure text-xs text-text-muted ${collapsed ? '' : 'flex items-center justify-between'}`}
-          >
-            {!collapsed ? <span>{t('labels.version')}</span> : null}
-            <span>{version}</span>
-          </div>
-        ) : null}
-
-        {/* Whose tool this is, under what it is. Quiet by design: the product
-            mark at the top of the rail is the one that has to be recognised. */}
-        <MsnMark collapsed={collapsed} className="mt-3" />
-
-        <SettingsButton collapsed={collapsed} onClick={onOpenSettings} />
-
-        <ThemeToggle collapsed={collapsed} />
-
-        <SignOutButton collapsed={collapsed} />
-
-        {/* The rail is not drawn below lg, so a phone never sees this: expanding
-            a rail to 224px there left 166px of page, the defect that made the
-            drawer necessary. */}
-        {!drawer ? (
-          <Tooltip
-            text={collapsed ? t('accessibility.expandSidebar') : t('accessibility.collapseSidebar')}
-          >
-            <button
-              type="button"
-              onClick={() => setChosenCollapsed((value) => !value)}
-              data-testid="sidebar-collapse"
-              aria-label={
-                collapsed ? t('accessibility.expandSidebar') : t('accessibility.collapseSidebar')
-              }
-              className="mt-3 flex min-h-11 w-full items-center justify-center rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary"
-            >
-              {collapsed ? (
-                <ChevronsRight className={iconSizes.md} />
-              ) : (
-                <ChevronsLeft className={iconSizes.md} />
-              )}
-            </button>
-          </Tooltip>
-        ) : null}
-      </div>
+      <RailFooter
+        collapsed={collapsed}
+        variant={variant}
+        status={{ tone: CONNECTION_TONES[connection], label: statusLabels[connection] }}
+        help={{ label: t('rail.help'), onClick: onOpenHelp }}
+        settings={{ label: t('settings.title'), onClick: onOpenSettings }}
+        theme={{
+          label: isDark
+            ? t('accessibility.switchToLightTheme')
+            : t('accessibility.switchToDarkTheme'),
+          onClick: toggleTheme,
+          isDark,
+        }}
+        {...(required ? { signOut: { label: tPages('login.signOut'), onClick: signOut } } : {})}
+        {...(version ? { version: { value: version, label: t('labels.version') } } : {})}
+        mark={{ src: msnLogo, name: t('rail.company') }}
+        collapse={{
+          collapseLabel: t('accessibility.collapseSidebar'),
+          expandLabel: t('accessibility.expandSidebar'),
+          onToggle: () => setChosenCollapsed((value) => !value),
+        }}
+      />
     </aside>
-  );
-}
-
-const RAIL_BUTTON =
-  'mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-[11px] text-text-muted hover:bg-surface-hover hover:text-text-primary';
-
-/** Opens the Settings drawer, where the theme, the language and the build details live. */
-function SettingsButton({ collapsed, onClick }: { collapsed: boolean; onClick: () => void }) {
-  const { t } = useTranslation('common');
-  const button = (
-    <button
-      type="button"
-      onClick={onClick}
-      data-testid="open-settings"
-      aria-label={t('settings.title')}
-      className={RAIL_BUTTON}
-    >
-      <Settings className={iconSizes.md} />
-      {!collapsed ? <span className="text-xs">{t('settings.title')}</span> : null}
-    </button>
-  );
-  return collapsed ? <Tooltip text={t('settings.title')}>{button}</Tooltip> : button;
-}
-
-/**
- * The quick theme toggle: light and dark, one click. It is on the same store
- * as the Settings control (System / Light / Dark), so choosing in either shows
- * in both. Its label names the current choice in the Settings control's words;
- * the tooltip says where one click goes.
- */
-function ThemeToggle({ collapsed }: { collapsed: boolean }) {
-  const { t } = useTranslation('common');
-  const { theme, isDark, toggleTheme } = useTheme();
-  const choice = {
-    system: t('settings.themeSystem'),
-    light: t('settings.themeLight'),
-    dark: t('settings.themeDark'),
-  }[theme];
-  const label = t('settings.themeQuick', { theme: choice });
-  const destination = isDark
-    ? t('accessibility.switchToLightTheme')
-    : t('accessibility.switchToDarkTheme');
-
-  return (
-    <Tooltip text={destination}>
-      <button
-        type="button"
-        onClick={toggleTheme}
-        data-testid="theme-toggle"
-        aria-label={label}
-        className={RAIL_BUTTON}
-      >
-        {isDark ? <Sun className={iconSizes.md} /> : <Moon className={iconSizes.md} />}
-        {!collapsed ? <span className="text-xs">{label}</span> : null}
-      </button>
-    </Tooltip>
-  );
-}
-
-/**
- * Ends the operator's session. Rendered only on a daemon that asked for one:
- * the loopback desktop app has no session to sign out of, and an inert control
- * there would read as a broken one.
- */
-function SignOutButton({ collapsed }: { collapsed: boolean }) {
-  const { t } = useTranslation('pages');
-  const { required, signOut } = useAuth();
-
-  if (!required) {
-    return null;
-  }
-  return (
-    <Tooltip text={t('login.signOut')}>
-      <button
-        type="button"
-        onClick={signOut}
-        data-testid="sign-out"
-        aria-label={t('login.signOut')}
-        className={RAIL_BUTTON}
-      >
-        {collapsed ? (
-          <LogOut className={iconSizes.md} />
-        ) : (
-          <span className="text-xs">{t('login.signOut')}</span>
-        )}
-      </button>
-    </Tooltip>
   );
 }

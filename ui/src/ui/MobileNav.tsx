@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router';
 import { iconSizes } from '../constants/sizes';
+import type { ConnectionState } from '../hooks/useConnectionStatus';
 import { ProductMark } from './ProductMark';
 import { Sidebar } from './Sidebar';
 
@@ -13,9 +14,13 @@ import { Sidebar } from './Sidebar';
  */
 export function MobileNav({
   version,
+  connection,
+  onOpenHelp,
   onOpenSettings,
 }: {
   version?: string;
+  connection: ConnectionState;
+  onOpenHelp: () => void;
   onOpenSettings: () => void;
 }) {
   const { t } = useTranslation('common');
@@ -89,6 +94,11 @@ export function MobileNav({
             variant="drawer"
             version={version}
             onNavigate={close}
+            connection={connection}
+            onOpenHelp={() => {
+              close();
+              onOpenHelp();
+            }}
             onOpenSettings={() => {
               close();
               onOpenSettings();

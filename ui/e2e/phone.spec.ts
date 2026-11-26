@@ -137,7 +137,7 @@ test('every page opens with a trail, a kicker, and help on the title line', asyn
 test('Settings fills the phone screen and holds both tabs', async ({ page }) => {
   await page.goto('/');
   await page.getByTestId('mobile-menu-toggle').click();
-  await page.getByTestId('sidebar-mobile').getByTestId('open-settings').click();
+  await page.getByTestId('sidebar-mobile').getByTestId('rail-settings').click();
 
   const drawer = page.getByTestId('settings-drawer');
   await expect(drawer).toBeVisible();
@@ -155,7 +155,7 @@ test('the rail gives way to a top bar and a drawer at phone width', async ({ pag
   // The rail used to be forced to 64px and still took a sixth of the screen;
   // below lg it is not drawn at all, and the page keeps the full width.
   await expect(page.getByTestId('sidebar')).toBeHidden();
-  await expect(page.getByTestId('sidebar-collapse')).toBeHidden();
+  await expect(page.getByTestId('rail-collapse')).toBeHidden();
   await expect(page.getByTestId('mobile-top-bar')).toBeVisible();
 
   const toggle = page.getByTestId('mobile-menu-toggle');
@@ -249,7 +249,7 @@ test.describe('at desktop width', () => {
 
     const box = await page.getByTestId('sidebar').boundingBox();
     expect(box?.width).toBeGreaterThan(200);
-    await expect(page.getByTestId('sidebar-collapse')).toBeVisible();
+    await expect(page.getByTestId('rail-collapse')).toBeVisible();
     await expect(page.getByTestId('mobile-top-bar')).toBeHidden();
   });
 });

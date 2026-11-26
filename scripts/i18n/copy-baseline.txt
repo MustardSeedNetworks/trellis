@@ -4,6 +4,14 @@
 # siblings list the sites they had when the check was promoted and may only
 # shrink the list; a new site fails CI.
 #
-# Deliberately empty. Trellis had no such site when it adopted the check, and
-# this file exists only so the gate runs held at zero rather than reporting
-# itself "not run". Translate a new site; do not list it here.
+# Trellis has no such site of its own. The five entries below are the canonical
+# shared DataTable test helper (ui/src/shared/DataTableTestUtils.tsx, copied
+# byte-identical from MustardSeedNetworks/.github): fixture strings in a file
+# the gate does not skip because its name does not end in .test.tsx. They
+# cannot be translated here, and go when .github skips that helper. Translate
+# a new site of trellis's own; do not list it here.
+ui/src/shared/DataTableTestUtils.tsx copy-prop caption=Devices
+ui/src/shared/DataTableTestUtils.tsx literal Select all
+ui/src/shared/DataTableTestUtils.tsx literal Loading devices
+ui/src/shared/DataTableTestUtils.tsx literal Previous page
+ui/src/shared/DataTableTestUtils.tsx literal Next page

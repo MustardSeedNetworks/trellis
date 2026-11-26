@@ -82,6 +82,15 @@
     "reports": "Reports",
     "surveys": "Surveys"
   },
+  "rail": {
+    "company": "Mustard Seed Networks",
+    "help": "Help",
+    "status": {
+      "checking": "Checking",
+      "connected": "Daemon connected",
+      "disconnected": "Daemon unreachable"
+    }
+  },
   "settings": {
     "about": "About",
     "aboutHint": "What this daemon reports about itself. Read only.",
@@ -95,7 +104,6 @@
     "themeDark": "Dark",
     "themeHint": "System follows this device’s light or dark setting.",
     "themeLight": "Light",
-    "themeQuick": "Theme: {{theme}}",
     "themeSystem": "System",
     "title": "Settings",
     "uiBuild": "UI build"

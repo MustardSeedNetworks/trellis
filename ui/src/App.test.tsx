@@ -109,7 +109,7 @@ describe('App daemon status', () => {
     );
     renderAt('/');
 
-    expect(await within(screen.getByTestId('sidebar')).findByText('9.8.7')).toBeInTheDocument();
+    expect(await within(screen.getByTestId('sidebar')).findByText('v9.8.7')).toBeInTheDocument();
     expect(screen.queryByTestId('daemon-unreachable-banner')).not.toBeInTheDocument();
   });
 
@@ -126,7 +126,7 @@ describe('App daemon status', () => {
     renderAt('/');
 
     expect(await screen.findByTestId('mobile-menu-toggle')).toBeInTheDocument();
-    await userEvent.click(within(screen.getByTestId('sidebar')).getByTestId('open-settings'));
+    await userEvent.click(within(screen.getByTestId('sidebar')).getByTestId('rail-settings'));
 
     const drawer = screen.getByTestId('settings-drawer');
     expect(within(drawer).getByRole('tab', { name: 'Appearance' })).toHaveAttribute(

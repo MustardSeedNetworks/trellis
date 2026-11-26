@@ -90,7 +90,7 @@ for (const language of ['en', 'es'] as const) {
 
 test('collapsed rail tooltips support hover, keyboard focus and Escape', async ({ page }) => {
   await page.goto('/');
-  await page.getByTestId('sidebar-collapse').click();
+  await page.getByTestId('rail-collapse').click();
   const link = page.getByTestId('nav-reports');
   await link.hover();
   const tooltip = page.getByRole('tooltip', { name: 'Reports' });
@@ -123,4 +123,19 @@ test('browser history changes the page without reopening old help', async ({ pag
   await expect(page.getByTestId('page-help-drawer')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('page-header-help-button')).toBeFocused();
+});
+
+test('the rail footer opens the current page help, and 404 still has help to give', async ({
+  page,
+}) => {
+  await page.goto('/coverage');
+  await page.getByTestId('rail-help').click();
+  await expect(page.getByTestId('page-help-drawer')).toBeVisible();
+  await expect(page.getByTestId('page-help-copy')).not.toBeEmpty();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('rail-help')).toBeFocused();
+
+  await page.goto('/nope');
+  await page.getByTestId('rail-help').click();
+  await expect(page.getByTestId('page-help-drawer')).toBeVisible();
 });

@@ -82,6 +82,15 @@
     "reports": "Informes",
     "surveys": "Estudios"
   },
+  "rail": {
+    "company": "Mustard Seed Networks",
+    "help": "Ayuda",
+    "status": {
+      "checking": "Comprobando",
+      "connected": "Daemon conectado",
+      "disconnected": "Daemon inaccesible"
+    }
+  },
   "settings": {
     "about": "Acerca de",
     "aboutHint": "Lo que este daemon informa de sí mismo. Solo lectura.",
@@ -95,7 +104,6 @@
     "themeDark": "Oscuro",
     "themeHint": "Sistema sigue el ajuste claro u oscuro de este dispositivo.",
     "themeLight": "Claro",
-    "themeQuick": "Tema: {{theme}}",
     "themeSystem": "Sistema",
     "title": "Ajustes",
     "uiBuild": "Compilación de la interfaz"

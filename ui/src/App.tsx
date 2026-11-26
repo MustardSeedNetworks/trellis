@@ -59,8 +59,18 @@ export function App() {
       >
         {t('accessibility.skipToContent')}
       </a>
-      <MobileNav version={version} onOpenSettings={() => setSettingsOpen(true)} />
-      <Sidebar version={version} onOpenSettings={() => setSettingsOpen(true)} />
+      <MobileNav
+        version={version}
+        connection={connection}
+        onOpenHelp={() => setHelpPath(path)}
+        onOpenSettings={() => setSettingsOpen(true)}
+      />
+      <Sidebar
+        version={version}
+        connection={connection}
+        onOpenHelp={() => setHelpPath(path)}
+        onOpenSettings={() => setSettingsOpen(true)}
+      />
       <CommandPalette />
       <main
         id="main-content"
@@ -84,14 +94,14 @@ export function App() {
         </Routes>
       </main>
       <RightDrawer
-        open={page !== undefined && helpPath === path}
+        open={helpPath === path}
         onClose={() => setHelpPath(null)}
         title={t('accessibility.helpTitle', { title })}
         closeLabel={t('accessibility.closeHelp')}
         data-testid="page-help-drawer"
       >
         <p className="text-sm leading-relaxed text-text-secondary" data-testid="page-help-copy">
-          {page?.help}
+          {page?.help ?? t('emptyState.notFoundBody')}
         </p>
       </RightDrawer>
       <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} build={build} />
