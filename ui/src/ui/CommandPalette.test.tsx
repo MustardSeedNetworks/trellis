@@ -1,19 +1,12 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import i18n from '@/i18n';
 import { CommandPalette } from './CommandPalette';
 
-// cmdk measures and scrolls; jsdom implements neither.
+// cmdk scrolls the active item into view; jsdom implements no scrolling. The
+// ResizeObserver it also needs comes from the global test setup.
 beforeAll(() => {
-  vi.stubGlobal(
-    'ResizeObserver',
-    class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    },
-  );
   Element.prototype.scrollIntoView = () => {};
 });
 afterEach(async () => {
