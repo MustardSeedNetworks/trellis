@@ -101,6 +101,9 @@ test('collapsed rail tooltips support hover, keyboard focus and Escape', async (
   await page.keyboard.press('Escape');
   await expect(tooltip).not.toBeVisible();
   await page.mouse.move(700, 700);
+  // Dismissed stays dismissed until pointer and focus have both left, and the
+  // tooltip lets the pointer go after a short grace period.
+  await page.waitForTimeout(300);
   await link.focus();
   await expect(tooltip).toBeVisible();
   await expect(link).toHaveAttribute('aria-describedby', (await tooltip.getAttribute('id')) ?? '');
