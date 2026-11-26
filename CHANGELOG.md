@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.13.8](https://github.com/MustardSeedNetworks/trellis/compare/v0.13.7...v0.13.8) (2026-11-26)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#1091](https://github.com/MustardSeedNetworks/trellis/issues/1091)) ([bb9b5ce](https://github.com/MustardSeedNetworks/trellis/commit/bb9b5ce3f4667d8a92f3f9bd50629d39656f249f))
+* **deps:** update ossf/scorecard-action action to v2.6.0 ([#1089](https://github.com/MustardSeedNetworks/trellis/issues/1089)) ([04d7688](https://github.com/MustardSeedNetworks/trellis/commit/04d76880ba29f28c8323c5503608230449bd5cb8))
+
 ## [0.13.7](https://github.com/MustardSeedNetworks/trellis/compare/v0.13.6...v0.13.7) (2026-11-26)
 
 
