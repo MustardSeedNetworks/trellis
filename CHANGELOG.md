@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.13.7](https://github.com/MustardSeedNetworks/trellis/compare/v0.13.6...v0.13.7) (2026-11-26)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.75.0 ([#1086](https://github.com/MustardSeedNetworks/trellis/issues/1086)) ([25de1ff](https://github.com/MustardSeedNetworks/trellis/commit/25de1ff30a4c814bbeb45a71838acf0f9e295c9c))
+* **deps:** update dependency react-router to v8.5.2 ([#1084](https://github.com/MustardSeedNetworks/trellis/issues/1084)) ([6d583a8](https://github.com/MustardSeedNetworks/trellis/commit/6d583a8d29d30555680fe700c9432451d6c6d3bc))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#1087](https://github.com/MustardSeedNetworks/trellis/issues/1087)) ([5de088f](https://github.com/MustardSeedNetworks/trellis/commit/5de088f3d7e5898a22df5f50d9c98564f8dca372))
+* **deps:** update actions/create-github-app-token action to v3.4.0 ([#1085](https://github.com/MustardSeedNetworks/trellis/issues/1085)) ([fbce658](https://github.com/MustardSeedNetworks/trellis/commit/fbce6588cf494a9bb94c3ca0fccfa6d99b019716))
+
 ## [0.13.6](https://github.com/MustardSeedNetworks/trellis/compare/v0.13.5...v0.13.6) (2026-11-25)
 
 
