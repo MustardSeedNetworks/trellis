@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.15.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.14.3...v0.15.0) (2026-11-27)
+
+
+### Features
+
+* **ui:** show the daemon's configuration in a Settings Daemon tab ([#1110](https://github.com/MustardSeedNetworks/trellis/issues/1110)) ([8674ffc](https://github.com/MustardSeedNetworks/trellis/commit/8674ffcc4948dbddf9249d4fa4d8ce1d61b77812)), closes [#1108](https://github.com/MustardSeedNetworks/trellis/issues/1108)
+* **ui:** use the shared typed rail status and bump the shared pins ([#1113](https://github.com/MustardSeedNetworks/trellis/issues/1113)) ([22cb6a2](https://github.com/MustardSeedNetworks/trellis/commit/22cb6a2df1b4439503bb6cb669ce20cf275285bc)), closes [#1112](https://github.com/MustardSeedNetworks/trellis/issues/1112)
+
+
+### Miscellaneous
+
+* **ui:** remove the unused tailwind-merge dependency and IconSize type ([#1111](https://github.com/MustardSeedNetworks/trellis/issues/1111)) ([d4bb53b](https://github.com/MustardSeedNetworks/trellis/commit/d4bb53b03092163ad060d7497588fc259463b868)), closes [#1109](https://github.com/MustardSeedNetworks/trellis/issues/1109)
+
 ## [0.14.3](https://github.com/MustardSeedNetworks/trellis/compare/v0.14.2...v0.14.3) (2026-11-27)
 
 
