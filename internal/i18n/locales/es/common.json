@@ -86,9 +86,12 @@
     "company": "Mustard Seed Networks",
     "help": "Ayuda",
     "status": {
-      "checking": "Comprobando",
-      "connected": "Daemon conectado",
-      "disconnected": "Daemon inaccesible"
+      "connected": "Conectado",
+      "disconnected": "Desconectado"
+    },
+    "statusDetail": {
+      "connected": "El daemon de Trellis está accesible y en buen estado.",
+      "disconnected": "No se puede acceder al daemon de Trellis."
     }
   },
   "settings": {
