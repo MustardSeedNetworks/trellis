@@ -17,8 +17,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
-import { RailFooter } from '@/shared/RailFooter';
-import type { StatusTone } from '@/shared/StatusPill';
+import { RailFooter, type RailStatus } from '@/shared/RailFooter';
 import { Tooltip } from '@/shared/Tooltip';
 import { useAuth } from '@/ui/AuthGate';
 import msnLogo from '../assets/msn-logo.svg';
@@ -48,12 +47,6 @@ interface SidebarProps {
   onOpenSettings: () => void;
 }
 
-const CONNECTION_TONES: Record<ConnectionState, StatusTone> = {
-  checking: 'unknown',
-  connected: 'success',
-  disconnected: 'error',
-};
-
 export function Sidebar({
   version,
   variant = 'rail',
@@ -80,11 +73,22 @@ export function Sidebar({
     }
   }, [chosenCollapsed, drawer]);
 
-  const statusLabels: Record<ConnectionState, string> = {
-    checking: t('rail.status.checking'),
-    connected: t('rail.status.connected'),
-    disconnected: t('rail.status.disconnected'),
-  };
+  // While the first probe is pending there is no verdict, and the footer takes
+  // none rather than a fifth word for "not yet".
+  let status: RailStatus | undefined;
+  if (connection === 'connected') {
+    status = {
+      state: 'connected',
+      label: t('rail.status.connected'),
+      detail: t('rail.statusDetail.connected'),
+    };
+  } else if (connection === 'disconnected') {
+    status = {
+      state: 'disconnected',
+      label: t('rail.status.disconnected'),
+      detail: t('rail.statusDetail.disconnected'),
+    };
+  }
 
   const link = (item: TrellisNavItem) => (
     <NavLink
@@ -158,7 +162,7 @@ export function Sidebar({
       <RailFooter
         collapsed={collapsed}
         variant={variant}
-        status={{ tone: CONNECTION_TONES[connection], label: statusLabels[connection] }}
+        status={status}
         help={{ label: t('rail.help'), onClick: onOpenHelp }}
         settings={{ label: t('settings.title'), onClick: onOpenSettings }}
         theme={{

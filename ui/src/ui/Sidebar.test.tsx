@@ -118,13 +118,18 @@ describe('Sidebar footer', () => {
 
   it('says whether the daemon answers, and shows the version as v<semver>', () => {
     const { unmount } = renderSidebar('rail', { connection: 'disconnected' });
-    expect(screen.getByTestId('rail-status')).toHaveTextContent('Daemon unreachable');
+    expect(screen.getByTestId('rail-status')).toHaveTextContent('Disconnected');
     expect(screen.getByTestId('rail-version')).toHaveTextContent('v1.2.3');
     expect(screen.getByTestId('rail-version')).not.toHaveTextContent('dirty');
     unmount();
 
     renderSidebar('rail', { connection: 'connected' });
-    expect(screen.getByTestId('rail-status')).toHaveTextContent('Daemon connected');
+    expect(screen.getByTestId('rail-status')).toHaveTextContent('Connected');
+  });
+
+  it('takes no verdict until the first probe answers', () => {
+    renderSidebar('rail', { connection: 'checking' });
+    expect(screen.queryByTestId('rail-status')).not.toBeInTheDocument();
   });
 
   it('offers no sign-out on a daemon that asked for no session', () => {
