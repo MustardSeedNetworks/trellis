@@ -14,6 +14,8 @@ import (
 
 	"connectrpc.com/connect/v2"
 	"connectrpc.com/connect/v2/connecthttp"
+	daemonv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/daemon/v1"
+	"github.com/MustardSeedNetworks/trellis/gen/trellis/daemon/v1/daemonv1connect"
 	surveyv1 "github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1"
 	"github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1/surveyv1connect"
 	"github.com/MustardSeedNetworks/trellis/internal/auth"
@@ -21,26 +23,30 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// The RPCs are read out of the compiled descriptor rather than listed here, so
-// an RPC added to the proto is covered by this test the day it is added — which
-// is the point: the composition was previously asserted by nothing at all, and
-// a hand-written list would have gone stale the same way (#520).
-func surveyProcedures(t *testing.T) []string {
+// The RPCs are read out of the compiled descriptors rather than listed here, so
+// an RPC added to either proto is covered by this test the day it is added —
+// which is the point: the composition was previously asserted by nothing at
+// all, and a hand-written list would have gone stale the same way (#520).
+func rpcProcedures(t *testing.T) []string {
 	t.Helper()
 
-	services := surveyv1.File_trellis_survey_v1_survey_proto.Services()
-	if services.Len() != 1 {
-		t.Fatalf("survey.proto declares %d services, want 1", services.Len())
-	}
-	service := services.Get(0)
-	methods := service.Methods()
-	if methods.Len() == 0 {
-		t.Fatal("survey service declares no RPCs; this test would assert nothing")
-	}
-
-	procedures := make([]string, 0, methods.Len())
-	for i := range methods.Len() {
-		procedures = append(procedures, procedurePath(service, methods.Get(i)))
+	var procedures []string
+	for _, file := range []protoreflect.FileDescriptor{
+		surveyv1.File_trellis_survey_v1_survey_proto,
+		daemonv1.File_trellis_daemon_v1_daemon_proto,
+	} {
+		services := file.Services()
+		if services.Len() != 1 {
+			t.Fatalf("%s declares %d services, want 1", file.Path(), services.Len())
+		}
+		service := services.Get(0)
+		methods := service.Methods()
+		if methods.Len() == 0 {
+			t.Fatalf("%s declares no RPCs; this test would assert nothing", file.Path())
+		}
+		for i := range methods.Len() {
+			procedures = append(procedures, procedurePath(service, methods.Get(i)))
+		}
 	}
 	return procedures
 }
@@ -94,6 +100,7 @@ func gatedMuxAndGate(t *testing.T) (*http.ServeMux, *auth.Gate) {
 
 	return newMux(muxDeps{
 		survey: surveyv1connect.UnimplementedSurveyServiceHandler{},
+		daemon: daemonv1connect.UnimplementedDaemonServiceHandler{},
 		gate:   gate,
 		ui:     http.NotFoundHandler(),
 	}), gate
@@ -106,7 +113,7 @@ func gatedMuxAndGate(t *testing.T) (*http.ServeMux, *auth.Gate) {
 func TestGatedMuxRefusesEveryRPCAnonymously(t *testing.T) {
 	mux := gatedMux(t)
 
-	for _, procedure := range surveyProcedures(t) {
+	for _, procedure := range rpcProcedures(t) {
 		status, code := callAnonymously(t, mux, procedure)
 		// The Connect code, not merely "not 200": a typo in the path (404), a
 		// wrong content type (415) or an unwrapped handler (unimplemented) all
@@ -124,10 +131,11 @@ func TestGatedMuxRefusesEveryRPCAnonymously(t *testing.T) {
 func TestUngatedMuxServesEveryRPCAnonymously(t *testing.T) {
 	mux := newMux(muxDeps{
 		survey: surveyv1connect.UnimplementedSurveyServiceHandler{},
+		daemon: daemonv1connect.UnimplementedDaemonServiceHandler{},
 		ui:     http.NotFoundHandler(),
 	})
 
-	for _, procedure := range surveyProcedures(t) {
+	for _, procedure := range rpcProcedures(t) {
 		status, code := callAnonymously(t, mux, procedure)
 		if code != "unimplemented" {
 			t.Errorf("%s on the loopback daemon = %d %q, want \"unimplemented\"", procedure, status, code)
@@ -186,7 +194,7 @@ func TestGatedMuxRefusesEveryRPCWithoutTheCSRFToken(t *testing.T) {
 	mux := gatedMux(t)
 	cookies, csrf := loginThroughMux(t, mux)
 
-	for _, procedure := range surveyProcedures(t) {
+	for _, procedure := range rpcProcedures(t) {
 		if code := callWithSession(t, mux, procedure, cookies, ""); code != "permission_denied" {
 			t.Errorf("%s with a session and no CSRF token = %q, want \"permission_denied\"", procedure, code)
 		}
@@ -312,6 +320,7 @@ func TestGatedMuxRefusesAStreamingRPCAnonymously(t *testing.T) {
 func TestUngatedMuxServesAStreamingRPCAnonymously(t *testing.T) {
 	mux := newMux(muxDeps{
 		survey: surveyv1connect.UnimplementedSurveyServiceHandler{},
+		daemon: daemonv1connect.UnimplementedDaemonServiceHandler{},
 		ui:     http.NotFoundHandler(),
 	})
 	handleTestStream(mux, nil)

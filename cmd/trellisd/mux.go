@@ -7,6 +7,7 @@ import (
 
 	"connectrpc.com/connect/v2"
 	"connectrpc.com/connect/v2/connecthttp"
+	"github.com/MustardSeedNetworks/trellis/gen/trellis/daemon/v1/daemonv1connect"
 	"github.com/MustardSeedNetworks/trellis/gen/trellis/survey/v1/surveyv1connect"
 	"github.com/MustardSeedNetworks/trellis/internal/api"
 	"github.com/MustardSeedNetworks/trellis/internal/auth"
@@ -20,6 +21,7 @@ import (
 // frontend.
 type muxDeps struct {
 	survey surveyv1connect.SurveyServiceHandler
+	daemon daemonv1connect.DaemonServiceHandler
 	gate   *auth.Gate
 	ui     http.Handler
 }
@@ -35,6 +37,7 @@ func newMux(deps muxDeps) *http.ServeMux {
 	mux := http.NewServeMux()
 	server := newRPCServer(deps.gate)
 	surveyv1connect.RegisterSurveyServiceHandler(server, deps.survey)
+	daemonv1connect.RegisterDaemonServiceHandler(server, deps.daemon)
 	mountRPC(mux, server)
 	if deps.gate != nil {
 		deps.gate.RegisterRoutes(mux)

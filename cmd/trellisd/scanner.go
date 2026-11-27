@@ -12,19 +12,6 @@ import (
 	"github.com/MustardSeedNetworks/trellis/internal/capture"
 )
 
-// captureModeEnv selects how the radio is read.
-//
-// "monitor" listens in monitor mode, which attributes every reading to a
-// channel and a moment but takes the adapter away from its association. That
-// makes it wrong for an active (throughput) survey and wrong on a host whose
-// only radio is also its uplink, so it is opt-in and the OS scan stays the
-// default.
-const (
-	captureModeEnv     = "TRELLIS_CAPTURE_MODE"
-	captureModeMonitor = "monitor"
-	captureModeScan    = "scan"
-)
-
 // newScanner returns the host's radio as the survey engine's capture backend.
 //
 // capture.Scanner and survey.Scanner are deliberately the same shape (ADR-0006),

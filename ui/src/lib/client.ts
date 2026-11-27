@@ -1,5 +1,6 @@
 import { Code, ConnectError, createClient, type Interceptor } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-web';
+import { DaemonService } from '@/gen/trellis/daemon/v1/daemon_pb';
 import { SurveyService } from '@/gen/trellis/survey/v1/survey_pb';
 import { currentCsrfToken, refreshSession } from '@/lib/auth';
 
@@ -68,3 +69,4 @@ const transport = createConnectTransport({
 });
 
 export const surveyClient = createClient(SurveyService, transport);
+export const daemonClient = createClient(DaemonService, transport);
