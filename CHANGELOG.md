@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.14.2](https://github.com/MustardSeedNetworks/trellis/compare/v0.14.1...v0.14.2) (2026-11-27)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @tanstack/react-query to v5.108.1 ([#1098](https://github.com/MustardSeedNetworks/trellis/issues/1098)) ([71db5c9](https://github.com/MustardSeedNetworks/trellis/commit/71db5c97637fd274d9aecde89770c5339e6d7bd4))
+* **deps:** update dependency lucide-react to v1.77.0 ([#1103](https://github.com/MustardSeedNetworks/trellis/issues/1103)) ([3c6f3ee](https://github.com/MustardSeedNetworks/trellis/commit/3c6f3ee9c7d542675d715388f963e07641b43feb))
+* **deps:** update dependency tailwind-merge to v3.7.1 ([#1099](https://github.com/MustardSeedNetworks/trellis/issues/1099)) ([d112d68](https://github.com/MustardSeedNetworks/trellis/commit/d112d68e7ea26a2446151f03c9cc49647e5ce46c))
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#1100](https://github.com/MustardSeedNetworks/trellis/issues/1100)) ([c9cf69b](https://github.com/MustardSeedNetworks/trellis/commit/c9cf69b06ef97aaa0b9fbbb5938a9046cb565599))
+* **deps:** lock file maintenance ([#1104](https://github.com/MustardSeedNetworks/trellis/issues/1104)) ([7dff94a](https://github.com/MustardSeedNetworks/trellis/commit/7dff94aa0aa4732c2f8ceb427d135b8829e804df))
+* **deps:** update goreleaser/goreleaser-cross docker tag to v1.27.3-4-v2.20.3 ([#1102](https://github.com/MustardSeedNetworks/trellis/issues/1102)) ([46c1fbb](https://github.com/MustardSeedNetworks/trellis/commit/46c1fbb2a8cca49a0ebb08c6650b0ffc4791e2b5))
+* **deps:** update pre-commit hook davidanson/markdownlint-cli2 to v0.24.2 ([#1105](https://github.com/MustardSeedNetworks/trellis/issues/1105)) ([afe67b6](https://github.com/MustardSeedNetworks/trellis/commit/afe67b605bbf22637fcff14e6a783e42e0505fa7))
+
 ## [0.14.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.14.0...v0.14.1) (2026-11-26)
 
 
