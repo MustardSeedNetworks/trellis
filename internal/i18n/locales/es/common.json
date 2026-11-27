@@ -95,10 +95,25 @@
     "about": "Acerca de",
     "aboutHint": "Lo que este daemon informa de sí mismo. Solo lectura.",
     "appearance": "Apariencia",
+    "authRequired": "Inicio de sesión obligatorio",
     "built": "Compilado",
+    "captureMode": "Modo de captura",
+    "captureModes": {
+      "monitor": "Modo monitor",
+      "scan": "Escaneo del sistema",
+      "unavailable": "No disponible en este equipo"
+    },
     "close": "Cerrar los ajustes",
     "commit": "Commit",
+    "daemon": "Daemon",
+    "daemonHint": "Cómo se inició este daemon. Solo lectura; no se muestran credenciales ni claves.",
+    "daemonUnavailable": "No llegan los ajustes del daemon",
+    "dataDir": "Directorio de datos",
     "languageHint": "Se guarda en este navegador.",
+    "listenAddr": "Escuchando en",
+    "logFile": "Archivo de registro",
+    "logStdout": "Salida estándar",
+    "no": "No",
     "tabs": "Secciones de ajustes",
     "theme": "Tema",
     "themeDark": "Oscuro",
@@ -106,7 +121,9 @@
     "themeLight": "Claro",
     "themeSystem": "Sistema",
     "title": "Ajustes",
-    "uiBuild": "Compilación de la interfaz"
+    "tls": "TLS",
+    "uiBuild": "Compilación de la interfaz",
+    "yes": "Sí"
   },
   "status": {
     "crit": "Crítico",

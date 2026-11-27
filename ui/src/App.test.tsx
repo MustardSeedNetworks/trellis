@@ -13,6 +13,16 @@ import { ToastProvider } from '@/ui/Toast';
 import { App } from './App';
 
 vi.mock('@/lib/client', () => ({
+  daemonClient: {
+    getConfig: vi.fn().mockResolvedValue({
+      listenAddr: '127.0.0.1:8446',
+      dataDir: '/data',
+      captureMode: 'scan',
+      tlsEnabled: false,
+      authRequired: false,
+      logFile: '',
+    }),
+  },
   surveyClient: {
     listSurveys: vi.fn().mockResolvedValue({ surveys: [] }),
     getCaptureCapability: vi.fn().mockResolvedValue({ available: true, reason: '', remedy: '' }),
@@ -135,6 +145,11 @@ describe('App daemon status', () => {
     );
     expect(within(drawer).getByTestId('language-switcher')).toBeInTheDocument();
     expect(within(drawer).getByRole('radio', { name: 'System' })).toBeChecked();
+
+    await userEvent.click(within(drawer).getByRole('tab', { name: 'Daemon' }));
+    expect(
+      await within(screen.getByTestId('settings-daemon')).findByText('127.0.0.1:8446'),
+    ).toBeInTheDocument();
 
     await userEvent.click(within(drawer).getByRole('tab', { name: 'About' }));
     expect(within(screen.getByTestId('settings-about')).getByText('Version')).toBeInTheDocument();

@@ -1,4 +1,4 @@
-import { Info, Palette } from 'lucide-react';
+import { Info, Palette, Server } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { BuildVersion } from '@/hooks/useBuildVersion';
@@ -9,8 +9,15 @@ import { RightDrawer } from '@/shared/RightDrawer';
 import { SegmentedControl } from '@/shared/SegmentedControl';
 import { Select } from '@/shared/Select';
 import { SettingsTabs } from '@/shared/SettingsTabs';
+import { DaemonSettings } from '@/ui/DaemonSettings';
+import { SettingsFacts } from '@/ui/SettingsFacts';
 
-type SectionId = 'appearance' | 'about';
+const SECTIONS = ['appearance', 'daemon', 'about'] as const;
+type SectionId = (typeof SECTIONS)[number];
+
+function isSectionId(value: string): value is SectionId {
+  return SECTIONS.some((section) => section === value);
+}
 
 function isLanguageCode(value: string): value is LanguageCode {
   return languages.some((language) => language.code === value);
@@ -22,9 +29,8 @@ function isTheme(value: string): value is Theme {
 
 /**
  * Settings: the preferences that live in this browser (theme, language) and
- * what this daemon says about itself. Nothing here writes to the daemon, and
- * the daemon's own configuration is not readable over its API yet, so it is
- * not shown rather than shown stale.
+ * what this daemon says about itself: its configuration and its build. Nothing
+ * here writes to the daemon.
  */
 export function SettingsDrawer({
   open,
@@ -40,6 +46,7 @@ export function SettingsDrawer({
 
   const tabs = [
     { id: 'appearance', label: t('settings.appearance'), icon: <Palette className="h-4 w-4" /> },
+    { id: 'daemon', label: t('settings.daemon'), icon: <Server className="h-4 w-4" /> },
     { id: 'about', label: t('settings.about'), icon: <Info className="h-4 w-4" /> },
   ];
 
@@ -54,10 +61,16 @@ export function SettingsDrawer({
       <SettingsTabs
         tabs={tabs}
         value={section}
-        onChange={(id) => setSection(id === 'about' ? 'about' : 'appearance')}
+        onChange={(id) => {
+          if (isSectionId(id)) {
+            setSection(id);
+          }
+        }}
         label={t('settings.tabs')}
       >
-        {section === 'appearance' ? <AppearanceSection /> : <AboutSection build={build} />}
+        {section === 'appearance' ? <AppearanceSection /> : null}
+        {section === 'daemon' ? <DaemonSettings /> : null}
+        {section === 'about' ? <AboutSection build={build} /> : null}
       </SettingsTabs>
     </RightDrawer>
   );
@@ -123,16 +136,7 @@ function AboutSection({ build }: { build: BuildVersion }) {
   return (
     <div className="flex flex-col gap-4" data-testid="settings-about">
       <p className="text-sm text-text-muted">{t('settings.aboutHint')}</p>
-      <dl className="flex flex-col divide-y divide-hairline">
-        {facts.map((fact) => (
-          <div key={fact.label} className="flex items-baseline justify-between gap-4 py-2">
-            <dt className="kicker">{fact.label}</dt>
-            <dd className="figure min-w-0 break-all text-right text-sm text-text-primary">
-              {fact.value === '' ? '—' : fact.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <SettingsFacts facts={facts} />
     </div>
   );
 }

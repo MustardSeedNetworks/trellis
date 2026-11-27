@@ -95,10 +95,25 @@
     "about": "About",
     "aboutHint": "What this daemon reports about itself. Read only.",
     "appearance": "Appearance",
+    "authRequired": "Sign-in required",
     "built": "Built",
+    "captureMode": "Capture mode",
+    "captureModes": {
+      "monitor": "Monitor mode",
+      "scan": "OS scan",
+      "unavailable": "Unavailable on this host"
+    },
     "close": "Close settings",
     "commit": "Commit",
+    "daemon": "Daemon",
+    "daemonHint": "How this daemon was started. Read only; no credentials or keys are shown.",
+    "daemonUnavailable": "Daemon settings are not arriving",
+    "dataDir": "Data directory",
     "languageHint": "Saved in this browser.",
+    "listenAddr": "Listening on",
+    "logFile": "Log file",
+    "logStdout": "Standard output",
+    "no": "No",
     "tabs": "Settings sections",
     "theme": "Theme",
     "themeDark": "Dark",
@@ -106,7 +121,9 @@
     "themeLight": "Light",
     "themeSystem": "System",
     "title": "Settings",
-    "uiBuild": "UI build"
+    "tls": "TLS",
+    "uiBuild": "UI build",
+    "yes": "Yes"
   },
   "status": {
     "crit": "Critical",

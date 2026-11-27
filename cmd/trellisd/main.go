@@ -167,12 +167,6 @@ func run(parent context.Context) error {
 		defer gate.Close()
 	}
 
-	uiHandler, err := api.UIHandler()
-	if err != nil {
-		return err
-	}
-	mux := newMux(muxDeps{survey: surveyHandler, gate: gate, ui: uiHandler})
-
 	// Serve HTTP/2 over plain-text (h2c) so local/dev clients can speak
 	// gRPC or Connect without TLS, alongside HTTP/1.1 for connect-web/JSON.
 	var protocols http.Protocols
@@ -193,6 +187,24 @@ func run(parent context.Context) error {
 	if gate != nil {
 		scheme = "https"
 	}
+	uiHandler, err := api.UIHandler()
+	if err != nil {
+		return err
+	}
+	logFile, err := apppaths.LogFile()
+	if err != nil {
+		return err
+	}
+	daemonHandler := api.NewDaemonServiceHandler(api.DaemonConfig{
+		ListenAddr:   boundAddr,
+		DataDir:      dataDir,
+		CaptureMode:  captureModeName(scannerErr),
+		TLSEnabled:   gate != nil,
+		AuthRequired: gate != nil,
+		LogFile:      logFile,
+	})
+	mux := newMux(muxDeps{survey: surveyHandler, daemon: daemonHandler, gate: gate, ui: uiHandler})
+
 	// Published now rather than at Acquire: the port is not known until the
 	// fallback has settled, and a second daemon can only name it once it is.
 	var handler http.Handler = mux

@@ -1,0 +1,42 @@
+// What the running daemon was started with, for the Settings Daemon tab.
+//
+// Read-only and non-secret by construction: every field is a fact an operator
+// could read off their own launch environment. The credential, the TLS key and
+// the session secrets are not fields here, and adding one is a contract change
+// that internal/api's secret-field test refuses.
+syntax = "proto3";
+
+package trellis.daemon.v1;
+
+option go_package = "github.com/MustardSeedNetworks/trellis/gen/trellis/daemon/v1;daemonv1";
+
+// DaemonService describes the running daemon to its own UI.
+service DaemonService {
+  // GetConfig returns the daemon's effective non-secret configuration.
+  rpc GetConfig(GetConfigRequest) returns (GetConfigResponse);
+}
+
+message GetConfigRequest {}
+
+message GetConfigResponse {
+  // listen_addr is the address the listener actually bound, after any port
+  // fallback, so it is what a second device would connect to.
+  string listen_addr = 1;
+
+  // data_dir holds the survey store and, when generated, the TLS certificate.
+  string data_dir = 2;
+
+  // capture_mode is "scan" (OS scan), "monitor" (monitor-mode capture), or
+  // "unavailable" when this host has no capture backend.
+  string capture_mode = 3;
+
+  // tls_enabled is true when the listener serves TLS.
+  bool tls_enabled = 4;
+
+  // auth_required is true when an operator credential is configured and every
+  // RPC is authenticated.
+  bool auth_required = 5;
+
+  // log_file is the file the daemon logs to, or empty when it logs to stdout.
+  string log_file = 6;
+}

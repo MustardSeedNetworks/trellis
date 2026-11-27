@@ -134,7 +134,7 @@ test('every page opens with a trail, a kicker, and help on the title line', asyn
   }
 });
 
-test('Settings fills the phone screen and holds both tabs', async ({ page }) => {
+test('Settings fills the phone screen and holds all three tabs', async ({ page }) => {
   await page.goto('/');
   await page.getByTestId('mobile-menu-toggle').click();
   await page.getByTestId('sidebar-mobile').getByTestId('rail-settings').click();
@@ -145,6 +145,8 @@ test('Settings fills the phone screen and holds both tabs', async ({ page }) => 
   expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
   expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(PHONE.width);
   await expect(drawer.getByRole('tab', { name: 'Appearance' })).toBeVisible();
+  await drawer.getByRole('tab', { name: 'Daemon' }).click();
+  await expect(drawer.getByTestId('settings-daemon')).toContainText('Listening on');
   await drawer.getByRole('tab', { name: 'About' }).click();
   await expect(drawer.getByTestId('settings-about')).toContainText('Version');
 });
