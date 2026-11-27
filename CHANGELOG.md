@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.3](https://github.com/MustardSeedNetworks/trellis/compare/v0.14.2...v0.14.3) (2026-11-27)
+
+
+### Miscellaneous
+
+* **deps:** update dependency markdownlint-cli2 to v0.24.2 ([#1106](https://github.com/MustardSeedNetworks/trellis/issues/1106)) ([9f700c6](https://github.com/MustardSeedNetworks/trellis/commit/9f700c619161d8440fd00b06ea8bb81b4cb8b5a2))
+
 ## [0.14.2](https://github.com/MustardSeedNetworks/trellis/compare/v0.14.1...v0.14.2) (2026-11-27)
 
 
