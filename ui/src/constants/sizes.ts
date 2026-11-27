@@ -11,5 +11,3 @@ export const iconSizes = {
   '2xl': 'h-8 w-8',
   '3xl': 'h-12 w-12',
 } as const;
-
-export type IconSize = keyof typeof iconSizes;
