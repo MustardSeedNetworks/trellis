@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.15.3](https://github.com/MustardSeedNetworks/trellis/compare/v0.15.2...v0.15.3) (2026-11-28)
+
+
+### Miscellaneous
+
+* **deps:** lock file maintenance ([#1125](https://github.com/MustardSeedNetworks/trellis/issues/1125)) ([54e8810](https://github.com/MustardSeedNetworks/trellis/commit/54e8810e88342a9035be547b632eff6d3b50c7eb))
+* **ui:** declare @testing-library/user-event devDependency ([#1124](https://github.com/MustardSeedNetworks/trellis/issues/1124)) ([e0c3954](https://github.com/MustardSeedNetworks/trellis/commit/e0c3954e884ddcae33cb7e528fc376e405020402))
+
 ## [0.15.2](https://github.com/MustardSeedNetworks/trellis/compare/v0.15.1...v0.15.2) (2026-11-28)
 
 
