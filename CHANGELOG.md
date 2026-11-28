@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.15.1](https://github.com/MustardSeedNetworks/trellis/compare/v0.15.0...v0.15.1) (2026-11-28)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @tanstack/react-query to v5.108.2 ([#1120](https://github.com/MustardSeedNetworks/trellis/issues/1120)) ([45563cc](https://github.com/MustardSeedNetworks/trellis/commit/45563ccda551d3f421b5d12ce7194d039889bfdd))
+* **ui:** re-copy the shared set for the tooltip escape fix ([#1116](https://github.com/MustardSeedNetworks/trellis/issues/1116)) ([f9b3c04](https://github.com/MustardSeedNetworks/trellis/commit/f9b3c04bbec97f89cd2d8c8f4416375e652d7df4))
+
+
+### Miscellaneous
+
+* **deps:** update github actions ([#1118](https://github.com/MustardSeedNetworks/trellis/issues/1118)) ([e7a9c40](https://github.com/MustardSeedNetworks/trellis/commit/e7a9c40b8a5c317f1c38cee52a890808dc074705))
+
 ## [0.15.0](https://github.com/MustardSeedNetworks/trellis/compare/v0.14.3...v0.15.0) (2026-11-27)
 
 
